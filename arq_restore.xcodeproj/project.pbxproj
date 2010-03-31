@@ -1,0 +1,825 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 45;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		8DD76F9A0486AA7600D96B5E /* arq_restore.m in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* arq_restore.m */; settings = {ATTRIBUTES = (); }; };
+		8DD76F9C0486AA7600D96B5E /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08FB779EFE84155DC02AAC07 /* Foundation.framework */; };
+		F805B54D1160D3E6007EC01E /* ArqRestoreCommand.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B54C1160D3E6007EC01E /* ArqRestoreCommand.m */; };
+		F805B7211160D9C2007EC01E /* HSLog.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7201160D9C2007EC01E /* HSLog.m */; };
+		F805B7301160DBE9007EC01E /* ArqFolder.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B72F1160DBE9007EC01E /* ArqFolder.m */; };
+		F805B7531160DCFE007EC01E /* ArrayNode.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7421160DCFE007EC01E /* ArrayNode.m */; };
+		F805B7541160DCFE007EC01E /* BooleanNode.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7441160DCFE007EC01E /* BooleanNode.m */; };
+		F805B7551160DCFE007EC01E /* DictNode.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7461160DCFE007EC01E /* DictNode.m */; };
+		F805B7561160DCFE007EC01E /* IntegerNode.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7481160DCFE007EC01E /* IntegerNode.m */; };
+		F805B7571160DCFE007EC01E /* RealNode.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B74C1160DCFE007EC01E /* RealNode.m */; };
+		F805B7581160DCFE007EC01E /* StringNode.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B74E1160DCFE007EC01E /* StringNode.m */; };
+		F805B7591160DCFE007EC01E /* XMLPListReader.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7501160DCFE007EC01E /* XMLPListReader.m */; };
+		F805B75A1160DCFE007EC01E /* XMLPListWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7521160DCFE007EC01E /* XMLPListWriter.m */; };
+		F805B7821160DD60007EC01E /* HTTPConnection_S3.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7691160DD60007EC01E /* HTTPConnection_S3.m */; };
+		F805B7831160DD60007EC01E /* NSError_S3.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B76B1160DD60007EC01E /* NSError_S3.m */; };
+		F805B7841160DD60007EC01E /* PathReceiver.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B76D1160DD60007EC01E /* PathReceiver.m */; };
+		F805B7851160DD60007EC01E /* S3AuthorizationParameters.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B76F1160DD60007EC01E /* S3AuthorizationParameters.m */; };
+		F805B7861160DD60007EC01E /* S3AuthorizationProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7711160DD60007EC01E /* S3AuthorizationProvider.m */; };
+		F805B7871160DD60007EC01E /* S3Lister.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7731160DD60007EC01E /* S3Lister.m */; };
+		F805B7881160DD60007EC01E /* S3ObjectMetadata.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7751160DD60007EC01E /* S3ObjectMetadata.m */; };
+		F805B7891160DD60007EC01E /* S3ObjectReceiver.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7771160DD60007EC01E /* S3ObjectReceiver.m */; };
+		F805B78B1160DD60007EC01E /* S3Request.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B77C1160DD60007EC01E /* S3Request.m */; };
+		F805B78C1160DD60007EC01E /* S3Service.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B77E1160DD60007EC01E /* S3Service.m */; };
+		F805B78D1160DD60007EC01E /* S3Signature.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7801160DD60007EC01E /* S3Signature.m */; };
+		F805B7A91160DEF2007EC01E /* RegexKitLite.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7A81160DEF2007EC01E /* RegexKitLite.m */; };
+		F805B7BA1160E3AF007EC01E /* Blob.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7B91160E3AF007EC01E /* Blob.m */; };
+		F805B7D11160E445007EC01E /* HTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7CC1160E445007EC01E /* HTTPConnection.m */; };
+		F805B7D21160E445007EC01E /* HTTPRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7CE1160E445007EC01E /* HTTPRequest.m */; };
+		F805B7D31160E445007EC01E /* HTTPResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7D01160E445007EC01E /* HTTPResponse.m */; };
+		F805B7D81160E456007EC01E /* BlobACL.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7D71160E456007EC01E /* BlobACL.m */; };
+		F805B7E11160E48B007EC01E /* ServerBlob.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7E01160E48B007EC01E /* ServerBlob.m */; };
+		F805B7FB1160E73D007EC01E /* RFC2616DateFormatter.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7FA1160E73D007EC01E /* RFC2616DateFormatter.m */; };
+		F805B7FE1160E764007EC01E /* RFC822.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7FD1160E764007EC01E /* RFC822.m */; };
+		F805B81B1160E838007EC01E /* InputStreams.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B81A1160E838007EC01E /* InputStreams.m */; };
+		F805B8251160E857007EC01E /* ChunkedInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B8221160E857007EC01E /* ChunkedInputStream.m */; };
+		F805B8261160E857007EC01E /* FixedLengthInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B8241160E857007EC01E /* FixedLengthInputStream.m */; };
+		F805B82B1160E861007EC01E /* FDInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B8281160E861007EC01E /* FDInputStream.m */; };
+		F805B82C1160E861007EC01E /* FDOutputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B82A1160E861007EC01E /* FDOutputStream.m */; };
+		F805B82F1160E86E007EC01E /* DataInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B82E1160E86E007EC01E /* DataInputStream.m */; };
+		F805B8321160E878007EC01E /* Writer.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B8311160E878007EC01E /* Writer.m */; };
+		F805B83B1160E8DD007EC01E /* NSData-InputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B83A1160E8DD007EC01E /* NSData-InputStream.m */; };
+		F805B83F1160E900007EC01E /* StreamPairFactory.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B83E1160E900007EC01E /* StreamPairFactory.m */; };
+		F805B8421160E90F007EC01E /* Streams.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B8411160E90F007EC01E /* Streams.m */; };
+		F805B8531160E9B0007EC01E /* CFStreamPair.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B8521160E9B0007EC01E /* CFStreamPair.m */; };
+		F805B85A1160E9C9007EC01E /* CFStreamInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B8571160E9C9007EC01E /* CFStreamInputStream.m */; };
+		F805B85B1160E9C9007EC01E /* CFStreamOutputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B8591160E9C9007EC01E /* CFStreamOutputStream.m */; };
+		F805B8601160E9F0007EC01E /* DNS_SDErrors.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B85F1160E9F0007EC01E /* DNS_SDErrors.m */; };
+		F805B8651160EA15007EC01E /* NSXMLNode_extra.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B8641160EA15007EC01E /* NSXMLNode_extra.m */; };
+		F805B86A1160EA83007EC01E /* NSData-Base64Extensions.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B8691160EA83007EC01E /* NSData-Base64Extensions.m */; };
+		F805B86F1160EAC1007EC01E /* DataInputStreamFactory.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B86E1160EAC1007EC01E /* DataInputStreamFactory.m */; };
+		F805B8891160EB39007EC01E /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F805B8881160EB39007EC01E /* libcrypto.dylib */; };
+		F805B88B1160EB3A007EC01E /* libicucore.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F805B88A1160EB39007EC01E /* libicucore.dylib */; };
+		F805B88F1160EB45007EC01E /* libssl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F805B88E1160EB45007EC01E /* libssl.dylib */; };
+		F805B8931160EB4E007EC01E /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F805B8921160EB4E007EC01E /* SystemConfiguration.framework */; };
+		F805B8A11160EBAA007EC01E /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F805B8A01160EBAA007EC01E /* CoreFoundation.framework */; };
+		F805B8C21160EC41007EC01E /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F805B8C11160EC41007EC01E /* Security.framework */; };
+		F805B8CE1160ECD7007EC01E /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F805B8CD1160ECD7007EC01E /* CoreServices.framework */; };
+		F8D678001160F26A00CC270E /* Restorer.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D677FF1160F26A00CC270E /* Restorer.m */; };
+		F8D678171160F4E300CC270E /* S3Fark.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678141160F4E300CC270E /* S3Fark.m */; };
+		F8D678181160F4E300CC270E /* S3Repo.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678161160F4E300CC270E /* S3Repo.m */; };
+		F8D6781D1160F4FD00CC270E /* SHA1Hash.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6781C1160F4FD00CC270E /* SHA1Hash.m */; };
+		F8D6782D1160F5D000CC270E /* PackSetSet.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6782A1160F5D000CC270E /* PackSetSet.m */; };
+		F8D6782E1160F5D000CC270E /* PackSet.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6782C1160F5D000CC270E /* PackSet.m */; };
+		F8D678331160F62E00CC270E /* ArqUserLibrary.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678321160F62E00CC270E /* ArqUserLibrary.m */; };
+		F8D6783C1160F70100CC270E /* PackIndexEntry.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6783B1160F70100CC270E /* PackIndexEntry.m */; };
+		F8D678451160F74A00CC270E /* DiskPack.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678421160F74A00CC270E /* DiskPack.m */; };
+		F8D678461160F74A00CC270E /* DiskPackIndex.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678441160F74A00CC270E /* DiskPackIndex.m */; };
+		F8D6785F1160F7CF00CC270E /* Commit.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6785C1160F7CF00CC270E /* Commit.m */; };
+		F8D678601160F7CF00CC270E /* Tree.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6785E1160F7CF00CC270E /* Tree.m */; };
+		F8D678651160F7FE00CC270E /* NSData-Encrypt.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678641160F7FE00CC270E /* NSData-Encrypt.m */; };
+		F8D6786A1160F81100CC270E /* OpenSSL.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678691160F81100CC270E /* OpenSSL.m */; };
+		F8D6786F1160F84600CC270E /* DecryptedInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6786E1160F84600CC270E /* DecryptedInputStream.m */; };
+		F8D678741160F85D00CC270E /* CryptInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678731160F85D00CC270E /* CryptInputStream.m */; };
+		F8D678771160F86E00CC270E /* FileInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678761160F86E00CC270E /* FileInputStream.m */; };
+		F8D678821160F8A000CC270E /* DataIO.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678791160F8A000CC270E /* DataIO.m */; };
+		F8D678831160F8A000CC270E /* DateIO.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6787B1160F8A000CC270E /* DateIO.m */; };
+		F8D678841160F8A000CC270E /* DoubleIO.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6787D1160F8A000CC270E /* DoubleIO.m */; };
+		F8D678851160F8A000CC270E /* IntegerIO.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6787F1160F8A000CC270E /* IntegerIO.m */; };
+		F8D678861160F8A000CC270E /* StringIO.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678811160F8A000CC270E /* StringIO.m */; };
+		F8D678891160F8CD00CC270E /* NSString_extra.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678881160F8CD00CC270E /* NSString_extra.m */; };
+		F8D6788C1160F8E500CC270E /* BinarySHA1.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6788B1160F8E500CC270E /* BinarySHA1.m */; };
+		F8D6789A1160FA2A00CC270E /* NSFileManager_extra.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678991160FA2A00CC270E /* NSFileManager_extra.m */; };
+		F8D6789D1160FA3900CC270E /* FileOutputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6789C1160FA3900CC270E /* FileOutputStream.m */; };
+		F8D678A01160FA4800CC270E /* FileInputStreamFactory.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6789F1160FA4800CC270E /* FileInputStreamFactory.m */; };
+		F8D678A51160FA5F00CC270E /* BooleanIO.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678A41160FA5F00CC270E /* BooleanIO.m */; };
+		F8D678A81160FA6A00CC270E /* EncryptedInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678A71160FA6A00CC270E /* EncryptedInputStream.m */; };
+		F8D678AF1160FAD900CC270E /* CommitFailedFile.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678AE1160FAD900CC270E /* CommitFailedFile.m */; };
+		F8D678B81160FB2100CC270E /* Node.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678B71160FB2100CC270E /* Node.m */; };
+		F8D67CEB1161363A00CC270E /* FileAttributes.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D67CEA1161363A00CC270E /* FileAttributes.m */; };
+		F8D67CF21161366100CC270E /* XAttrSet.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D67CF11161366100CC270E /* XAttrSet.m */; };
+		F8D67D071161384100CC270E /* FileACL.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D67D041161384100CC270E /* FileACL.m */; };
+		F8D67D081161384100CC270E /* OSStatusDescription.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D67D061161384100CC270E /* OSStatusDescription.m */; };
+		F8D67F701161443600CC270E /* RestoreNode.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D67F6F1161443600CC270E /* RestoreNode.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		8DD76F9E0486AA7600D96B5E /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 8;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		08FB7796FE84155DC02AAC07 /* arq_restore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = arq_restore.m; sourceTree = "<group>"; };
+		08FB779EFE84155DC02AAC07 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
+		32A70AAB03705E1F00C91783 /* arq_restore_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = arq_restore_Prefix.pch; sourceTree = "<group>"; };
+		8DD76FA10486AA7600D96B5E /* arq_restore */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = arq_restore; sourceTree = BUILT_PRODUCTS_DIR; };
+		F805B54B1160D3E6007EC01E /* ArqRestoreCommand.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ArqRestoreCommand.h; sourceTree = "<group>"; };
+		F805B54C1160D3E6007EC01E /* ArqRestoreCommand.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ArqRestoreCommand.m; sourceTree = "<group>"; };
+		F805B71F1160D9C2007EC01E /* HSLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HSLog.h; sourceTree = "<group>"; };
+		F805B7201160D9C2007EC01E /* HSLog.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HSLog.m; sourceTree = "<group>"; };
+		F805B72E1160DBE9007EC01E /* ArqFolder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ArqFolder.h; sourceTree = "<group>"; };
+		F805B72F1160DBE9007EC01E /* ArqFolder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ArqFolder.m; sourceTree = "<group>"; };
+		F805B7411160DCFE007EC01E /* ArrayNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ArrayNode.h; sourceTree = "<group>"; };
+		F805B7421160DCFE007EC01E /* ArrayNode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ArrayNode.m; sourceTree = "<group>"; };
+		F805B7431160DCFE007EC01E /* BooleanNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BooleanNode.h; sourceTree = "<group>"; };
+		F805B7441160DCFE007EC01E /* BooleanNode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BooleanNode.m; sourceTree = "<group>"; };
+		F805B7451160DCFE007EC01E /* DictNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DictNode.h; sourceTree = "<group>"; };
+		F805B7461160DCFE007EC01E /* DictNode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DictNode.m; sourceTree = "<group>"; };
+		F805B7471160DCFE007EC01E /* IntegerNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IntegerNode.h; sourceTree = "<group>"; };
+		F805B7481160DCFE007EC01E /* IntegerNode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IntegerNode.m; sourceTree = "<group>"; };
+		F805B7491160DCFE007EC01E /* PListNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PListNode.h; sourceTree = "<group>"; };
+		F805B74A1160DCFE007EC01E /* PListNodeType.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PListNodeType.h; sourceTree = "<group>"; };
+		F805B74B1160DCFE007EC01E /* RealNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RealNode.h; sourceTree = "<group>"; };
+		F805B74C1160DCFE007EC01E /* RealNode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RealNode.m; sourceTree = "<group>"; };
+		F805B74D1160DCFE007EC01E /* StringNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StringNode.h; sourceTree = "<group>"; };
+		F805B74E1160DCFE007EC01E /* StringNode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StringNode.m; sourceTree = "<group>"; };
+		F805B74F1160DCFE007EC01E /* XMLPListReader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XMLPListReader.h; sourceTree = "<group>"; };
+		F805B7501160DCFE007EC01E /* XMLPListReader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XMLPListReader.m; sourceTree = "<group>"; };
+		F805B7511160DCFE007EC01E /* XMLPListWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XMLPListWriter.h; sourceTree = "<group>"; };
+		F805B7521160DCFE007EC01E /* XMLPListWriter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XMLPListWriter.m; sourceTree = "<group>"; };
+		F805B7681160DD60007EC01E /* HTTPConnection_S3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HTTPConnection_S3.h; sourceTree = "<group>"; };
+		F805B7691160DD60007EC01E /* HTTPConnection_S3.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HTTPConnection_S3.m; sourceTree = "<group>"; };
+		F805B76A1160DD60007EC01E /* NSError_S3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSError_S3.h; sourceTree = "<group>"; };
+		F805B76B1160DD60007EC01E /* NSError_S3.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSError_S3.m; sourceTree = "<group>"; };
+		F805B76C1160DD60007EC01E /* PathReceiver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PathReceiver.h; sourceTree = "<group>"; };
+		F805B76D1160DD60007EC01E /* PathReceiver.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PathReceiver.m; sourceTree = "<group>"; };
+		F805B76E1160DD60007EC01E /* S3AuthorizationParameters.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = S3AuthorizationParameters.h; sourceTree = "<group>"; };
+		F805B76F1160DD60007EC01E /* S3AuthorizationParameters.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = S3AuthorizationParameters.m; sourceTree = "<group>"; };
+		F805B7701160DD60007EC01E /* S3AuthorizationProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = S3AuthorizationProvider.h; sourceTree = "<group>"; };
+		F805B7711160DD60007EC01E /* S3AuthorizationProvider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = S3AuthorizationProvider.m; sourceTree = "<group>"; };
+		F805B7721160DD60007EC01E /* S3Lister.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = S3Lister.h; sourceTree = "<group>"; };
+		F805B7731160DD60007EC01E /* S3Lister.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = S3Lister.m; sourceTree = "<group>"; };
+		F805B7741160DD60007EC01E /* S3ObjectMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = S3ObjectMetadata.h; sourceTree = "<group>"; };
+		F805B7751160DD60007EC01E /* S3ObjectMetadata.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = S3ObjectMetadata.m; sourceTree = "<group>"; };
+		F805B7761160DD60007EC01E /* S3ObjectReceiver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = S3ObjectReceiver.h; sourceTree = "<group>"; };
+		F805B7771160DD60007EC01E /* S3ObjectReceiver.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = S3ObjectReceiver.m; sourceTree = "<group>"; };
+		F805B77A1160DD60007EC01E /* S3Receiver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = S3Receiver.h; sourceTree = "<group>"; };
+		F805B77B1160DD60007EC01E /* S3Request.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = S3Request.h; sourceTree = "<group>"; };
+		F805B77C1160DD60007EC01E /* S3Request.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = S3Request.m; sourceTree = "<group>"; };
+		F805B77D1160DD60007EC01E /* S3Service.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = S3Service.h; sourceTree = "<group>"; };
+		F805B77E1160DD60007EC01E /* S3Service.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = S3Service.m; sourceTree = "<group>"; };
+		F805B77F1160DD60007EC01E /* S3Signature.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = S3Signature.h; sourceTree = "<group>"; };
+		F805B7801160DD60007EC01E /* S3Signature.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = S3Signature.m; sourceTree = "<group>"; };
+		F805B7A71160DEF2007EC01E /* RegexKitLite.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RegexKitLite.h; sourceTree = "<group>"; };
+		F805B7A81160DEF2007EC01E /* RegexKitLite.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RegexKitLite.m; sourceTree = "<group>"; };
+		F805B7B81160E3AF007EC01E /* Blob.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Blob.h; sourceTree = "<group>"; };
+		F805B7B91160E3AF007EC01E /* Blob.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Blob.m; sourceTree = "<group>"; };
+		F805B7CA1160E445007EC01E /* HTTP.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HTTP.h; sourceTree = "<group>"; };
+		F805B7CB1160E445007EC01E /* HTTPConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HTTPConnection.h; sourceTree = "<group>"; };
+		F805B7CC1160E445007EC01E /* HTTPConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HTTPConnection.m; sourceTree = "<group>"; };
+		F805B7CD1160E445007EC01E /* HTTPRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HTTPRequest.h; sourceTree = "<group>"; };
+		F805B7CE1160E445007EC01E /* HTTPRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HTTPRequest.m; sourceTree = "<group>"; };
+		F805B7CF1160E445007EC01E /* HTTPResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HTTPResponse.h; sourceTree = "<group>"; };
+		F805B7D01160E445007EC01E /* HTTPResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HTTPResponse.m; sourceTree = "<group>"; };
+		F805B7D61160E456007EC01E /* BlobACL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BlobACL.h; sourceTree = "<group>"; };
+		F805B7D71160E456007EC01E /* BlobACL.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BlobACL.m; sourceTree = "<group>"; };
+		F805B7DE1160E48B007EC01E /* NSErrorCodes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSErrorCodes.h; sourceTree = "<group>"; };
+		F805B7DF1160E48B007EC01E /* ServerBlob.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ServerBlob.h; sourceTree = "<group>"; };
+		F805B7E01160E48B007EC01E /* ServerBlob.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ServerBlob.m; sourceTree = "<group>"; };
+		F805B7F91160E73D007EC01E /* RFC2616DateFormatter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RFC2616DateFormatter.h; sourceTree = "<group>"; };
+		F805B7FA1160E73D007EC01E /* RFC2616DateFormatter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RFC2616DateFormatter.m; sourceTree = "<group>"; };
+		F805B7FC1160E764007EC01E /* RFC822.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RFC822.h; sourceTree = "<group>"; };
+		F805B7FD1160E764007EC01E /* RFC822.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RFC822.m; sourceTree = "<group>"; };
+		F805B80B1160E7C3007EC01E /* InputStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InputStream.h; sourceTree = "<group>"; };
+		F805B8191160E838007EC01E /* InputStreams.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InputStreams.h; sourceTree = "<group>"; };
+		F805B81A1160E838007EC01E /* InputStreams.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InputStreams.m; sourceTree = "<group>"; };
+		F805B8211160E857007EC01E /* ChunkedInputStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ChunkedInputStream.h; sourceTree = "<group>"; };
+		F805B8221160E857007EC01E /* ChunkedInputStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ChunkedInputStream.m; sourceTree = "<group>"; };
+		F805B8231160E857007EC01E /* FixedLengthInputStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FixedLengthInputStream.h; sourceTree = "<group>"; };
+		F805B8241160E857007EC01E /* FixedLengthInputStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FixedLengthInputStream.m; sourceTree = "<group>"; };
+		F805B8271160E861007EC01E /* FDInputStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FDInputStream.h; sourceTree = "<group>"; };
+		F805B8281160E861007EC01E /* FDInputStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FDInputStream.m; sourceTree = "<group>"; };
+		F805B8291160E861007EC01E /* FDOutputStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FDOutputStream.h; sourceTree = "<group>"; };
+		F805B82A1160E861007EC01E /* FDOutputStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FDOutputStream.m; sourceTree = "<group>"; };
+		F805B82D1160E86E007EC01E /* DataInputStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DataInputStream.h; sourceTree = "<group>"; };
+		F805B82E1160E86E007EC01E /* DataInputStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DataInputStream.m; sourceTree = "<group>"; };
+		F805B8301160E878007EC01E /* Writer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Writer.h; sourceTree = "<group>"; };
+		F805B8311160E878007EC01E /* Writer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Writer.m; sourceTree = "<group>"; };
+		F805B8331160E882007EC01E /* BufferedInputStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BufferedInputStream.h; sourceTree = "<group>"; };
+		F805B8361160E8A0007EC01E /* OutputStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OutputStream.h; sourceTree = "<group>"; };
+		F805B8391160E8DD007EC01E /* NSData-InputStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSData-InputStream.h"; sourceTree = "<group>"; };
+		F805B83A1160E8DD007EC01E /* NSData-InputStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSData-InputStream.m"; sourceTree = "<group>"; };
+		F805B83C1160E900007EC01E /* StreamPair.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StreamPair.h; sourceTree = "<group>"; };
+		F805B83D1160E900007EC01E /* StreamPairFactory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StreamPairFactory.h; sourceTree = "<group>"; };
+		F805B83E1160E900007EC01E /* StreamPairFactory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StreamPairFactory.m; sourceTree = "<group>"; };
+		F805B8401160E90F007EC01E /* Streams.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Streams.h; sourceTree = "<group>"; };
+		F805B8411160E90F007EC01E /* Streams.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Streams.m; sourceTree = "<group>"; };
+		F805B8511160E9B0007EC01E /* CFStreamPair.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CFStreamPair.h; sourceTree = "<group>"; };
+		F805B8521160E9B0007EC01E /* CFStreamPair.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CFStreamPair.m; sourceTree = "<group>"; };
+		F805B8561160E9C9007EC01E /* CFStreamInputStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CFStreamInputStream.h; sourceTree = "<group>"; };
+		F805B8571160E9C9007EC01E /* CFStreamInputStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CFStreamInputStream.m; sourceTree = "<group>"; };
+		F805B8581160E9C9007EC01E /* CFStreamOutputStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CFStreamOutputStream.h; sourceTree = "<group>"; };
+		F805B8591160E9C9007EC01E /* CFStreamOutputStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CFStreamOutputStream.m; sourceTree = "<group>"; };
+		F805B85E1160E9F0007EC01E /* DNS_SDErrors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DNS_SDErrors.h; sourceTree = "<group>"; };
+		F805B85F1160E9F0007EC01E /* DNS_SDErrors.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DNS_SDErrors.m; sourceTree = "<group>"; };
+		F805B8631160EA15007EC01E /* NSXMLNode_extra.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSXMLNode_extra.h; sourceTree = "<group>"; };
+		F805B8641160EA15007EC01E /* NSXMLNode_extra.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSXMLNode_extra.m; sourceTree = "<group>"; };
+		F805B8661160EA36007EC01E /* InputStreamFactory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InputStreamFactory.h; sourceTree = "<group>"; };
+		F805B8681160EA83007EC01E /* NSData-Base64Extensions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSData-Base64Extensions.h"; sourceTree = "<group>"; };
+		F805B8691160EA83007EC01E /* NSData-Base64Extensions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSData-Base64Extensions.m"; sourceTree = "<group>"; };
+		F805B86D1160EAC1007EC01E /* DataInputStreamFactory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DataInputStreamFactory.h; sourceTree = "<group>"; };
+		F805B86E1160EAC1007EC01E /* DataInputStreamFactory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DataInputStreamFactory.m; sourceTree = "<group>"; };
+		F805B8881160EB39007EC01E /* libcrypto.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.dylib; path = usr/lib/libcrypto.dylib; sourceTree = SDKROOT; };
+		F805B88A1160EB39007EC01E /* libicucore.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libicucore.dylib; path = usr/lib/libicucore.dylib; sourceTree = SDKROOT; };
+		F805B88E1160EB45007EC01E /* libssl.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libssl.dylib; path = usr/lib/libssl.dylib; sourceTree = SDKROOT; };
+		F805B8921160EB4E007EC01E /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
+		F805B8981160EB71007EC01E /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		F805B8A01160EBAA007EC01E /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		F805B8BB1160EC38007EC01E /* SecurityFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SecurityFoundation.framework; path = System/Library/Frameworks/SecurityFoundation.framework; sourceTree = SDKROOT; };
+		F805B8C11160EC41007EC01E /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		F805B8C51160EC4E007EC01E /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		F805B8CD1160ECD7007EC01E /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
+		F8D6763E1160F22800CC270E /* SetNSError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SetNSError.h; sourceTree = "<group>"; };
+		F8D677FE1160F26A00CC270E /* Restorer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Restorer.h; sourceTree = "<group>"; };
+		F8D677FF1160F26A00CC270E /* Restorer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Restorer.m; sourceTree = "<group>"; };
+		F8D678131160F4E300CC270E /* S3Fark.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = S3Fark.h; sourceTree = "<group>"; };
+		F8D678141160F4E300CC270E /* S3Fark.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = S3Fark.m; sourceTree = "<group>"; };
+		F8D678151160F4E300CC270E /* S3Repo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = S3Repo.h; sourceTree = "<group>"; };
+		F8D678161160F4E300CC270E /* S3Repo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = S3Repo.m; sourceTree = "<group>"; };
+		F8D6781B1160F4FD00CC270E /* SHA1Hash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SHA1Hash.h; sourceTree = "<group>"; };
+		F8D6781C1160F4FD00CC270E /* SHA1Hash.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SHA1Hash.m; sourceTree = "<group>"; };
+		F8D678291160F5D000CC270E /* PackSetSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PackSetSet.h; sourceTree = "<group>"; };
+		F8D6782A1160F5D000CC270E /* PackSetSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PackSetSet.m; sourceTree = "<group>"; };
+		F8D6782B1160F5D000CC270E /* PackSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PackSet.h; sourceTree = "<group>"; };
+		F8D6782C1160F5D000CC270E /* PackSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PackSet.m; sourceTree = "<group>"; };
+		F8D678311160F62E00CC270E /* ArqUserLibrary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ArqUserLibrary.h; sourceTree = "<group>"; };
+		F8D678321160F62E00CC270E /* ArqUserLibrary.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ArqUserLibrary.m; sourceTree = "<group>"; };
+		F8D6783A1160F70100CC270E /* PackIndexEntry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PackIndexEntry.h; sourceTree = "<group>"; };
+		F8D6783B1160F70100CC270E /* PackIndexEntry.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PackIndexEntry.m; sourceTree = "<group>"; };
+		F8D678411160F74A00CC270E /* DiskPack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DiskPack.h; sourceTree = "<group>"; };
+		F8D678421160F74A00CC270E /* DiskPack.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DiskPack.m; sourceTree = "<group>"; };
+		F8D678431160F74A00CC270E /* DiskPackIndex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DiskPackIndex.h; sourceTree = "<group>"; };
+		F8D678441160F74A00CC270E /* DiskPackIndex.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DiskPackIndex.m; sourceTree = "<group>"; };
+		F8D6785B1160F7CE00CC270E /* Commit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Commit.h; sourceTree = "<group>"; };
+		F8D6785C1160F7CF00CC270E /* Commit.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Commit.m; sourceTree = "<group>"; };
+		F8D6785D1160F7CF00CC270E /* Tree.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Tree.h; sourceTree = "<group>"; };
+		F8D6785E1160F7CF00CC270E /* Tree.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Tree.m; sourceTree = "<group>"; };
+		F8D678631160F7FE00CC270E /* NSData-Encrypt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSData-Encrypt.h"; sourceTree = "<group>"; };
+		F8D678641160F7FE00CC270E /* NSData-Encrypt.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSData-Encrypt.m"; sourceTree = "<group>"; };
+		F8D678681160F81100CC270E /* OpenSSL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenSSL.h; sourceTree = "<group>"; };
+		F8D678691160F81100CC270E /* OpenSSL.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OpenSSL.m; sourceTree = "<group>"; };
+		F8D6786D1160F84600CC270E /* DecryptedInputStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DecryptedInputStream.h; sourceTree = "<group>"; };
+		F8D6786E1160F84600CC270E /* DecryptedInputStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DecryptedInputStream.m; sourceTree = "<group>"; };
+		F8D678721160F85D00CC270E /* CryptInputStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CryptInputStream.h; sourceTree = "<group>"; };
+		F8D678731160F85D00CC270E /* CryptInputStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CryptInputStream.m; sourceTree = "<group>"; };
+		F8D678751160F86E00CC270E /* FileInputStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileInputStream.h; sourceTree = "<group>"; };
+		F8D678761160F86E00CC270E /* FileInputStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FileInputStream.m; sourceTree = "<group>"; };
+		F8D678781160F8A000CC270E /* DataIO.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DataIO.h; sourceTree = "<group>"; };
+		F8D678791160F8A000CC270E /* DataIO.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DataIO.m; sourceTree = "<group>"; };
+		F8D6787A1160F8A000CC270E /* DateIO.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DateIO.h; sourceTree = "<group>"; };
+		F8D6787B1160F8A000CC270E /* DateIO.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DateIO.m; sourceTree = "<group>"; };
+		F8D6787C1160F8A000CC270E /* DoubleIO.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DoubleIO.h; sourceTree = "<group>"; };
+		F8D6787D1160F8A000CC270E /* DoubleIO.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DoubleIO.m; sourceTree = "<group>"; };
+		F8D6787E1160F8A000CC270E /* IntegerIO.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IntegerIO.h; sourceTree = "<group>"; };
+		F8D6787F1160F8A000CC270E /* IntegerIO.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IntegerIO.m; sourceTree = "<group>"; };
+		F8D678801160F8A000CC270E /* StringIO.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StringIO.h; sourceTree = "<group>"; };
+		F8D678811160F8A000CC270E /* StringIO.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StringIO.m; sourceTree = "<group>"; };
+		F8D678871160F8CD00CC270E /* NSString_extra.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSString_extra.h; sourceTree = "<group>"; };
+		F8D678881160F8CD00CC270E /* NSString_extra.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSString_extra.m; sourceTree = "<group>"; };
+		F8D6788A1160F8E500CC270E /* BinarySHA1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BinarySHA1.h; sourceTree = "<group>"; };
+		F8D6788B1160F8E500CC270E /* BinarySHA1.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BinarySHA1.m; sourceTree = "<group>"; };
+		F8D678981160FA2A00CC270E /* NSFileManager_extra.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSFileManager_extra.h; sourceTree = "<group>"; };
+		F8D678991160FA2A00CC270E /* NSFileManager_extra.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSFileManager_extra.m; sourceTree = "<group>"; };
+		F8D6789B1160FA3900CC270E /* FileOutputStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileOutputStream.h; sourceTree = "<group>"; };
+		F8D6789C1160FA3900CC270E /* FileOutputStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FileOutputStream.m; sourceTree = "<group>"; };
+		F8D6789E1160FA4800CC270E /* FileInputStreamFactory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileInputStreamFactory.h; sourceTree = "<group>"; };
+		F8D6789F1160FA4800CC270E /* FileInputStreamFactory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FileInputStreamFactory.m; sourceTree = "<group>"; };
+		F8D678A31160FA5F00CC270E /* BooleanIO.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BooleanIO.h; sourceTree = "<group>"; };
+		F8D678A41160FA5F00CC270E /* BooleanIO.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BooleanIO.m; sourceTree = "<group>"; };
+		F8D678A61160FA6A00CC270E /* EncryptedInputStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EncryptedInputStream.h; sourceTree = "<group>"; };
+		F8D678A71160FA6A00CC270E /* EncryptedInputStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EncryptedInputStream.m; sourceTree = "<group>"; };
+		F8D678AD1160FAD900CC270E /* CommitFailedFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CommitFailedFile.h; sourceTree = "<group>"; };
+		F8D678AE1160FAD900CC270E /* CommitFailedFile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CommitFailedFile.m; sourceTree = "<group>"; };
+		F8D678B61160FB2100CC270E /* Node.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Node.h; sourceTree = "<group>"; };
+		F8D678B71160FB2100CC270E /* Node.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Node.m; sourceTree = "<group>"; };
+		F8D67CE91161363A00CC270E /* FileAttributes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileAttributes.h; sourceTree = "<group>"; };
+		F8D67CEA1161363A00CC270E /* FileAttributes.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FileAttributes.m; sourceTree = "<group>"; };
+		F8D67CF01161366100CC270E /* XAttrSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XAttrSet.h; sourceTree = "<group>"; };
+		F8D67CF11161366100CC270E /* XAttrSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XAttrSet.m; sourceTree = "<group>"; };
+		F8D67D031161384100CC270E /* FileACL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileACL.h; sourceTree = "<group>"; };
+		F8D67D041161384100CC270E /* FileACL.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FileACL.m; sourceTree = "<group>"; };
+		F8D67D051161384100CC270E /* OSStatusDescription.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OSStatusDescription.h; sourceTree = "<group>"; };
+		F8D67D061161384100CC270E /* OSStatusDescription.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OSStatusDescription.m; sourceTree = "<group>"; };
+		F8D67F6E1161443600CC270E /* RestoreNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RestoreNode.h; sourceTree = "<group>"; };
+		F8D67F6F1161443600CC270E /* RestoreNode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RestoreNode.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8DD76F9B0486AA7600D96B5E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8DD76F9C0486AA7600D96B5E /* Foundation.framework in Frameworks */,
+				F805B8891160EB39007EC01E /* libcrypto.dylib in Frameworks */,
+				F805B88B1160EB3A007EC01E /* libicucore.dylib in Frameworks */,
+				F805B88F1160EB45007EC01E /* libssl.dylib in Frameworks */,
+				F805B8931160EB4E007EC01E /* SystemConfiguration.framework in Frameworks */,
+				F805B8A11160EBAA007EC01E /* CoreFoundation.framework in Frameworks */,
+				F805B8C21160EC41007EC01E /* Security.framework in Frameworks */,
+				F805B8CE1160ECD7007EC01E /* CoreServices.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		08FB7794FE84155DC02AAC07 /* arq_restore */ = {
+			isa = PBXGroup;
+			children = (
+				08FB7795FE84155DC02AAC07 /* Source */,
+				08FB779DFE84155DC02AAC07 /* External Frameworks and Libraries */,
+				1AB674ADFE9D54B511CA2CBB /* Products */,
+			);
+			name = arq_restore;
+			sourceTree = "<group>";
+		};
+		08FB7795FE84155DC02AAC07 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				F805B8671160EA7C007EC01E /* crypto */,
+				F805B7A61160DEF2007EC01E /* shared */,
+				F805B7401160DCFE007EC01E /* plist */,
+				F805B8081160E7A1007EC01E /* io */,
+				F805B7C91160E445007EC01E /* http */,
+				F805B7651160DD60007EC01E /* s3 */,
+				32A70AAB03705E1F00C91783 /* arq_restore_Prefix.pch */,
+				08FB7796FE84155DC02AAC07 /* arq_restore.m */,
+				F8D678311160F62E00CC270E /* ArqUserLibrary.h */,
+				F8D678321160F62E00CC270E /* ArqUserLibrary.m */,
+				F805B54B1160D3E6007EC01E /* ArqRestoreCommand.h */,
+				F805B54C1160D3E6007EC01E /* ArqRestoreCommand.m */,
+				F805B72E1160DBE9007EC01E /* ArqFolder.h */,
+				F805B72F1160DBE9007EC01E /* ArqFolder.m */,
+				F8D6785B1160F7CE00CC270E /* Commit.h */,
+				F8D6785C1160F7CF00CC270E /* Commit.m */,
+				F8D678AD1160FAD900CC270E /* CommitFailedFile.h */,
+				F8D678AE1160FAD900CC270E /* CommitFailedFile.m */,
+				F8D678411160F74A00CC270E /* DiskPack.h */,
+				F8D678421160F74A00CC270E /* DiskPack.m */,
+				F8D678431160F74A00CC270E /* DiskPackIndex.h */,
+				F8D678441160F74A00CC270E /* DiskPackIndex.m */,
+				F805B71F1160D9C2007EC01E /* HSLog.h */,
+				F805B7201160D9C2007EC01E /* HSLog.m */,
+				F8D678B61160FB2100CC270E /* Node.h */,
+				F8D678B71160FB2100CC270E /* Node.m */,
+				F8D6783A1160F70100CC270E /* PackIndexEntry.h */,
+				F8D6783B1160F70100CC270E /* PackIndexEntry.m */,
+				F8D678291160F5D000CC270E /* PackSetSet.h */,
+				F8D6782A1160F5D000CC270E /* PackSetSet.m */,
+				F8D6782B1160F5D000CC270E /* PackSet.h */,
+				F8D6782C1160F5D000CC270E /* PackSet.m */,
+				F8D677FE1160F26A00CC270E /* Restorer.h */,
+				F8D677FF1160F26A00CC270E /* Restorer.m */,
+				F8D67F6E1161443600CC270E /* RestoreNode.h */,
+				F8D67F6F1161443600CC270E /* RestoreNode.m */,
+				F8D678131160F4E300CC270E /* S3Fark.h */,
+				F8D678141160F4E300CC270E /* S3Fark.m */,
+				F8D678151160F4E300CC270E /* S3Repo.h */,
+				F8D678161160F4E300CC270E /* S3Repo.m */,
+				F8D6785D1160F7CF00CC270E /* Tree.h */,
+				F8D6785E1160F7CF00CC270E /* Tree.m */,
+				F8D67CE91161363A00CC270E /* FileAttributes.h */,
+				F8D67CEA1161363A00CC270E /* FileAttributes.m */,
+				F8D67CF01161366100CC270E /* XAttrSet.h */,
+				F8D67CF11161366100CC270E /* XAttrSet.m */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		08FB779DFE84155DC02AAC07 /* External Frameworks and Libraries */ = {
+			isa = PBXGroup;
+			children = (
+				08FB779EFE84155DC02AAC07 /* Foundation.framework */,
+				F805B8921160EB4E007EC01E /* SystemConfiguration.framework */,
+				F805B8981160EB71007EC01E /* Security.framework */,
+				F805B8A01160EBAA007EC01E /* CoreFoundation.framework */,
+				F805B8BB1160EC38007EC01E /* SecurityFoundation.framework */,
+				F805B8C11160EC41007EC01E /* Security.framework */,
+				F805B8C51160EC4E007EC01E /* Cocoa.framework */,
+				F805B8CD1160ECD7007EC01E /* CoreServices.framework */,
+				F805B8881160EB39007EC01E /* libcrypto.dylib */,
+				F805B88A1160EB39007EC01E /* libicucore.dylib */,
+				F805B88E1160EB45007EC01E /* libssl.dylib */,
+			);
+			name = "External Frameworks and Libraries";
+			sourceTree = "<group>";
+		};
+		1AB674ADFE9D54B511CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				8DD76FA10486AA7600D96B5E /* arq_restore */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		F805B7401160DCFE007EC01E /* plist */ = {
+			isa = PBXGroup;
+			children = (
+				F805B7411160DCFE007EC01E /* ArrayNode.h */,
+				F805B7421160DCFE007EC01E /* ArrayNode.m */,
+				F805B7431160DCFE007EC01E /* BooleanNode.h */,
+				F805B7441160DCFE007EC01E /* BooleanNode.m */,
+				F805B7451160DCFE007EC01E /* DictNode.h */,
+				F805B7461160DCFE007EC01E /* DictNode.m */,
+				F805B7471160DCFE007EC01E /* IntegerNode.h */,
+				F805B7481160DCFE007EC01E /* IntegerNode.m */,
+				F805B7491160DCFE007EC01E /* PListNode.h */,
+				F805B74A1160DCFE007EC01E /* PListNodeType.h */,
+				F805B74B1160DCFE007EC01E /* RealNode.h */,
+				F805B74C1160DCFE007EC01E /* RealNode.m */,
+				F805B74D1160DCFE007EC01E /* StringNode.h */,
+				F805B74E1160DCFE007EC01E /* StringNode.m */,
+				F805B74F1160DCFE007EC01E /* XMLPListReader.h */,
+				F805B7501160DCFE007EC01E /* XMLPListReader.m */,
+				F805B7511160DCFE007EC01E /* XMLPListWriter.h */,
+				F805B7521160DCFE007EC01E /* XMLPListWriter.m */,
+			);
+			path = plist;
+			sourceTree = "<group>";
+		};
+		F805B7651160DD60007EC01E /* s3 */ = {
+			isa = PBXGroup;
+			children = (
+				F805B7681160DD60007EC01E /* HTTPConnection_S3.h */,
+				F805B7691160DD60007EC01E /* HTTPConnection_S3.m */,
+				F805B76A1160DD60007EC01E /* NSError_S3.h */,
+				F805B76B1160DD60007EC01E /* NSError_S3.m */,
+				F805B76C1160DD60007EC01E /* PathReceiver.h */,
+				F805B76D1160DD60007EC01E /* PathReceiver.m */,
+				F805B76E1160DD60007EC01E /* S3AuthorizationParameters.h */,
+				F805B76F1160DD60007EC01E /* S3AuthorizationParameters.m */,
+				F805B7701160DD60007EC01E /* S3AuthorizationProvider.h */,
+				F805B7711160DD60007EC01E /* S3AuthorizationProvider.m */,
+				F805B7721160DD60007EC01E /* S3Lister.h */,
+				F805B7731160DD60007EC01E /* S3Lister.m */,
+				F805B7741160DD60007EC01E /* S3ObjectMetadata.h */,
+				F805B7751160DD60007EC01E /* S3ObjectMetadata.m */,
+				F805B7761160DD60007EC01E /* S3ObjectReceiver.h */,
+				F805B7771160DD60007EC01E /* S3ObjectReceiver.m */,
+				F805B77A1160DD60007EC01E /* S3Receiver.h */,
+				F805B77B1160DD60007EC01E /* S3Request.h */,
+				F805B77C1160DD60007EC01E /* S3Request.m */,
+				F805B77D1160DD60007EC01E /* S3Service.h */,
+				F805B77E1160DD60007EC01E /* S3Service.m */,
+				F805B77F1160DD60007EC01E /* S3Signature.h */,
+				F805B7801160DD60007EC01E /* S3Signature.m */,
+			);
+			path = s3;
+			sourceTree = "<group>";
+		};
+		F805B7A61160DEF2007EC01E /* shared */ = {
+			isa = PBXGroup;
+			children = (
+				F8D6788A1160F8E500CC270E /* BinarySHA1.h */,
+				F8D6788B1160F8E500CC270E /* BinarySHA1.m */,
+				F805B7D61160E456007EC01E /* BlobACL.h */,
+				F805B7D71160E456007EC01E /* BlobACL.m */,
+				F805B7B81160E3AF007EC01E /* Blob.h */,
+				F805B7B91160E3AF007EC01E /* Blob.m */,
+				F805B85E1160E9F0007EC01E /* DNS_SDErrors.h */,
+				F805B85F1160E9F0007EC01E /* DNS_SDErrors.m */,
+				F8D67D031161384100CC270E /* FileACL.h */,
+				F8D67D041161384100CC270E /* FileACL.m */,
+				F805B7DE1160E48B007EC01E /* NSErrorCodes.h */,
+				F8D678871160F8CD00CC270E /* NSString_extra.h */,
+				F8D678881160F8CD00CC270E /* NSString_extra.m */,
+				F805B8631160EA15007EC01E /* NSXMLNode_extra.h */,
+				F805B8641160EA15007EC01E /* NSXMLNode_extra.m */,
+				F8D67D051161384100CC270E /* OSStatusDescription.h */,
+				F8D67D061161384100CC270E /* OSStatusDescription.m */,
+				F805B7FC1160E764007EC01E /* RFC822.h */,
+				F805B7FD1160E764007EC01E /* RFC822.m */,
+				F805B7A71160DEF2007EC01E /* RegexKitLite.h */,
+				F805B7A81160DEF2007EC01E /* RegexKitLite.m */,
+				F805B7DF1160E48B007EC01E /* ServerBlob.h */,
+				F805B7E01160E48B007EC01E /* ServerBlob.m */,
+				F8D6763E1160F22800CC270E /* SetNSError.h */,
+			);
+			path = shared;
+			sourceTree = "<group>";
+		};
+		F805B7C91160E445007EC01E /* http */ = {
+			isa = PBXGroup;
+			children = (
+				F805B7CA1160E445007EC01E /* HTTP.h */,
+				F805B7CB1160E445007EC01E /* HTTPConnection.h */,
+				F805B7CC1160E445007EC01E /* HTTPConnection.m */,
+				F805B7CD1160E445007EC01E /* HTTPRequest.h */,
+				F805B7CE1160E445007EC01E /* HTTPRequest.m */,
+				F805B7CF1160E445007EC01E /* HTTPResponse.h */,
+				F805B7D01160E445007EC01E /* HTTPResponse.m */,
+				F805B7F91160E73D007EC01E /* RFC2616DateFormatter.h */,
+				F805B7FA1160E73D007EC01E /* RFC2616DateFormatter.m */,
+			);
+			path = http;
+			sourceTree = "<group>";
+		};
+		F805B8081160E7A1007EC01E /* io */ = {
+			isa = PBXGroup;
+			children = (
+				F8D678A31160FA5F00CC270E /* BooleanIO.h */,
+				F8D678A41160FA5F00CC270E /* BooleanIO.m */,
+				F805B8331160E882007EC01E /* BufferedInputStream.h */,
+				F805B8561160E9C9007EC01E /* CFStreamInputStream.h */,
+				F805B8571160E9C9007EC01E /* CFStreamInputStream.m */,
+				F805B8581160E9C9007EC01E /* CFStreamOutputStream.h */,
+				F805B8591160E9C9007EC01E /* CFStreamOutputStream.m */,
+				F805B8511160E9B0007EC01E /* CFStreamPair.h */,
+				F805B8521160E9B0007EC01E /* CFStreamPair.m */,
+				F805B8211160E857007EC01E /* ChunkedInputStream.h */,
+				F805B8221160E857007EC01E /* ChunkedInputStream.m */,
+				F8D678721160F85D00CC270E /* CryptInputStream.h */,
+				F8D678731160F85D00CC270E /* CryptInputStream.m */,
+				F8D678781160F8A000CC270E /* DataIO.h */,
+				F8D678791160F8A000CC270E /* DataIO.m */,
+				F805B86D1160EAC1007EC01E /* DataInputStreamFactory.h */,
+				F805B86E1160EAC1007EC01E /* DataInputStreamFactory.m */,
+				F805B82D1160E86E007EC01E /* DataInputStream.h */,
+				F805B82E1160E86E007EC01E /* DataInputStream.m */,
+				F8D6787A1160F8A000CC270E /* DateIO.h */,
+				F8D6787B1160F8A000CC270E /* DateIO.m */,
+				F8D6786D1160F84600CC270E /* DecryptedInputStream.h */,
+				F8D6786E1160F84600CC270E /* DecryptedInputStream.m */,
+				F8D6787C1160F8A000CC270E /* DoubleIO.h */,
+				F8D6787D1160F8A000CC270E /* DoubleIO.m */,
+				F8D678A61160FA6A00CC270E /* EncryptedInputStream.h */,
+				F8D678A71160FA6A00CC270E /* EncryptedInputStream.m */,
+				F805B8271160E861007EC01E /* FDInputStream.h */,
+				F805B8281160E861007EC01E /* FDInputStream.m */,
+				F805B8291160E861007EC01E /* FDOutputStream.h */,
+				F805B82A1160E861007EC01E /* FDOutputStream.m */,
+				F8D678751160F86E00CC270E /* FileInputStream.h */,
+				F8D678761160F86E00CC270E /* FileInputStream.m */,
+				F8D6789E1160FA4800CC270E /* FileInputStreamFactory.h */,
+				F8D6789F1160FA4800CC270E /* FileInputStreamFactory.m */,
+				F8D6789B1160FA3900CC270E /* FileOutputStream.h */,
+				F8D6789C1160FA3900CC270E /* FileOutputStream.m */,
+				F805B8231160E857007EC01E /* FixedLengthInputStream.h */,
+				F805B8241160E857007EC01E /* FixedLengthInputStream.m */,
+				F805B8661160EA36007EC01E /* InputStreamFactory.h */,
+				F805B8191160E838007EC01E /* InputStreams.h */,
+				F805B81A1160E838007EC01E /* InputStreams.m */,
+				F805B80B1160E7C3007EC01E /* InputStream.h */,
+				F8D6787E1160F8A000CC270E /* IntegerIO.h */,
+				F8D6787F1160F8A000CC270E /* IntegerIO.m */,
+				F805B8391160E8DD007EC01E /* NSData-InputStream.h */,
+				F805B83A1160E8DD007EC01E /* NSData-InputStream.m */,
+				F8D678981160FA2A00CC270E /* NSFileManager_extra.h */,
+				F8D678991160FA2A00CC270E /* NSFileManager_extra.m */,
+				F805B8361160E8A0007EC01E /* OutputStream.h */,
+				F805B83C1160E900007EC01E /* StreamPair.h */,
+				F805B83D1160E900007EC01E /* StreamPairFactory.h */,
+				F805B83E1160E900007EC01E /* StreamPairFactory.m */,
+				F805B8401160E90F007EC01E /* Streams.h */,
+				F805B8411160E90F007EC01E /* Streams.m */,
+				F8D678801160F8A000CC270E /* StringIO.h */,
+				F8D678811160F8A000CC270E /* StringIO.m */,
+				F805B8301160E878007EC01E /* Writer.h */,
+				F805B8311160E878007EC01E /* Writer.m */,
+			);
+			path = io;
+			sourceTree = "<group>";
+		};
+		F805B8671160EA7C007EC01E /* crypto */ = {
+			isa = PBXGroup;
+			children = (
+				F8D6781B1160F4FD00CC270E /* SHA1Hash.h */,
+				F8D6781C1160F4FD00CC270E /* SHA1Hash.m */,
+				F805B8681160EA83007EC01E /* NSData-Base64Extensions.h */,
+				F805B8691160EA83007EC01E /* NSData-Base64Extensions.m */,
+				F8D678631160F7FE00CC270E /* NSData-Encrypt.h */,
+				F8D678641160F7FE00CC270E /* NSData-Encrypt.m */,
+				F8D678681160F81100CC270E /* OpenSSL.h */,
+				F8D678691160F81100CC270E /* OpenSSL.m */,
+			);
+			path = crypto;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		8DD76F960486AA7600D96B5E /* arq_restore */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1DEB927408733DD40010E9CD /* Build configuration list for PBXNativeTarget "arq_restore" */;
+			buildPhases = (
+				8DD76F990486AA7600D96B5E /* Sources */,
+				8DD76F9B0486AA7600D96B5E /* Frameworks */,
+				8DD76F9E0486AA7600D96B5E /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = arq_restore;
+			productInstallPath = "$(HOME)/bin";
+			productName = arq_restore;
+			productReference = 8DD76FA10486AA7600D96B5E /* arq_restore */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		08FB7793FE84155DC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 1DEB927808733DD40010E9CD /* Build configuration list for PBXProject "arq_restore" */;
+			compatibilityVersion = "Xcode 3.1";
+			hasScannedForEncodings = 1;
+			mainGroup = 08FB7794FE84155DC02AAC07 /* arq_restore */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				8DD76F960486AA7600D96B5E /* arq_restore */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		8DD76F990486AA7600D96B5E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8DD76F9A0486AA7600D96B5E /* arq_restore.m in Sources */,
+				F805B54D1160D3E6007EC01E /* ArqRestoreCommand.m in Sources */,
+				F805B7211160D9C2007EC01E /* HSLog.m in Sources */,
+				F805B7301160DBE9007EC01E /* ArqFolder.m in Sources */,
+				F805B7531160DCFE007EC01E /* ArrayNode.m in Sources */,
+				F805B7541160DCFE007EC01E /* BooleanNode.m in Sources */,
+				F805B7551160DCFE007EC01E /* DictNode.m in Sources */,
+				F805B7561160DCFE007EC01E /* IntegerNode.m in Sources */,
+				F805B7571160DCFE007EC01E /* RealNode.m in Sources */,
+				F805B7581160DCFE007EC01E /* StringNode.m in Sources */,
+				F805B7591160DCFE007EC01E /* XMLPListReader.m in Sources */,
+				F805B75A1160DCFE007EC01E /* XMLPListWriter.m in Sources */,
+				F805B7821160DD60007EC01E /* HTTPConnection_S3.m in Sources */,
+				F805B7831160DD60007EC01E /* NSError_S3.m in Sources */,
+				F805B7841160DD60007EC01E /* PathReceiver.m in Sources */,
+				F805B7851160DD60007EC01E /* S3AuthorizationParameters.m in Sources */,
+				F805B7861160DD60007EC01E /* S3AuthorizationProvider.m in Sources */,
+				F805B7871160DD60007EC01E /* S3Lister.m in Sources */,
+				F805B7881160DD60007EC01E /* S3ObjectMetadata.m in Sources */,
+				F805B7891160DD60007EC01E /* S3ObjectReceiver.m in Sources */,
+				F805B78B1160DD60007EC01E /* S3Request.m in Sources */,
+				F805B78C1160DD60007EC01E /* S3Service.m in Sources */,
+				F805B78D1160DD60007EC01E /* S3Signature.m in Sources */,
+				F805B7A91160DEF2007EC01E /* RegexKitLite.m in Sources */,
+				F805B7BA1160E3AF007EC01E /* Blob.m in Sources */,
+				F805B7D11160E445007EC01E /* HTTPConnection.m in Sources */,
+				F805B7D21160E445007EC01E /* HTTPRequest.m in Sources */,
+				F805B7D31160E445007EC01E /* HTTPResponse.m in Sources */,
+				F805B7D81160E456007EC01E /* BlobACL.m in Sources */,
+				F805B7E11160E48B007EC01E /* ServerBlob.m in Sources */,
+				F805B7FB1160E73D007EC01E /* RFC2616DateFormatter.m in Sources */,
+				F805B7FE1160E764007EC01E /* RFC822.m in Sources */,
+				F805B81B1160E838007EC01E /* InputStreams.m in Sources */,
+				F805B8251160E857007EC01E /* ChunkedInputStream.m in Sources */,
+				F805B8261160E857007EC01E /* FixedLengthInputStream.m in Sources */,
+				F805B82B1160E861007EC01E /* FDInputStream.m in Sources */,
+				F805B82C1160E861007EC01E /* FDOutputStream.m in Sources */,
+				F805B82F1160E86E007EC01E /* DataInputStream.m in Sources */,
+				F805B8321160E878007EC01E /* Writer.m in Sources */,
+				F805B83B1160E8DD007EC01E /* NSData-InputStream.m in Sources */,
+				F805B83F1160E900007EC01E /* StreamPairFactory.m in Sources */,
+				F805B8421160E90F007EC01E /* Streams.m in Sources */,
+				F805B8531160E9B0007EC01E /* CFStreamPair.m in Sources */,
+				F805B85A1160E9C9007EC01E /* CFStreamInputStream.m in Sources */,
+				F805B85B1160E9C9007EC01E /* CFStreamOutputStream.m in Sources */,
+				F805B8601160E9F0007EC01E /* DNS_SDErrors.m in Sources */,
+				F805B8651160EA15007EC01E /* NSXMLNode_extra.m in Sources */,
+				F805B86A1160EA83007EC01E /* NSData-Base64Extensions.m in Sources */,
+				F805B86F1160EAC1007EC01E /* DataInputStreamFactory.m in Sources */,
+				F8D678001160F26A00CC270E /* Restorer.m in Sources */,
+				F8D678171160F4E300CC270E /* S3Fark.m in Sources */,
+				F8D678181160F4E300CC270E /* S3Repo.m in Sources */,
+				F8D6781D1160F4FD00CC270E /* SHA1Hash.m in Sources */,
+				F8D6782D1160F5D000CC270E /* PackSetSet.m in Sources */,
+				F8D6782E1160F5D000CC270E /* PackSet.m in Sources */,
+				F8D678331160F62E00CC270E /* ArqUserLibrary.m in Sources */,
+				F8D6783C1160F70100CC270E /* PackIndexEntry.m in Sources */,
+				F8D678451160F74A00CC270E /* DiskPack.m in Sources */,
+				F8D678461160F74A00CC270E /* DiskPackIndex.m in Sources */,
+				F8D6785F1160F7CF00CC270E /* Commit.m in Sources */,
+				F8D678601160F7CF00CC270E /* Tree.m in Sources */,
+				F8D678651160F7FE00CC270E /* NSData-Encrypt.m in Sources */,
+				F8D6786A1160F81100CC270E /* OpenSSL.m in Sources */,
+				F8D6786F1160F84600CC270E /* DecryptedInputStream.m in Sources */,
+				F8D678741160F85D00CC270E /* CryptInputStream.m in Sources */,
+				F8D678771160F86E00CC270E /* FileInputStream.m in Sources */,
+				F8D678821160F8A000CC270E /* DataIO.m in Sources */,
+				F8D678831160F8A000CC270E /* DateIO.m in Sources */,
+				F8D678841160F8A000CC270E /* DoubleIO.m in Sources */,
+				F8D678851160F8A000CC270E /* IntegerIO.m in Sources */,
+				F8D678861160F8A000CC270E /* StringIO.m in Sources */,
+				F8D678891160F8CD00CC270E /* NSString_extra.m in Sources */,
+				F8D6788C1160F8E500CC270E /* BinarySHA1.m in Sources */,
+				F8D6789A1160FA2A00CC270E /* NSFileManager_extra.m in Sources */,
+				F8D6789D1160FA3900CC270E /* FileOutputStream.m in Sources */,
+				F8D678A01160FA4800CC270E /* FileInputStreamFactory.m in Sources */,
+				F8D678A51160FA5F00CC270E /* BooleanIO.m in Sources */,
+				F8D678A81160FA6A00CC270E /* EncryptedInputStream.m in Sources */,
+				F8D678AF1160FAD900CC270E /* CommitFailedFile.m in Sources */,
+				F8D678B81160FB2100CC270E /* Node.m in Sources */,
+				F8D67CEB1161363A00CC270E /* FileAttributes.m in Sources */,
+				F8D67CF21161366100CC270E /* XAttrSet.m in Sources */,
+				F8D67D071161384100CC270E /* FileACL.m in Sources */,
+				F8D67D081161384100CC270E /* OSStatusDescription.m in Sources */,
+				F8D67F701161443600CC270E /* RestoreNode.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		1DEB927508733DD40010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = arq_restore_Prefix.pch;
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
+				HEADER_SEARCH_PATHS = "";
+				INSTALL_PATH = /usr/local/bin;
+				PRODUCT_NAME = arq_restore;
+				SDKROOT = macosx10.5;
+			};
+			name = Debug;
+		};
+		1DEB927608733DD40010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = arq_restore_Prefix.pch;
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
+				HEADER_SEARCH_PATHS = "";
+				INSTALL_PATH = /usr/local/bin;
+				PRODUCT_NAME = arq_restore;
+				SDKROOT = macosx10.5;
+			};
+			name = Release;
+		};
+		1DEB927908733DD40010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PREBINDING = NO;
+				SDKROOT = macosx10.6;
+			};
+			name = Debug;
+		};
+		1DEB927A08733DD40010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				PREBINDING = NO;
+				SDKROOT = macosx10.6;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1DEB927408733DD40010E9CD /* Build configuration list for PBXNativeTarget "arq_restore" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB927508733DD40010E9CD /* Debug */,
+				1DEB927608733DD40010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1DEB927808733DD40010E9CD /* Build configuration list for PBXProject "arq_restore" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB927908733DD40010E9CD /* Debug */,
+				1DEB927A08733DD40010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 08FB7793FE84155DC02AAC07 /* Project object */;
+}
