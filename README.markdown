@@ -30,7 +30,7 @@ Example output:
 
 The `s3 path` value is of the form `/<s3 bucket name>/<computer uuid>/buckets/<folder uuid>`.
 
-(The word "buckets" in the path should be folders, but it's not for historical reasons).
+(The word "buckets" in the path should be "folders", but it's not for historical reasons).
 
 
 ### Restore from a Backup
