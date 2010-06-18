@@ -139,6 +139,9 @@ static NSString *ERROR_DOMAIN = @"S3RepoErrorDomain";
 - (BOOL)containsBlobForSHA1:(NSString *)sha1 packSetName:(NSString *)packSetName searchPackOnly:(BOOL)searchPackOnly {
     return [fark containsBlobForSHA1:sha1 packSetName:packSetName searchPackOnly:searchPackOnly];
 }
+- (NSString *)packSHA1ForPackedBlobSHA1:(NSString *)sha1 packSetName:(NSString *)packSetName {
+	return [fark packSHA1ForPackedBlobSHA1:sha1 packSetName:packSetName];
+}
 - (NSData *)dataForSHA1:(NSString *)sha1 error:(NSError **)error {
     NSData *data = [fark dataForSHA1:sha1 packSetName:treesPackSetName searchPackOnly:YES error:error];
     if (data == nil) {

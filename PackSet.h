@@ -63,4 +63,5 @@
 - (NSString *)name;
 - (ServerBlob *)newServerBlobForSHA1:(NSString *)sha1 error:(NSError **)error;
 - (BOOL)containsBlobForSHA1:(NSString *)sha1;
+- (NSString *)packSHA1ForPackedBlobSHA1:(NSString *)blobSHA1;
 @end

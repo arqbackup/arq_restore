@@ -82,6 +82,15 @@
     BOOL contains = [[packSets objectForKey:packSetName] containsBlobForSHA1:sha1];
     return contains;
 }
+- (NSString *)packSHA1ForPackedBlobSHA1:(NSString *)sha1 packSetName:(NSString *)packSetName {
+	NSError *myError = nil;
+    PackSet *packSet = [self packSetForName:packSetName error:&myError];
+    if (packSet == nil) {
+		HSLogError(@"%@", [myError localizedDescription]);
+        return nil;
+    }
+	return [packSet packSHA1ForPackedBlobSHA1:sha1];
+}
 - (BOOL)resetFromS3:(NSError **)error {
     HSLogDebug(@"resetting pack sets from S3");
     [packSets removeAllObjects];

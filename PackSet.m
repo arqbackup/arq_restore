@@ -153,6 +153,13 @@ static double DEFAULT_MAX_REUSABLE_PACK_FILE_SIZE_FRACTION = 0.6;
 - (BOOL)containsBlobForSHA1:(NSString *)sha1 {
     return [packIndexEntries objectForKey:sha1] != nil;
 }
+- (NSString *)packSHA1ForPackedBlobSHA1:(NSString *)blobSHA1 {
+	PackIndexEntry *pie = [packIndexEntries objectForKey:blobSHA1];
+	if (pie == nil) {
+		return nil;
+	}
+	return [pie packSHA1];
+}
 @end
 
 @implementation PackSet (internal)

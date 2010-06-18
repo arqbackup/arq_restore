@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		8DD76F9A0486AA7600D96B5E /* arq_restore.m in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* arq_restore.m */; settings = {ATTRIBUTES = (); }; };
 		8DD76F9C0486AA7600D96B5E /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08FB779EFE84155DC02AAC07 /* Foundation.framework */; };
 		F805B54D1160D3E6007EC01E /* ArqRestoreCommand.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B54C1160D3E6007EC01E /* ArqRestoreCommand.m */; };
 		F805B7211160D9C2007EC01E /* HSLog.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7201160D9C2007EC01E /* HSLog.m */; };
@@ -64,6 +63,103 @@
 		F805B8A11160EBAA007EC01E /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F805B8A01160EBAA007EC01E /* CoreFoundation.framework */; };
 		F805B8C21160EC41007EC01E /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F805B8C11160EC41007EC01E /* Security.framework */; };
 		F805B8CE1160ECD7007EC01E /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F805B8CD1160ECD7007EC01E /* CoreServices.framework */; };
+		F83C1A7411CA7C170001958F /* ArqRestoreCommand.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B54C1160D3E6007EC01E /* ArqRestoreCommand.m */; };
+		F83C1A7511CA7C170001958F /* HSLog.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7201160D9C2007EC01E /* HSLog.m */; };
+		F83C1A7611CA7C170001958F /* ArqFolder.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B72F1160DBE9007EC01E /* ArqFolder.m */; };
+		F83C1A7711CA7C170001958F /* ArrayNode.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7421160DCFE007EC01E /* ArrayNode.m */; };
+		F83C1A7811CA7C170001958F /* BooleanNode.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7441160DCFE007EC01E /* BooleanNode.m */; };
+		F83C1A7911CA7C170001958F /* DictNode.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7461160DCFE007EC01E /* DictNode.m */; };
+		F83C1A7A11CA7C170001958F /* IntegerNode.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7481160DCFE007EC01E /* IntegerNode.m */; };
+		F83C1A7B11CA7C170001958F /* RealNode.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B74C1160DCFE007EC01E /* RealNode.m */; };
+		F83C1A7C11CA7C170001958F /* StringNode.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B74E1160DCFE007EC01E /* StringNode.m */; };
+		F83C1A7D11CA7C170001958F /* XMLPListReader.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7501160DCFE007EC01E /* XMLPListReader.m */; };
+		F83C1A7E11CA7C170001958F /* XMLPListWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7521160DCFE007EC01E /* XMLPListWriter.m */; };
+		F83C1A7F11CA7C170001958F /* HTTPConnection_S3.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7691160DD60007EC01E /* HTTPConnection_S3.m */; };
+		F83C1A8011CA7C170001958F /* NSError_S3.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B76B1160DD60007EC01E /* NSError_S3.m */; };
+		F83C1A8111CA7C170001958F /* PathReceiver.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B76D1160DD60007EC01E /* PathReceiver.m */; };
+		F83C1A8211CA7C170001958F /* S3AuthorizationParameters.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B76F1160DD60007EC01E /* S3AuthorizationParameters.m */; };
+		F83C1A8311CA7C170001958F /* S3AuthorizationProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7711160DD60007EC01E /* S3AuthorizationProvider.m */; };
+		F83C1A8411CA7C170001958F /* S3Lister.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7731160DD60007EC01E /* S3Lister.m */; };
+		F83C1A8511CA7C170001958F /* S3ObjectMetadata.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7751160DD60007EC01E /* S3ObjectMetadata.m */; };
+		F83C1A8611CA7C170001958F /* S3ObjectReceiver.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7771160DD60007EC01E /* S3ObjectReceiver.m */; };
+		F83C1A8711CA7C170001958F /* S3Request.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B77C1160DD60007EC01E /* S3Request.m */; };
+		F83C1A8811CA7C170001958F /* S3Service.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B77E1160DD60007EC01E /* S3Service.m */; };
+		F83C1A8911CA7C170001958F /* S3Signature.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7801160DD60007EC01E /* S3Signature.m */; };
+		F83C1A8A11CA7C170001958F /* RegexKitLite.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7A81160DEF2007EC01E /* RegexKitLite.m */; };
+		F83C1A8B11CA7C170001958F /* Blob.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7B91160E3AF007EC01E /* Blob.m */; };
+		F83C1A8C11CA7C170001958F /* HTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7CC1160E445007EC01E /* HTTPConnection.m */; };
+		F83C1A8D11CA7C170001958F /* HTTPRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7CE1160E445007EC01E /* HTTPRequest.m */; };
+		F83C1A8E11CA7C170001958F /* HTTPResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7D01160E445007EC01E /* HTTPResponse.m */; };
+		F83C1A8F11CA7C170001958F /* BlobACL.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7D71160E456007EC01E /* BlobACL.m */; };
+		F83C1A9011CA7C170001958F /* ServerBlob.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7E01160E48B007EC01E /* ServerBlob.m */; };
+		F83C1A9111CA7C170001958F /* RFC2616DateFormatter.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7FA1160E73D007EC01E /* RFC2616DateFormatter.m */; };
+		F83C1A9211CA7C170001958F /* RFC822.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7FD1160E764007EC01E /* RFC822.m */; };
+		F83C1A9311CA7C170001958F /* InputStreams.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B81A1160E838007EC01E /* InputStreams.m */; };
+		F83C1A9411CA7C170001958F /* ChunkedInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B8221160E857007EC01E /* ChunkedInputStream.m */; };
+		F83C1A9511CA7C170001958F /* FixedLengthInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B8241160E857007EC01E /* FixedLengthInputStream.m */; };
+		F83C1A9611CA7C170001958F /* FDInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B8281160E861007EC01E /* FDInputStream.m */; };
+		F83C1A9711CA7C170001958F /* FDOutputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B82A1160E861007EC01E /* FDOutputStream.m */; };
+		F83C1A9811CA7C170001958F /* DataInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B82E1160E86E007EC01E /* DataInputStream.m */; };
+		F83C1A9911CA7C170001958F /* Writer.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B8311160E878007EC01E /* Writer.m */; };
+		F83C1A9A11CA7C170001958F /* NSData-InputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B83A1160E8DD007EC01E /* NSData-InputStream.m */; };
+		F83C1A9B11CA7C170001958F /* StreamPairFactory.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B83E1160E900007EC01E /* StreamPairFactory.m */; };
+		F83C1A9C11CA7C170001958F /* Streams.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B8411160E90F007EC01E /* Streams.m */; };
+		F83C1A9D11CA7C170001958F /* CFStreamPair.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B8521160E9B0007EC01E /* CFStreamPair.m */; };
+		F83C1A9E11CA7C170001958F /* CFStreamInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B8571160E9C9007EC01E /* CFStreamInputStream.m */; };
+		F83C1A9F11CA7C170001958F /* CFStreamOutputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B8591160E9C9007EC01E /* CFStreamOutputStream.m */; };
+		F83C1AA011CA7C170001958F /* DNS_SDErrors.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B85F1160E9F0007EC01E /* DNS_SDErrors.m */; };
+		F83C1AA111CA7C170001958F /* NSXMLNode_extra.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B8641160EA15007EC01E /* NSXMLNode_extra.m */; };
+		F83C1AA211CA7C170001958F /* NSData-Base64Extensions.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B8691160EA83007EC01E /* NSData-Base64Extensions.m */; };
+		F83C1AA311CA7C170001958F /* DataInputStreamFactory.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B86E1160EAC1007EC01E /* DataInputStreamFactory.m */; };
+		F83C1AA411CA7C170001958F /* Restorer.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D677FF1160F26A00CC270E /* Restorer.m */; };
+		F83C1AA511CA7C170001958F /* S3Fark.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678141160F4E300CC270E /* S3Fark.m */; };
+		F83C1AA611CA7C170001958F /* S3Repo.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678161160F4E300CC270E /* S3Repo.m */; };
+		F83C1AA711CA7C170001958F /* SHA1Hash.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6781C1160F4FD00CC270E /* SHA1Hash.m */; };
+		F83C1AA811CA7C170001958F /* PackSetSet.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6782A1160F5D000CC270E /* PackSetSet.m */; };
+		F83C1AA911CA7C170001958F /* PackSet.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6782C1160F5D000CC270E /* PackSet.m */; };
+		F83C1AAA11CA7C170001958F /* ArqUserLibrary.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678321160F62E00CC270E /* ArqUserLibrary.m */; };
+		F83C1AAB11CA7C170001958F /* PackIndexEntry.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6783B1160F70100CC270E /* PackIndexEntry.m */; };
+		F83C1AAC11CA7C170001958F /* DiskPack.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678421160F74A00CC270E /* DiskPack.m */; };
+		F83C1AAD11CA7C170001958F /* DiskPackIndex.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678441160F74A00CC270E /* DiskPackIndex.m */; };
+		F83C1AAE11CA7C170001958F /* Commit.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6785C1160F7CF00CC270E /* Commit.m */; };
+		F83C1AAF11CA7C170001958F /* Tree.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6785E1160F7CF00CC270E /* Tree.m */; };
+		F83C1AB011CA7C170001958F /* NSData-Encrypt.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678641160F7FE00CC270E /* NSData-Encrypt.m */; };
+		F83C1AB111CA7C170001958F /* OpenSSL.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678691160F81100CC270E /* OpenSSL.m */; };
+		F83C1AB211CA7C170001958F /* DecryptedInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6786E1160F84600CC270E /* DecryptedInputStream.m */; };
+		F83C1AB311CA7C170001958F /* CryptInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678731160F85D00CC270E /* CryptInputStream.m */; };
+		F83C1AB411CA7C170001958F /* FileInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678761160F86E00CC270E /* FileInputStream.m */; };
+		F83C1AB511CA7C170001958F /* DataIO.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678791160F8A000CC270E /* DataIO.m */; };
+		F83C1AB611CA7C170001958F /* DateIO.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6787B1160F8A000CC270E /* DateIO.m */; };
+		F83C1AB711CA7C170001958F /* DoubleIO.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6787D1160F8A000CC270E /* DoubleIO.m */; };
+		F83C1AB811CA7C170001958F /* IntegerIO.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6787F1160F8A000CC270E /* IntegerIO.m */; };
+		F83C1AB911CA7C170001958F /* StringIO.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678811160F8A000CC270E /* StringIO.m */; };
+		F83C1ABA11CA7C170001958F /* NSString_extra.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678881160F8CD00CC270E /* NSString_extra.m */; };
+		F83C1ABB11CA7C170001958F /* BinarySHA1.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6788B1160F8E500CC270E /* BinarySHA1.m */; };
+		F83C1ABC11CA7C170001958F /* NSFileManager_extra.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678991160FA2A00CC270E /* NSFileManager_extra.m */; };
+		F83C1ABD11CA7C170001958F /* FileOutputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6789C1160FA3900CC270E /* FileOutputStream.m */; };
+		F83C1ABE11CA7C170001958F /* FileInputStreamFactory.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6789F1160FA4800CC270E /* FileInputStreamFactory.m */; };
+		F83C1ABF11CA7C170001958F /* BooleanIO.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678A41160FA5F00CC270E /* BooleanIO.m */; };
+		F83C1AC011CA7C170001958F /* EncryptedInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678A71160FA6A00CC270E /* EncryptedInputStream.m */; };
+		F83C1AC111CA7C170001958F /* CommitFailedFile.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678AE1160FAD900CC270E /* CommitFailedFile.m */; };
+		F83C1AC211CA7C170001958F /* Node.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678B71160FB2100CC270E /* Node.m */; };
+		F83C1AC311CA7C170001958F /* FileAttributes.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D67CEA1161363A00CC270E /* FileAttributes.m */; };
+		F83C1AC411CA7C170001958F /* XAttrSet.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D67CF11161366100CC270E /* XAttrSet.m */; };
+		F83C1AC511CA7C170001958F /* FileACL.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D67D041161384100CC270E /* FileACL.m */; };
+		F83C1AC611CA7C170001958F /* OSStatusDescription.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D67D061161384100CC270E /* OSStatusDescription.m */; };
+		F83C1AC711CA7C170001958F /* RestoreNode.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D67F6F1161443600CC270E /* RestoreNode.m */; };
+		F83C1AC811CA7C170001958F /* arq_verify.m in Sources */ = {isa = PBXBuildFile; fileRef = F83C1A5F11CA7A6B0001958F /* arq_verify.m */; };
+		F83C1AC911CA7C170001958F /* ArqVerifyCommand.m in Sources */ = {isa = PBXBuildFile; fileRef = F83C1A6211CA7BD20001958F /* ArqVerifyCommand.m */; };
+		F83C1ACB11CA7C170001958F /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08FB779EFE84155DC02AAC07 /* Foundation.framework */; };
+		F83C1ACC11CA7C170001958F /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F805B8881160EB39007EC01E /* libcrypto.dylib */; };
+		F83C1ACD11CA7C170001958F /* libicucore.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F805B88A1160EB39007EC01E /* libicucore.dylib */; };
+		F83C1ACE11CA7C170001958F /* libssl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F805B88E1160EB45007EC01E /* libssl.dylib */; };
+		F83C1ACF11CA7C170001958F /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F805B8921160EB4E007EC01E /* SystemConfiguration.framework */; };
+		F83C1AD011CA7C170001958F /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F805B8A01160EBAA007EC01E /* CoreFoundation.framework */; };
+		F83C1AD111CA7C170001958F /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F805B8C11160EC41007EC01E /* Security.framework */; };
+		F83C1AD211CA7C170001958F /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F805B8CD1160ECD7007EC01E /* CoreServices.framework */; };
+		F83C1AE311CA7C7C0001958F /* arq_restore.m in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* arq_restore.m */; };
+		F83C1D0A11CA929D0001958F /* BucketVerifier.m in Sources */ = {isa = PBXBuildFile; fileRef = F83C1D0911CA929D0001958F /* BucketVerifier.m */; };
+		F83C1D1D11CA95AF0001958F /* BucketVerifier.m in Sources */ = {isa = PBXBuildFile; fileRef = F83C1D0911CA929D0001958F /* BucketVerifier.m */; };
 		F8D678001160F26A00CC270E /* Restorer.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D677FF1160F26A00CC270E /* Restorer.m */; };
 		F8D678171160F4E300CC270E /* S3Fark.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678141160F4E300CC270E /* S3Fark.m */; };
 		F8D678181160F4E300CC270E /* S3Repo.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678161160F4E300CC270E /* S3Repo.m */; };
@@ -104,6 +200,15 @@
 
 /* Begin PBXCopyFilesBuildPhase section */
 		8DD76F9E0486AA7600D96B5E /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 8;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		F83C1AD311CA7C170001958F /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 8;
 			dstPath = /usr/share/man/man1/;
@@ -235,6 +340,12 @@
 		F805B8C11160EC41007EC01E /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		F805B8C51160EC4E007EC01E /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		F805B8CD1160ECD7007EC01E /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
+		F83C1A5F11CA7A6B0001958F /* arq_verify.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = arq_verify.m; sourceTree = "<group>"; };
+		F83C1A6111CA7BD20001958F /* ArqVerifyCommand.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ArqVerifyCommand.h; sourceTree = "<group>"; };
+		F83C1A6211CA7BD20001958F /* ArqVerifyCommand.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ArqVerifyCommand.m; sourceTree = "<group>"; };
+		F83C1AD711CA7C170001958F /* arq_verify */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = arq_verify; sourceTree = BUILT_PRODUCTS_DIR; };
+		F83C1D0811CA929D0001958F /* BucketVerifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BucketVerifier.h; path = s3/BucketVerifier.h; sourceTree = "<group>"; };
+		F83C1D0911CA929D0001958F /* BucketVerifier.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BucketVerifier.m; path = s3/BucketVerifier.m; sourceTree = "<group>"; };
 		F8D6763E1160F22800CC270E /* SetNSError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SetNSError.h; sourceTree = "<group>"; };
 		F8D677FE1160F26A00CC270E /* Restorer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Restorer.h; sourceTree = "<group>"; };
 		F8D677FF1160F26A00CC270E /* Restorer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Restorer.m; sourceTree = "<group>"; };
@@ -326,6 +437,21 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F83C1ACA11CA7C170001958F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F83C1ACB11CA7C170001958F /* Foundation.framework in Frameworks */,
+				F83C1ACC11CA7C170001958F /* libcrypto.dylib in Frameworks */,
+				F83C1ACD11CA7C170001958F /* libicucore.dylib in Frameworks */,
+				F83C1ACE11CA7C170001958F /* libssl.dylib in Frameworks */,
+				F83C1ACF11CA7C170001958F /* SystemConfiguration.framework in Frameworks */,
+				F83C1AD011CA7C170001958F /* CoreFoundation.framework in Frameworks */,
+				F83C1AD111CA7C170001958F /* Security.framework in Frameworks */,
+				F83C1AD211CA7C170001958F /* CoreServices.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -354,6 +480,11 @@
 				F8D678321160F62E00CC270E /* ArqUserLibrary.m */,
 				F805B54B1160D3E6007EC01E /* ArqRestoreCommand.h */,
 				F805B54C1160D3E6007EC01E /* ArqRestoreCommand.m */,
+				F83C1A5F11CA7A6B0001958F /* arq_verify.m */,
+				F83C1A6111CA7BD20001958F /* ArqVerifyCommand.h */,
+				F83C1A6211CA7BD20001958F /* ArqVerifyCommand.m */,
+				F83C1D0811CA929D0001958F /* BucketVerifier.h */,
+				F83C1D0911CA929D0001958F /* BucketVerifier.m */,
 				F805B72E1160DBE9007EC01E /* ArqFolder.h */,
 				F805B72F1160DBE9007EC01E /* ArqFolder.m */,
 				F8D6785B1160F7CE00CC270E /* Commit.h */,
@@ -414,6 +545,7 @@
 			isa = PBXGroup;
 			children = (
 				8DD76FA10486AA7600D96B5E /* arq_restore */,
+				F83C1AD711CA7C170001958F /* arq_verify */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -622,6 +754,24 @@
 			productReference = 8DD76FA10486AA7600D96B5E /* arq_restore */;
 			productType = "com.apple.product-type.tool";
 		};
+		F83C1A7111CA7C170001958F /* arq_verify */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F83C1AD411CA7C170001958F /* Build configuration list for PBXNativeTarget "arq_verify" */;
+			buildPhases = (
+				F83C1A7211CA7C170001958F /* Sources */,
+				F83C1ACA11CA7C170001958F /* Frameworks */,
+				F83C1AD311CA7C170001958F /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = arq_verify;
+			productInstallPath = "$(HOME)/bin";
+			productName = arq_restore;
+			productReference = F83C1AD711CA7C170001958F /* arq_verify */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -635,6 +785,7 @@
 			projectRoot = "";
 			targets = (
 				8DD76F960486AA7600D96B5E /* arq_restore */,
+				F83C1A7111CA7C170001958F /* arq_verify */,
 			);
 		};
 /* End PBXProject section */
@@ -644,7 +795,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8DD76F9A0486AA7600D96B5E /* arq_restore.m in Sources */,
 				F805B54D1160D3E6007EC01E /* ArqRestoreCommand.m in Sources */,
 				F805B7211160D9C2007EC01E /* HSLog.m in Sources */,
 				F805B7301160DBE9007EC01E /* ArqFolder.m in Sources */,
@@ -729,6 +879,102 @@
 				F8D67D071161384100CC270E /* FileACL.m in Sources */,
 				F8D67D081161384100CC270E /* OSStatusDescription.m in Sources */,
 				F8D67F701161443600CC270E /* RestoreNode.m in Sources */,
+				F83C1AE311CA7C7C0001958F /* arq_restore.m in Sources */,
+				F83C1D0A11CA929D0001958F /* BucketVerifier.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F83C1A7211CA7C170001958F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F83C1AC811CA7C170001958F /* arq_verify.m in Sources */,
+				F83C1A7411CA7C170001958F /* ArqRestoreCommand.m in Sources */,
+				F83C1A7511CA7C170001958F /* HSLog.m in Sources */,
+				F83C1A7611CA7C170001958F /* ArqFolder.m in Sources */,
+				F83C1A7711CA7C170001958F /* ArrayNode.m in Sources */,
+				F83C1A7811CA7C170001958F /* BooleanNode.m in Sources */,
+				F83C1A7911CA7C170001958F /* DictNode.m in Sources */,
+				F83C1A7A11CA7C170001958F /* IntegerNode.m in Sources */,
+				F83C1A7B11CA7C170001958F /* RealNode.m in Sources */,
+				F83C1A7C11CA7C170001958F /* StringNode.m in Sources */,
+				F83C1A7D11CA7C170001958F /* XMLPListReader.m in Sources */,
+				F83C1A7E11CA7C170001958F /* XMLPListWriter.m in Sources */,
+				F83C1A7F11CA7C170001958F /* HTTPConnection_S3.m in Sources */,
+				F83C1A8011CA7C170001958F /* NSError_S3.m in Sources */,
+				F83C1A8111CA7C170001958F /* PathReceiver.m in Sources */,
+				F83C1A8211CA7C170001958F /* S3AuthorizationParameters.m in Sources */,
+				F83C1A8311CA7C170001958F /* S3AuthorizationProvider.m in Sources */,
+				F83C1A8411CA7C170001958F /* S3Lister.m in Sources */,
+				F83C1A8511CA7C170001958F /* S3ObjectMetadata.m in Sources */,
+				F83C1A8611CA7C170001958F /* S3ObjectReceiver.m in Sources */,
+				F83C1A8711CA7C170001958F /* S3Request.m in Sources */,
+				F83C1A8811CA7C170001958F /* S3Service.m in Sources */,
+				F83C1A8911CA7C170001958F /* S3Signature.m in Sources */,
+				F83C1A8A11CA7C170001958F /* RegexKitLite.m in Sources */,
+				F83C1A8B11CA7C170001958F /* Blob.m in Sources */,
+				F83C1A8C11CA7C170001958F /* HTTPConnection.m in Sources */,
+				F83C1A8D11CA7C170001958F /* HTTPRequest.m in Sources */,
+				F83C1A8E11CA7C170001958F /* HTTPResponse.m in Sources */,
+				F83C1A8F11CA7C170001958F /* BlobACL.m in Sources */,
+				F83C1A9011CA7C170001958F /* ServerBlob.m in Sources */,
+				F83C1A9111CA7C170001958F /* RFC2616DateFormatter.m in Sources */,
+				F83C1A9211CA7C170001958F /* RFC822.m in Sources */,
+				F83C1A9311CA7C170001958F /* InputStreams.m in Sources */,
+				F83C1A9411CA7C170001958F /* ChunkedInputStream.m in Sources */,
+				F83C1A9511CA7C170001958F /* FixedLengthInputStream.m in Sources */,
+				F83C1A9611CA7C170001958F /* FDInputStream.m in Sources */,
+				F83C1A9711CA7C170001958F /* FDOutputStream.m in Sources */,
+				F83C1A9811CA7C170001958F /* DataInputStream.m in Sources */,
+				F83C1A9911CA7C170001958F /* Writer.m in Sources */,
+				F83C1A9A11CA7C170001958F /* NSData-InputStream.m in Sources */,
+				F83C1A9B11CA7C170001958F /* StreamPairFactory.m in Sources */,
+				F83C1A9C11CA7C170001958F /* Streams.m in Sources */,
+				F83C1A9D11CA7C170001958F /* CFStreamPair.m in Sources */,
+				F83C1A9E11CA7C170001958F /* CFStreamInputStream.m in Sources */,
+				F83C1A9F11CA7C170001958F /* CFStreamOutputStream.m in Sources */,
+				F83C1AA011CA7C170001958F /* DNS_SDErrors.m in Sources */,
+				F83C1AA111CA7C170001958F /* NSXMLNode_extra.m in Sources */,
+				F83C1AA211CA7C170001958F /* NSData-Base64Extensions.m in Sources */,
+				F83C1AA311CA7C170001958F /* DataInputStreamFactory.m in Sources */,
+				F83C1AA411CA7C170001958F /* Restorer.m in Sources */,
+				F83C1AA511CA7C170001958F /* S3Fark.m in Sources */,
+				F83C1AA611CA7C170001958F /* S3Repo.m in Sources */,
+				F83C1AA711CA7C170001958F /* SHA1Hash.m in Sources */,
+				F83C1AA811CA7C170001958F /* PackSetSet.m in Sources */,
+				F83C1AA911CA7C170001958F /* PackSet.m in Sources */,
+				F83C1AAA11CA7C170001958F /* ArqUserLibrary.m in Sources */,
+				F83C1AAB11CA7C170001958F /* PackIndexEntry.m in Sources */,
+				F83C1AAC11CA7C170001958F /* DiskPack.m in Sources */,
+				F83C1AAD11CA7C170001958F /* DiskPackIndex.m in Sources */,
+				F83C1AAE11CA7C170001958F /* Commit.m in Sources */,
+				F83C1AAF11CA7C170001958F /* Tree.m in Sources */,
+				F83C1AB011CA7C170001958F /* NSData-Encrypt.m in Sources */,
+				F83C1AB111CA7C170001958F /* OpenSSL.m in Sources */,
+				F83C1AB211CA7C170001958F /* DecryptedInputStream.m in Sources */,
+				F83C1AB311CA7C170001958F /* CryptInputStream.m in Sources */,
+				F83C1AB411CA7C170001958F /* FileInputStream.m in Sources */,
+				F83C1AB511CA7C170001958F /* DataIO.m in Sources */,
+				F83C1AB611CA7C170001958F /* DateIO.m in Sources */,
+				F83C1AB711CA7C170001958F /* DoubleIO.m in Sources */,
+				F83C1AB811CA7C170001958F /* IntegerIO.m in Sources */,
+				F83C1AB911CA7C170001958F /* StringIO.m in Sources */,
+				F83C1ABA11CA7C170001958F /* NSString_extra.m in Sources */,
+				F83C1ABB11CA7C170001958F /* BinarySHA1.m in Sources */,
+				F83C1ABC11CA7C170001958F /* NSFileManager_extra.m in Sources */,
+				F83C1ABD11CA7C170001958F /* FileOutputStream.m in Sources */,
+				F83C1ABE11CA7C170001958F /* FileInputStreamFactory.m in Sources */,
+				F83C1ABF11CA7C170001958F /* BooleanIO.m in Sources */,
+				F83C1AC011CA7C170001958F /* EncryptedInputStream.m in Sources */,
+				F83C1AC111CA7C170001958F /* CommitFailedFile.m in Sources */,
+				F83C1AC211CA7C170001958F /* Node.m in Sources */,
+				F83C1AC311CA7C170001958F /* FileAttributes.m in Sources */,
+				F83C1AC411CA7C170001958F /* XAttrSet.m in Sources */,
+				F83C1AC511CA7C170001958F /* FileACL.m in Sources */,
+				F83C1AC611CA7C170001958F /* OSStatusDescription.m in Sources */,
+				F83C1AC711CA7C170001958F /* RestoreNode.m in Sources */,
+				F83C1AC911CA7C170001958F /* ArqVerifyCommand.m in Sources */,
+				F83C1D1D11CA95AF0001958F /* BucketVerifier.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -798,6 +1044,43 @@
 			};
 			name = Release;
 		};
+		F83C1AD511CA7C170001958F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = arq_restore_Prefix.pch;
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
+				HEADER_SEARCH_PATHS = "";
+				INSTALL_PATH = /usr/local/bin;
+				PRODUCT_NAME = arq_verify;
+				SDKROOT = macosx10.5;
+			};
+			name = Debug;
+		};
+		F83C1AD611CA7C170001958F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = arq_restore_Prefix.pch;
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
+				HEADER_SEARCH_PATHS = "";
+				INSTALL_PATH = /usr/local/bin;
+				PRODUCT_NAME = arq_restore;
+				SDKROOT = macosx10.5;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -815,6 +1098,15 @@
 			buildConfigurations = (
 				1DEB927908733DD40010E9CD /* Debug */,
 				1DEB927A08733DD40010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F83C1AD411CA7C170001958F /* Build configuration list for PBXNativeTarget "arq_verify" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F83C1AD511CA7C170001958F /* Debug */,
+				F83C1AD611CA7C170001958F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

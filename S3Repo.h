@@ -71,6 +71,7 @@
 - (BOOL)tree:(Tree **)tree forSHA1:(NSString *)theSHA1 error:(NSError **)error;
 
 - (BOOL)containsBlobForSHA1:(NSString *)sha1 packSetName:(NSString *)packSetName searchPackOnly:(BOOL)searchPackOnly;
+- (NSString *)packSHA1ForPackedBlobSHA1:(NSString *)sha1 packSetName:(NSString *)packSetName;
 - (NSData *)dataForSHA1:(NSString *)sha1 error:(NSError **)error;
 - (ServerBlob *)newServerBlobForSHA1:(NSString *)sha1 error:(NSError **)error;
 - (NSData *)dataForSHA1s:(NSArray *)sha1s error:(NSError **)error;
