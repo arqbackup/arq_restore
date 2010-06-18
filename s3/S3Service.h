@@ -39,7 +39,8 @@
 enum {
     BUCKET_REGION_US_STANDARD = 0,
     BUCKET_REGION_US_WEST = 1,
-    BUCKET_REGION_EU = 2
+    BUCKET_REGION_EU = 2,
+    BUCKET_REGION_AP_SOUTHEAST_1 = 3
 };
 
 @interface S3Service : NSObject {
@@ -50,6 +51,8 @@ enum {
 + (NSString *)errorDomain;
 + (NSString *)serverErrorDomain;
 + (NSString *)displayNameForBucketRegion:(int)region;
++ (NSString *)s3BucketNameForAccessKeyID:(NSString *)theAccessKeyId region:(int)s3BucketRegion;
++ (NSArray *)s3BucketNamesForAccessKeyID:(NSString *)theAccessKeyId;
 - (id)initWithS3AuthorizationProvider:(S3AuthorizationProvider *)theSAP useSSL:(BOOL)useSSL retryOnNetworkError:(BOOL)retry;
 - (NSArray *)s3BucketNames:(NSError **)error;
 - (BOOL)s3BucketExists:(NSString *)s3BucketName;

@@ -69,11 +69,32 @@
             return @"US Standard";
         case BUCKET_REGION_US_WEST:
             return @"US West";
+        case BUCKET_REGION_AP_SOUTHEAST_1:
+            return @"Asia Pacific (Singapore)";
         case BUCKET_REGION_EU:
             return @"EU";
     }
     NSAssert(NO, @"invalid S3 bucket region");
     return nil;
+}
++ (NSString *)s3BucketNameForAccessKeyID:(NSString *)theAccessKeyID region:(int)s3BucketRegion {
+    NSString *regionSuffix = @"";
+    if (s3BucketRegion == BUCKET_REGION_US_WEST) {
+        regionSuffix = @".us-west-1";
+    } else if (s3BucketRegion == BUCKET_REGION_AP_SOUTHEAST_1) {
+        regionSuffix = @".ap-southeast-1";
+    } else if (s3BucketRegion == BUCKET_REGION_EU) {
+        regionSuffix = @".eu";
+    }
+    return [NSString stringWithFormat:@"%@.com.haystacksoftware.arq%@", [theAccessKeyID lowercaseString], regionSuffix];
+}
++ (NSArray *)s3BucketNamesForAccessKeyID:(NSString *)theAccessKeyId {
+	return [NSArray arrayWithObjects:
+			[S3Service s3BucketNameForAccessKeyID:theAccessKeyId region:BUCKET_REGION_US_STANDARD],
+			[S3Service s3BucketNameForAccessKeyID:theAccessKeyId region:BUCKET_REGION_US_WEST],
+			[S3Service s3BucketNameForAccessKeyID:theAccessKeyId region:BUCKET_REGION_EU],
+			[S3Service s3BucketNameForAccessKeyID:theAccessKeyId region:BUCKET_REGION_AP_SOUTHEAST_1],
+			nil];
 }
 - (id)initWithS3AuthorizationProvider:(S3AuthorizationProvider *)theSAP useSSL:(BOOL)isUseSSL retryOnNetworkError:(BOOL)retry {
 	if (self = [super init]) {

@@ -36,6 +36,7 @@
 #import "ArqFolder.h"
 
 static void printUsage(const char *exeName) {
+	fprintf(stderr, "Usage:\n");
     fprintf(stderr, "\t%s\n", exeName);
     fprintf(stderr, "\t%s /s3bucket/computerUUID/folderUUID\n", exeName);
 }

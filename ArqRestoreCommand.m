@@ -42,8 +42,6 @@
 
 @interface ArqRestoreCommand (internal)
 - (BOOL)validateS3Keys:(NSError **)error;
-- (NSArray *)s3BucketNames:(NSError **)error;
-- (NSString *)s3BucketNameForRegion:(int)s3BucketRegion;
 @end
 
 @implementation ArqRestoreCommand
@@ -80,10 +78,7 @@
     if (![self validateS3Keys:error]) {
         return NO;
     }
-    NSArray *s3BucketNames = [self s3BucketNames:error];
-    if (s3BucketNames == nil) {
-        return NO;
-    }
+	NSArray *s3BucketNames = [S3Service s3BucketNamesForAccessKeyID:accessKey];
     NSMutableArray *computerUUIDPaths = [NSMutableArray array];
     for (NSString *s3BucketName in s3BucketNames) {
         NSString *computerUUIDPrefix = [NSString stringWithFormat:@"/%@/", s3BucketName];
@@ -171,21 +166,5 @@
         return NO;
     }
     return YES;
-}
-- (NSArray *)s3BucketNames:(NSError **)error {
-    return [NSArray arrayWithObjects:
-            [self s3BucketNameForRegion:BUCKET_REGION_US_STANDARD],
-            [self s3BucketNameForRegion:BUCKET_REGION_US_WEST],
-            [self s3BucketNameForRegion:BUCKET_REGION_EU],
-            nil];
-}
-- (NSString *)s3BucketNameForRegion:(int)s3BucketRegion {
-    NSString *regionSuffix = @"";
-    if (s3BucketRegion == BUCKET_REGION_US_WEST) {
-        regionSuffix = @".us-west-1";
-    } else if (s3BucketRegion == BUCKET_REGION_EU) {
-        regionSuffix = @".eu";
-    }
-    return [NSString stringWithFormat:@"%@.com.haystacksoftware.arq%@", [accessKey lowercaseString], regionSuffix];
 }
 @end
