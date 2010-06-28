@@ -51,5 +51,5 @@
 - (NSString *)packSHA1ForPackedBlobSHA1:(NSString *)sha1 packSetName:(NSString *)packSetName;
 
 // Sync local cache files to S3 data; reload PackIndexEntries from local cache files.
-- (BOOL)resetFromS3:(NSError **)error;
+- (NSArray *)resetFromS3:(NSError **)error;
 @end

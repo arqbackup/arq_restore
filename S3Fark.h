@@ -50,5 +50,5 @@
 - (ServerBlob *)newServerBlobForSHA1:(NSString *)sha1 packSetName:(NSString *)packSetName searchPackOnly:(BOOL)searchPackOnly error:(NSError **)error;
 - (BOOL)containsBlobForSHA1:(NSString *)sha1 packSetName:(NSString *)packSetName searchPackOnly:(BOOL)searchPackOnly;
 - (NSString *)packSHA1ForPackedBlobSHA1:(NSString *)sha1 packSetName:(NSString *)packSetName;
-- (BOOL)reloadPacksFromS3:(NSError **)error;
+- (NSArray *)reloadPacksFromS3:(NSError **)error;
 @end

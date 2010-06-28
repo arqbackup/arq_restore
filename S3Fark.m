@@ -99,7 +99,7 @@
 - (NSString *)packSHA1ForPackedBlobSHA1:(NSString *)sha1 packSetName:(NSString *)packSetName {
 	return [packSetSet packSHA1ForPackedBlobSHA1:sha1 packSetName:packSetName];
 }
-- (BOOL)reloadPacksFromS3:(NSError **)error {
+- (NSArray *)reloadPacksFromS3:(NSError **)error {
     NSAssert([NSThread currentThread] == creatorThread, @"must be on same thread!");
     return [packSetSet resetFromS3:error];
 }

@@ -43,7 +43,16 @@
 		printf("s3bucket name: %s\n", [s3BucketName UTF8String]);
 	}
 	for (NSString *s3BucketName in s3BucketNames) {
-		if (![self verifyS3BucketName:s3BucketName error:error]) {
+		NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+		BOOL ret = [self verifyS3BucketName:s3BucketName error:error];
+		if (error != NULL) {
+			[*error retain];
+		}
+		[pool drain];
+		if (error != NULL) {
+			[*error autorelease];
+		}
+		if (!ret) {
 			return NO;
 		}
 	}
@@ -88,6 +97,7 @@
 		return NO;
 	}
 	for (NSString *s3BucketUUIDPath in s3BucketUUIDPaths) {
+		NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 		NSString *bucketUUID = [s3BucketUUIDPath lastPathComponent];
 		printf("verifying bucketUUID %s computerUUID %s s3Bucket %s\n", [bucketUUID UTF8String], [computerUUID UTF8String], [s3BucketName UTF8String]);
 		BucketVerifier *bucketVerifier = [[[BucketVerifier alloc] initWithS3Service:s3
@@ -96,7 +106,15 @@
 																		 bucketUUID:bucketUUID
 																	  s3ObjectSHA1s:objectSHA1s
 																	  encryptionKey:encryptionPassword] autorelease];
-		if (![bucketVerifier verify:error]) {
+		BOOL ret = [bucketVerifier verify:error];
+		if (error != NULL) {
+			[*error retain];
+		}
+		[pool drain];
+		if (error != NULL) {
+			[*error autorelease];
+		}
+		if (!ret) {
 			return NO;
 		}
 	}
@@ -123,16 +141,25 @@
 
 @implementation ArqVerifyCommand (internal)
 - (NSArray *)objectSHA1sForS3BucketName:(NSString *)s3BucketName computerUUID:(NSString *)computerUUID error:(NSError **)error {
+	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+	NSMutableArray *objectSHA1s = nil;
 	NSString *objectsPrefix = [NSString stringWithFormat:@"/%@/%@/objects", s3BucketName, computerUUID];
 	printf("loading S3 object SHA1s with prefix %s\n", [objectsPrefix UTF8String]);
 	NSArray *objectPaths = [s3 pathsWithPrefix:objectsPrefix error:error];
-	if (objectPaths == nil) {
-		return NO;
+	if (objectPaths != nil) {
+		objectSHA1s = [[NSMutableArray alloc] init];
+		printf("loaded %u object SHA1s with prefix %s\n", [objectPaths count], [objectsPrefix UTF8String]);
+		for (NSString *objectPath in objectPaths) {
+			[objectSHA1s addObject:[objectPath lastPathComponent]];
+		}
 	}
-	printf("loaded %u object SHA1s with prefix %s\n", [objectPaths count], [objectsPrefix UTF8String]);
-	NSMutableArray *objectSHA1s = [NSMutableArray array];
-	for (NSString *objectPath in objectPaths) {
-		[objectSHA1s addObject:[objectPath lastPathComponent]];
+	if (error != NULL) {
+		[*error retain];
+	}
+	[pool drain];
+	[objectSHA1s autorelease];
+	if (error != NULL) {
+		[*error autorelease];
 	}
 	return objectSHA1s;
 }

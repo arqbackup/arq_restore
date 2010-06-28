@@ -60,8 +60,9 @@
 			goto init_error;
         }
 		NSXMLNode *sizeNode = [nodes objectAtIndex:0];
-		NSNumberFormatter *numberFormatter = [[[NSNumberFormatter alloc] init] autorelease];
+		NSNumberFormatter *numberFormatter = [[NSNumberFormatter alloc] init];
 		size = [[numberFormatter numberFromString:[sizeNode stringValue]] longValue];
+		[numberFormatter release];
 		goto init_done;
 	init_error:
 		[self release];

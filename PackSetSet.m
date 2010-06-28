@@ -91,12 +91,12 @@
     }
 	return [packSet packSHA1ForPackedBlobSHA1:sha1];
 }
-- (BOOL)resetFromS3:(NSError **)error {
+- (NSArray *)resetFromS3:(NSError **)error {
     HSLogDebug(@"resetting pack sets from S3");
     [packSets removeAllObjects];
     NSDictionary *s3PackSHA1sByPackSetName = [self packSHA1sByPackSetNameFromS3:error];
     if (s3PackSHA1sByPackSetName == nil) {
-        return NO;
+        return nil;
     }
     
     //
@@ -104,7 +104,7 @@
     //
     NSMutableSet *diskPackSetNames = [self diskPackSetNames:error];
     if (diskPackSetNames == nil) {
-        return NO;
+        return nil;
     }
     NSMutableSet *s3PackSetNames = [NSMutableSet setWithArray:[s3PackSHA1sByPackSetName allKeys]];
     [diskPackSetNames minusSet:s3PackSetNames];
@@ -112,7 +112,7 @@
         NSString *packSetPath = [PackSet localPathWithComputerUUID:computerUUID packSetName:bogusDiskPackSetName];
         HSLogDebug(@"removing local pack set that doesn't exist in S3: %@", packSetPath);
         if (![[NSFileManager defaultManager] removeItemAtPath:packSetPath error:error]) {
-            return NO;
+            return nil;
         }
     }
     
@@ -128,11 +128,15 @@
                                            keepPacksLocal:[s3PackSetName hasSuffix:@"-trees"] 
                                                 packSHA1s:packSHA1s error:error] autorelease];
         if (packSet == nil) {
-            return NO;
+            return nil;
         }
         [packSets setObject:packSet forKey:s3PackSetName];
     }
-    return YES;
+	NSMutableArray *ret = [NSMutableArray array];
+	for (NSArray *sha1s in [s3PackSHA1sByPackSetName allValues]) {
+		[ret addObjectsFromArray:sha1s];
+	}
+	return ret;
 }
 @end
 @implementation PackSetSet (internal)

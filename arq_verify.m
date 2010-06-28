@@ -61,7 +61,7 @@ int main (int argc, const char * argv[]) {
 	
 	NSString *accessKey = [NSString stringWithUTF8String:cAccessKey];
 	NSString *secretKey = [NSString stringWithUTF8String:cSecretKey];
-	NSString *encryptionPassword = [[NSString alloc] initWithUTF8String:cEncryptionPassword];
+	NSString *encryptionPassword = [[[NSString alloc] initWithUTF8String:cEncryptionPassword] autorelease];
     ArqVerifyCommand *cmd = [[[ArqVerifyCommand alloc] initWithAccessKey:accessKey secretKey:secretKey encryptionPassword:encryptionPassword] autorelease];
     NSError *error = nil;
 	BOOL ret = NO;

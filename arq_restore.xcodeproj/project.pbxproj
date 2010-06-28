@@ -1076,7 +1076,7 @@
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				HEADER_SEARCH_PATHS = "";
 				INSTALL_PATH = /usr/local/bin;
-				PRODUCT_NAME = arq_restore;
+				PRODUCT_NAME = arq_verify;
 				SDKROOT = macosx10.5;
 			};
 			name = Release;
