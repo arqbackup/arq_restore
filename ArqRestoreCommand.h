@@ -38,7 +38,8 @@
     NSString *secretKey;
     NSString *encryptionPassword;
     S3Service *s3;
+    NSString *path;
 }
-- (BOOL)printArqFolders:(NSError **)error;
-- (BOOL)restorePath:(NSString *)path error:(NSError **)error;
+- (BOOL)readArgc:(int)argc argv:(const char **)argv;
+- (BOOL)execute:(NSError **)error;
 @end

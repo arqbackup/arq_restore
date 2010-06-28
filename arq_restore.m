@@ -37,32 +37,25 @@
 
 static void printUsage(const char *exeName) {
 	fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "\t%s\n", exeName);
-    fprintf(stderr, "\t%s /s3bucket/computerUUID/folderUUID\n", exeName);
+    fprintf(stderr, "\t%s [-l log_level]\n", exeName);
+    fprintf(stderr, "\t%s [-l log_level] /s3bucket/computerUUID/folderUUID\n", exeName);
 }
-int main (int argc, const char * argv[]) {
+int main (int argc, const char **argv) {
     setHSLogLevel(HSLOG_LEVEL_ERROR);
     char *exePath = strdup(argv[0]);
     char *exeName = basename(exePath);
     NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
     ArqRestoreCommand *cmd = [[[ArqRestoreCommand alloc] init] autorelease];
     int ret = 0;
-    NSError *error = nil;
-    if (argc == 1) {
-        if (![cmd printArqFolders:&error]) {
-            NSLog(@"%@", [error localizedDescription]);
-            ret = 1;
-        } else {
-            printf("\nType %s <s3 path> to restore\n", exeName);
-        }
-    } else if (argc == 2) {
-        if (![cmd restorePath:[NSString stringWithUTF8String:argv[1]] error:&error]) {
-            NSLog(@"%@", [error localizedDescription]);
-            ret = 1;
-        }
-    } else {
+    if (![cmd readArgc:argc argv:argv]) {
         printUsage(exeName);
         ret = 1;
+    } else {
+        NSError *myError = nil;
+        if (![cmd execute:&myError]) {
+            NSLog(@"%@", [myError localizedDescription]);
+            ret = 1;
+        }
     }
     [pool drain];
     free(exePath);

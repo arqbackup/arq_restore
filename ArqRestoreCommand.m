@@ -40,7 +40,10 @@
 #import "HTTP.h"
 #import "Restorer.h"
 
+
 @interface ArqRestoreCommand (internal)
+- (BOOL)printArqFolders:(NSError **)error;
+- (BOOL)restorePath:(NSError **)error;
 - (BOOL)validateS3Keys:(NSError **)error;
 @end
 
@@ -72,13 +75,48 @@
     [secretKey release];
     [encryptionPassword release];
     [s3 release];
+    [path release];
     [super dealloc];
 }
+- (BOOL)readArgc:(int)argc argv:(const char **)argv {
+    for (int i = 1; i < argc; i++) {
+        if (*argv[i] == '-') {
+            if (strcmp(argv[i], "-l")) {
+                fprintf(stderr, "invalid argument\n");
+                return NO;
+            }
+            if (argc <= i+1) {
+                fprintf(stderr, "missing log_level argument (error,warn,info,debug or trace)\n");
+                return NO;
+            }
+            i++;
+            NSString *level = [NSString stringWithUTF8String:argv[i]];
+            setHSLogLevel(hsLogLevelForName(level));
+        } else if (path == nil) {
+            path = [[NSString alloc] initWithUTF8String:argv[i]];
+        } else {
+            fprintf(stderr, "warning: ignoring argument '%s'\n", argv[i]);
+        }
+    }
+    return YES;
+}
+- (BOOL)execute:(NSError **)error {
+    BOOL ret = YES;
+    if (path == nil) {
+        ret = [self printArqFolders:error];
+    } else {
+        ret = [self restorePath:error];
+    }
+    return ret;
+}
+@end
+
+@implementation ArqRestoreCommand (internal)
 - (BOOL)printArqFolders:(NSError **)error {
     if (![self validateS3Keys:error]) {
         return NO;
     }
-	NSArray *s3BucketNames = [S3Service s3BucketNamesForAccessKeyID:accessKey];
+    NSArray *s3BucketNames = [S3Service s3BucketNamesForAccessKeyID:accessKey];
     NSMutableArray *computerUUIDPaths = [NSMutableArray array];
     for (NSString *s3BucketName in s3BucketNames) {
         NSString *computerUUIDPrefix = [NSString stringWithFormat:@"/%@/", s3BucketName];
@@ -118,7 +156,7 @@
     }
     return YES;
 }
-- (BOOL)restorePath:(NSString *)path error:(NSError **)error {
+- (BOOL)restorePath:(NSError **)error {
     if (![self validateS3Keys:error]) {
         return NO;
     }
@@ -153,9 +191,6 @@
     printf("restored files are in %s\n", [bucketName fileSystemRepresentation]);
     return YES;
 }
-@end
-
-@implementation ArqRestoreCommand (internal)
 - (BOOL)validateS3Keys:(NSError **)error {
     if (accessKey == nil) {
         SETNSERROR(@"ArqErrorDomain", -1, @"missing ARQ_ACCESS_KEY environment variable");
