@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -32,9 +32,14 @@
 
 #import <Cocoa/Cocoa.h>
 #import "S3Receiver.h"
-@class Blob;
+#import "Blob.h"
+#import "InputStream.h"
 @class S3AuthorizationProvider;
 @class ServerBlob;
+
+#define S3_INITIAL_RETRY_SLEEP (0.5)
+#define S3_RETRY_SLEEP_GROWTH_FACTOR (1.5)
+#define S3_MAX_RETRY (5)
 
 enum {
     BUCKET_REGION_US_STANDARD = 0,
@@ -49,10 +54,11 @@ enum {
     BOOL retryOnNetworkError;
 }
 + (NSString *)errorDomain;
-+ (NSString *)serverErrorDomain;
++ (NSString *)amazonErrorDomain;
 + (NSString *)displayNameForBucketRegion:(int)region;
 + (NSString *)s3BucketNameForAccessKeyID:(NSString *)theAccessKeyId region:(int)s3BucketRegion;
 + (NSArray *)s3BucketNamesForAccessKeyID:(NSString *)theAccessKeyId;
++ (int)s3BucketRegionForS3BucketName:(NSString *)s3BucketName;
 - (id)initWithS3AuthorizationProvider:(S3AuthorizationProvider *)theSAP useSSL:(BOOL)useSSL retryOnNetworkError:(BOOL)retry;
 - (NSArray *)s3BucketNames:(NSError **)error;
 - (BOOL)s3BucketExists:(NSString *)s3BucketName;
@@ -61,11 +67,10 @@ enum {
 - (NSArray *)objectsWithPrefix:(NSString *)prefix error:(NSError **)error;
 - (BOOL)listObjectsWithPrefix:(NSString *)prefix receiver:(id <S3Receiver>)receiver error:(NSError **)error;
 - (BOOL)listObjectsWithMax:(int)maxResults prefix:(NSString *)prefix receiver:(id <S3Receiver>)receiver error:(NSError **)error;
-- (BOOL)containsBlobAtPath:(NSString *)path;
+- (BOOL)containsBlob:(BOOL *)contains atPath:(NSString *)path error:(NSError **)error;
 
 - (NSData *)dataAtPath:(NSString *)path error:(NSError **)error;
 - (ServerBlob *)newServerBlobAtPath:(NSString *)path error:(NSError **)error;
-
 
 - (NSArray *)commonPrefixesForPathPrefix:(NSString *)prefix delimiter:(NSString *)delimiter error:(NSError **)error;
 

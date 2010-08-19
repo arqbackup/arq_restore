@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -41,4 +41,6 @@
 }
 - (id)initWithPath:(NSString *)thePath append:(BOOL)isAppend;
 - (void)close;
+- (BOOL)seekTo:(unsigned long long)offset error:(NSError **)error;
+- (NSString *)path;
 @end

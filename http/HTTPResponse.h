@@ -32,7 +32,6 @@
 
 #import <Cocoa/Cocoa.h>
 @protocol BufferedInputStream;
-@protocol InputStream;
 @class FDInputStream;
 
 @interface HTTPResponse : NSObject {
@@ -47,5 +46,5 @@
 - (NSString *)protocol;
 - (NSString *)headerForKey:(NSString *)key;
 - (unsigned long long)contentLength;
-- (id <InputStream>)newResponseInputStream:(id <BufferedInputStream>)underlyingStream error:(NSError **)error;
+- (id <BufferedInputStream>)newResponseInputStream:(id <BufferedInputStream>)underlyingStream error:(NSError **)error;
 @end

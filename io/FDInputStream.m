@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -104,8 +104,6 @@ read_again:
 }
 - (NSData *)slurp:(NSError **)error {
     return [InputStreams slurp:self error:error];
-}
-- (void)bytesWereNotUsed {
 }
 
 #pragma mark BufferedInputStream protocol

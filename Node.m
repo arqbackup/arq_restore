@@ -31,14 +31,11 @@
  */ 
 
 #include <sys/stat.h>
+#import "Node.h"
 #import "BooleanIO.h"
 #import "IntegerIO.h"
 #import "StringIO.h"
-#import "Node.h"
-#import "InputStream.h"
-#import "Blob.h"
-#import "SetNSError.h"
-#import "Tree.h"
+#import "BufferedInputStream.h"
 
 @implementation Node
 @synthesize isTree, dataSize, thumbnailSHA1, previewSHA1, xattrsSHA1, xattrsSize, aclSHA1, uid, gid, mode, mtime_sec, mtime_nsec, flags, finderFlags, extendedFinderFlags, finderFileType, finderFileCreator, isFileExtensionHidden, treeVersion, st_rdev;
@@ -117,7 +114,16 @@
 	[finderFileCreator release];
 	[super dealloc];
 }
-
+- (NSString *)treeSHA1 {
+    NSAssert(isTree, @"must be a Tree");
+    return [dataSHA1s objectAtIndex:0];
+}
+- (NSArray *)dataSHA1s {
+    return dataSHA1s;
+}
+- (BOOL)dataMatchesStatData:(struct stat *)st {
+    return (st->st_mtimespec.tv_sec == mtime_sec && st->st_mtimespec.tv_nsec == mtime_nsec && st->st_size == dataSize);
+}
 - (void)writeToData:(NSMutableData *)data {
     [BooleanIO write:isTree to:data];
     [IntegerIO writeInt32:(int32_t)[dataSHA1s count] to:data];
@@ -151,15 +157,5 @@
     [IntegerIO writeInt64:createTime_nsec to:data];
     [IntegerIO writeInt64:st_blocks to:data];
     [IntegerIO writeUInt32:st_blksize to:data];
-}
-- (BOOL)dataMatchesStatData:(struct stat *)st {
-    return (st->st_mtimespec.tv_sec == mtime_sec && st->st_mtimespec.tv_nsec == mtime_nsec & st->st_size == dataSize);
-}
-- (NSString *)treeSHA1 {
-    NSAssert(isTree, @"must be a Tree");
-    return [dataSHA1s objectAtIndex:0];
-}
-- (NSArray *)dataSHA1s {
-    return dataSHA1s;
 }
 @end

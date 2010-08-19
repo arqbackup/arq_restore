@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -30,6 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
+#import "BlobACL.h"
+#import "InputStream.h"
 #import "Blob.h"
 #import "RegexKitLite.h"
 #import "NSError_S3.h"
@@ -39,12 +41,15 @@
 #import "S3Service.h"
 #import "PathReceiver.h"
 #import "SetNSError.h"
+#import "DataInputStream.h"
 #import "HTTPResponse.h"
 #import "HTTPRequest.h"
 #import "HTTP.h"
+#import "Streams.h"
 #import "S3ObjectReceiver.h"
 #import "ServerBlob.h"
 #import "NSErrorCodes.h"
+#import "NSData-InputStream.h"
 #import "S3Request.h"
 
 /*
@@ -60,19 +65,19 @@
 + (NSString *)errorDomain {
     return @"S3ServiceErrorDomain";
 }
-+ (NSString *)serverErrorDomain {
-    return @"S3ServiceServerErrorDomain";
++ (NSString *)amazonErrorDomain {
+    return @"AmazonErrorDomain";
 }
 + (NSString *)displayNameForBucketRegion:(int)region {
     switch (region) {
         case BUCKET_REGION_US_STANDARD:
             return @"US Standard";
         case BUCKET_REGION_US_WEST:
-            return @"US West";
+            return @"US-West (Northern California)";
         case BUCKET_REGION_AP_SOUTHEAST_1:
             return @"Asia Pacific (Singapore)";
         case BUCKET_REGION_EU:
-            return @"EU";
+            return @"EU (Ireland)";
     }
     NSAssert(NO, @"invalid S3 bucket region");
     return nil;
@@ -87,6 +92,16 @@
         regionSuffix = @".eu";
     }
     return [NSString stringWithFormat:@"%@.com.haystacksoftware.arq%@", [theAccessKeyID lowercaseString], regionSuffix];
+}
++ (int)s3BucketRegionForS3BucketName:(NSString *)s3BucketName {
+	if ([s3BucketName hasSuffix:@"com.haystacksoftware.arq.eu"]) {
+		return BUCKET_REGION_EU;
+	} else if ([s3BucketName hasSuffix:@"com.haystacksoftware.arq.ap-southeast-1"]) {
+		return BUCKET_REGION_AP_SOUTHEAST_1;
+	} else if ([s3BucketName hasSuffix:@"com.haystacksoftware.arq.us-west-1"]) {
+		return BUCKET_REGION_US_WEST;
+	}
+	return BUCKET_REGION_US_STANDARD;
 }
 + (NSArray *)s3BucketNamesForAccessKeyID:(NSString *)theAccessKeyId {
 	return [NSArray arrayWithObjects:
@@ -155,16 +170,14 @@
 	S3Lister *lister = [[[S3Lister alloc] initWithS3AuthorizationProvider:sap useSSL:useSSL retryOnNetworkError:retryOnNetworkError max:maxResults prefix:prefix receiver:receiver] autorelease];
     return lister && [lister listObjects:error];
 }
-- (BOOL)containsBlobAtPath:(NSString *)path {
-    NSError *error = nil;
+- (BOOL)containsBlob:(BOOL *)contains atPath:(NSString *)path error:(NSError **)error {
+    *contains = NO;
     PathReceiver *rec = [[PathReceiver alloc] init];
     S3Lister *lister = [[S3Lister alloc] initWithS3AuthorizationProvider:sap useSSL:useSSL retryOnNetworkError:retryOnNetworkError max:-1 prefix:path receiver:rec];
-    BOOL ret = [lister listObjects:&error];
-    if (!ret) {
-        HSLogError(@"listObjects(%@): %@", path, [error localizedDescription]);
-    } else {
-        ret = [[rec paths] containsObject:path];
-        HSLogDebug(@"S3 path %@ %@", path, (ret ? @"exists" : @"does not exist"));
+    BOOL ret = [lister listObjects:error];
+    if (ret) {
+        *contains = [[rec paths] containsObject:path];
+        HSLogDebug(@"S3 path %@ %@", path, ((*contains) ? @"exists" : @"does not exist"));
     }
     [lister release];
     [rec release];

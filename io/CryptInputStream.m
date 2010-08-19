@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -36,11 +36,12 @@
 #import "InputStreams.h"
 #import "NSErrorCodes.h"
 
-@interface CryptInputStream (internal)
-- (unsigned char *)readAtLeastBlockSize:(NSUInteger *)length error:(NSError **)error;
-@end
+#define MY_BUF_SIZE (4096)
 
 @implementation CryptInputStream
++ (NSString *)errorDomain {
+    return @"CryptInputStreamErrorDomain";
+}
 - (id)initWithCryptInitFunc:(void *)theCryptInit cryptUpdateFunc:(void *)theCryptUpdate cryptFinalFunc:(void *)theCryptFinal inputStream:(id <InputStream>)theIS cipherName:(NSString *)theCipherName key:(NSString *)theKey error:(NSError **)error {
     if (self = [super init]) {
         cryptInit = (CryptInitFunc)theCryptInit;
@@ -51,7 +52,7 @@
             is = [theIS retain];
             NSData *keyData = [theKey dataUsingEncoding:NSUTF8StringEncoding];
             if ([keyData length] > EVP_MAX_KEY_LENGTH) {
-                SETNSERROR(@"EncryptedInputStreamErrorDomain", -1, @"encryption key must be less than or equal to %d bytes", EVP_MAX_KEY_LENGTH);
+                SETNSERROR([CryptInputStream errorDomain], -1, @"encryption key must be less than or equal to %d bytes", EVP_MAX_KEY_LENGTH);
                 break;
             }
             if (![OpenSSL initializeSSL:error]) {
@@ -59,18 +60,20 @@
             }
             cipher = EVP_get_cipherbyname([theCipherName UTF8String]);
             if (!cipher) {
-                SETNSERROR(@"EncryptedInputStreamErrorDomain", -1, @"failed to load %@ cipher: %@", theCipherName, [OpenSSL errorMessage]);
+                SETNSERROR([CryptInputStream errorDomain], -1, @"failed to load %@ cipher: %@", theCipherName, [OpenSSL errorMessage]);
                 break;
             }
             evp_key[0] = 0;
             EVP_BytesToKey(cipher, EVP_md5(), NULL, [keyData bytes], [keyData length], 1, evp_key, iv);
             EVP_CIPHER_CTX_init(&cipherContext);
             if (!(*cryptInit)(&cipherContext, cipher, evp_key, iv)) {
-                SETNSERROR(@"NSDataEncryptErrorDomain", -1, @"EVP_EncryptInit: %@",  [OpenSSL errorMessage]);
+                SETNSERROR([CryptInputStream errorDomain], -1, @"EVP_EncryptInit: %@",  [OpenSSL errorMessage]);
                 break;
             }
             EVP_CIPHER_CTX_set_key_length(&cipherContext, EVP_MAX_KEY_LENGTH);
             blockSize = (unsigned long long)EVP_CIPHER_CTX_block_size(&cipherContext);
+            outBufLen = MY_BUF_SIZE + blockSize - 1;
+            outBuf = (unsigned char *)malloc(outBufLen);
             initialized = YES;
             ret = YES;
         } while(0);
@@ -99,89 +102,63 @@
 }
 - (unsigned char *)read:(NSUInteger *)length error:(NSError **)error {
     if (finalized) {
-        SETNSERROR(@"StreamsErrorDomain", ERROR_EOF, @"already finalized");
+        SETNSERROR([CryptInputStream errorDomain], ERROR_EOF, @"EOF");
         return NULL;
     }
     NSUInteger inLen = 0;
+    NSError *myError = nil;
+    unsigned char *inBuf = [is read:&inLen error:&myError];
     int outLen = 0;
-    NSError *myError;
-    unsigned char *inBuf = [self readAtLeastBlockSize:&inLen error:&myError];
-    if (inBuf == NULL && [myError code] != ERROR_EOF) {
-        if (error != NULL) {
-            *error = myError;
-        }
-        return NULL;
-    }
-    NSUInteger neededBufLen = inLen + blockSize;
-    if (outBufLen < neededBufLen) {
-        if (outBuf == NULL) {
-            outBuf = (unsigned char *)malloc(neededBufLen);
+    if (inBuf == NULL) {
+        if ([myError code] == ERROR_EOF) {
+            finalized = YES;
+            if (!(cryptFinal)(&cipherContext, outBuf, &outLen)) {
+                SETNSERROR(@"OpenSSLErrorDomain", -1, @"crypt final: %@", [OpenSSL errorMessage]);
+                return NULL;
+            }
+            if (outLen == 0) {
+                // Don't return 0 bytes and make the caller have to call again.
+                SETNSERROR([CryptInputStream errorDomain], ERROR_EOF, @"EOF");
+                return NULL;
+            }
+            *length = (NSUInteger)outLen;
+            return outBuf;
         } else {
-            outBuf = (unsigned char *)realloc(outBuf, neededBufLen);
-        }
-        outBufLen = neededBufLen;
-    }
-    if (inBuf != NULL) {
-        NSAssert(inLen > 0, @"expected more than 0 input bytes");
-        totalInBytesRecvd += inLen;
-        if (!(*cryptUpdate)(&cipherContext, outBuf, &outLen, inBuf, inLen)) {
-            SETNSERROR(@"OpenSSLErrorDomain", -1, @"crypt update: %@", [OpenSSL errorMessage]);
+            if (error != NULL) {
+                *error = myError;
+            }
             return NULL;
         }
-        NSAssert(outLen < outBufLen, @"can't receive more bytes than outBufLen from EVP_EncryptUpdate");
+    }
+    NSUInteger needed = inLen + blockSize - 1;
+    if (outBufLen < needed) {
+        outBuf = (unsigned char *)realloc(outBuf, needed);
+        if (outBuf == NULL) {
+            SETNSERROR(@"MallocErrorDomain", -1, @"malloc failed");
+            return NULL;
+        }
+        outBufLen = needed;
+    }
+    if (!(*cryptUpdate)(&cipherContext, outBuf, &outLen, inBuf, inLen)) {
+        SETNSERROR(@"OpenSSLErrorDomain", -1, @"crypt update: %@", [OpenSSL errorMessage]);
+        return NULL;
     }
     if (outLen == 0) {
         finalized = YES;
-        if (totalInBytesRecvd > 0 && !(*cryptFinal)(&cipherContext, outBuf, &outLen)) {
+        if (!(cryptFinal)(&cipherContext, outBuf, &outLen)) {
             SETNSERROR(@"OpenSSLErrorDomain", -1, @"crypt final: %@", [OpenSSL errorMessage]);
             return NULL;
         }
-        NSAssert(outLen < outBufLen, @"can't receive more bytes than outBufLen from EVP_EncryptFinal");
+        if (outLen == 0) {
+            // Don't return 0 bytes and make the caller have to call again.
+            SETNSERROR([CryptInputStream errorDomain], ERROR_EOF, @"EOF");
+            return NULL;
+        }
     }
-    if (outLen == 0) {
-        SETNSERROR(@"StreamsErrorDomain", ERROR_EOF, @"EOF on encrypted input stream");
-        return NULL;
-    }
-    NSAssert(outLen > 0, @"outLen must be greater than 0");
     *length = (NSUInteger)outLen;
     return outBuf;
 }
 - (NSData *)slurp:(NSError **)error {
     return [InputStreams slurp:self error:error];
-}
-- (void)bytesWereNotUsed {
-}
-
-@end
-@implementation CryptInputStream (internal)
-- (unsigned char *)readAtLeastBlockSize:(NSUInteger *)length error:(NSError **)error {
-    NSMutableData *data = [NSMutableData data];
-    while ([data length] < blockSize) {
-        NSUInteger recvd = 0;
-        NSError *myError = nil;
-        unsigned char *buf = [is read:&recvd error:&myError];
-        if (buf == NULL) {
-            if ([myError code] != ERROR_EOF) {
-                if (error != NULL) {
-                    *error = myError;
-                }
-                return NULL;
-            }
-            break;
-        }
-        if (recvd > blockSize && [data length] == 0) {
-            // Short-circuit to avoid a buffer copy.
-            *length = recvd;
-            return buf;
-        }
-        [data appendBytes:buf length:recvd];
-    }
-    if ([data length] == 0) {
-        SETNSERROR(@"StreamsErrorDomain", ERROR_EOF, @"EOF");
-        return NULL;
-    }
-    NSAssert([data length] > 0, @"must have received some bytes");
-    *length = [data length];
-    return [data mutableBytes];
 }
 @end

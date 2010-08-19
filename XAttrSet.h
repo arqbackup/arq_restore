@@ -39,7 +39,9 @@
 }
 - (id)initWithPath:(NSString *)thePath error:(NSError **)error;
 - (id)initWithBufferedInputStream:(id <BufferedInputStream>)is error:(NSError **)error;
+- (Blob *)toBlob;
 - (NSUInteger)count;
+- (unsigned long long)dataLength;
 - (NSArray *)names;
 - (BOOL)applyToFile:(NSString *)path error:(NSError **)error;
 @end

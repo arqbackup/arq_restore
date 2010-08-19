@@ -32,12 +32,12 @@
 
 #import <Cocoa/Cocoa.h>
 @class S3Service;
-@class S3Fark;
-@class S3Repo;
+@class ArqFark;
+@class ArqRepo;
 
 @interface Restorer : NSObject {
-    S3Fark *fark;
-    S3Repo *repo;
+    ArqFark *fark;
+    ArqRepo *repo;
     NSString *bucketName;
     NSString *rootPath;
     NSMutableArray *restoreNodes;

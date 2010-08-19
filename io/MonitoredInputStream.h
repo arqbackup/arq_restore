@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -31,25 +31,16 @@
  */ 
 
 #import <Cocoa/Cocoa.h>
-@class ServerBlob;
-@class S3Service;
-@class Blob;
+#import "InputStream.h"
 
-@interface PackSetSet : NSObject {
-    S3Service *s3;
-    NSString *s3BucketName;
-    NSString *computerUUID;
-    NSMutableDictionary *packSets;
+@interface MonitoredInputStream : NSObject <InputStream> {
+    id <InputStream> underlyingStream;
+    unsigned long long bytesReceived;
+    id delegate;
 }
-+ (NSString *)s3PathWithS3BucketName:(NSString *)theS3BucketName computerUUID:(NSString *)theComputerUUID;
-+ (NSString *)localPathWithComputerUUID:(NSString *)computerUUID;
-- (id)initWithS3Service:(S3Service *)theS3
-           s3BucketName:(NSString *)theS3BucketName
-           computerUUID:(NSString *)theComputerUUID;    
-- (ServerBlob *)newServerBlobForSHA1:(NSString *)sha1 packSetName:(NSString *)packSetName error:(NSError **)error;
-- (BOOL)containsBlobForSHA1:(NSString *)sha1 packSetName:(NSString *)packSetName;
-- (NSString *)packSHA1ForPackedBlobSHA1:(NSString *)sha1 packSetName:(NSString *)packSetName;
+- (id)initWithUnderlyingStream:(id <InputStream>)theUnderlyingStream delegate:(id)theDelegate;
+@end
 
-// Sync local cache files to S3 data; reload PackIndexEntries from local cache files.
-- (NSArray *)resetFromS3:(NSError **)error;
+@interface NSObject (MonitoredInputStreamDelegate)
+- (BOOL)monitoredInputStream:(MonitoredInputStream *)stream receivedBytes:(unsigned long long)length error:(NSError **)error;
 @end

@@ -78,8 +78,8 @@
     }
     return (unsigned long long)contentLength;
 }
-- (id <InputStream>)newResponseInputStream:(id <BufferedInputStream>)underlyingStream error:(NSError **)error {
-    id <InputStream> ret = nil;
+- (id <BufferedInputStream>)newResponseInputStream:(id <BufferedInputStream>)underlyingStream error:(NSError **)error {
+    id <BufferedInputStream> ret = nil;
     if ([requestMethod isEqualToString:@"HEAD"] || code == 204) {
         ret = [[NSData data] newInputStream];
     } else {

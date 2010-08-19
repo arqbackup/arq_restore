@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -33,6 +33,10 @@
 #import "FileOutputStream.h"
 #import "SetNSError.h"
 
+@interface FileOutputStream (internal)
+- (BOOL)open:(NSError **)error;
+@end
+
 @implementation FileOutputStream
 - (id)initWithPath:(NSString *)thePath append:(BOOL)isAppend {
     if (self = [super init]) {
@@ -55,20 +59,24 @@
         fd = -1;
     }
 }
+- (BOOL)seekTo:(unsigned long long)offset error:(NSError **)error {
+    if (fd == -1 && ![self open:error]) {
+        return NO;
+    }
+    if (lseek(fd, (off_t)offset, SEEK_SET) == -1) {
+        SETNSERROR(@"UnixErrorDomain", errno, @"lseek(%@, %qu): %s", path, offset, strerror(errno));
+        return NO;
+    }
+    return YES;
+}
+- (NSString *)path {
+    return path;
+}
+
+#pragma mark OutputStream
 - (BOOL)write:(const unsigned char *)buf length:(NSUInteger)len error:(NSError **)error {
-    if (fd == -1) {
-        int oflag = O_WRONLY|O_CREAT;
-        if (append) {
-            oflag |= O_APPEND;
-        } else {
-            oflag |= O_TRUNC;
-        }
-        mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-        fd = open([path fileSystemRepresentation], oflag, mode);
-        if (fd == -1) {
-            SETNSERROR(@"UnixErrorDomain", errno, @"%s", strerror(errno));
-            return NO;
-        }
+    if (fd == -1 && ![self open:error]) {
+        return NO;
     }
     int ret = 0;
     NSUInteger written = 0;
@@ -88,5 +96,23 @@
 }
 - (unsigned long long)bytesWritten {
     return bytesWritten;
+}
+@end
+
+@implementation FileOutputStream (internal)
+- (BOOL)open:(NSError **)error {
+    int oflag = O_WRONLY|O_CREAT;
+    if (append) {
+        oflag |= O_APPEND;
+    } else {
+        oflag |= O_TRUNC;
+    }
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    fd = open([path fileSystemRepresentation], oflag, mode);
+    if (fd == -1) {
+        SETNSERROR(@"UnixErrorDomain", errno, @"%s", strerror(errno));
+        return NO;
+    }
+    return YES;
 }
 @end

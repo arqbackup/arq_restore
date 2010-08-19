@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -36,5 +36,4 @@
 @protocol InputStream <NSObject>
 - (unsigned char *)read:(NSUInteger *)length error:(NSError **)error;
 - (NSData *)slurp:(NSError **)error;
-- (void)bytesWereNotUsed;
 @end

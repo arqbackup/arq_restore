@@ -30,6 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
+#include <sys/stat.h>
 #include <sys/xattr.h>
 #import "XAttrSet.h"
 #import "StringIO.h"
@@ -40,6 +41,7 @@
 #import "SetNSError.h"
 #import "NSErrorCodes.h"
 #import "Streams.h"
+#import "NSError_extra.h"
 
 #define HEADER_LENGTH (12)
 
@@ -52,9 +54,17 @@
 - (id)initWithPath:(NSString *)thePath error:(NSError **)error {
     if (self = [super init]) {
         xattrs = [[NSMutableDictionary alloc] init];
-        if (![self loadFromPath:thePath error:error]) {
-            [self release];
-            self = nil;
+        NSError *myError = nil;
+        if (![self loadFromPath:thePath error:&myError]) {
+            if ([myError isErrorWithDomain:@"UnixErrorDomain" code:EPERM]) {
+                HSLogDebug(@"%@ doesn't support extended attributes; skipping", thePath);
+            } else {
+                if (error != NULL) {
+                    *error = myError;
+                }
+                [self release];
+                self = nil;
+            }
         }
     }
     return self;
@@ -73,8 +83,29 @@
     [xattrs release];
     [super dealloc];
 }
+- (Blob *)toBlob {
+    NSMutableData *data = [[NSMutableData alloc] init];
+    [data appendBytes:"XAttrSetV002" length:HEADER_LENGTH];
+    uint64_t count = (uint64_t)[xattrs count];
+    [IntegerIO writeUInt64:count to:data];
+    for (NSString *name in [xattrs allKeys]) {
+        [StringIO write:name to:data];
+        [DataIO write:[xattrs objectForKey:name] to:data];
+    }
+    Blob *ret = [[[Blob alloc] initWithData:data mimeType:@"binary/octet-stream" downloadName:@"xattrset"] autorelease];    
+    [data release];
+    return ret;
+}
 - (NSUInteger)count {
     return [xattrs count];
+}
+- (unsigned long long)dataLength {
+    unsigned long long total = 0;
+    for (NSString *key in [xattrs allKeys]) {
+        NSData *value = [xattrs objectForKey:key];
+        total += [value length];
+    }
+    return total;
 }
 - (NSArray *)names {
     return [xattrs allKeys];
@@ -109,15 +140,12 @@
 
 @implementation XAttrSet (internal)
 - (BOOL)loadFromPath:(NSString *)thePath error:(NSError **)error {
-    NSDictionary *attribs = [[NSFileManager defaultManager] attributesOfItemAtPath:thePath error:error];
-    if (attribs == nil) {
+    struct stat st;
+    if (lstat([thePath fileSystemRepresentation], &st) == -1) {
+        SETNSERROR(@"UnixErrorDomain", errno, @"lstat(%@): %s", thePath, strerror(errno));
         return NO;
     }
-    NSString *fileType = [attribs objectForKey:NSFileType];
-    if (![fileType isEqualToString:NSFileTypeSocket] 
-        && ![fileType isEqualToString:NSFileTypeBlockSpecial] 
-        && ![fileType isEqualToString:NSFileTypeCharacterSpecial]
-        && ![fileType isEqualToString:NSFileTypeUnknown]) {
+    if (S_ISREG(st.st_mode) || S_ISDIR(st.st_mode) || S_ISLNK(st.st_mode)) {
         const char *path = [thePath fileSystemRepresentation];
         ssize_t xattrsize = listxattr(path, NULL, 0, XATTR_NOFOLLOW);
         if (xattrsize == -1) {

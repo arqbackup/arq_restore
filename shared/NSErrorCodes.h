@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -35,3 +35,7 @@
 #define ERROR_EOF -4
 #define ERROR_NOT_LICENSED -5
 #define ERROR_BUCKET_CONFIGURATION_CHANGED -6
+#define ERROR_ABORT_REQUESTED -7
+#define ERROR_PACK_INDEX_ENTRY_NOT_RESOLVABLE (-8)
+#define ERROR_COULD_NOT_CONNECT_TO_AGENT (-9)
+#define ERROR_AGENT_COMMUNICATION (-10)

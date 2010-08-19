@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -30,38 +30,42 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
-#import <Cocoa/Cocoa.h>
-@class Blob;
-@class S3Service;
-@class ServerBlob;
+#import "MonitoredInputStream.h"
+#import "SetNSError.h"
 
-@interface PackSet : NSObject {
-    NSString *packSetName;
-    NSString *escapedPackSetName;
-    NSString *packSetDir;
-    S3Service *s3;
-    NSString *s3BucketName;
-    NSString *computerUUID;
-    BOOL keepPacksLocal;
-    NSMutableSet *packSHA1s;
-    NSString *currentPackSHA1;
-    NSMutableDictionary *packIndexEntries;
+@implementation MonitoredInputStream
+- (id)initWithUnderlyingStream:(id <InputStream>)theUnderlyingStream delegate:(id)theDelegate {
+    if (self = [super init]) {
+        underlyingStream = [theUnderlyingStream retain];
+        delegate = [theDelegate retain];
+        NSNotification *notif = [NSNotification notificationWithName:@"MonitoredInputStreamCreated" object:nil];
+        [[NSNotificationCenter defaultCenter] performSelectorOnMainThread:@selector(postNotification:) withObject:notif waitUntilDone:NO];
+    }
+    return self;
 }
-+ (NSString *)errorDomain;
-+ (unsigned long long)maxPackFileSizeMB;
-+ (unsigned long long)maxPackItemSizeBytes;
-+ (NSString *)s3PathWithS3BucketName:(NSString *)theS3BucketName computerUUID:(NSString *)theComputerUUID packSetName:(NSString *)thePackSetName;
-+ (NSString *)localPathWithComputerUUID:(NSString *)theComputerUUID packSetName:(NSString *)thePackSetName;
-
-- (id)initWithName:(NSString *)thePackSetName 
-         s3Service:(S3Service *)theS3 
-      s3BucketName:(NSString *)theS3BucketName 
-      computerUUID:(NSString *)theComputerUUID 
-    keepPacksLocal:(BOOL)isKeepPacksLocal 
-         packSHA1s:(NSArray *)thePackSHA1s 
-             error:(NSError **)error;
-- (NSString *)name;
-- (ServerBlob *)newServerBlobForSHA1:(NSString *)sha1 error:(NSError **)error;
-- (BOOL)containsBlobForSHA1:(NSString *)sha1;
-- (NSString *)packSHA1ForPackedBlobSHA1:(NSString *)blobSHA1;
+- (void)dealloc {
+    [underlyingStream release];
+    [delegate release];
+    [super dealloc];
+}
+- (unsigned char *)read:(NSUInteger *)length error:(NSError **)error {
+    unsigned char *buf = [underlyingStream read:length error:error];
+    if (buf != NULL) {
+        if (![delegate monitoredInputStream:self receivedBytes:*length error:error]) {
+            return NULL;
+        }
+        bytesReceived += (unsigned long long)*length;
+    }
+    return buf;
+}
+- (NSData *)slurp:(NSError **)error {
+    NSData *data = [underlyingStream slurp:error];
+    if (data != nil) {
+        if (![delegate monitoredInputStream:self receivedBytes:(unsigned long long)[data length] error:error]) {
+            data = nil;
+        }
+        bytesReceived += (unsigned long long)[data length];
+    }
+    return data;
+}
 @end

@@ -31,8 +31,9 @@
  */ 
 
 #import <Cocoa/Cocoa.h>
-@protocol InputStream;
+#import "InputStream.h"
 @protocol StreamPair;
+@protocol BufferedInputStream;
 @class HTTPRequest;
 @class HTTPResponse;
 
@@ -49,11 +50,12 @@
 - (void)setRequestContentDispositionHeader:(NSString *)downloadName;
 - (void)setRFC822DateRequestHeader;
 - (BOOL)executeRequest:(NSError **)error;
+- (BOOL)executeRequestWithBody:(id <InputStream>)bodyStream error:(NSError **)error;
 - (int)responseCode;
 - (NSString *)responseHeaderForKey:(NSString *)key;
 - (NSString *)responseMimeType;
 - (NSString *)responseDownloadName;
-- (id <InputStream>)newResponseBodyStream:(NSError **)error;
+- (id <BufferedInputStream>)newResponseBodyStream:(NSError **)error;
 - (NSData *)slurpResponseBody:(NSError **)error;
 - (void)setCloseRequested;
 @end

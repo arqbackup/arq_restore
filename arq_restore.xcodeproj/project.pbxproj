@@ -112,11 +112,7 @@
 		F83C1AA211CA7C170001958F /* NSData-Base64Extensions.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B8691160EA83007EC01E /* NSData-Base64Extensions.m */; };
 		F83C1AA311CA7C170001958F /* DataInputStreamFactory.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B86E1160EAC1007EC01E /* DataInputStreamFactory.m */; };
 		F83C1AA411CA7C170001958F /* Restorer.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D677FF1160F26A00CC270E /* Restorer.m */; };
-		F83C1AA511CA7C170001958F /* S3Fark.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678141160F4E300CC270E /* S3Fark.m */; };
-		F83C1AA611CA7C170001958F /* S3Repo.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678161160F4E300CC270E /* S3Repo.m */; };
 		F83C1AA711CA7C170001958F /* SHA1Hash.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6781C1160F4FD00CC270E /* SHA1Hash.m */; };
-		F83C1AA811CA7C170001958F /* PackSetSet.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6782A1160F5D000CC270E /* PackSetSet.m */; };
-		F83C1AA911CA7C170001958F /* PackSet.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6782C1160F5D000CC270E /* PackSet.m */; };
 		F83C1AAA11CA7C170001958F /* ArqUserLibrary.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678321160F62E00CC270E /* ArqUserLibrary.m */; };
 		F83C1AAB11CA7C170001958F /* PackIndexEntry.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6783B1160F70100CC270E /* PackIndexEntry.m */; };
 		F83C1AAC11CA7C170001958F /* DiskPack.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678421160F74A00CC270E /* DiskPack.m */; };
@@ -161,11 +157,7 @@
 		F83C1D0A11CA929D0001958F /* BucketVerifier.m in Sources */ = {isa = PBXBuildFile; fileRef = F83C1D0911CA929D0001958F /* BucketVerifier.m */; };
 		F83C1D1D11CA95AF0001958F /* BucketVerifier.m in Sources */ = {isa = PBXBuildFile; fileRef = F83C1D0911CA929D0001958F /* BucketVerifier.m */; };
 		F8D678001160F26A00CC270E /* Restorer.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D677FF1160F26A00CC270E /* Restorer.m */; };
-		F8D678171160F4E300CC270E /* S3Fark.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678141160F4E300CC270E /* S3Fark.m */; };
-		F8D678181160F4E300CC270E /* S3Repo.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678161160F4E300CC270E /* S3Repo.m */; };
 		F8D6781D1160F4FD00CC270E /* SHA1Hash.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6781C1160F4FD00CC270E /* SHA1Hash.m */; };
-		F8D6782D1160F5D000CC270E /* PackSetSet.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6782A1160F5D000CC270E /* PackSetSet.m */; };
-		F8D6782E1160F5D000CC270E /* PackSet.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6782C1160F5D000CC270E /* PackSet.m */; };
 		F8D678331160F62E00CC270E /* ArqUserLibrary.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678321160F62E00CC270E /* ArqUserLibrary.m */; };
 		F8D6783C1160F70100CC270E /* PackIndexEntry.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D6783B1160F70100CC270E /* PackIndexEntry.m */; };
 		F8D678451160F74A00CC270E /* DiskPack.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D678421160F74A00CC270E /* DiskPack.m */; };
@@ -196,6 +188,23 @@
 		F8D67D071161384100CC270E /* FileACL.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D67D041161384100CC270E /* FileACL.m */; };
 		F8D67D081161384100CC270E /* OSStatusDescription.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D67D061161384100CC270E /* OSStatusDescription.m */; };
 		F8D67F701161443600CC270E /* RestoreNode.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D67F6F1161443600CC270E /* RestoreNode.m */; };
+		F8F4D19D121D77E1002D09C1 /* NSError_extra.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F4D19C121D77E1002D09C1 /* NSError_extra.m */; };
+		F8F4D1A0121D78AD002D09C1 /* MonitoredInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F4D19F121D78AD002D09C1 /* MonitoredInputStream.m */; };
+		F8F4D1B0121D7990002D09C1 /* ArqPackSet.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F4D1AD121D7990002D09C1 /* ArqPackSet.m */; };
+		F8F4D1B1121D7990002D09C1 /* ArqRepo.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F4D1AF121D7990002D09C1 /* ArqRepo.m */; };
+		F8F4D1C3121D79AC002D09C1 /* ArqFark.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F4D1C2121D79AC002D09C1 /* ArqFark.m */; };
+		F8F4D1E2121D7BC3002D09C1 /* AppKeychain.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F4D1E1121D7BC3002D09C1 /* AppKeychain.m */; };
+		F8F4D1E7121D7DA2002D09C1 /* FarkPath.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F4D1E6121D7DA2002D09C1 /* FarkPath.m */; };
+		F8F4D1FE121D8409002D09C1 /* PackIndexWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F4D1FD121D8409002D09C1 /* PackIndexWriter.m */; };
+		F8F4D207121D8696002D09C1 /* ArqRepo_Verifier.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F4D206121D8696002D09C1 /* ArqRepo_Verifier.m */; };
+		F8F4D59A121D9FA7002D09C1 /* MonitoredInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F4D19F121D78AD002D09C1 /* MonitoredInputStream.m */; };
+		F8F4D59B121D9FAD002D09C1 /* ArqFark.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F4D1C2121D79AC002D09C1 /* ArqFark.m */; };
+		F8F4D59C121D9FAE002D09C1 /* ArqPackSet.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F4D1AD121D7990002D09C1 /* ArqPackSet.m */; };
+		F8F4D59D121D9FAF002D09C1 /* ArqRepo.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F4D1AF121D7990002D09C1 /* ArqRepo.m */; };
+		F8F4D59E121D9FAF002D09C1 /* ArqRepo_Verifier.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F4D206121D8696002D09C1 /* ArqRepo_Verifier.m */; };
+		F8F4D5A1121D9FC2002D09C1 /* AppKeychain.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F4D1E1121D7BC3002D09C1 /* AppKeychain.m */; };
+		F8F4D5A2121D9FC9002D09C1 /* FarkPath.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F4D1E6121D7DA2002D09C1 /* FarkPath.m */; };
+		F8F4D5A3121D9FCF002D09C1 /* PackIndexWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F4D1FD121D8409002D09C1 /* PackIndexWriter.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -344,21 +353,13 @@
 		F83C1A6111CA7BD20001958F /* ArqVerifyCommand.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ArqVerifyCommand.h; sourceTree = "<group>"; };
 		F83C1A6211CA7BD20001958F /* ArqVerifyCommand.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ArqVerifyCommand.m; sourceTree = "<group>"; };
 		F83C1AD711CA7C170001958F /* arq_verify */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = arq_verify; sourceTree = BUILT_PRODUCTS_DIR; };
-		F83C1D0811CA929D0001958F /* BucketVerifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BucketVerifier.h; path = s3/BucketVerifier.h; sourceTree = "<group>"; };
-		F83C1D0911CA929D0001958F /* BucketVerifier.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BucketVerifier.m; path = s3/BucketVerifier.m; sourceTree = "<group>"; };
+		F83C1D0811CA929D0001958F /* BucketVerifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BucketVerifier.h; sourceTree = "<group>"; };
+		F83C1D0911CA929D0001958F /* BucketVerifier.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BucketVerifier.m; sourceTree = "<group>"; };
 		F8D6763E1160F22800CC270E /* SetNSError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SetNSError.h; sourceTree = "<group>"; };
 		F8D677FE1160F26A00CC270E /* Restorer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Restorer.h; sourceTree = "<group>"; };
 		F8D677FF1160F26A00CC270E /* Restorer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Restorer.m; sourceTree = "<group>"; };
-		F8D678131160F4E300CC270E /* S3Fark.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = S3Fark.h; sourceTree = "<group>"; };
-		F8D678141160F4E300CC270E /* S3Fark.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = S3Fark.m; sourceTree = "<group>"; };
-		F8D678151160F4E300CC270E /* S3Repo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = S3Repo.h; sourceTree = "<group>"; };
-		F8D678161160F4E300CC270E /* S3Repo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = S3Repo.m; sourceTree = "<group>"; };
 		F8D6781B1160F4FD00CC270E /* SHA1Hash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SHA1Hash.h; sourceTree = "<group>"; };
 		F8D6781C1160F4FD00CC270E /* SHA1Hash.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SHA1Hash.m; sourceTree = "<group>"; };
-		F8D678291160F5D000CC270E /* PackSetSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PackSetSet.h; sourceTree = "<group>"; };
-		F8D6782A1160F5D000CC270E /* PackSetSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PackSetSet.m; sourceTree = "<group>"; };
-		F8D6782B1160F5D000CC270E /* PackSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PackSet.h; sourceTree = "<group>"; };
-		F8D6782C1160F5D000CC270E /* PackSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PackSet.m; sourceTree = "<group>"; };
 		F8D678311160F62E00CC270E /* ArqUserLibrary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ArqUserLibrary.h; sourceTree = "<group>"; };
 		F8D678321160F62E00CC270E /* ArqUserLibrary.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ArqUserLibrary.m; sourceTree = "<group>"; };
 		F8D6783A1160F70100CC270E /* PackIndexEntry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PackIndexEntry.h; sourceTree = "<group>"; };
@@ -419,6 +420,24 @@
 		F8D67D061161384100CC270E /* OSStatusDescription.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OSStatusDescription.m; sourceTree = "<group>"; };
 		F8D67F6E1161443600CC270E /* RestoreNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RestoreNode.h; sourceTree = "<group>"; };
 		F8D67F6F1161443600CC270E /* RestoreNode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RestoreNode.m; sourceTree = "<group>"; };
+		F8F4D19B121D77E1002D09C1 /* NSError_extra.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSError_extra.h; sourceTree = "<group>"; };
+		F8F4D19C121D77E1002D09C1 /* NSError_extra.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSError_extra.m; sourceTree = "<group>"; };
+		F8F4D19E121D78AD002D09C1 /* MonitoredInputStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MonitoredInputStream.h; sourceTree = "<group>"; };
+		F8F4D19F121D78AD002D09C1 /* MonitoredInputStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MonitoredInputStream.m; sourceTree = "<group>"; };
+		F8F4D1AC121D7990002D09C1 /* ArqPackSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ArqPackSet.h; sourceTree = "<group>"; };
+		F8F4D1AD121D7990002D09C1 /* ArqPackSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ArqPackSet.m; sourceTree = "<group>"; };
+		F8F4D1AE121D7990002D09C1 /* ArqRepo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ArqRepo.h; sourceTree = "<group>"; };
+		F8F4D1AF121D7990002D09C1 /* ArqRepo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ArqRepo.m; sourceTree = "<group>"; };
+		F8F4D1C1121D79AC002D09C1 /* ArqFark.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ArqFark.h; sourceTree = "<group>"; };
+		F8F4D1C2121D79AC002D09C1 /* ArqFark.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ArqFark.m; sourceTree = "<group>"; };
+		F8F4D1E0121D7BC3002D09C1 /* AppKeychain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppKeychain.h; sourceTree = "<group>"; };
+		F8F4D1E1121D7BC3002D09C1 /* AppKeychain.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppKeychain.m; sourceTree = "<group>"; };
+		F8F4D1E5121D7DA2002D09C1 /* FarkPath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FarkPath.h; sourceTree = "<group>"; };
+		F8F4D1E6121D7DA2002D09C1 /* FarkPath.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FarkPath.m; sourceTree = "<group>"; };
+		F8F4D1FC121D8409002D09C1 /* PackIndexWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PackIndexWriter.h; sourceTree = "<group>"; };
+		F8F4D1FD121D8409002D09C1 /* PackIndexWriter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PackIndexWriter.m; sourceTree = "<group>"; };
+		F8F4D205121D8696002D09C1 /* ArqRepo_Verifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ArqRepo_Verifier.h; sourceTree = "<group>"; };
+		F8F4D206121D8696002D09C1 /* ArqRepo_Verifier.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ArqRepo_Verifier.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -458,6 +477,8 @@
 		08FB7794FE84155DC02AAC07 /* arq_restore */ = {
 			isa = PBXGroup;
 			children = (
+				F8F4D1FC121D8409002D09C1 /* PackIndexWriter.h */,
+				F8F4D1FD121D8409002D09C1 /* PackIndexWriter.m */,
 				08FB7795FE84155DC02AAC07 /* Source */,
 				08FB779DFE84155DC02AAC07 /* External Frameworks and Libraries */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
@@ -476,6 +497,16 @@
 				F805B7651160DD60007EC01E /* s3 */,
 				32A70AAB03705E1F00C91783 /* arq_restore_Prefix.pch */,
 				08FB7796FE84155DC02AAC07 /* arq_restore.m */,
+				F8F4D1C1121D79AC002D09C1 /* ArqFark.h */,
+				F8F4D1C2121D79AC002D09C1 /* ArqFark.m */,
+				F8F4D1E5121D7DA2002D09C1 /* FarkPath.h */,
+				F8F4D1E6121D7DA2002D09C1 /* FarkPath.m */,
+				F8F4D1AC121D7990002D09C1 /* ArqPackSet.h */,
+				F8F4D1AD121D7990002D09C1 /* ArqPackSet.m */,
+				F8F4D1AE121D7990002D09C1 /* ArqRepo.h */,
+				F8F4D1AF121D7990002D09C1 /* ArqRepo.m */,
+				F8F4D205121D8696002D09C1 /* ArqRepo_Verifier.h */,
+				F8F4D206121D8696002D09C1 /* ArqRepo_Verifier.m */,
 				F8D678311160F62E00CC270E /* ArqUserLibrary.h */,
 				F8D678321160F62E00CC270E /* ArqUserLibrary.m */,
 				F805B54B1160D3E6007EC01E /* ArqRestoreCommand.h */,
@@ -483,8 +514,6 @@
 				F83C1A5F11CA7A6B0001958F /* arq_verify.m */,
 				F83C1A6111CA7BD20001958F /* ArqVerifyCommand.h */,
 				F83C1A6211CA7BD20001958F /* ArqVerifyCommand.m */,
-				F83C1D0811CA929D0001958F /* BucketVerifier.h */,
-				F83C1D0911CA929D0001958F /* BucketVerifier.m */,
 				F805B72E1160DBE9007EC01E /* ArqFolder.h */,
 				F805B72F1160DBE9007EC01E /* ArqFolder.m */,
 				F8D6785B1160F7CE00CC270E /* Commit.h */,
@@ -501,24 +530,18 @@
 				F8D678B71160FB2100CC270E /* Node.m */,
 				F8D6783A1160F70100CC270E /* PackIndexEntry.h */,
 				F8D6783B1160F70100CC270E /* PackIndexEntry.m */,
-				F8D678291160F5D000CC270E /* PackSetSet.h */,
-				F8D6782A1160F5D000CC270E /* PackSetSet.m */,
-				F8D6782B1160F5D000CC270E /* PackSet.h */,
-				F8D6782C1160F5D000CC270E /* PackSet.m */,
 				F8D677FE1160F26A00CC270E /* Restorer.h */,
 				F8D677FF1160F26A00CC270E /* Restorer.m */,
 				F8D67F6E1161443600CC270E /* RestoreNode.h */,
 				F8D67F6F1161443600CC270E /* RestoreNode.m */,
-				F8D678131160F4E300CC270E /* S3Fark.h */,
-				F8D678141160F4E300CC270E /* S3Fark.m */,
-				F8D678151160F4E300CC270E /* S3Repo.h */,
-				F8D678161160F4E300CC270E /* S3Repo.m */,
 				F8D6785D1160F7CF00CC270E /* Tree.h */,
 				F8D6785E1160F7CF00CC270E /* Tree.m */,
 				F8D67CE91161363A00CC270E /* FileAttributes.h */,
 				F8D67CEA1161363A00CC270E /* FileAttributes.m */,
 				F8D67CF01161366100CC270E /* XAttrSet.h */,
 				F8D67CF11161366100CC270E /* XAttrSet.m */,
+				F8F4D1E0121D7BC3002D09C1 /* AppKeychain.h */,
+				F8F4D1E1121D7BC3002D09C1 /* AppKeychain.m */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -578,6 +601,8 @@
 		F805B7651160DD60007EC01E /* s3 */ = {
 			isa = PBXGroup;
 			children = (
+				F83C1D0811CA929D0001958F /* BucketVerifier.h */,
+				F83C1D0911CA929D0001958F /* BucketVerifier.m */,
 				F805B7681160DD60007EC01E /* HTTPConnection_S3.h */,
 				F805B7691160DD60007EC01E /* HTTPConnection_S3.m */,
 				F805B76A1160DD60007EC01E /* NSError_S3.h */,
@@ -608,6 +633,8 @@
 		F805B7A61160DEF2007EC01E /* shared */ = {
 			isa = PBXGroup;
 			children = (
+				F8F4D19B121D77E1002D09C1 /* NSError_extra.h */,
+				F8F4D19C121D77E1002D09C1 /* NSError_extra.m */,
 				F8D6788A1160F8E500CC270E /* BinarySHA1.h */,
 				F8D6788B1160F8E500CC270E /* BinarySHA1.m */,
 				F805B7D61160E456007EC01E /* BlobACL.h */,
@@ -655,6 +682,8 @@
 		F805B8081160E7A1007EC01E /* io */ = {
 			isa = PBXGroup;
 			children = (
+				F8F4D19E121D78AD002D09C1 /* MonitoredInputStream.h */,
+				F8F4D19F121D78AD002D09C1 /* MonitoredInputStream.m */,
 				F8D678A31160FA5F00CC270E /* BooleanIO.h */,
 				F8D678A41160FA5F00CC270E /* BooleanIO.m */,
 				F805B8331160E882007EC01E /* BufferedInputStream.h */,
@@ -844,11 +873,7 @@
 				F805B86A1160EA83007EC01E /* NSData-Base64Extensions.m in Sources */,
 				F805B86F1160EAC1007EC01E /* DataInputStreamFactory.m in Sources */,
 				F8D678001160F26A00CC270E /* Restorer.m in Sources */,
-				F8D678171160F4E300CC270E /* S3Fark.m in Sources */,
-				F8D678181160F4E300CC270E /* S3Repo.m in Sources */,
 				F8D6781D1160F4FD00CC270E /* SHA1Hash.m in Sources */,
-				F8D6782D1160F5D000CC270E /* PackSetSet.m in Sources */,
-				F8D6782E1160F5D000CC270E /* PackSet.m in Sources */,
 				F8D678331160F62E00CC270E /* ArqUserLibrary.m in Sources */,
 				F8D6783C1160F70100CC270E /* PackIndexEntry.m in Sources */,
 				F8D678451160F74A00CC270E /* DiskPack.m in Sources */,
@@ -881,6 +906,15 @@
 				F8D67F701161443600CC270E /* RestoreNode.m in Sources */,
 				F83C1AE311CA7C7C0001958F /* arq_restore.m in Sources */,
 				F83C1D0A11CA929D0001958F /* BucketVerifier.m in Sources */,
+				F8F4D19D121D77E1002D09C1 /* NSError_extra.m in Sources */,
+				F8F4D1A0121D78AD002D09C1 /* MonitoredInputStream.m in Sources */,
+				F8F4D1B0121D7990002D09C1 /* ArqPackSet.m in Sources */,
+				F8F4D1B1121D7990002D09C1 /* ArqRepo.m in Sources */,
+				F8F4D1C3121D79AC002D09C1 /* ArqFark.m in Sources */,
+				F8F4D1E2121D7BC3002D09C1 /* AppKeychain.m in Sources */,
+				F8F4D1E7121D7DA2002D09C1 /* FarkPath.m in Sources */,
+				F8F4D1FE121D8409002D09C1 /* PackIndexWriter.m in Sources */,
+				F8F4D207121D8696002D09C1 /* ArqRepo_Verifier.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -938,11 +972,7 @@
 				F83C1AA211CA7C170001958F /* NSData-Base64Extensions.m in Sources */,
 				F83C1AA311CA7C170001958F /* DataInputStreamFactory.m in Sources */,
 				F83C1AA411CA7C170001958F /* Restorer.m in Sources */,
-				F83C1AA511CA7C170001958F /* S3Fark.m in Sources */,
-				F83C1AA611CA7C170001958F /* S3Repo.m in Sources */,
 				F83C1AA711CA7C170001958F /* SHA1Hash.m in Sources */,
-				F83C1AA811CA7C170001958F /* PackSetSet.m in Sources */,
-				F83C1AA911CA7C170001958F /* PackSet.m in Sources */,
 				F83C1AAA11CA7C170001958F /* ArqUserLibrary.m in Sources */,
 				F83C1AAB11CA7C170001958F /* PackIndexEntry.m in Sources */,
 				F83C1AAC11CA7C170001958F /* DiskPack.m in Sources */,
@@ -975,6 +1005,14 @@
 				F83C1AC711CA7C170001958F /* RestoreNode.m in Sources */,
 				F83C1AC911CA7C170001958F /* ArqVerifyCommand.m in Sources */,
 				F83C1D1D11CA95AF0001958F /* BucketVerifier.m in Sources */,
+				F8F4D59A121D9FA7002D09C1 /* MonitoredInputStream.m in Sources */,
+				F8F4D59B121D9FAD002D09C1 /* ArqFark.m in Sources */,
+				F8F4D59C121D9FAE002D09C1 /* ArqPackSet.m in Sources */,
+				F8F4D59D121D9FAF002D09C1 /* ArqRepo.m in Sources */,
+				F8F4D59E121D9FAF002D09C1 /* ArqRepo_Verifier.m in Sources */,
+				F8F4D5A1121D9FC2002D09C1 /* AppKeychain.m in Sources */,
+				F8F4D5A2121D9FC9002D09C1 /* FarkPath.m in Sources */,
+				F8F4D5A3121D9FCF002D09C1 /* PackIndexWriter.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -32,6 +32,8 @@
 
 #import "SHA1Hash.h"
 #include <openssl/sha.h>
+#include <sys/stat.h>
+#import "SetNSError.h"
 #import "FileInputStream.h"
 #import "NSErrorCodes.h"
 #import "Blob.h"
@@ -62,7 +64,7 @@ static NSString *digest2String(unsigned char *digest) {
     return digest2String(md);
 }
 + (NSString *)hashBlob:(Blob *)blob blobLength:(unsigned long long *)blobLength error:(NSError **)error {
-    id <InputStream> is = [blob newInputStream:self];
+    id <InputStream> is = [[blob inputStreamFactory] newInputStream];
     if (is == nil) {
         return nil;
     }
@@ -71,11 +73,13 @@ static NSString *digest2String(unsigned char *digest) {
     return sha1;
 }
 + (NSString *)hashFile:(NSString *)path error:(NSError **)error {
-    NSDictionary *attribs = [[NSFileManager defaultManager] attributesOfItemAtPath:path error:error];
-    if (attribs == nil) {
+    struct stat st;
+    if (lstat([path fileSystemRepresentation], &st) == -1) {
+        SETNSERROR(@"UnixErrorDomain", errno, @"lstat(%@): %s", path, strerror(errno));
         return NO;
     }
-    FileInputStream *fis = [[FileInputStream alloc] initWithPath:path length:[[attribs objectForKey:NSFileSize] unsignedLongLongValue]];
+    unsigned long long length = (unsigned long long)st.st_size;
+    FileInputStream *fis = [[FileInputStream alloc] initWithPath:path offset:0 length:length];
     NSString *sha1 = [SHA1Hash hashStream:fis error:error];
     [fis release];
     return sha1;

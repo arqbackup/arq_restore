@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -37,7 +37,7 @@
 #import "FDInputStream.h"
 
 @implementation FixedLengthInputStream
-- (id)initWithUnderlyingStream:(FDInputStream *)is length:(unsigned long long)theLength {
+- (id)initWithUnderlyingStream:(id <BufferedInputStream>)is length:(unsigned long long)theLength {
     if (self = [super init]) {
         underlyingStream = [is retain];
         fixedLength = theLength;
@@ -54,8 +54,17 @@
         SETNSERROR(@"StreamsErrorDomain", ERROR_EOF, @"EOF on fixed length input stream");
         return NULL;
     }
-    unsigned char *buf = [underlyingStream readMaximum:maximum length:length error:error];
+    NSError *myError = nil;
+    unsigned char *buf = [underlyingStream readMaximum:maximum length:length error:&myError];
     if (buf == NULL) {
+        if ([myError code] == ERROR_EOF) {
+            HSLogError(@"unexpected EOF when only %qu of %qu bytes received", totalReceived, fixedLength);
+            SETNSERROR(@"StreamsErrorDomain", -1, @"unexpected EOF when only %qu of %qu bytes received", totalReceived, fixedLength);
+            return NULL;
+        }
+        if (error != NULL) {
+            *error = myError;
+        }
         return NULL;
     }
     totalReceived += (unsigned long long)(*length);
@@ -63,7 +72,5 @@
 }
 - (NSData *)slurp:(NSError **)error {
     return [InputStreams slurp:self error:error];
-}
-- (void)bytesWereNotUsed {
 }
 @end

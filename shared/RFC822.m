@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -33,13 +33,14 @@
 #import "RFC822.h"
 #import "SetNSError.h"
 #import "RegexKitLite.h"
+#import "S3Service.h"
 
 #define FMT822 (@"^(\\d{4})-(\\d{2})-(\\d{2})T(\\d{2}):(\\d{2}):(\\d{2})\\.(\\d{3})Z$")
 
 @implementation RFC822
 + (NSDate *)dateFromString:(NSString *)dateString error:(NSError **)error {
     if ([dateString rangeOfRegex:FMT822].location == NSNotFound) {
-        SETNSERROR(@"S3ErrorDomain", -1, @"invalid date '%@'", dateString);
+        SETNSERROR([S3Service amazonErrorDomain], -1, @"invalid date '%@'", dateString);
         return nil;
     }
     return [NSCalendarDate dateWithYear:[[dateString stringByMatching:FMT822 capture:1] intValue] 

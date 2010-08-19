@@ -12,7 +12,8 @@
 #import "HTTP.h"
 #import "RegexKitLite.h"
 #import "BucketVerifier.h"
-#import "PackSet.h"
+#import "NSError_extra.h"
+#import "NSErrorCodes.h"
 
 @interface ArqVerifyCommand (internal)
 - (NSArray *)objectSHA1sForS3BucketName:(NSString *)s3BucketName computerUUID:(NSString *)computerUUID error:(NSError **)error;
@@ -64,7 +65,7 @@
 	NSError *myError = nil;
 	NSArray *computerUUIDs = [s3 commonPrefixesForPathPrefix:computerUUIDPrefix delimiter:@"/" error:&myError];
 	if (computerUUIDs == nil) {
-		if ([[myError domain] isEqualToString:[S3Service serverErrorDomain]] && [myError code] == HTTP_NOT_FOUND) {
+        if ([myError isErrorWithDomain:[S3Service errorDomain] code:ERROR_NOT_FOUND]) {
 			// Skip.
 			printf("no computer UUIDs found in bucket %s\n", [s3BucketName UTF8String]);
 			return YES;

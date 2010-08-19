@@ -40,9 +40,6 @@
 #import "SetNSError.h"
 #import "RegexKitLite.h"
 #import "NSErrorCodes.h"
-#import "Streams.h"
-
-#define HEADER_LENGTH (8)
 
 @interface Tree (internal)
 - (BOOL)readHeader:(id <BufferedInputStream>)is error:(NSError **)error;
@@ -52,11 +49,8 @@
 @synthesize xattrsSHA1, xattrsSize, aclSHA1, uid, gid, mode, mtime_sec, mtime_nsec, flags, finderFlags, extendedFinderFlags, treeVersion, st_rdev;
 @synthesize ctime_sec, ctime_nsec, createTime_sec, createTime_nsec, st_nlink, st_ino;
 
-- (id)init {
-    if (self = [super init]) {
-        nodes = [[NSMutableDictionary alloc] init];
-    }
-    return self;
++ (NSString *)errorDomain {
+    return @"TreeErrorDomain";
 }
 - (id)initWithBufferedInputStream:(id <BufferedInputStream>)is error:(NSError **)error {
 	if (self = [super init]) {
@@ -130,15 +124,52 @@ initDone:
 - (BOOL)containsNodeNamed:(NSString *)name {
 	return [nodes objectForKey:name] != nil;
 }
+- (Blob *)toBlob {
+    NSMutableData *data = [[NSMutableData alloc] init];
+    char header[TREE_HEADER_LENGTH + 1];
+    sprintf(header, "TreeV%03d", CURRENT_TREE_VERSION);
+    [data appendBytes:header length:TREE_HEADER_LENGTH];
+    [StringIO write:xattrsSHA1 to:data];
+    [IntegerIO writeUInt64:xattrsSize to:data];
+    [StringIO write:aclSHA1 to:data];
+    [IntegerIO writeInt32:uid to:data];
+    [IntegerIO writeInt32:gid to:data];
+    [IntegerIO writeInt32:mode to:data];
+    [IntegerIO writeInt64:mtime_sec to:data];
+    [IntegerIO writeInt64:mtime_nsec to:data];
+    [IntegerIO writeInt64:flags to:data];
+    [IntegerIO writeInt32:finderFlags to:data];
+    [IntegerIO writeInt32:extendedFinderFlags to:data];
+    [IntegerIO writeInt32:st_dev to:data];
+    [IntegerIO writeInt32:st_ino to:data];
+    [IntegerIO writeUInt32:st_nlink to:data];
+    [IntegerIO writeInt32:st_rdev to:data];
+    [IntegerIO writeInt64:ctime_sec to:data];
+    [IntegerIO writeInt64:ctime_nsec to:data];
+    [IntegerIO writeInt64:st_blocks to:data];
+    [IntegerIO writeUInt32:st_blksize to:data];
+    
+    [IntegerIO writeUInt32:(uint32_t)[nodes count] to:data];
+    NSMutableArray *nodeNames = [NSMutableArray arrayWithArray:[nodes allKeys]];
+    [nodeNames sortUsingSelector:@selector(compare:)];
+    for (NSString *nodeName in nodeNames) {
+        [StringIO write:nodeName to:data];
+        Node *node = [nodes objectForKey:nodeName];
+        [node writeToData:data];
+    }
+    Blob *ret =[[[Blob alloc] initWithData:data mimeType:@"binary/octet-stream" downloadName:@"Tree"] autorelease];
+    [data release];
+    return ret;
+}
 @end
 
 @implementation Tree (internal)
 - (BOOL)readHeader:(id <BufferedInputStream>)is error:(NSError **)error {
-    unsigned char *headerBytes = [is readExactly:HEADER_LENGTH error:error];
+    unsigned char *headerBytes = [is readExactly:TREE_HEADER_LENGTH error:error];
     if (headerBytes == NULL) {
         return NO;
     }
-    NSString *header = [[[NSString alloc] initWithBytes:headerBytes length:HEADER_LENGTH encoding:NSASCIIStringEncoding] autorelease];
+    NSString *header = [[[NSString alloc] initWithBytes:headerBytes length:TREE_HEADER_LENGTH encoding:NSASCIIStringEncoding] autorelease];
     NSRange versionRange = [header rangeOfRegex:@"^TreeV(\\d{3})$" capture:1];
     treeVersion = 0;
     if (versionRange.location != NSNotFound) {
@@ -148,7 +179,7 @@ initDone:
         [nf release];
     }
     if (treeVersion != CURRENT_TREE_VERSION) {
-        SETNSERROR(@"TreeErrorDomain", ERROR_INVALID_OBJECT_VERSION, @"invalid Tree header: %@", header);
+        SETNSERROR([Tree errorDomain], ERROR_INVALID_OBJECT_VERSION, @"invalid Tree header: %@", header);
         return NO;
     }
     return YES;

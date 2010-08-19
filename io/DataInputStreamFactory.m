@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -30,6 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
+
 #import "DataInputStreamFactory.h"
 #import "DataInputStream.h"
 #import "NSData-InputStream.h"
@@ -47,10 +48,12 @@
 }
 
 #pragma mark InputStreamFactory protocol
-- (id <InputStream>) newInputStream:(id)sender {
+- (id <InputStream>) newInputStream {
     return [data newInputStream];
 }
-- (id <InputStream>) newInputStream:(id)sender sourceOffset:(unsigned long long)theOffset sourceLength:(unsigned long long)theLength {
-    return [[DataInputStream alloc] initWithData:data offset:theOffset length:theLength];
+
+#pragma mark NSObject
+- (NSString *)description {
+    return [NSString stringWithFormat:@"<DataISF: %u>", [data length]];
 }
 @end

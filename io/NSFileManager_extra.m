@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -49,6 +49,29 @@
         }
     } else if (![fm createDirectoryAtPath:parentPath withIntermediateDirectories:YES attributes:nil error:error]) {
         return NO;
+    }
+    return YES;
+}
+- (BOOL)touchFileAtPath:(NSString *)path error:(NSError **)error {
+    if ([[NSFileManager defaultManager] fileExistsAtPath:path]) {
+        time_t theTime = time(NULL);
+        struct timespec spec;
+        spec.tv_sec = theTime;
+        spec.tv_nsec = 0;
+        struct timeval timevals[2];
+        TIMESPEC_TO_TIMEVAL(&(timevals[0]), &spec);
+        TIMESPEC_TO_TIMEVAL(&(timevals[1]), &spec);
+        if (utimes([path fileSystemRepresentation], timevals) == -1) {
+            SETNSERROR(@"UnixErrorDomain", errno, @"utimes(%@): %s", path, strerror(errno));
+            return NO;
+        }
+    } else {
+        int fd = open([path fileSystemRepresentation], O_CREAT, S_IRWXU | S_IRWXG | S_IRWXO);
+        if (fd == -1) {
+            SETNSERROR(@"UnixErrorDomain", errno, @"%s", strerror(errno));
+            return NO;
+        }
+        close(fd);
     }
     return YES;
 }

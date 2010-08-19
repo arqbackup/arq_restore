@@ -40,18 +40,16 @@
 #import "PackIndexEntry.h"
 #import "NSErrorCodes.h"
 #import "S3Service.h"
-#import "PackSetSet.h"
 #import "FileOutputStream.h"
 #import "Streams.h"
 #import "NSFileManager_extra.h"
 #import "ServerBlob.h"
-#import "PackSet.h"
 #import "S3ObjectReceiver.h"
 #import "DiskPack.h"
 #import "BlobACL.h"
 #import "FileInputStreamFactory.h"
+#import "PackIndexWriter.h"
 #import "ArqUserLibrary.h"
-#import "Blob.h"
 
 typedef struct index_object {
     uint64_t nbo_offset;
@@ -76,10 +74,10 @@ typedef struct pack_index {
 
 @implementation DiskPackIndex
 + (NSString *)s3PathWithS3BucketName:(NSString *)theS3BucketName computerUUID:(NSString *)theComputerUUID packSetName:(NSString *)thePackSetName packSHA1:(NSString *)thePackSHA1 {
-    return [NSString stringWithFormat:@"%@/%@.index", [PackSet s3PathWithS3BucketName:theS3BucketName computerUUID:theComputerUUID packSetName:thePackSetName], thePackSHA1];
+    return [NSString stringWithFormat:@"/%@/%@/packsets/%@/%@.index", theS3BucketName, theComputerUUID, thePackSetName, thePackSHA1];
 }
 + (NSString *)localPathWithComputerUUID:(NSString *)theComputerUUID packSetName:(NSString *)thePackSetName packSHA1:(NSString *)thePackSHA1 {
-    return [NSString stringWithFormat:@"%@/%@/%@.index", [PackSet localPathWithComputerUUID:theComputerUUID packSetName:thePackSetName], [thePackSHA1 substringToIndex:2], [thePackSHA1 substringFromIndex:2]];
+    return [NSString stringWithFormat:@"%@/%@/packsets/%@/%@/%@.index", [ArqUserLibrary arqCachesPath], theComputerUUID, thePackSetName, [thePackSHA1 substringToIndex:2], [thePackSHA1 substringFromIndex:2]];
 }
 - (id)initWithS3Service:(S3Service *)theS3 s3BucketName:(NSString *)theS3BucketName computerUUID:(NSString *)theComputerUUID packSetName:(NSString *)thePackSetName packSHA1:(NSString *)thePackSHA1 {
     if (self = [super init]) {
@@ -109,12 +107,12 @@ typedef struct pack_index {
     if (![fm fileExistsAtPath:localPath]) {
         HSLogDebug(@"packset %@: making pack index %@ local", packSetName, packSHA1);
         ServerBlob *sb = [s3 newServerBlobAtPath:s3Path error:error];
-        if (sb != nil) {
+        if (sb == nil) {
+            ret = NO;
+        } else {
             unsigned long long bytesWritten;
             ret = [self savePackIndex:sb bytesWritten:&bytesWritten error:error];
             [sb release];
-        } else {
-            HSLogError(@"failed to read pack index from S3 path %@", s3Path);
         }
     } else {
         ret = YES;
@@ -143,12 +141,13 @@ typedef struct pack_index {
     uint32_t count = OSSwapBigToHostInt32(the_pack_index->nbo_fanout[255]);
     index_object *indexObjects = &(the_pack_index->first_index_object);
     for (uint32_t i = 0; i < count; i++) {
+        NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
         uint64_t offset = OSSwapBigToHostInt64(indexObjects[i].nbo_offset);
         uint64_t dataLength = OSSwapBigToHostInt64(indexObjects[i].nbo_datalength);
         NSString *objectSHA1 = [NSString hexStringWithBytes:indexObjects[i].sha1 length:20];
-        PackIndexEntry *pie = [[PackIndexEntry alloc] initWithPackSHA1:packSHA1 offset:offset dataLength:dataLength objectSHA1:objectSHA1];
+        PackIndexEntry *pie = [[[PackIndexEntry alloc] initWithPackSHA1:packSHA1 offset:offset dataLength:dataLength objectSHA1:objectSHA1] autorelease];
         [ret addObject:pie];
-        [pie release];
+        [pool drain];
     }
     if (munmap(the_pack_index, st.st_size) == -1) {
         HSLogError(@"munmap: %s", strerror(errno));

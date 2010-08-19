@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -92,8 +92,6 @@
     NSData *ret = [data subdataWithRange:NSMakeRange(pos, [data length] - pos)];
     pos = [data length];
     return ret;
-}
-- (void)bytesWereNotUsed {
 }
 - (uint64_t)bytesReceived {
     return (uint64_t)pos;

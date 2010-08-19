@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -41,7 +41,6 @@
 #import "HTTP.h"
 #import "S3Service.h"
 #import "S3Request.h"
-#import "ServerBlob.h"
 
 @interface S3Lister (internal)
 - (BOOL)getWithMax:(int)max error:(NSError **)error;
@@ -76,8 +75,11 @@
 		*error = nil;
 	}
     BOOL ret = YES;
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    
+    NSAutoreleasePool *pool = nil;
 	while (isTruncated) {
+        [pool drain];
+        pool = [[NSAutoreleasePool alloc] init];
 		if (maxRequested < 0) {
             if (![self getWithMax:-1 error:error]) {
                 ret = NO;
@@ -90,11 +92,12 @@
             }
 		}
 	}
-	if (!ret && error != NULL) {
+
+	if (error != NULL) {
 		[*error retain];
 	}
     [pool drain];
-	if (!ret && error != NULL) {
+	if (error != NULL) {
 		[*error autorelease];
 	}
     return ret;

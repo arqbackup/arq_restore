@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -32,12 +32,12 @@
 
 #import <Cocoa/Cocoa.h>
 #import "InputStream.h"
-@class FDInputStream;
+@protocol BufferedInputStream;
 
 @interface FixedLengthInputStream : NSObject <InputStream> {
-    FDInputStream *underlyingStream;
+    id <BufferedInputStream> underlyingStream;
     unsigned long long fixedLength;
     unsigned long long totalReceived;
 }
-- (id)initWithUnderlyingStream:(FDInputStream *)is length:(unsigned long long)theLength;
+- (id)initWithUnderlyingStream:(id <BufferedInputStream>)is length:(unsigned long long)theLength;
 @end

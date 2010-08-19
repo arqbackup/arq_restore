@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -43,7 +43,6 @@ typedef int (*CryptFinalFunc)(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl
     CryptUpdateFunc cryptUpdate;
     CryptFinalFunc cryptFinal;
     id <InputStream> is;
-    NSUInteger totalInBytesRecvd;
     unsigned char *outBuf;
     NSUInteger outBufLen;
     const EVP_CIPHER *cipher;
@@ -54,5 +53,6 @@ typedef int (*CryptFinalFunc)(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl
     BOOL initialized;
     BOOL finalized;
 }
++ (NSString *)errorDomain;
 - (id)initWithCryptInitFunc:(void *)theCryptInit cryptUpdateFunc:(void *)theCryptUpdate cryptFinalFunc:(void *)theCryptFinal inputStream:(id <InputStream>)theIS cipherName:(NSString *)theCipherName key:(NSString *)theKey error:(NSError **)error;
 @end

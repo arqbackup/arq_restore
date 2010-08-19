@@ -36,7 +36,6 @@
 #import "FDInputStream.h"
 #import "StringIO.h"
 #import "IntegerIO.h"
-#import "PackSetSet.h"
 #import "ServerBlob.h"
 #import "NSFileManager_extra.h"
 #import "S3Service.h"
@@ -44,12 +43,11 @@
 #import "FileInputStream.h"
 #import "FileOutputStream.h"
 #import "Streams.h"
-#import "PackSet.h"
 #import "S3ObjectReceiver.h"
 #import "S3ObjectMetadata.h"
 #import "PackIndexEntry.h"
 #import "SHA1Hash.h"
-
+#import "ArqUserLibrary.h"
 
 @interface DiskPack (internal)
 - (BOOL)savePack:(ServerBlob *)sb bytesWritten:(unsigned long long *)written error:(NSError **)error;
@@ -58,10 +56,10 @@
 
 @implementation DiskPack
 + (NSString *)s3PathWithS3BucketName:(NSString *)theS3BucketName computerUUID:(NSString *)theComputerUUID packSetName:(NSString *)thePackSetName packSHA1:(NSString *)thePackSHA1 {
-    return [NSString stringWithFormat:@"%@/%@.pack", [PackSet s3PathWithS3BucketName:theS3BucketName computerUUID:theComputerUUID packSetName:thePackSetName], thePackSHA1];
+    return [NSString stringWithFormat:@"/%@/%@/packsets/%@/%@.pack", theS3BucketName, theComputerUUID, thePackSetName, thePackSHA1];
 }
 + (NSString *)localPathWithComputerUUID:(NSString *)theComputerUUID packSetName:(NSString *)thePackSetName packSHA1:(NSString *)thePackSHA1 {
-    return [NSString stringWithFormat:@"%@/%@/%@.pack", [PackSet localPathWithComputerUUID:theComputerUUID packSetName:thePackSetName], [thePackSHA1 substringToIndex:2], [thePackSHA1 substringFromIndex:2]];
+    return [NSString stringWithFormat:@"%@/%@/packsets/%@/%@/%@.pack", [ArqUserLibrary arqCachesPath], theComputerUUID, thePackSetName, [thePackSHA1 substringToIndex:2], [thePackSHA1 substringFromIndex:2]];
 }
 - (id)initWithS3Service:(S3Service *)theS3 s3BucketName:(NSString *)theS3BucketName computerUUID:(NSString *)theComputerUUID packSetName:(NSString *)thePackSetName packSHA1:(NSString *)thePackSHA1 {
     if (self = [super init]) {
@@ -90,8 +88,14 @@
     BOOL ret = NO;
     if (![fm fileExistsAtPath:localPath]) {
         HSLogDebug(@"packset %@: making pack %@ local", packSetName, packSHA1);
-        ServerBlob *sb = [s3 newServerBlobAtPath:s3Path error:error];
-        if (sb != nil) {
+        NSError *myError = nil;
+        ServerBlob *sb = [s3 newServerBlobAtPath:s3Path error:&myError];
+        if (sb == nil) {
+            HSLogError(@"error getting S3 pack %@: %@", s3Path, [myError localizedDescription]);
+            if (error != NULL) {
+                *error = myError;
+            }
+        } else {
             unsigned long long bytesWritten;
             ret = [self savePack:sb bytesWritten:&bytesWritten error:error];
             [sb release];
@@ -148,25 +152,12 @@
     *length = st.st_size;
     return YES;
 }
-- (BOOL)copyToPath:(NSString *)dest error:(NSError **)error {
-    NSFileManager *fm = [NSFileManager defaultManager];
-    if ([fm fileExistsAtPath:dest] && ![fm removeItemAtPath:dest error:error]) {
-        HSLogError(@"error removing old mutable pack at %@", dest);
-        return NO;
-    }
-    if (![fm ensureParentPathExistsForPath:dest error:error] || ![fm copyItemAtPath:localPath toPath:dest error:error]) {
-        HSLogError(@"error copying pack %@ to %@", localPath, dest);
-        return NO;
-    }
-    HSLogDebug(@"copied %@ to %@", localPath, dest);
-    return YES;
-}
 - (NSArray *)sortedPackIndexEntries:(NSError **)error {
     unsigned long long length;
     if (![self fileLength:&length error:error]) {
         return NO;
     }
-    FileInputStream *fis = [[FileInputStream alloc] initWithPath:localPath length:length];
+    FileInputStream *fis = [[FileInputStream alloc] initWithPath:localPath offset:0 length:length];
     NSArray *ret = [self sortedPackIndexEntriesFromStream:fis error:error];
     [fis release];
     return ret;

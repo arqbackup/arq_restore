@@ -34,7 +34,6 @@
 #import "DateIO.h"
 #import "StringIO.h"
 #import "Commit.h"
-#import "Blob.h"
 #import "DataInputStream.h"
 #import "RegexKitLite.h"
 #import "SetNSError.h"

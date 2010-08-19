@@ -60,4 +60,9 @@
 - (NSString *)objectSHA1 {
     return objectSHA1;
 }
+
+#pragma mark NSObject
+- (NSString *)description {
+    return [NSString stringWithFormat:@"<PackIndexEntry: packSHA1=%@ offset=%qu dataLength=%qu objectSHA1=%@>", packSHA1, offset, dataLength, objectSHA1];
+}
 @end

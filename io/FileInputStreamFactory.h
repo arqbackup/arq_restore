@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -35,7 +35,9 @@
 
 @interface FileInputStreamFactory : NSObject <InputStreamFactory> {
     NSString *path;
+    unsigned long long offset;
     unsigned long long length;
 }
+- (id)initWithPath:(NSString *)thePath offset:(unsigned long long)theOffset length:(unsigned long long)theLength;
 - (id)initWithPath:(NSString *)thePath error:(NSError **)error;
 @end

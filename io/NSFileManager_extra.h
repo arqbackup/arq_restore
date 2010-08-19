@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -35,4 +35,5 @@
 
 @interface NSFileManager (extra)
 - (BOOL)ensureParentPathExistsForPath:(NSString *)path error:(NSError **)error;
+- (BOOL)touchFileAtPath:(NSString *)path error:(NSError **)error;
 @end

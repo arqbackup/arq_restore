@@ -39,7 +39,8 @@
 #import "ArqFolder.h"
 #import "HTTP.h"
 #import "Restorer.h"
-
+#import "NSErrorCodes.h"
+#import "NSError_extra.h"
 
 @interface ArqRestoreCommand (internal)
 - (BOOL)printArqFolders:(NSError **)error;
@@ -123,7 +124,7 @@
         NSError *myError = nil;
         NSArray *computerUUIDs = [s3 commonPrefixesForPathPrefix:computerUUIDPrefix delimiter:@"/" error:&myError];
         if (computerUUIDs == nil) {
-            if ([[myError domain] isEqualToString:[S3Service serverErrorDomain]] && [myError code] == HTTP_NOT_FOUND) {
+            if ([myError isErrorWithDomain:[S3Service errorDomain] code:ERROR_NOT_FOUND]) {
                 // Skip.
             } else {
                 if (error != NULL) {

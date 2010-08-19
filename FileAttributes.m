@@ -114,7 +114,7 @@ static OSStatus SymlinkPathMakeRef(const UInt8 *path, FSRef *ref, Boolean *isDir
         cPath = [path fileSystemRepresentation];
         memcpy(&st, theStat, sizeof(st));
         targetExists = YES;
-        if ((st.st_mode & S_IFLNK) == S_IFLNK) {
+        if (S_ISLNK(st.st_mode)) {
             struct stat targetSt;
             int ret = stat(cPath, &targetSt);
             if (ret == -1 && errno == ENOENT) {
@@ -125,7 +125,7 @@ static OSStatus SymlinkPathMakeRef(const UInt8 *path, FSRef *ref, Boolean *isDir
             FSRef fsRef;
             Boolean isDirectory;
             OSStatus oss = 0;
-            if ((st.st_mode & S_IFLNK) == S_IFLNK) {
+            if (S_ISLNK(st.st_mode)) {
                 oss = SymlinkPathMakeRef((UInt8*)cPath, &fsRef, &isDirectory);
             } else {
                 oss = FSPathMakeRef((UInt8*)cPath, &fsRef, &isDirectory);
@@ -254,22 +254,22 @@ static OSStatus SymlinkPathMakeRef(const UInt8 *path, FSRef *ref, Boolean *isDir
     return finderFileCreator;
 }
 - (BOOL)isExtensionHidden {
-    return (st.st_flags & UF_HIDDEN) == UF_HIDDEN;
+    return st.st_flags & UF_HIDDEN;
 }
 - (BOOL)isFifo {
-    return (st.st_mode & S_IFIFO) == S_IFIFO;
+    return S_ISFIFO(st.st_mode);
 }
 - (BOOL)isDevice {
-    return (st.st_mode & S_IFCHR) == S_IFCHR || (st.st_mode & S_IFBLK) == S_IFBLK;
+    return S_ISBLK(st.st_mode) || S_ISCHR(st.st_mode);
 }
 - (BOOL)isSymbolicLink {
-    return (st.st_mode & S_IFLNK) == S_IFLNK;
+    return S_ISLNK(st.st_mode);
 }
 - (BOOL)isRegularFile {
-    return (st.st_mode & S_IFREG) == S_IFREG;
+    return S_ISREG(st.st_mode);
 }
 - (BOOL)isSocket {
-    return (st.st_mode & S_IFSOCK) == S_IFSOCK;
+    return S_ISSOCK(st.st_mode);
 }
 - (int)st_dev {
     return st.st_dev;
@@ -311,7 +311,7 @@ static OSStatus SymlinkPathMakeRef(const UInt8 *path, FSRef *ref, Boolean *isDir
             FSRef fsRef;
             Boolean isDirectory;
             OSStatus oss = 0;
-            if ((st.st_mode & S_IFLNK) == S_IFLNK) {
+            if (S_ISLNK(st.st_mode)) {
                 oss = SymlinkPathMakeRef((UInt8*)cPath, &fsRef, &isDirectory);
             } else {
                 oss = FSPathMakeRef((UInt8*)cPath, &fsRef, &isDirectory);
@@ -391,7 +391,7 @@ static OSStatus SymlinkPathMakeRef(const UInt8 *path, FSRef *ref, Boolean *isDir
         FSRef fsRef;
         Boolean isDirectory;
         OSStatus oss = 0;
-        if ((st.st_mode & S_IFLNK) == S_IFLNK) {
+        if (S_ISLNK(st.st_mode)) {
             oss = SymlinkPathMakeRef((UInt8*)cPath, &fsRef, &isDirectory);
         } else {
             oss = FSPathMakeRef((UInt8*)cPath, &fsRef, &isDirectory);
@@ -432,7 +432,7 @@ static OSStatus SymlinkPathMakeRef(const UInt8 *path, FSRef *ref, Boolean *isDir
         FSRef fsRef;
         Boolean isDirectory;
         OSStatus oss = 0;
-        if ((st.st_mode & S_IFLNK) == S_IFLNK) {
+        if (S_ISLNK(st.st_mode)) {
             oss = SymlinkPathMakeRef((UInt8*)cPath, &fsRef, &isDirectory);
         } else {
             oss = FSPathMakeRef((UInt8*)cPath, &fsRef, &isDirectory);
@@ -485,11 +485,12 @@ static OSStatus SymlinkPathMakeRef(const UInt8 *path, FSRef *ref, Boolean *isDir
 }
 - (BOOL)applyUID:(int)uid gid:(int)gid error:(NSError **)error {
     if (uid != st.st_uid || gid != st.st_gid) {
-        HSLogTrace(@"lchown(%s, %d, %d)", cPath, uid, gid);
         if (lchown(cPath, uid, gid) == -1) {
+            HSLogError(@"lchown failed");
             SETNSERROR(@"UnixErrorDomain", errno, @"lchown: %s", strerror(errno));
             return NO;
         }
+        HSLogDebug(@"lchown(%s, %d, %d); euid=%d", cPath, uid, gid, geteuid());
         st.st_uid = uid;
         st.st_gid = gid;
     }
@@ -497,26 +498,26 @@ static OSStatus SymlinkPathMakeRef(const UInt8 *path, FSRef *ref, Boolean *isDir
 }
 - (BOOL)applyMode:(int)mode error:(NSError **)error {
     if (mode != st.st_mode) {
-        if ((st.st_mode & S_IFDIR) == S_IFDIR) {
-            HSLogTrace(@"chmod(%s, %d)", cPath, mode);
+        if (S_ISDIR(st.st_mode)) {
             int ret = chmod(cPath, mode);
             if (ret == -1) {
                 SETNSERROR(@"UnixErrorDomain", errno, @"Setting permissions on %@: %s", path, strerror(errno));
                 return NO;
             }
+            HSLogDebug(@"chmod(%s, 0%6o)", cPath, mode);
         } else {
             int fd = open(cPath, O_RDWR|O_SYMLINK);
             if (fd == -1) {
                 SETNSERROR(@"UnixErrorDomain", errno, @"%s", strerror(errno));
                 return NO;
             }
-            HSLogTrace(@"fchmod symlink (%s, %d)", cPath, mode);
             int ret = fchmod(fd, mode);
             close(fd);
             if (ret == -1) {
                 SETNSERROR(@"UnixErrorDomain", errno, @"Setting permissions on %@: %s", path, strerror(errno));
                 return NO;
             }
+            HSLogDebug(@"fchmod(%s, 0%6o)", cPath, mode);
         }
         st.st_mode = mode;
     }

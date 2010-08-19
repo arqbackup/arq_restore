@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -42,15 +42,6 @@
 @end
 
 @implementation FileInputStream
-- (id)initWithPath:(NSString *)thePath length:(unsigned long long)theLength {
-    if (self = [super init]) {
-        fd = -1;
-        path = [thePath retain];
-        fileLength = theLength;
-        buf = (unsigned char *)malloc(MY_BUF_SIZE);
-    }
-    return self;
-}
 - (id)initWithPath:(NSString *)thePath offset:(unsigned long long)theOffset length:(unsigned long long)theLength {
     if (self = [super init]) {
         fd = -1;
@@ -141,8 +132,6 @@ read_again:
 }
 - (uint64_t)bytesReceived {
     return bytesReceived;
-}
-- (void)bytesWereNotUsed {
 }
 
 #pragma mark NSObject protocol

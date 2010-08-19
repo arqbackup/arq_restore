@@ -35,6 +35,8 @@
 #define ARQ_DEFAULT_CIPHER_NAME @"aes256"
 
 @interface NSData (Encrypt)
++ (NSString *)encryptErrorDomain;
++ (NSString *)decryptErrorDomain;
 - (NSData *)encryptWithCipher:(NSString *)cipherName key:(NSString *)key error:(NSError **)error;
 - (NSData *)decryptWithCipher:(NSString *)cipherName key:(NSString *)key error:(NSError **)error;
 

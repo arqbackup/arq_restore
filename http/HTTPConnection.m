@@ -81,7 +81,13 @@
     [request setRFC822DateHeader];
 }
 - (BOOL)executeRequest:(NSError **)error {
+    return [self executeRequestWithBody:nil error:error];
+}
+- (BOOL)executeRequestWithBody:(id <InputStream>)bodyStream error:(NSError **)error {
     if (![request write:streamPair error:error]) {
+        return NO;
+    }
+    if (bodyStream != nil && ![Streams transferFrom:bodyStream to:streamPair error:error]) {
         return NO;
     }
     if (![response readHead:streamPair requestMethod:[request method] error:error]) {
@@ -117,7 +123,7 @@
     }
     return downloadName;
 }
-- (id <InputStream>)newResponseBodyStream:(NSError **)error {
+- (id <BufferedInputStream>)newResponseBodyStream:(NSError **)error {
     return [response newResponseInputStream:streamPair error:error];
 }
 - (NSData *)slurpResponseBody:(NSError **)error {

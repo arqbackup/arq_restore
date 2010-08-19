@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -38,21 +38,7 @@
     if (self = [super init]) {
         mimeType = [theMimeType copy];
         downloadName = [theDownloadName copy];
-        gzipped = NO;
         inputStreamFactory = [theFactory retain];
-        entireSource = YES;
-    }
-    return self;
-}
-- (id)initWithInputStreamFactory:(id <InputStreamFactory>)theFactory sourceOffset:(unsigned long long)theOffset sourceLength:(unsigned long long)theLength mimeType:(NSString *)theMimeType downloadName:(NSString *)theDownloadName {
-    if (self = [super init]) {
-        mimeType = [theMimeType copy];
-        downloadName = [theDownloadName copy];
-        gzipped = NO;
-        inputStreamFactory = [theFactory retain];
-        entireSource = NO;
-        sourceOffset = theOffset;
-        sourceLength = theLength;
     }
     return self;
 }
@@ -60,19 +46,7 @@
     if (self = [super init]) {
         mimeType = [theMimeType copy];
         downloadName = [theDownloadName copy];
-        gzipped = NO;
         inputStreamFactory = [[DataInputStreamFactory alloc] initWithData:theData];
-        entireSource = YES;
-    }
-    return self;
-}
-- (id)initWithGzippedData:(NSData *)theData mimeType:(NSString *)theMimeType downloadName:(NSString *)theDownloadName {
-    if (self = [super init]) {
-        mimeType = [theMimeType copy];
-        downloadName = [theDownloadName copy];
-        gzipped = YES;
-        inputStreamFactory = [[DataInputStreamFactory alloc] initWithData:theData];
-        entireSource = YES;
     }
     return self;
 }
@@ -88,25 +62,18 @@
 - (NSString *)downloadName {
     return downloadName;
 }
-- (BOOL)gzipped {
-    return gzipped;
-}
-- (id <InputStream>)newInputStream:(id)sender {
-    id <InputStream> is = nil;
-    if (entireSource) {
-        is = [inputStreamFactory newInputStream:sender];
-    } else {
-        is = [inputStreamFactory newInputStream:sender sourceOffset:sourceOffset sourceLength:sourceLength];
-    }
-    return is;
+- (id <InputStreamFactory>)inputStreamFactory {
+    return inputStreamFactory;
 }
 - (NSData *)slurp:(NSError **)error {
-    return [self slurp:self error:error];
-}
-- (NSData *)slurp:(id)sender error:(NSError **)error {
-    id <InputStream> is = [self newInputStream:sender];
+    id <InputStream> is = [inputStreamFactory newInputStream];
     NSData *data = [is slurp:error];
     [is release];
     return data;
+}
+
+#pragma mark NSObject
+- (NSString *)description {
+    return [NSString stringWithFormat:@"<Blob: isf=%@>", [inputStreamFactory description]];
 }
 @end

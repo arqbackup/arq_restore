@@ -31,7 +31,7 @@
  */ 
 
 #import <Cocoa/Cocoa.h>
-@protocol OutputStream;
+#import "OutputStream.h"
 @class RFC2616DateFormatter;
 
 @interface HTTPRequest : NSObject {

@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -30,29 +30,38 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
+#include <sys/stat.h>
 #import "FileInputStreamFactory.h"
 #import "FileInputStream.h"
+#import "SetNSError.h"
 
 @implementation FileInputStreamFactory
-- (id)initWithPath:(NSString *)thePath error:(NSError **)error {
+- (id)initWithPath:(NSString *)thePath offset:(unsigned long long)theOffset length:(unsigned long long)theLength {
     if (self = [super init]) {
         path = [thePath copy];
-        NSDictionary *attribs = [[NSFileManager defaultManager] attributesOfItemAtPath:path error:error];
-        if (attribs == nil) {
-            return nil;
-        }        
-        length = [[attribs objectForKey:NSFileSize] unsignedLongLongValue];
+        offset = theOffset;
+        length = theLength;
     }
     return self;
+}
+- (id)initWithPath:(NSString *)thePath error:(NSError **)error {
+    struct stat st;
+    if (lstat([thePath fileSystemRepresentation], &st) == -1) {
+        SETNSERROR(@"UnixErrorDomain", errno, @"lstat(%@): %s", path, strerror(errno));
+        return nil;
+    }
+    return [self initWithPath:thePath offset:0 length:(unsigned long long)st.st_size];
 }
 - (void)dealloc {
     [path release];
     [super dealloc];
 }
-- (id <InputStream>) newInputStream:(id)sender {
-    return [[FileInputStream alloc] initWithPath:path length:length];
+- (id <InputStream>) newInputStream {
+    return [[FileInputStream alloc] initWithPath:path offset:offset length:length];
 }
-- (id <InputStream>) newInputStream:(id)sender sourceOffset:(unsigned long long)theOffset sourceLength:(unsigned long long)theLength {
-    return [[FileInputStream alloc] initWithPath:path offset:theOffset length:length];
+
+#pragma mark NSObject
+- (NSString *)description {
+    return [NSString stringWithFormat:@"<FileISF: %@,length=%qu>", path, length];
 }
 @end

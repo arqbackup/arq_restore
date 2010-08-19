@@ -73,6 +73,7 @@
 - (void)setContentDispositionHeader:(NSString *)downloadName {
     if (downloadName != nil) {
         NSString *encodedFilename = [NSString stringWithFormat:@"\"%@\"", [downloadName stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\\\""]];
+        encodedFilename = [encodedFilename stringByReplacingOccurrencesOfString:@"\n" withString:@"\\n"];
         NSString *contentDisposition = [NSString stringWithFormat:@"attachment;filename=%@", encodedFilename];
         [self setHeader:contentDisposition forKey:@"Content-Disposition"];
     }

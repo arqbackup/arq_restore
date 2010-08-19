@@ -33,8 +33,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #import "Restorer.h"
-#import "S3Fark.h"
-#import "S3Repo.h"
+#import "ArqFark.h"
+#import "ArqRepo.h"
 #import "SetNSError.h"
 #import "Tree.h"
 #import "Node.h"
@@ -65,8 +65,8 @@
 @implementation Restorer
 - (id)initWithS3Service:(S3Service *)theS3 s3BucketName:(NSString *)theS3BucketName computerUUID:(NSString *)theComputerUUID bucketUUID:(NSString *)theBucketUUID bucketName:(NSString *)theBucketName encryptionKey:(NSString *)theEncryptionKey {
     if (self = [super init]) {
-        fark = [[S3Fark alloc] initWithS3Service:theS3 s3BucketName:theS3BucketName computerUUID:theComputerUUID];
-        repo = [[S3Repo alloc] initWithS3Service:theS3 s3BucketName:theS3BucketName computerUUID:theComputerUUID bucketUUID:theBucketUUID encrypted:YES encryptionKey:theEncryptionKey fark:fark ensureCacheIntegrity:NO];
+        fark = [[ArqFark alloc] initWithS3Service:theS3 s3BucketName:theS3BucketName computerUUID:theComputerUUID];
+        repo = [[ArqRepo alloc] initWithS3Service:theS3 s3BucketName:theS3BucketName computerUUID:theComputerUUID bucketUUID:theBucketUUID encryptionKey:theEncryptionKey];
         bucketName = [theBucketName copy];
         rootPath = [[[[NSFileManager defaultManager] currentDirectoryPath] stringByAppendingPathComponent:theBucketName] copy];
         restoreNodes = [[NSMutableArray alloc] init];
@@ -88,23 +88,20 @@
         SETNSERROR(@"RestorerErrorDomain", -1, @"%@ already exists", rootPath);
         return NO;
     }
-    if (![fark reloadPacksFromS3:error]) {
-        return NO;
-    }
     if (![[NSFileManager defaultManager] createDirectoryAtPath:rootPath withIntermediateDirectories:YES attributes:nil error:error]) {
         HSLogError(@"failed to create directory %@", rootPath);
         return NO;
     }
-    NSString *headSHA1 = nil;
-    if (![repo localHeadSHA1:&headSHA1 error:error]) {
+    NSString *headSHA1 = [repo headSHA1:error];
+    if (headSHA1 == nil) {
         return NO;
     }
     if (headSHA1 == nil) {
         SETNSERROR(@"RestorerErrorDomain", -1, @"no backup found");
         return NO;
     }
-    Commit *head = nil;
-    if (![repo commit:&head forSHA1:headSHA1 error:error]) {
+    Commit *head = [repo commitForSHA1:headSHA1 error:error];
+    if (head == nil) {
         return NO;
     }
     if (![self addRestoreNodesForTreeSHA1:[head treeSHA1] relativePath:@"" error:error]) {
@@ -130,8 +127,8 @@
 
 @implementation Restorer (internal)
 - (BOOL)addRestoreNodesForTreeSHA1:(NSString *)treeSHA1 relativePath:(NSString *)relativePath error:(NSError **)error {
-    Tree *tree = nil;
-    if (![repo tree:&tree forSHA1:treeSHA1 error:error]) {
+    Tree *tree = [repo treeForSHA1:treeSHA1 error:error];
+    if (tree == nil) {
         return NO;
     }
     RestoreNode *treeRN = [[RestoreNode alloc] initWithTree:tree nodeName:nil relativePath:relativePath];
@@ -330,7 +327,7 @@
     }
     HSLogTrace(@"%qu bytes -> %@", [node dataSize], path);
     if (([node mode] & S_IFLNK) == S_IFLNK) {
-        NSData *data = [repo dataForSHA1s:[node dataSHA1s] error:error];
+        NSData *data = [repo blobDataForSHA1s:[node dataSHA1s] error:error];
         if (data == nil) {
             HSLogError(@"error getting data for %@", [node dataSHA1s]);
             return NO;
@@ -435,7 +432,7 @@
 }
 - (BOOL)applyACLSHA1:(NSString *)aclSHA1 toFileAttributes:(FileAttributes *)fa error:(NSError **)error {
     if (aclSHA1 != nil) {
-        NSData *data = [repo dataForSHA1:aclSHA1 error:error];
+        NSData *data = [repo blobDataForSHA1:aclSHA1 error:error];
         if (data == nil) {
             return NO;
         }
@@ -448,7 +445,7 @@
 }
 - (BOOL)applyXAttrsSHA1:(NSString *)xattrsSHA1 toFile:(NSString *)path error:(NSError **)error {
     if (xattrsSHA1 != nil) {
-        NSData *xattrsData = [repo dataForSHA1:xattrsSHA1 error:error];
+        NSData *xattrsData = [repo blobDataForSHA1:xattrsSHA1 error:error];
         if (xattrsData == nil) {
             return NO;
         }

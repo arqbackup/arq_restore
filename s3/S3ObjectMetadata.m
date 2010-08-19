@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -60,9 +60,14 @@
 			goto init_error;
         }
 		NSXMLNode *sizeNode = [nodes objectAtIndex:0];
-		NSNumberFormatter *numberFormatter = [[NSNumberFormatter alloc] init];
+		NSNumberFormatter *numberFormatter = [[[NSNumberFormatter alloc] init] autorelease];
 		size = [[numberFormatter numberFromString:[sizeNode stringValue]] longValue];
-		[numberFormatter release];
+        nodes = [node nodesForXPath:@"StorageClass" error:error];
+        if (!nodes) {
+            goto init_error;
+        }
+        NSXMLNode *storageClassNode = [nodes objectAtIndex:0];
+        storageClass = [[storageClassNode stringValue] retain];
 		goto init_done;
 	init_error:
 		[self release];
@@ -70,18 +75,28 @@
 		goto init_done;
 	}
 init_done:
-	if (self == nil && error != NULL) {
+	if (error != NULL) {
 		[*error retain];
 	}
 	[pool drain];
-	if (self == nil && error != NULL) {
+	if (error != NULL) {
 		[*error autorelease];
 	}
 	return self;
 }
+- (id)initWithPath:(NSString *)thePath lastModified:(NSDate *)theLastModified size:(long)theSize storageClass:(NSString *)theStorageClass {
+    if (self = [super init]) {
+        path = [thePath retain];
+        lastModified = [theLastModified retain];
+        size = theSize;
+        storageClass = [theStorageClass retain];
+    }
+    return self;
+}
 - (void)dealloc {
 	[path release];
 	[lastModified release];
+    [storageClass release];
 	[super dealloc];
 }
 - (NSString *)path {
@@ -93,5 +108,7 @@ init_done:
 - (long)size {
 	return size;
 }
-
+- (NSString *)storageClass {
+    return storageClass;
+}
 @end

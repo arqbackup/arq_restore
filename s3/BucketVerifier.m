@@ -8,12 +8,15 @@
 
 #import "BucketVerifier.h"
 #import "S3Service.h"
-#import "S3Fark.h"
-#import "S3Repo.h"
+#import "ArqFark.h"
+#import "ArqRepo.h"
+#import "ArqRepo_Verifier.h"
 #import "Commit.h"
 #import "Tree.h"
 #import "Node.h"
 #import "SetNSError.h"
+#import "NSError_extra.h"
+#import "NSErrorCodes.h"
 
 @interface BucketVerifier (internal)
 - (BOOL)verifyTree:(NSString *)treeSHA1 path:(NSString *)path error:(NSError **)error;
@@ -28,8 +31,8 @@
 		computerUUID = [theComputerUUID retain];
 		bucketUUID = [theBucketUUID retain];
 		objectSHA1s = [theObjectSHA1s retain];
-		fark = [[S3Fark alloc] initWithS3Service:s3 s3BucketName:s3BucketName computerUUID:computerUUID];
-		repo = [[S3Repo alloc] initWithS3Service:s3 s3BucketName:s3BucketName computerUUID:computerUUID bucketUUID:bucketUUID encrypted:YES encryptionKey:encryptionKey fark:fark ensureCacheIntegrity:YES];
+		fark = [[ArqFark alloc] initWithS3Service:s3 s3BucketName:s3BucketName computerUUID:computerUUID];
+		repo = [[ArqRepo alloc] initWithS3Service:s3 s3BucketName:s3BucketName computerUUID:computerUUID bucketUUID:bucketUUID encryptionKey:encryptionKey];
 	}
 	return self;
 }
@@ -44,38 +47,35 @@
 	[super dealloc];
 }	
 - (BOOL)verify:(NSError **)error {
-	printf("reloading packs from S3 for s3Bucket %s computerUUID %s bucketUUID %s\n", [s3BucketName UTF8String], [computerUUID UTF8String], [bucketUUID UTF8String]);
-	NSArray *s3PackSHA1s = [fark reloadPacksFromS3:error];
-	if (s3PackSHA1s == nil) {
-		return NO;
-	}
-	printf("S3 packs found for computer UUID %s:\n", [computerUUID UTF8String]);
-	for (NSString *s3PackSHA1 in s3PackSHA1s) {
-		printf("S3 pack SHA1: %s\n", [s3PackSHA1 UTF8String]);
-	}
+    printf("verifying all objects exist for commits in %s\n", [bucketUUID UTF8String]);
 	
-	NSString *headSHA1 = nil;
-	if (![repo localHeadSHA1:&headSHA1 error:error]) {
-		return NO;
-	}
-	if (headSHA1 == nil) {
-		printf("no head commit for s3Bucket %s computerUUID %s bucketUUID %s\n", [s3BucketName UTF8String], [computerUUID UTF8String], [bucketUUID UTF8String]);
-		return YES;
-	}
-	printf("head commit for s3Bucket %s computerUUID %s bucketUUID %s is %s\n", [s3BucketName UTF8String], [computerUUID UTF8String], [bucketUUID UTF8String], [headSHA1 UTF8String]);
-	NSString *commitSHA1 = headSHA1;
-	while (commitSHA1 != nil) {
-		printf("verifying commit %s bucketUUID %s\n", [commitSHA1 UTF8String], [bucketUUID UTF8String]);
-		Commit *commit = nil;
-		if (![repo commit:&commit forSHA1:commitSHA1 error:error]) {
-			return NO;
-		}
-		printf("commit %s's tree is %s\n", [commitSHA1 UTF8String], [[commit treeSHA1] UTF8String]);
-		if (![self verifyTree:[commit treeSHA1] path:@"/" error:error]) {
-			return NO;
-		}
-		commitSHA1 = [[commit parentCommitSHA1s] anyObject];
-	}
+    NSError *myError = nil;
+	NSString *headSHA1 = [repo headSHA1:&myError];
+    if (headSHA1 == nil) {
+        if ([myError isErrorWithDomain:[ArqRepo errorDomain] code:ERROR_NOT_FOUND]) {
+            printf("no head commit for s3Bucket %s computerUUID %s bucketUUID %s is %s\n", [s3BucketName UTF8String], [computerUUID UTF8String], [bucketUUID UTF8String], [headSHA1 UTF8String]);
+        } else {
+            if (error != NULL) {
+                *error = myError;
+            }
+            return NO;
+        }
+	} else {
+        printf("head commit for s3Bucket %s computerUUID %s bucketUUID %s is %s\n", [s3BucketName UTF8String], [computerUUID UTF8String], [bucketUUID UTF8String], [headSHA1 UTF8String]);
+        NSString *commitSHA1 = headSHA1;
+        while (commitSHA1 != nil) {
+            printf("verifying commit %s bucketUUID %s\n", [commitSHA1 UTF8String], [bucketUUID UTF8String]);
+            Commit *commit = [repo commitForSHA1:commitSHA1 error:error];
+            if (commit == nil) {
+                return NO;
+            }
+            printf("commit %s's tree is %s\n", [commitSHA1 UTF8String], [[commit treeSHA1] UTF8String]);
+            if (![self verifyTree:[commit treeSHA1] path:@"/" error:error]) {
+                return NO;
+            }
+            commitSHA1 = [[commit parentCommitSHA1s] anyObject];
+        }
+    }
 	return YES;
 }
 @end
@@ -83,8 +83,8 @@
 @implementation BucketVerifier (internal)
 - (BOOL)verifyTree:(NSString *)treeSHA1 path:(NSString *)path error:(NSError **)error {
 	printf("verifying tree %s (path %s)\n", [treeSHA1 UTF8String], [path UTF8String]);
-	Tree *tree = nil;
-	if (![repo tree:&tree forSHA1:treeSHA1 error:error]) {
+	Tree *tree = [repo treeForSHA1:treeSHA1 error:error];
+    if (tree == nil) {
 		fprintf(stderr, "tree %s not found\n", [treeSHA1 UTF8String]);
 		return NO;
 	}
@@ -153,14 +153,19 @@
 }
 - (BOOL)verify:(NSString *)sha1 error:(NSError **)error {
     if (sha1 != nil) {
-		if ([objectSHA1s containsObject:sha1]) {
+        NSString *packSHA1 = nil;
+        if (![repo packSHA1:&packSHA1 forPackedBlobSHA1:sha1 error:error]) {
+            return NO;
+        }
+        if (packSHA1 != nil) {
+            printf("sha1 %s: pack set %s, packSHA1 %s\n", [sha1 UTF8String], [[repo blobsPackSetName] UTF8String], [packSHA1 UTF8String]);
+        } else {
+            if (![objectSHA1s containsObject:sha1]) {
+                SETNSERROR(@"VerifierErrorDomain", ERROR_NOT_FOUND, @"sha1 %@ not found in blobs packset or objects", sha1);
+                return NO;
+            }
 			printf("sha1 %s: blob\n", [sha1 UTF8String]);
-		} else if ([repo containsBlobForSHA1:sha1 packSetName:[repo blobsPackSetName] searchPackOnly:YES]) {
-			printf("sha1 %s: pack set %s, packSHA1 %s\n", [sha1 UTF8String], [[repo blobsPackSetName] UTF8String], [[repo packSHA1ForPackedBlobSHA1:sha1 packSetName:[repo blobsPackSetName]] UTF8String]);
-		} else {
-			SETNSERROR(@"VerifierErrorDomain", -1, @"sha1 %@ not found", sha1);
-			return NO;
-		}
+        }
 	}
 	return YES;
 }

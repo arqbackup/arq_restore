@@ -57,7 +57,7 @@
             if ([data length] > 0) {
                 NSData *keyData = [key dataUsingEncoding:NSUTF8StringEncoding];
                 if ([keyData length] > EVP_MAX_KEY_LENGTH) {
-                    SETNSERROR(@"NSDataEncryptErrorDomain", -1, @"encryption key must be less than or equal to %d bytes", EVP_MAX_KEY_LENGTH);
+                    SETNSERROR([NSData encryptErrorDomain], -1, @"encryption key must be less than or equal to %d bytes", EVP_MAX_KEY_LENGTH);
                     break;
                 }
                 if (![OpenSSL initializeSSL:error]) {
@@ -65,7 +65,7 @@
                 }
                 cipher = EVP_get_cipherbyname([cipherName UTF8String]);
                 if (!cipher) {
-                    SETNSERROR(@"NSDataEncryptErrorDomain", -1, @"failed to load %@ cipher: %@", cipherName, [OpenSSL errorMessage]);
+                    SETNSERROR([NSData encryptErrorDomain], -1, @"failed to load %@ cipher: %@", cipherName, [OpenSSL errorMessage]);
                     break;
                 }
                 
@@ -96,7 +96,7 @@
     }
     
     if (!EVP_EncryptInit(&cipherContext, cipher, evp_key, iv)) {
-        SETNSERROR(@"NSDataEncryptErrorDomain", -1, @"EVP_EncryptInit: %@",  [OpenSSL errorMessage]);
+        SETNSERROR([NSData encryptErrorDomain], -1, @"EVP_EncryptInit: %@",  [OpenSSL errorMessage]);
         return nil;
     }
     EVP_CIPHER_CTX_set_key_length(&cipherContext, EVP_MAX_KEY_LENGTH);
@@ -106,12 +106,12 @@
     
     int outlen;
     if (!EVP_EncryptUpdate(&cipherContext, outbuf, &outlen, [data bytes], [data length])) {
-        SETNSERROR(@"NSDataEncryptErrorDomain", -1, @"EVP_EncryptUpdate: %@",  [OpenSSL errorMessage]);
+        SETNSERROR([NSData encryptErrorDomain], -1, @"EVP_EncryptUpdate: %@",  [OpenSSL errorMessage]);
         return nil;
     }
     int templen;
     if (!EVP_EncryptFinal(&cipherContext, outbuf + outlen, &templen)) {
-        SETNSERROR(@"NSDataEncryptErrorDomain", -1, @"EVP_EncryptFinal: %@",  [OpenSSL errorMessage]);
+        SETNSERROR([NSData encryptErrorDomain], -1, @"EVP_EncryptFinal: %@",  [OpenSSL errorMessage]);
         return nil;
     }
     outlen += templen;
@@ -134,7 +134,7 @@
     }
     
     if (!EVP_DecryptInit(&cipherContext, cipher, evp_key, iv)) {
-        SETNSERROR(@"NSDataDecryptErrorDomain", -1, @"EVP_DecryptInit: %@", [OpenSSL errorMessage]);
+        SETNSERROR([NSData decryptErrorDomain], -1, @"EVP_DecryptInit: %@", [OpenSSL errorMessage]);
         return nil;
     }
     EVP_CIPHER_CTX_set_key_length(&cipherContext, EVP_MAX_KEY_LENGTH);
@@ -151,12 +151,12 @@
     
     int outlen;
     if (!EVP_DecryptUpdate(&cipherContext, outbuf, &outlen, input, inlen)) {
-        SETNSERROR(@"NSDataEncryptErrorDomain", -1, @"EVP_DecryptUpdate: %@", [OpenSSL errorMessage]);
+        SETNSERROR([NSData decryptErrorDomain], -1, @"EVP_DecryptUpdate: %@", [OpenSSL errorMessage]);
         return nil;
     }
     int templen;
     if (!EVP_DecryptFinal(&cipherContext, outbuf + outlen, &templen)) {
-        SETNSERROR(@"NSDataEncryptErrorDomain", -1, @"EVP_DecryptFinal: %@", [OpenSSL errorMessage]);
+        SETNSERROR([NSData decryptErrorDomain], -1, @"EVP_DecryptFinal: %@", [OpenSSL errorMessage]);
         return nil;
     }
     outlen += templen;
@@ -167,6 +167,12 @@
 @end
 
 @implementation NSData (Encrypt)
++ (NSString *)encryptErrorDomain {
+    return @"NSDataEncryptErrorDomain";
+}
++ (NSString *)decryptErrorDomain {
+    return @"NSDataDecryptErrorDomain";
+}
 - (NSData *)encryptWithCipher:(NSString *)cipherName key:(NSString *)key error:(NSError **)error {
     NSData *ret = nil;
     Crypter *crypter = [[Crypter alloc] initWithCipher:cipherName key:key data:self error:error];

@@ -31,10 +31,7 @@
  */ 
 
 #import <Cocoa/Cocoa.h>
-@class MutableS3Repo;
-#import "InputStream.h"
-#import "InputStreamFactory.h"
-#import "OutputStream.h"
+@protocol InputStream;
 
 @interface Node : NSObject {
     int treeVersion;

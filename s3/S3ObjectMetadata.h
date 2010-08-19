@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -37,10 +37,12 @@
 	NSString *path;
 	NSDate *lastModified;
 	long size;
+    NSString *storageClass;
 }
 - (id)initWithS3BucketName:(NSString *)s3BucketName node:(NSXMLNode *)node error:(NSError **)error;
-
+- (id)initWithPath:(NSString *)thePath lastModified:(NSDate *)theLastModified size:(long)theSize storageClass:(NSString *)theStorageClass;
 - (NSString *)path;
 - (NSDate *)lastModified;
 - (long)size;
+- (NSString *)storageClass;
 @end

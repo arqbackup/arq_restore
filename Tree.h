@@ -32,12 +32,11 @@
 
 #import <Cocoa/Cocoa.h>
 #import "Blob.h"
-#import "BufferedInputStream.h"
-#import "OutputStream.h"
+@protocol BufferedInputStream;
 @class Node;
-@class MutableS3Repo;
 
 #define CURRENT_TREE_VERSION 10
+#define TREE_HEADER_LENGTH (8)
 
 @interface Tree : NSObject {
     int treeVersion;
@@ -64,11 +63,12 @@
     uint32_t st_blksize;
 	NSMutableDictionary *nodes;
 }
-- (id)init;
++ (NSString *)errorDomain;
 - (id)initWithBufferedInputStream:(id <BufferedInputStream>)is error:(NSError **)error;
 - (NSArray *)childNodeNames;
 - (Node *)childNodeWithName:(NSString *)name;
 - (BOOL)containsNodeNamed:(NSString *)name;
+- (Blob *)toBlob;
 
 @property(readonly,copy) NSString *xattrsSHA1;
 @property(readonly) unsigned long long xattrsSize;
@@ -89,4 +89,5 @@
 @property(readonly) long long createTime_nsec;
 @property(readonly) uint32_t st_nlink;
 @property(readonly) int st_ino;
+
 @end

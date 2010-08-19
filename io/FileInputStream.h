@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -41,6 +41,5 @@
     unsigned char *buf;
     uint64_t bytesReceived;
 }
-- (id)initWithPath:(NSString *)thePath length:(unsigned long long)theLength;
 - (id)initWithPath:(NSString *)thePath offset:(unsigned long long)theOffset length:(unsigned long long)theLength;
 @end

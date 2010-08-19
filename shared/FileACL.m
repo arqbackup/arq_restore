@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -71,7 +71,7 @@
         return NO;
     }
     int ret = 0;
-    if ((st.st_mode & S_IFMT) == S_IFLNK) {
+    if (S_ISLNK(st.st_mode)) {
         ret = acl_set_link_np(pathChars, ACL_TYPE_EXTENDED, acl);
     } else {
         ret = acl_set_file(pathChars, ACL_TYPE_EXTENDED, acl);

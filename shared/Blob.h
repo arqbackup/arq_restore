@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -36,20 +36,12 @@
 @interface Blob : NSObject {
     NSString *mimeType;
     NSString *downloadName;
-    BOOL gzipped;
     id <InputStreamFactory> inputStreamFactory;
-    BOOL entireSource;
-    unsigned long long sourceOffset;
-    unsigned long long sourceLength;
 }
 - (id)initWithInputStreamFactory:(id <InputStreamFactory>)theFactory mimeType:(NSString *)theMimeType downloadName:(NSString *)theDownloadName;
-- (id)initWithInputStreamFactory:(id <InputStreamFactory>)theFactory sourceOffset:(unsigned long long)theOffset sourceLength:(unsigned long long)theLength mimeType:(NSString *)theMimeType downloadName:(NSString *)theDownloadName;
 - (id)initWithData:(NSData *)theData mimeType:(NSString *)theMimeType downloadName:(NSString *)theDownloadName;
-- (id)initWithGzippedData:(NSData *)theData mimeType:(NSString *)theMimeType downloadName:(NSString *)theDownloadName;
 - (NSString *)mimeType;
 - (NSString *)downloadName;
-- (BOOL)gzipped;
-- (id <InputStream>)newInputStream:(id)sender;
+- (id <InputStreamFactory>)inputStreamFactory;
 - (NSData *)slurp:(NSError **)error;
-- (NSData *)slurp:(id)sender error:(NSError **)error;
 @end

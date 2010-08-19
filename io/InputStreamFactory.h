@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -36,8 +36,5 @@
 @protocol InputStreamFactory <NSObject>
 
 // Returns an object that must be released by the caller.
-- (id <InputStream>) newInputStream:(id)sender;
-
-// Returns an object that must be released by the caller.
-- (id <InputStream>) newInputStream:(id)sender sourceOffset:(unsigned long long)theOffset sourceLength:(unsigned long long)theLength;
+- (id <InputStream>) newInputStream;
 @end
