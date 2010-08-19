@@ -41,6 +41,7 @@
 #import "Restorer.h"
 #import "NSErrorCodes.h"
 #import "NSError_extra.h"
+#import "UserAndComputer.h"
 
 @interface ArqRestoreCommand (internal)
 - (BOOL)printArqFolders:(NSError **)error;
@@ -117,42 +118,55 @@
     if (![self validateS3Keys:error]) {
         return NO;
     }
-    NSArray *s3BucketNames = [S3Service s3BucketNamesForAccessKeyID:accessKey];
-    NSMutableArray *computerUUIDPaths = [NSMutableArray array];
-    for (NSString *s3BucketName in s3BucketNames) {
+    for (NSString *s3BucketName in [S3Service s3BucketNamesForAccessKeyID:accessKey]) {
+        printf("S3 bucket: %s", [s3BucketName UTF8String]);
         NSString *computerUUIDPrefix = [NSString stringWithFormat:@"/%@/", s3BucketName];
         NSError *myError = nil;
         NSArray *computerUUIDs = [s3 commonPrefixesForPathPrefix:computerUUIDPrefix delimiter:@"/" error:&myError];
-        if (computerUUIDs == nil) {
-            if ([myError isErrorWithDomain:[S3Service errorDomain] code:ERROR_NOT_FOUND]) {
-                // Skip.
-            } else {
-                if (error != NULL) {
-                    *error = myError;
-                }
-                return NO;
+        if (computerUUIDs == nil && ![myError isErrorWithDomain:[S3Service errorDomain] code:ERROR_NOT_FOUND]) {
+            if (error != NULL) {
+                *error = myError;
             }
-        }
-        for (NSString *computerUUID in computerUUIDs) {
-            [computerUUIDPaths addObject:[computerUUIDPrefix stringByAppendingPathComponent:computerUUID]];
-        }
-    }
-    for (NSString *computerUUIDPath in computerUUIDPaths) {
-        NSString *computerBucketsPrefix = [computerUUIDPath stringByAppendingPathComponent:@"buckets"];
-        NSArray *s3BucketUUIDPaths = [s3 pathsWithPrefix:computerBucketsPrefix error:error];
-        if (s3BucketUUIDPaths == nil) {
             return NO;
         }
-        for (NSString *uuidPath in s3BucketUUIDPaths) {
-            NSData *data = [s3 dataAtPath:uuidPath error:error];
-            if (data == nil) {
+        if ([computerUUIDs count] == 0) {
+            printf("    (no computers found)");
+        }
+        printf("\n");
+        for (NSString *computerUUID in computerUUIDs) {
+            NSString *computerInfoPath = [NSString stringWithFormat:@"/%@/%@/computerinfo", s3BucketName, computerUUID];
+            NSError *uacError = nil;
+            NSData *uacData = [s3 dataAtPath:computerInfoPath error:&uacError];
+            UserAndComputer *uac = nil;
+            if (uacData != nil) {
+                uac = [[[UserAndComputer alloc] initWithXMLData:uacData error:&uacError] autorelease];
+                printf("    %s (%s)", [[uac computerName] UTF8String], [[uac userName] UTF8String]);
+            } else {
+                printf("    (unknown computer)");
+            }
+            NSString *computerUUIDPath = [computerUUIDPrefix stringByAppendingPathComponent:computerUUID];
+            NSString *computerBucketsPrefix = [computerUUIDPath stringByAppendingPathComponent:@"buckets"];
+            NSArray *s3BucketUUIDPaths = [s3 pathsWithPrefix:computerBucketsPrefix error:error];
+            if (s3BucketUUIDPaths == nil) {
                 return NO;
             }
-            DictNode *plist = [DictNode dictNodeWithXMLData:data error:error];
-            if (plist == nil) {
-                return NO;
+            if ([s3BucketUUIDPaths count] == 0) {
+                printf("    (no folders found)");
             }
-            printf("s3 path=%s\tlocal path=%s\n", [uuidPath UTF8String], [[[plist stringNodeForKey:@"LocalPath"] stringValue] UTF8String]);
+            printf("\n");
+            for (NSString *uuidPath in s3BucketUUIDPaths) {
+                NSData *data = [s3 dataAtPath:uuidPath error:error];
+                if (data == nil) {
+                    return NO;
+                }
+                DictNode *plist = [DictNode dictNodeWithXMLData:data error:error];
+                if (plist == nil) {
+                    return NO;
+                }
+                printf("        %s\n", [[[plist stringNodeForKey:@"LocalPath"] stringValue] UTF8String]);
+                printf("            UUID:            %s\n", [[uuidPath lastPathComponent] UTF8String]);
+                printf("            restore command: arq_restore %s\n", [uuidPath UTF8String]);
+            }
         }
     }
     return YES;
@@ -185,6 +199,20 @@
     NSString *computerUUID = [path substringWithRange:computerUUIDRange];
     NSString *bucketUUID = [path substringWithRange:bucketUUIDRange];
     NSString *bucketName = [[plist stringNodeForKey:@"BucketName"] stringValue];
+
+    printf("restoring %s from ", [bucketName UTF8String]);
+    
+    NSError *uacError = nil;
+    NSData *uacData = [s3 dataAtPath:[NSString stringWithFormat:@"/%@/%@/computerinfo", s3BucketName, computerUUID] error:&uacError];
+    UserAndComputer *uac = nil;
+    if (uacData != nil) {
+        uac = [[[UserAndComputer alloc] initWithXMLData:uacData error:&uacError] autorelease];
+        printf("%s (%s)", [[uac computerName] UTF8String], [[uac userName] UTF8String]);
+    } else {
+        printf("(unknown computer)");
+    }
+    printf(" to %s/%s\n", [[[NSFileManager defaultManager] currentDirectoryPath] UTF8String], [bucketName UTF8String]);
+    
     Restorer *restorer = [[[Restorer alloc] initWithS3Service:s3 s3BucketName:s3BucketName computerUUID:computerUUID bucketUUID:bucketUUID bucketName:bucketName encryptionKey:encryptionPassword] autorelease];
     if (![restorer restore:error]) {
         return NO;

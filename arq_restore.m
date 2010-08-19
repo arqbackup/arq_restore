@@ -53,7 +53,7 @@ int main (int argc, const char **argv) {
     } else {
         NSError *myError = nil;
         if (![cmd execute:&myError]) {
-            NSLog(@"%@", [myError localizedDescription]);
+            fprintf(stderr, "restore error: %s\n", [[myError localizedDescription] UTF8String]);
             ret = 1;
         }
     }

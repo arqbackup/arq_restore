@@ -205,6 +205,7 @@
 		F8F4D5A1121D9FC2002D09C1 /* AppKeychain.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F4D1E1121D7BC3002D09C1 /* AppKeychain.m */; };
 		F8F4D5A2121D9FC9002D09C1 /* FarkPath.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F4D1E6121D7DA2002D09C1 /* FarkPath.m */; };
 		F8F4D5A3121D9FCF002D09C1 /* PackIndexWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F4D1FD121D8409002D09C1 /* PackIndexWriter.m */; };
+		F8F4D67E121DA542002D09C1 /* UserAndComputer.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F4D67D121DA542002D09C1 /* UserAndComputer.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -438,6 +439,8 @@
 		F8F4D1FD121D8409002D09C1 /* PackIndexWriter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PackIndexWriter.m; sourceTree = "<group>"; };
 		F8F4D205121D8696002D09C1 /* ArqRepo_Verifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ArqRepo_Verifier.h; sourceTree = "<group>"; };
 		F8F4D206121D8696002D09C1 /* ArqRepo_Verifier.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ArqRepo_Verifier.m; sourceTree = "<group>"; };
+		F8F4D67C121DA542002D09C1 /* UserAndComputer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UserAndComputer.h; sourceTree = "<group>"; };
+		F8F4D67D121DA542002D09C1 /* UserAndComputer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UserAndComputer.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -477,8 +480,6 @@
 		08FB7794FE84155DC02AAC07 /* arq_restore */ = {
 			isa = PBXGroup;
 			children = (
-				F8F4D1FC121D8409002D09C1 /* PackIndexWriter.h */,
-				F8F4D1FD121D8409002D09C1 /* PackIndexWriter.m */,
 				08FB7795FE84155DC02AAC07 /* Source */,
 				08FB779DFE84155DC02AAC07 /* External Frameworks and Libraries */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
@@ -495,6 +496,10 @@
 				F805B8081160E7A1007EC01E /* io */,
 				F805B7C91160E445007EC01E /* http */,
 				F805B7651160DD60007EC01E /* s3 */,
+				F8F4D1FC121D8409002D09C1 /* PackIndexWriter.h */,
+				F8F4D1FD121D8409002D09C1 /* PackIndexWriter.m */,
+				F8F4D67C121DA542002D09C1 /* UserAndComputer.h */,
+				F8F4D67D121DA542002D09C1 /* UserAndComputer.m */,
 				32A70AAB03705E1F00C91783 /* arq_restore_Prefix.pch */,
 				08FB7796FE84155DC02AAC07 /* arq_restore.m */,
 				F8F4D1C1121D79AC002D09C1 /* ArqFark.h */,
@@ -915,6 +920,7 @@
 				F8F4D1E7121D7DA2002D09C1 /* FarkPath.m in Sources */,
 				F8F4D1FE121D8409002D09C1 /* PackIndexWriter.m in Sources */,
 				F8F4D207121D8696002D09C1 /* ArqRepo_Verifier.m in Sources */,
+				F8F4D67E121DA542002D09C1 /* UserAndComputer.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
