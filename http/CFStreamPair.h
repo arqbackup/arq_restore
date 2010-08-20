@@ -46,6 +46,6 @@
 }
 + (NSString *)errorDomain;
 + (NSError *)NSErrorWithNetworkError:(CFErrorRef)err;
-- (id)initWithHost:(NSString *)theHost useSSL:(BOOL)isUseSSL maxLifetime:(NSTimeInterval)theMaxLifetime;
+- (id)initWithHost:(NSString *)theHost port:(int)thePort useSSL:(BOOL)isUseSSL maxLifetime:(NSTimeInterval)theMaxLifetime;
 
 @end

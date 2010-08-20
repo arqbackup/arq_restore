@@ -39,6 +39,8 @@
 #import "Blob.h"
 #import "BufferedInputStream.h"
 
+#define MY_BUF_SIZE (8192)
+
 @interface SHA1Hash (internal)
 + (NSString *)hashStream:(id <InputStream>)is error:(NSError **)error;
 + (NSString *)hashStream:(id <InputStream>)is streamLength:(unsigned long long *)streamLength error:(NSError **)error;
@@ -55,6 +57,9 @@ static NSString *digest2String(unsigned char *digest) {
 }
 
 @implementation SHA1Hash
++ (NSString *)errorDomain {
+    return @"SHA1HashErrorDomain";
+}
 + (NSString *)hashData:(NSData *)data {
 	SHA_CTX ctx;
 	SHA1_Init(&ctx);
@@ -84,20 +89,29 @@ static NSString *digest2String(unsigned char *digest) {
     [fis release];
     return sha1;
 }
-+ (NSString *)hashStream:(id <BufferedInputStream>)bis withlength:(uint64_t)length error:(NSError **)error {
++ (NSString *)hashStream:(id <InputStream>)is withLength:(uint64_t)length error:(NSError **)error {
 	SHA_CTX ctx;
 	SHA1_Init(&ctx);
     uint64_t received = 0;
+    unsigned char *buf = (unsigned char *)malloc(MY_BUF_SIZE);
+    NSInteger ret = 0;
     while (received < length) {
         uint64_t toRead = length - received;
-        NSUInteger thisLength = 0;
-        unsigned char *buf = [bis readMaximum:toRead length:&thisLength error:error];
-        if (buf == NULL) {
-            return nil;
+        uint64_t toReadThisTime = toRead > MY_BUF_SIZE ? MY_BUF_SIZE : toRead;
+        ret = [is read:buf bufferLength:toReadThisTime error:error];
+        if (ret < 0) {
+            break;
         }
-        NSAssert(thisLength > 0, @"expected more than 0 bytes");
-        SHA1_Update(&ctx, buf, (unsigned long)thisLength);
-        received += (uint64_t)thisLength;
+        if (ret == 0) {
+            SETNSERROR([SHA1Hash errorDomain], -1, @"unexpected EOF after %qu of %qu bytes", received, length);
+            break;
+        }
+        SHA1_Update(&ctx, buf, ret);
+        received += (uint64_t)ret;
+    }
+    free(buf);
+    if (ret <= 0) {
+        return nil;
     }
 	unsigned char md[SHA_DIGEST_LENGTH];
 	SHA1_Final(md, &ctx);
@@ -114,22 +128,19 @@ static NSString *digest2String(unsigned char *digest) {
 	SHA_CTX ctx;
 	SHA1_Init(&ctx);
     *streamLength = 0;
+    unsigned char *buf = (unsigned char *)malloc(MY_BUF_SIZE);
+    NSInteger ret = 0;
     for (;;) {
-        NSUInteger length = 0;
-        NSError *myError;
-        unsigned char *buf = [is read:&length error:&myError];
-        if (buf == NULL) {
-            if ([myError code] != ERROR_EOF) {
-                if (error != NULL) {
-                    *error = myError;
-                }
-                return nil;
-            }
-            break; // EOF.
+        ret = [is read:buf bufferLength:MY_BUF_SIZE error:error];
+        if (ret <= 0) {
+            break;
         }
-        NSAssert(length > 0, @"expected more than 0 bytes");
-        SHA1_Update(&ctx, buf, (unsigned long)length);
-        *streamLength += (unsigned long long)length;
+        SHA1_Update(&ctx, buf, (unsigned long)ret);
+        *streamLength += (unsigned long long)ret;
+    }
+    free(buf);
+    if (ret < 0) {
+        return nil;
     }
 	unsigned char md[SHA_DIGEST_LENGTH];
 	SHA1_Final(md, &ctx);

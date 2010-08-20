@@ -32,6 +32,7 @@
 
 #import "BooleanIO.h"
 #import "Streams.h"
+#import "BufferedInputStream.h"
 
 @implementation BooleanIO
 + (void)write:(BOOL)b to:(NSMutableData *)data {
@@ -43,13 +44,13 @@
     return [os write:&c length:1 error:error];
     
 }
-+ (BOOL)read:(BOOL *)value from:(id <BufferedInputStream>)is error:(NSError **)error {
++ (BOOL)read:(BOOL *)value from:(BufferedInputStream *)is error:(NSError **)error {
     *value = NO;
-    unsigned char *bytes = [is readExactly:1 error:error];
-    if (!bytes) {
+    unsigned char c = 0;
+    if (![is readExactly:1 into:&c error:error]) {
         return NO;
     }
-    *value = bytes[0] != 0;
+    *value = (c != 0);
     return YES;
 }
 @end

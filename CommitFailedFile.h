@@ -31,13 +31,13 @@
  */ 
 
 #import <Cocoa/Cocoa.h>
-@protocol BufferedInputStream;
+@class BufferedInputStream;
 
 @interface CommitFailedFile : NSObject {
     NSString *relativePath;
     NSString *errorMessage;
 }
-- (id)initWithInputStream:(id <BufferedInputStream>)is error:(NSError **)error;
+- (id)initWithInputStream:(BufferedInputStream *)is error:(NSError **)error;
 - (NSString *)relativePath;
 - (NSString *)errorMessage;
 - (void)writeTo:(NSMutableData *)data;

@@ -38,4 +38,5 @@
 }
 - (id)initWithString:(NSString *)theValue;
 - (NSString *)stringValue;
+- (BOOL)isEqualToStringNode:(StringNode *)other;
 @end

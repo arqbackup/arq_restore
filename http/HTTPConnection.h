@@ -33,16 +33,18 @@
 #import <Cocoa/Cocoa.h>
 #import "InputStream.h"
 @protocol StreamPair;
-@protocol BufferedInputStream;
+@class BufferedInputStream;
 @class HTTPRequest;
 @class HTTPResponse;
 
 @interface HTTPConnection : NSObject {
     id <StreamPair> streamPair;
+    BufferedInputStream *bufferedInputStream;
     HTTPRequest *request;
     HTTPResponse *response;
 }
 - (id)initWithHost:(NSString *)theHost useSSL:(BOOL)isUseSSL error:(NSError **)error;
+- (id)initWithHost:(NSString *)theHost port:(int)thePort useSSL:(BOOL)isUseSSL error:(NSError **)error;
 - (void)setRequestMethod:(NSString *)theRequestMethod pathInfo:(NSString *)thePathInfo queryString:(NSString *)theQueryString protocol:(NSString *)theProtocol;
 - (void)setRequestHeader:(NSString *)value forKey:(NSString *)key;
 - (void)setRequestHostHeader;
@@ -55,7 +57,7 @@
 - (NSString *)responseHeaderForKey:(NSString *)key;
 - (NSString *)responseMimeType;
 - (NSString *)responseDownloadName;
-- (id <BufferedInputStream>)newResponseBodyStream:(NSError **)error;
+- (id <InputStream>)newResponseBodyStream:(NSError **)error;
 - (NSData *)slurpResponseBody:(NSError **)error;
 - (void)setCloseRequested;
 @end

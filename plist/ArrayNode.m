@@ -34,6 +34,11 @@
 #import "ArrayNode.h"
 #import "PListNodeType.h"
 
+@interface ArrayNode (internal)
+- (id)initWithList:(NSMutableArray *)list;
+- (NSArray *)list;
+@end
+
 @implementation ArrayNode
 - (id)init {
     if (self = [super init]) {
@@ -46,6 +51,15 @@
 		list = [[NSMutableArray alloc] initWithArray:nodes];
 	}
 	return self;
+}
+- (BOOL)isEqualToArrayNode:(ArrayNode *)other {
+    if (self == other) {
+        return YES;
+    }
+    if (![list isEqualToArray:[other list]]) {
+        return NO;
+    }
+    return YES;
 }
 - (void)dealloc {
 	[list release];
@@ -97,10 +111,43 @@
 	return PLN_ARRAY;
 }
 
+#pragma mark NSCopying protocol
+- (id)copyWithZone:(NSZone *)zone {
+    NSMutableArray *listCopy = [[NSMutableArray alloc] initWithArray:list copyItems:YES];
+    ArrayNode *ret = [[ArrayNode alloc] initWithList:listCopy];
+    [listCopy release];
+    return ret;
+}
 
 #pragma mark NSObject protocol
-
+- (BOOL)isEqual:(id)other {
+    if (other == self) {
+        return YES;
+    }
+    if (other == nil || ![other isKindOfClass:[self class]]) {
+        return NO;
+    }
+    return [self isEqualToArrayNode:other];
+}
+- (NSUInteger)hash {
+    NSUInteger prime = 31;
+    NSUInteger result = 1;
+    result = prime * result + [list hash];
+    return result;
+}
 - (NSString *)description {
     return [NSString stringWithFormat:@"<ArrayNode 0x%x %@>", self, [list description]];
+}
+@end
+
+@implementation ArrayNode (internal)
+- (id)initWithList:(NSMutableArray *)theList {
+    if (self = [super init]) {
+        list = [theList retain];
+    }
+    return self;
+}
+- (NSArray *)list {
+    return list;
 }
 @end

@@ -48,7 +48,7 @@
 	NSDate *_creationDate;
     NSArray *_commitFailedFiles;
 }
-- (id)initWithBufferedInputStream:(id <BufferedInputStream>)is error:(NSError **)error;
+- (id)initWithBufferedInputStream:(BufferedInputStream *)is error:(NSError **)error;
 
 @property(readonly,copy) NSString *author;
 @property(readonly,copy) NSString *comment;

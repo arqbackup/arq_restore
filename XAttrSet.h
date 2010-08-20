@@ -38,7 +38,7 @@
     NSMutableDictionary *xattrs;
 }
 - (id)initWithPath:(NSString *)thePath error:(NSError **)error;
-- (id)initWithBufferedInputStream:(id <BufferedInputStream>)is error:(NSError **)error;
+- (id)initWithBufferedInputStream:(BufferedInputStream *)is error:(NSError **)error;
 - (Blob *)toBlob;
 - (NSUInteger)count;
 - (unsigned long long)dataLength;

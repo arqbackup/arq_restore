@@ -536,9 +536,11 @@ static void rkl_find(RKLCacheSlot *cacheSlot, NSInteger capture, NSRange searchR
     
     cacheSlot->lastFindRange = searchRange; // Cache the successful search/find range.
   }
-  
+//#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-value"
   if(capture == 0) { captureRange = cacheSlot->lastMatchRange; } else { RKLGetRangeForCapture(cacheSlot->icu_regex, status, capture, captureRange); }
-
+//#pragma clang diagnostic pop
+    
  exitNow:
   *resultRange = captureRange;
 }

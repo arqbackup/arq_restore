@@ -36,7 +36,7 @@
 #import "NSErrorCodes.h"
 #import "CFStreamPair.h"
 
-#define MY_BUF_SIZE (4096)
+#define MY_BUF_SIZE (8192)
 #define DEFAULT_READ_TIMEOUT_SECONDS (60)
 
 @interface CFStreamInputStream (internal)
@@ -57,57 +57,11 @@
 }
 
 #pragma mark InputStream
-- (unsigned char *)read:(NSUInteger *)length error:(NSError **)error {
+- (NSInteger)read:(unsigned char *)buf bufferLength:(NSUInteger)bufferLength error:(NSError **)error {
     if (![self open:error]) {
-        return NULL;
+        return -1;
     }
-    unsigned char *ret = [self readMaximum:MY_BUF_SIZE length:length error:error];
-    if (ret != NULL) {
-        bytesReceived += (uint64_t)*length;
-    }
-    return ret;
-}
-- (NSData *)slurp:(NSError **)error {
-    if (![self open:error]) {
-        return nil;
-    }
-    return [InputStreams slurp:self error:error];
-}
-
-#pragma mark BufferedInputStream
-- (unsigned char *)readExactly:(NSUInteger)exactLength error:(NSError **)error {
-    if (![self open:error]) {
-        return NULL;
-    }
-    if (exactLength > 2147483648) {
-        SETNSERROR(@"InputStreamErrorDomain", -1, @"absurd length %u requested", exactLength);
-        return NULL;
-    }
-    NSMutableData *data = [NSMutableData dataWithLength:exactLength];
-    unsigned char *dataBuf = [data mutableBytes];
-    NSUInteger total = 0;
-    while (total < exactLength) {
-        NSUInteger maximum = exactLength - total;
-        NSUInteger length;
-        unsigned char *ibuf = [self readMaximum:maximum length:&length error:error];
-        if (ibuf == NULL) {
-            return NULL;
-        }
-        NSAssert(length > 0, @"expected more than 0 bytes");
-        memcpy(dataBuf + total, ibuf, length);
-        total += length;
-    }
-    bytesReceived += (uint64_t)exactLength;
-    return dataBuf;
-}
-- (unsigned char *)readMaximum:(NSUInteger)maximum length:(NSUInteger *)length error:(NSError **)error {
-    if (![self open:error]) {
-        return NULL;
-    }
-    NSUInteger toRead = (MY_BUF_SIZE > maximum) ? maximum : MY_BUF_SIZE;
-    NSMutableData *data = [NSMutableData dataWithLength:toRead];
-    unsigned char *buf = (unsigned char *)[data mutableBytes];
-    CFIndex index = CFReadStreamRead(readStream, buf, toRead);
+    CFIndex index = CFReadStreamRead(readStream, buf, bufferLength);
     if (index == -1) {
         if (error != NULL) {
             CFErrorRef err = CFReadStreamCopyError(readStream);
@@ -118,18 +72,12 @@
                 CFRelease(err);
             }
         }
-        return NULL;
+        return -1;
     }
-    if (index == 0) {
-        SETNSERROR(@"StreamErrorDomain", ERROR_EOF, @"EOF");
-        return NULL;
-    }
-    *length = (NSUInteger)index;
-    bytesReceived += (uint64_t)index;
-    return buf;
+    return (NSInteger)index;
 }
-- (uint64_t)bytesReceived {
-    return bytesReceived;
+- (NSData *)slurp:(NSError **)error {
+    return [InputStreams slurp:self error:error];
 }
 @end
 @implementation CFStreamInputStream (internal)

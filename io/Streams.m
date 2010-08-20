@@ -34,31 +34,30 @@
 #import "SetNSError.h"
 #import "FDOutputStream.h"
 #import "NSErrorCodes.h"
-#import "InputStream.h"
+
+#define MY_BUF_SIZE (8192)
 
 @implementation Streams
 + (BOOL)transferFrom:(id <InputStream>)is to:(id <OutputStream>)os error:(NSError **)error {
-    BOOL ret = YES;
+    unsigned long long written = 0;
+    return [Streams transferFrom:is to:os bytesWritten:&written error:error];
+}
++ (BOOL)transferFrom:(id <InputStream>)is to:(id <OutputStream>)os bytesWritten:(unsigned long long *)written error:(NSError **)error {
+    NSInteger received = 0;
+    unsigned char *buf = (unsigned char *)malloc(MY_BUF_SIZE);
     for (;;) {
-        NSUInteger received;
-        NSError *readError = nil;
-        unsigned char *buf = [is read:&received error:&readError];
-        if (buf == NULL) {
-            if ([readError code] != ERROR_EOF) {
-                ret = NO;
-                if (error != NULL) {
-                    *error = readError;
-                }
-            }
+        received = [is read:buf bufferLength:MY_BUF_SIZE error:error];
+        if (received <= 0) {
             break;
         }
-        NSAssert(received > 0, @"expected to receive more than 0 bytes");
         if (![os write:buf length:received error:error]) {
-            ret = NO;
+            received = -1;
             break;
         }
+        *written += (unsigned long long)received;
     }
-    return ret;
+    free(buf);
+    return received >= 0;
 }
 + (BOOL)transferFrom:(id <InputStream>)is atomicallyToFile:(NSString *)path bytesWritten:(unsigned long long *)written error:(NSError **)error {
     NSString *tempFileTemplate = [path stringByAppendingString:@".XXXXXX"];

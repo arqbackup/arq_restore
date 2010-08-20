@@ -59,6 +59,7 @@
 
 @interface S3Service (internal)
 - (NSXMLDocument *)listBuckets:(NSError **)error;
+- (BOOL)internalACL:(int *)acl atPath:(NSString *)path error:(NSError **)error;
 @end
 
 @implementation S3Service
@@ -199,6 +200,39 @@
     [s3r release];
     return sb;
 }
+- (BOOL)aclXMLData:(NSData **)aclXMLData atPath:(NSString *)path error:(NSError **)error {
+    *aclXMLData = nil;
+    HSLogDebug(@"getting %@", path);
+    S3Request *s3r = [[S3Request alloc] initWithMethod:@"GET" path:path queryString:@"?acl" authorizationProvider:sap useSSL:useSSL retryOnNetworkError:retryOnNetworkError];
+    ServerBlob *sb = [s3r newServerBlob:error];
+    [s3r release];
+    if (sb == nil) {
+        return NO;
+    }
+    NSData *output = [sb slurp:error];
+    [sb release];
+    if (output == nil) {
+        return NO;
+    }
+    *aclXMLData = output;
+    return YES;
+}
+- (BOOL)acl:(int *)acl atPath:(NSString *)path error:(NSError **)error {
+	if (error != NULL) {
+		*error = nil;
+	}
+    *acl = 0;
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    BOOL ret = [self internalACL:acl atPath:path error:error];
+	if (!ret && error != NULL) {
+		[*error retain];
+	}
+    [pool drain];
+	if (!ret && error != NULL) {
+		[*error autorelease];
+	}
+    return ret;
+}
 - (NSArray *)commonPrefixesForPathPrefix:(NSString *)prefix delimiter:(NSString *)delimiter error:(NSError **)error {
 	if (![prefix hasPrefix:@"/"]) {
         HSLogError(@"invalid prefix %@", prefix);
@@ -268,5 +302,62 @@
         return nil;
     }
     return [[[NSXMLDocument alloc] initWithData:data options:0 error:error] autorelease];
+}
+- (BOOL)internalACL:(int *)acl atPath:(NSString *)path error:(NSError **)error {
+    NSData *aclData;
+    if (![self aclXMLData:&aclData atPath:path error:error]) {
+        return NO;
+    }
+	NSXMLDocument *xmlDoc = [[[NSXMLDocument alloc] initWithData:aclData options:0 error:error] autorelease];
+    if (!xmlDoc) {
+        return NO;
+    }
+    NSArray *grants = [xmlDoc nodesForXPath:@"AccessControlPolicy/AccessControlList/Grant" error:error];
+    if (!grants) {
+        return NO;
+    }
+    BOOL publicRead = NO;
+    BOOL publicWrite = NO;
+    for (NSXMLElement *grant in grants) {
+        NSArray *grantees = [grant nodesForXPath:@"Grantee" error:error];
+        if (!grantees) {
+            return NO;
+        }
+        for (NSXMLElement *grantee in grantees) {
+            NSString *xsiType = [[grantee attributeForName:@"xsi:type"] stringValue];
+            if ([xsiType isEqualToString:@"Group"]) {
+                NSArray *uris = [grantee nodesForXPath:@"URI" error:error];
+                if (!uris) {
+                    return NO;
+                }
+                if ([uris count] > 0) {
+                    if ([[[uris objectAtIndex:0] stringValue] isEqualToString:@"http://acs.amazonaws.com/groups/global/AllUsers"]) {
+                        NSArray *permissions = [grant nodesForXPath:@"Permission" error:error];
+                        if (!permissions) {
+                            return NO;
+                        }
+                        for (NSXMLElement *permission in permissions) {
+                            if ([[permission stringValue] isEqualToString:@"WRITE"]) {
+                                publicWrite = YES;
+                            } else if ([[permission stringValue] isEqualToString:@"READ"]) {
+                                publicRead = YES;
+                            } else {
+                                SETNSERROR([S3Service errorDomain], -1, @"unexpected permission");
+                                return NO;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if (publicRead && publicWrite) {
+        *acl = PUBLIC_READ_WRITE;
+    } else if (publicRead) {
+        *acl = PUBLIC_READ;
+    } else {
+        *acl = PRIVATE;
+    }
+    return YES;
 }
 @end

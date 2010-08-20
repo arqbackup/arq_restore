@@ -38,6 +38,7 @@
 #import "IntegerIO.h"
 #import "Blob.h"
 #import "DataInputStream.h"
+#import "BufferedInputStream.h"
 #import "SetNSError.h"
 #import "NSErrorCodes.h"
 #import "Streams.h"
@@ -47,7 +48,7 @@
 
 @interface XAttrSet (internal)
 - (BOOL)loadFromPath:(NSString *)thePath error:(NSError **)error;
-- (BOOL)loadFromInputStream:(id <BufferedInputStream>)is error:(NSError **)error;
+- (BOOL)loadFromInputStream:(BufferedInputStream *)is error:(NSError **)error;
 @end
 
 @implementation XAttrSet
@@ -69,7 +70,7 @@
     }
     return self;
 }
-- (id)initWithBufferedInputStream:(id <BufferedInputStream>)is error:(NSError **)error {
+- (id)initWithBufferedInputStream:(BufferedInputStream *)is error:(NSError **)error {
     if (self = [super init]) {
         xattrs = [[NSMutableDictionary alloc] init];
         if (![self loadFromInputStream:is error:error]) {
@@ -189,12 +190,12 @@
     }
     return YES;
 }
-- (BOOL)loadFromInputStream:(id <BufferedInputStream>)is error:(NSError **)error {
-    unsigned char *headerBytes = [is readExactly:HEADER_LENGTH error:error];
-    if (headerBytes == NULL) {
+- (BOOL)loadFromInputStream:(BufferedInputStream *)is error:(NSError **)error {
+    NSData *headerData = [is readExactly:HEADER_LENGTH error:error];
+    if (headerData == nil) {
         return NO;
     }
-    if (strncmp((const char *)headerBytes, "XAttrSetV002", HEADER_LENGTH)) {
+    if (strncmp((const char *)[headerData bytes], "XAttrSetV002", HEADER_LENGTH)) {
         SETNSERROR(@"XAttrSetErrorDomain", ERROR_INVALID_OBJECT_VERSION, @"invalid XAttrSet header");
         return NO;
     }

@@ -42,6 +42,7 @@
     NSString *rootPath;
     NSMutableArray *restoreNodes;
     NSMutableDictionary *hardlinks;
+    unsigned long long writtenToCurrentFile;
 }
 - (id)initWithS3Service:(S3Service *)theS3 s3BucketName:(NSString *)theS3BucketName computerUUID:(NSString *)theComputerUUID bucketUUID:(NSString *)theBucketUUID bucketName:(NSString *)theBucketName encryptionKey:(NSString *)theEncryptionKey;
 - (BOOL)restore:(NSError **)error;

@@ -32,7 +32,7 @@
 
 #import <Cocoa/Cocoa.h>
 #import "Blob.h"
-@protocol BufferedInputStream;
+@class BufferedInputStream;
 @class Node;
 
 #define CURRENT_TREE_VERSION 10
@@ -64,7 +64,7 @@
 	NSMutableDictionary *nodes;
 }
 + (NSString *)errorDomain;
-- (id)initWithBufferedInputStream:(id <BufferedInputStream>)is error:(NSError **)error;
+- (id)initWithBufferedInputStream:(BufferedInputStream *)is error:(NSError **)error;
 - (NSArray *)childNodeNames;
 - (Node *)childNodeWithName:(NSString *)name;
 - (BOOL)containsNodeNamed:(NSString *)name;

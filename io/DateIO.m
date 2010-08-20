@@ -30,9 +30,12 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
+#import <Cocoa/Cocoa.h>
+
 #import "BooleanIO.h"
 #import "IntegerIO.h"
 #import "DateIO.h"
+#import "BufferedInputStream.h"
 
 @implementation DateIO
 + (void)write:(NSDate *)date to:(NSMutableData *)data {
@@ -43,7 +46,7 @@
 		[IntegerIO writeInt64:millisecondsSince1970 to:data];
 	}
 }
-+ (BOOL)read:(NSDate **)date from:(id <BufferedInputStream>)is error:(NSError **)error {
++ (BOOL)read:(NSDate **)date from:(BufferedInputStream *)is error:(NSError **)error {
     *date = nil;
     BOOL notNil;
     if (![BooleanIO read:&notNil from:is error:error]) {

@@ -31,9 +31,9 @@
  */ 
 
 #import <Cocoa/Cocoa.h>
-#import "BufferedInputStream.h"
+#import "InputStream.h"
 
-@interface FDInputStream : NSObject <BufferedInputStream> {
+@interface FDInputStream : NSObject <InputStream> {
     int fd;
     uint64_t bytesReceived;
 }

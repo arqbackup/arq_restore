@@ -35,7 +35,7 @@
 #import "InputStreams.h"
 #import "NSErrorCodes.h"
 
-#define MY_BUF_SIZE (4096)
+#define MY_BUF_SIZE (8192)
 #define DEFAULT_READ_TIMEOUT_SECONDS (60)
 
 static time_t readTimeoutSeconds = DEFAULT_READ_TIMEOUT_SECONDS;
@@ -54,14 +54,10 @@ static time_t readTimeoutSeconds = DEFAULT_READ_TIMEOUT_SECONDS;
 - (void)dealloc {
     [super dealloc];
 }
-- (unsigned char *)read:(NSUInteger *)length error:(NSError **)error {
-    return [self readMaximum:MY_BUF_SIZE length:length error:error];
-}
-- (unsigned char *)readMaximum:(NSUInteger)maximum length:(NSUInteger *)length error:(NSError **)error {
-    NSUInteger toRead = (MY_BUF_SIZE > maximum) ? maximum : MY_BUF_SIZE;
-    NSMutableData *data = [NSMutableData dataWithLength:toRead];
-    unsigned char *buf = (unsigned char *)[data mutableBytes];
-    int ret = 0;
+
+#pragma mark InputStream
+- (NSInteger)read:(unsigned char *)buf bufferLength:(NSUInteger)bufferLength error:(NSError **)error {
+    NSInteger ret = 0;
     fd_set readSet;
     fd_set exceptSet;
     FD_ZERO(&readSet);
@@ -80,58 +76,26 @@ select_again:
         goto select_again;
     } else if (ret == -1) {
         SETNSERROR(@"UnixErrorDomain", errno, @"select: %s", strerror(errno));
-        return NULL;
+        return -1;
     } else if (ret == 0) {
-        SETNSERROR(@"InputStreamErrorDomain", -1, @"read timeout");
-        return NULL;
+        SETNSERROR(@"InputStreamErrorDomain", ERROR_TIMEOUT, @"read timeout");
+        return -1;
     }
     
 read_again:
-    ret = read(fd, buf, toRead);
+    ret = read(fd, buf, bufferLength);
     if ((ret == -1) && (errno == EINTR)) {
         goto read_again;
     } else if (ret == -1) {
         SETNSERROR(@"UnixErrorDomain", errno, @"read: %s", strerror(errno));
-        return NULL;
+        return -1;
     }
-    if (ret == 0) {
-        SETNSERROR(@"StreamErrorDomain", ERROR_EOF, @"EOF on fd %d", fd);
-        return NULL;
-    }
-    *length = (NSUInteger)ret;
-    bytesReceived += (uint64_t)ret;
-    return buf;
+    return ret;
 }
 - (NSData *)slurp:(NSError **)error {
     return [InputStreams slurp:self error:error];
 }
 
-#pragma mark BufferedInputStream protocol
-- (unsigned char *)readExactly:(NSUInteger)exactLength error:(NSError **)error {
-    if (exactLength > 2147483648) {
-        SETNSERROR(@"InputStreamErrorDomain", -1, @"absurd length %u requested", exactLength);
-        return NULL;
-    }
-    NSMutableData *data = [NSMutableData dataWithLength:exactLength];
-    unsigned char *dataBuf = [data mutableBytes];
-    NSUInteger total = 0;
-    while (total < exactLength) {
-        NSUInteger maximum = exactLength - total;
-        NSUInteger length;
-        unsigned char *ibuf = [self readMaximum:maximum length:&length error:error];
-        if (ibuf == NULL) {
-            return NULL;
-        }
-        NSAssert(length > 0, @"expected more than 0 bytes");
-        memcpy(dataBuf + total, ibuf, length);
-        total += length;
-    }
-    bytesReceived += (uint64_t)exactLength;
-    return dataBuf;
-}
-- (uint64_t)bytesReceived {
-    return bytesReceived;
-}
 #pragma mark NSObject protocol
 - (NSString *)description {
     return [NSString stringWithFormat:@"<FDInputStream: fd=%d>", fd];

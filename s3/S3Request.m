@@ -50,7 +50,7 @@
 
 @interface S3Request (internal)
 - (ServerBlob *)newServerBlobOnce:(NSError **)error;
-- (void)setError:(NSError **)error withHTTPResponseCode:(int)code responseData:(NSData *)response;
+- (BOOL)setError:(NSError **)error withHTTPResponseCode:(int)code responseData:(NSData *)response;
 @end
 
 @implementation S3Request
@@ -178,11 +178,8 @@
     [pool drain];
     [myError autorelease];
     if (sb == nil && error != NULL) {
-        if (myError != nil) {
-            *error = myError;
-        } else {
-            SETNSERROR([S3Service errorDomain], -1, @"unknown error reading %@", path);
-        }
+        NSAssert(myError != nil, @"myError must be set");
+        *error = myError;
     }
     return sb;
 }
@@ -226,7 +223,7 @@
     ServerBlob *ret = nil;
     int code = [conn responseCode];
     if (code >= 200 && code <= 299) {
-        id <BufferedInputStream> bodyStream = [conn newResponseBodyStream:error];
+        id <InputStream> bodyStream = [conn newResponseBodyStream:error];
         if (bodyStream == nil) {
             return nil;
         }
@@ -260,7 +257,7 @@
     }
     return nil;
 }
-- (void)setError:(NSError **)error withHTTPResponseCode:(int)code responseData:(NSData *)response {
+- (BOOL)setError:(NSError **)error withHTTPResponseCode:(int)code responseData:(NSData *)response {
     NSAssert(error != NULL, @"NSError **error must not be NULL");
     NSString *errorXML = [[[NSString alloc] initWithData:response encoding:NSUTF8StringEncoding] autorelease];
     HSLogDebug(@"amazon HTTP error code=%d; xml=%@", code, errorXML);
@@ -269,7 +266,7 @@
     if (xmlDoc == nil) {
         HSLogError(@"error parsing Amazon error XML: %@", [xmlError localizedDescription]);
         SETNSERROR([S3Service errorDomain], code, @"Amazon error (failed to parse XML); xml=%@", errorXML);
-        return;
+        return YES;
     }
     
     HSLogTrace(@"error XML: %@", [xmlDoc description]);
@@ -279,13 +276,13 @@
     if (errorNodes == nil) {
         HSLogError(@"error finding Error node in Amazon error XML: %@", [xmlError localizedDescription]);
         SETNSERROR([S3Service errorDomain], code, @"Amazon error (failed to parse Error node in XML); xml=%@", errorXML);
-        return;
+        return YES;
     }
     
     if ([errorNodes count] == 0) {
         HSLogWarn(@"missing Error node in S3 XML response %@", errorXML);
         SETNSERROR([S3Service errorDomain], code, @"Amazon error (no Error node found); xml=%@", errorXML);
-        return;
+        return YES;
     }
     
     if ([errorNodes count] > 1) {
@@ -303,6 +300,7 @@
                               nil];
     NSError *myError = [NSError errorWithDomain:[S3Service amazonErrorDomain] code:code userInfo:userInfo];
     *error = myError;
+    return YES;
 }
 
 #pragma mark MonitoredInputStream

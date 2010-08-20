@@ -39,15 +39,23 @@
 #import "RegexKitLite.h"
 #import "FDOutputStream.h"
 #import "FDInputStream.h"
+#import "BufferedInputStream.h"
+
+static int HTTP_DEFAULT_PORT = 80;
+static int HTTPS_DEFAULT_PORT = 443;
 
 @implementation HTTPConnection
 - (id)initWithHost:(NSString *)theHost useSSL:(BOOL)isUseSSL error:(NSError **)error {
+    return [self initWithHost:theHost port:(isUseSSL ? HTTPS_DEFAULT_PORT : HTTP_DEFAULT_PORT) useSSL:isUseSSL error:error];
+}
+- (id)initWithHost:(NSString *)theHost port:(int)thePort useSSL:(BOOL)isUseSSL error:(NSError **)error {
     if (self = [super init]) {
-        streamPair = [[StreamPairFactory theFactory] newStreamPairToHost:theHost useSSL:isUseSSL error:error];
+        streamPair = [[StreamPairFactory theFactory] newStreamPairToHost:theHost port:thePort useSSL:isUseSSL error:error];
         if (streamPair == nil) {
             [self release];
             return nil;
         }
+        bufferedInputStream = [[BufferedInputStream alloc] initWithUnderlyingStream:streamPair];
         request = [[HTTPRequest alloc] initWithHost:theHost];
         response = [[HTTPResponse alloc] init];
     }
@@ -55,6 +63,7 @@
 }
 - (void)dealloc {
     [streamPair release];
+    [bufferedInputStream release];
     [request release];
     [response release];
     [super dealloc];
@@ -87,10 +96,12 @@
     if (![request write:streamPair error:error]) {
         return NO;
     }
-    if (bodyStream != nil && ![Streams transferFrom:bodyStream to:streamPair error:error]) {
+    unsigned long long written = 0;
+    if (bodyStream != nil && ![Streams transferFrom:bodyStream to:streamPair bytesWritten:&written error:error]) {
         return NO;
     }
-    if (![response readHead:streamPair requestMethod:[request method] error:error]) {
+    HSLogTrace(@"wrote %qu-byte request body", written);
+    if (![response readHead:bufferedInputStream requestMethod:[request method] error:error]) {
         return NO;
     }
     if ([[response headerForKey:@"Connection"] isEqualToString:@"Close"]) {
@@ -123,8 +134,8 @@
     }
     return downloadName;
 }
-- (id <BufferedInputStream>)newResponseBodyStream:(NSError **)error {
-    return [response newResponseInputStream:streamPair error:error];
+- (id <InputStream>)newResponseBodyStream:(NSError **)error {
+    return [response newResponseInputStream:bufferedInputStream error:error];
 }
 - (NSData *)slurpResponseBody:(NSError **)error {
     id <InputStream> is = [self newResponseBodyStream:error];

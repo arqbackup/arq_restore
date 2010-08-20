@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -31,16 +31,11 @@
  */ 
 
 #import <Cocoa/Cocoa.h>
-@protocol StreamPair;
 
-@interface StreamPairFactory : NSObject {
-    NSTimeInterval maxStreamPairLifetime;
-    NSLock *lock;
-    NSMutableDictionary *threadMap;
-    
+
+@interface BinaryPListWriter : NSObject {
+    NSMutableData *data;
 }
-+ (StreamPairFactory *)theFactory;
-- (void)setMaxStreamPairLifetime:(NSTimeInterval)theMaxLifetime;
-- (id <StreamPair>)newStreamPairToHost:(NSString *)theHost useSSL:(BOOL)isUseSSL error:(NSError **)error;
-
+- (id)initWithMutableData:(NSMutableData *)theData;
+- (void)write:(DictNode *)plist;
 @end

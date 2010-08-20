@@ -33,83 +33,64 @@
 #import "InputStreams.h"
 #import "SetNSError.h"
 #import "NSErrorCodes.h"
-#import "FDInputStream.h"
+#import "BufferedInputStream.h"
 
+#define MY_BUF_SIZE (8192)
 
 @implementation InputStreams
 + (NSData *)slurp:(id <InputStream>)is error:(NSError **)error {
     NSMutableData *data = [[[NSMutableData alloc] init] autorelease];
+    unsigned char *buf = (unsigned char *)malloc(MY_BUF_SIZE);
+    NSInteger ret = 0;
     for (;;) {
-        NSError *myError = nil;
-        NSUInteger received;
-        unsigned char *buf = [is read:&received error:&myError];
-        if (buf == NULL) {
-            if ([myError code] != ERROR_EOF) {
-                data = nil;
-                if (error != NULL) {
-                    *error = myError;
-                }
-            }
+        ret = [is read:buf bufferLength:MY_BUF_SIZE error:error];
+        if (ret <= 0) {
             break;
         }
-        [data appendBytes:buf length:received];
+        [data appendBytes:buf length:ret];
+    }
+    free(buf);
+    if (ret == -1) {
+        return nil;
     }
     return data;
 }
-+ (NSString *)readLineWithCRLF:(FDInputStream *)is maxLength:(NSUInteger)maxLength error:(NSError **)error {
-    NSMutableData *data = [[[NSMutableData alloc] init] autorelease];
++ (NSString *)readLineWithCRLF:(BufferedInputStream *)bis maxLength:(NSUInteger)maxLength error:(NSError **)error {
+    unsigned char *buf = (unsigned char *)malloc(maxLength);
+    NSUInteger received = 0;
     for (;;) {
-        if ([data length] > maxLength) {
-            SETNSERROR(@"InputStreamErrorDomain", -1, @"exceeded maxLength %u", maxLength);
+        if (received > maxLength) {
+            SETNSERROR(@"InputStreamErrorDomain", -1, @"exceeded maxLength %u before finding CRLF", maxLength);
             return nil;
         }
-        NSUInteger received = 0;
-        unsigned char *buf = [is readMaximum:1 length:&received error:error];
-        if (buf == NULL) {
+        if (![bis readExactly:1 into:(buf + received) error:error]) {
             return nil;
         }
-        NSAssert(received == 1, @"expected 1 byte from readMaximum:");
-        [data appendBytes:buf length:1];
-        char c = buf[0];
-        if (c == '\r') {
-            buf = [is readMaximum:1 length:&received error:error];
-            if (buf == NULL) {
-                return nil;
-            }
-            NSAssert(received == 1, @"expected 1 byte from readMaximum:");
-            [data appendBytes:buf length:1];
-            c = buf[0];
-            if (c == '\n') {
-                break;
-            }
+        received++;
+        if (received >= 2 && buf[received - 1] == '\n' && buf[received - 2] == '\r') {
+            break;
         }
     }
-    NSString *line = [[[NSString alloc] initWithBytes:[data bytes] length:[data length] encoding:NSUTF8StringEncoding] autorelease];
-    HSLogTrace(@"got line <%@>", [line substringToIndex:[line length] - 2]);
-    return line;
+    NSString *ret = [[[NSString alloc] initWithBytes:buf length:received encoding:NSUTF8StringEncoding] autorelease];
+    HSLogTrace(@"got line <%@>", ret);
+    return ret;
 }
-+ (NSString *)readLine:(FDInputStream *)is error:(NSError **)error {
-    NSMutableData *data = [[[NSMutableData alloc] init] autorelease];
++ (NSString *)readLine:(BufferedInputStream *)bis error:(NSError **)error {
+    NSMutableData *data = [NSMutableData data];
+    unsigned char buf[1];
+    NSUInteger received = 0;
     for (;;) {
-        NSUInteger received = 0;
-        NSError *myError = nil;
-        unsigned char *buf = [is readMaximum:1 length:&received error:&myError];
-        if (buf == NULL) {
-            if ([myError code] != ERROR_EOF) {
-                if (error != NULL) {
-                    *error = myError;
-                }
-                return nil;
-            }
-            //EOF.
-            break;
+        if (![bis readExactly:1 into:buf error:error]) {
+            return nil;
         }
-        NSAssert(received == 1, @"expected 1 byte from readMaximum:");
-        if (buf[0] == '\n') {
+        if (*buf == '\n') {
             break;
         }
         [data appendBytes:buf length:1];
+        received++;
     }
-    return [[[NSString alloc] initWithBytes:[data bytes] length:[data length] encoding:NSUTF8StringEncoding] autorelease];
+    NSString *ret = [[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] autorelease];
+    HSLogTrace(@"got line <%@> followed by \\n", ret);
+    return ret;
 }
 @end

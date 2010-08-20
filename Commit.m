@@ -35,6 +35,7 @@
 #import "StringIO.h"
 #import "Commit.h"
 #import "DataInputStream.h"
+#import "BufferedInputStream.h"
 #import "RegexKitLite.h"
 #import "SetNSError.h"
 #import "NSErrorCodes.h"
@@ -43,7 +44,7 @@
 #define HEADER_LENGTH (10)
 
 @interface Commit (internal)
-- (BOOL)readHeader:(id <BufferedInputStream>)is error:(NSError **)error;
+- (BOOL)readHeader:(BufferedInputStream *)is error:(NSError **)error;
 @end
 
 @implementation Commit
@@ -57,7 +58,7 @@ mergeCommonAncestorCommitSHA1 = _mergeCommonAncestorCommitSHA1,
 creationDate = _creationDate,
 commitFailedFiles = _commitFailedFiles;
 
-- (id)initWithBufferedInputStream:(id <BufferedInputStream>)is error:(NSError **)error {
+- (id)initWithBufferedInputStream:(BufferedInputStream *)is error:(NSError **)error {
 	if (self = [super init]) {
         _parentCommitSHA1s = [[NSMutableSet alloc] init];
         if (![self readHeader:is error:error]) {
@@ -158,12 +159,12 @@ commitFailedFiles = _commitFailedFiles;
 @end
 
 @implementation Commit (internal)
-- (BOOL)readHeader:(id <BufferedInputStream>)is error:(NSError **)error {
-    unsigned char *headerBytes = [is readExactly:HEADER_LENGTH error:error];
-    if (headerBytes == NULL) {
+- (BOOL)readHeader:(BufferedInputStream *)is error:(NSError **)error {
+    NSData *headerData = [is readExactly:HEADER_LENGTH error:error];
+    if (headerData == nil) {
         return NO;
     }
-    NSString *header = [[[NSString alloc] initWithBytes:headerBytes length:HEADER_LENGTH encoding:NSASCIIStringEncoding] autorelease];
+    NSString *header = [[[NSString alloc] initWithData:headerData encoding:NSUTF8StringEncoding] autorelease];
     NSRange versionRange = [header rangeOfRegex:@"^CommitV(\\d{3})$" capture:1];
     commitVersion = 0;
     if (versionRange.location != NSNotFound) {

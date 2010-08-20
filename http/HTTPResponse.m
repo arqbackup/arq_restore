@@ -78,8 +78,8 @@
     }
     return (unsigned long long)contentLength;
 }
-- (id <BufferedInputStream>)newResponseInputStream:(id <BufferedInputStream>)underlyingStream error:(NSError **)error {
-    id <BufferedInputStream> ret = nil;
+- (id <InputStream>)newResponseInputStream:(BufferedInputStream *)underlyingStream error:(NSError **)error {
+    id <InputStream>ret = nil;
     if ([requestMethod isEqualToString:@"HEAD"] || code == 204) {
         ret = [[NSData data] newInputStream];
     } else {
@@ -105,14 +105,16 @@
     }
     return ret;
 }
-- (BOOL)readHead:(id <BufferedInputStream>)inputStream requestMethod:(NSString *)theRequestMethod error:(NSError **)error {
+- (BOOL)readHead:(BufferedInputStream *)inputStream requestMethod:(NSString *)theRequestMethod error:(NSError **)error {
     [headers removeAllObjects];
     [requestMethod release];
     requestMethod = [theRequestMethod copy];
+    HSLogTrace(@"reading response start line");
     NSString *line = [InputStreams readLineWithCRLF:inputStream maxLength:MAX_HTTP_STATUS_LINE_LENGTH error:error];
     if (line == nil) {
         return NO;
     }
+    HSLogTrace(@"response start line: %@", line);
     NSString *pattern = @"^HTTP/(1.\\d)\\s+(\\d+)\\s+(.+)\r\n$";
     NSRange protoRange = [line rangeOfRegex:pattern capture:1];
     NSRange codeRange = [line rangeOfRegex:pattern capture:2];
@@ -129,6 +131,7 @@
         if (line == nil) {
             return NO;
         }
+        HSLogTrace(@"response header: %@", line);
         if ([line isEqualToString:@"\r\n"]) {
             break;
         }

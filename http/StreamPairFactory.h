@@ -41,6 +41,6 @@
 }
 + (StreamPairFactory *)theFactory;
 - (void)setMaxStreamPairLifetime:(NSTimeInterval)theMaxLifetime;
-- (id <StreamPair>)newStreamPairToHost:(NSString *)theHost useSSL:(BOOL)isUseSSL error:(NSError **)error;
+- (id <StreamPair>)newStreamPairToHost:(NSString *)theHost port:(int)thePort useSSL:(BOOL)isUseSSL error:(NSError **)error;
 - (void)clear;
 @end

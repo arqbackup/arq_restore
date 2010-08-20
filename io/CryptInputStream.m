@@ -36,7 +36,11 @@
 #import "InputStreams.h"
 #import "NSErrorCodes.h"
 
-#define MY_BUF_SIZE (4096)
+#define MY_BUF_SIZE (8192)
+
+@interface CryptInputStream (internal)
+- (BOOL)fillOutBuf:(NSError **)error;
+@end
 
 @implementation CryptInputStream
 + (NSString *)errorDomain {
@@ -72,8 +76,10 @@
             }
             EVP_CIPHER_CTX_set_key_length(&cipherContext, EVP_MAX_KEY_LENGTH);
             blockSize = (unsigned long long)EVP_CIPHER_CTX_block_size(&cipherContext);
-            outBufLen = MY_BUF_SIZE + blockSize - 1;
-            outBuf = (unsigned char *)malloc(outBufLen);
+            inBufSize = MY_BUF_SIZE;
+            inBuf = (unsigned char *)malloc(inBufSize);
+            outBufSize = MY_BUF_SIZE + blockSize - 1;
+            outBuf = (unsigned char *)malloc(outBufSize);
             initialized = YES;
             ret = YES;
         } while(0);
@@ -88,6 +94,9 @@
     if (initialized) {
         EVP_CIPHER_CTX_cleanup(&cipherContext);
     }
+    if (inBuf != NULL) {
+        free(inBuf);
+    }
     if (outBuf != NULL) {
         free(outBuf);
     }
@@ -100,65 +109,53 @@
 - (BOOL)cryptFinal:(int *)outLen {
     @throw [NSException exceptionWithName:@"PureVirtualMethod" reason:@"don't call this" userInfo:nil];
 }
-- (unsigned char *)read:(NSUInteger *)length error:(NSError **)error {
-    if (finalized) {
-        SETNSERROR([CryptInputStream errorDomain], ERROR_EOF, @"EOF");
-        return NULL;
-    }
-    NSUInteger inLen = 0;
-    NSError *myError = nil;
-    unsigned char *inBuf = [is read:&inLen error:&myError];
-    int outLen = 0;
-    if (inBuf == NULL) {
-        if ([myError code] == ERROR_EOF) {
-            finalized = YES;
-            if (!(cryptFinal)(&cipherContext, outBuf, &outLen)) {
-                SETNSERROR(@"OpenSSLErrorDomain", -1, @"crypt final: %@", [OpenSSL errorMessage]);
-                return NULL;
-            }
-            if (outLen == 0) {
-                // Don't return 0 bytes and make the caller have to call again.
-                SETNSERROR([CryptInputStream errorDomain], ERROR_EOF, @"EOF");
-                return NULL;
-            }
-            *length = (NSUInteger)outLen;
-            return outBuf;
-        } else {
-            if (error != NULL) {
-                *error = myError;
-            }
-            return NULL;
+
+#pragma mark InputStream
+- (NSInteger)read:(unsigned char *)buf bufferLength:(NSUInteger)bufferLength error:(NSError **)error {
+    while (outBufPos >= outBufLen && !finalized) {
+        if (![self fillOutBuf:error]) {
+            return -1;
         }
     }
-    NSUInteger needed = inLen + blockSize - 1;
-    if (outBufLen < needed) {
-        outBuf = (unsigned char *)realloc(outBuf, needed);
-        if (outBuf == NULL) {
-            SETNSERROR(@"MallocErrorDomain", -1, @"malloc failed");
-            return NULL;
-        }
-        outBufLen = needed;
+    NSUInteger available = outBufLen - outBufPos;
+    NSUInteger ret = 0;
+    if (available > 0) {
+        NSUInteger toCopy = available > bufferLength ? bufferLength : available;
+        memcpy(buf, outBuf + outBufPos, toCopy);
+        outBufPos += toCopy;
+        ret = toCopy;
     }
-    if (!(*cryptUpdate)(&cipherContext, outBuf, &outLen, inBuf, inLen)) {
-        SETNSERROR(@"OpenSSLErrorDomain", -1, @"crypt update: %@", [OpenSSL errorMessage]);
-        return NULL;
-    }
-    if (outLen == 0) {
-        finalized = YES;
-        if (!(cryptFinal)(&cipherContext, outBuf, &outLen)) {
-            SETNSERROR(@"OpenSSLErrorDomain", -1, @"crypt final: %@", [OpenSSL errorMessage]);
-            return NULL;
-        }
-        if (outLen == 0) {
-            // Don't return 0 bytes and make the caller have to call again.
-            SETNSERROR([CryptInputStream errorDomain], ERROR_EOF, @"EOF");
-            return NULL;
-        }
-    }
-    *length = (NSUInteger)outLen;
-    return outBuf;
+    return ret;
 }
 - (NSData *)slurp:(NSError **)error {
     return [InputStreams slurp:self error:error];
+}
+@end
+
+@implementation CryptInputStream (internal)
+- (BOOL)fillOutBuf:(NSError **)error {
+    if (finalized) {
+        SETNSERROR([CryptInputStream errorDomain], ERROR_EOF, @"EOF");
+        return NO;
+    }
+    outBufLen = 0;
+    outBufPos = 0;
+    NSInteger recvd = [is read:inBuf bufferLength:inBufSize error:error];
+    if (recvd == -1) {
+        return NO;
+    }
+    if (recvd == 0) {
+        finalized = YES;
+        if (!(cryptFinal)(&cipherContext, outBuf, &outBufLen)) {
+            SETNSERROR(@"OpenSSLErrorDomain", -1, @"crypt final: %@", [OpenSSL errorMessage]);
+            return NO;
+        }
+    } else {
+        if (!(*cryptUpdate)(&cipherContext, outBuf, &outBufLen, inBuf, recvd)) {
+            SETNSERROR(@"OpenSSLErrorDomain", -1, @"crypt update: %@", [OpenSSL errorMessage]);
+            return NO;
+        }
+    }
+    return YES;
 }
 @end

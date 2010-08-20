@@ -37,6 +37,7 @@
 #import "Streams.h"
 #import "NSData-InputStream.h"
 #import "BooleanIO.h"
+#import "BufferedInputStream.h"
 
 @implementation StringIO
 + (void)write:(NSString *)str to:(NSMutableData *)data {
@@ -56,7 +57,14 @@
     [data release];
     return ret;
 }
-+ (BOOL)read:(NSString **)value from:(id <BufferedInputStream>)is error:(NSError **)error {
++ (BOOL)read:(NSString **)value from:(BufferedInputStream *)is error:(NSError **)error {
+    if (![StringIO newString:value from:is error:error]) {
+        return NO;
+    }
+    [*value autorelease];
+    return YES;
+}
++ (BOOL)newString:(NSString **)value from:(BufferedInputStream *)is error:(NSError **)error {
     *value = nil;
     BOOL isNotNil = NO;
     if (![BooleanIO read:&isNotNil from:is error:error]) {
@@ -67,11 +75,16 @@
         if (![IntegerIO readUInt64:&len from:is error:error]) {
             return NO;
         }
-        unsigned char *utf8 = [is readExactly:len error:error];
-        if (!utf8) {
+        unsigned char *buf = (unsigned char *)malloc(len);
+        *value = nil;
+        BOOL ret = [is readExactly:len into:buf error:error];
+        if (ret) {
+            *value = [[NSString alloc] initWithBytes:buf length:len encoding:NSUTF8StringEncoding];
+        }
+        free(buf);
+        if (!ret) {
             return NO;
         }
-        *value = [[[NSString alloc] initWithBytes:utf8 length:len encoding:NSUTF8StringEncoding] autorelease];
     }
     return YES;
 }

@@ -39,5 +39,5 @@
 }
 + (void)write:(BOOL)b to:(NSMutableData *)data;
 + (BOOL)write:(BOOL)b to:(id <OutputStream>)os error:(NSError **)error;
-+ (BOOL)read:(BOOL *)value from:(id <BufferedInputStream>)is error:(NSError **)error;
++ (BOOL)read:(BOOL *)value from:(BufferedInputStream *)is error:(NSError **)error;
 @end

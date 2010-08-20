@@ -82,7 +82,9 @@
         return nil;
     }
     DataInputStream *dis = [[DataInputStream alloc] initWithData:data];
-    Commit *commit = [[[Commit alloc] initWithBufferedInputStream:dis error:error] autorelease];
+    BufferedInputStream *bis = [[BufferedInputStream alloc] initWithUnderlyingStream:dis];
+    Commit *commit = [[[Commit alloc] initWithBufferedInputStream:bis error:error] autorelease];
+    [bis release];
     [dis release];
     return commit;
 }
@@ -109,7 +111,9 @@
         return nil;
     }
     DataInputStream *dis = [[DataInputStream alloc] initWithData:data];
-    Tree *tree = [[[Tree alloc] initWithBufferedInputStream:dis error:error] autorelease];
+    BufferedInputStream *bis = [[BufferedInputStream alloc] initWithUnderlyingStream:dis];
+    Tree *tree = [[[Tree alloc] initWithBufferedInputStream:bis error:error] autorelease];
+    [bis release];
     [dis release];
     return tree;
 }

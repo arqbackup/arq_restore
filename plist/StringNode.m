@@ -48,7 +48,12 @@
 - (NSString *)stringValue {
 	return value;
 }
-
+- (BOOL)isEqualToStringNode:(StringNode *)other {
+    if (self == other) {
+        return YES;
+    }
+    return value == [other stringValue];
+}
 
 #pragma mark PListNode protocol
 
@@ -56,10 +61,27 @@
 	return PLN_STRING;
 }
 
-
+#pragma mark NSCopying protocol
+- (id)copyWithZone:(NSZone *)zone {
+    return [[StringNode alloc] initWithString:value];
+}
 
 #pragma mark NSObject protocol
-
+- (BOOL)isEqual:(id)other {
+    if (other == self) {
+        return YES;
+    }
+    if (other == nil || ![other isKindOfClass:[self class]]) {
+        return NO;
+    }
+    return [self isEqualToStringNode:other];
+}
+- (NSUInteger)hash {
+    NSUInteger prime = 31;
+    NSUInteger result = 1;
+    result = prime * result + [value hash];
+    return result;
+}
 - (NSString *)description {
     return [NSString stringWithFormat:@"<StringNode 0x%x \"%@\">", self, value];
 }

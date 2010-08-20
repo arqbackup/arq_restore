@@ -41,7 +41,7 @@ static void printUsage(const char *exeName) {
     fprintf(stderr, "\t%s [-l log_level] /s3bucket/computerUUID/folderUUID\n", exeName);
 }
 int main (int argc, const char **argv) {
-    setHSLogLevel(HSLOG_LEVEL_ERROR);
+    setHSLogLevel(HSLOG_LEVEL_WARN);
     char *exePath = strdup(argv[0]);
     char *exeName = basename(exePath);
     NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];

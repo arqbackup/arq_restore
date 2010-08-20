@@ -31,15 +31,13 @@
  */ 
 
 #import <Cocoa/Cocoa.h>
-#import "BufferedInputStream.h"
+#import "InputStream.h"
 
-@interface FileInputStream : NSObject <BufferedInputStream> {
+@interface FileInputStream : NSObject <InputStream> {
     int fd;
     NSString *path;
     unsigned long long fileLength;
     unsigned long long offset;
-    unsigned char *buf;
-    uint64_t bytesReceived;
 }
 - (id)initWithPath:(NSString *)thePath offset:(unsigned long long)theOffset length:(unsigned long long)theLength;
 @end

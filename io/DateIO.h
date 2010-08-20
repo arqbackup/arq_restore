@@ -31,11 +31,11 @@
  */ 
 
 #import <Cocoa/Cocoa.h>
-#import "BufferedInputStream.h"
+@class BufferedInputStream;
 
 @interface DateIO : NSObject {
 
 }
 + (void)write:(NSDate *)date to:(NSMutableData *)data;
-+ (BOOL)read:(NSDate **)date from:(id <BufferedInputStream>)is error:(NSError **)error;
++ (BOOL)read:(NSDate **)date from:(BufferedInputStream *)is error:(NSError **)error;
 @end

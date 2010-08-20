@@ -32,12 +32,12 @@
 
 #import <Cocoa/Cocoa.h>
 #import "InputStream.h"
-@class FDInputStream;
+@class BufferedInputStream;
 
 @interface ChunkedInputStream : NSObject <InputStream> {
-    FDInputStream *underlyingStream;
+    BufferedInputStream *underlyingStream;
     NSUInteger chunkLength;
     NSUInteger received;
 }
-- (id)initWithUnderlyingStream:(FDInputStream *)is;
+- (id)initWithUnderlyingStream:(BufferedInputStream *)is;
 @end

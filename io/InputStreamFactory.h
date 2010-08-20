@@ -31,6 +31,8 @@
  */ 
 
 #import <Cocoa/Cocoa.h>
+
+#import <Cocoa/Cocoa.h>
 #import "InputStream.h"
 
 @protocol InputStreamFactory <NSObject>

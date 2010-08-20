@@ -89,12 +89,14 @@
     Writer *writer = [[Writer alloc] initWithOutputStream:os];
     BOOL ret = NO;
     do {
+        HSLogTrace(@"writing %@ %@%@ HTTP/%@\\r\\n", method, pathInfo, (queryString != nil ? queryString : @""), protocol);
         if (![writer write:method error:error]
             || ![writer write:@" " error:error]
             || ![writer write:pathInfo error:error]) {
             break;
         }
         if (queryString != nil) {
+            HSLogTrace(@"writing %@", queryString);
             if (![writer write:queryString error:error]) {
                 break;
             }
@@ -105,7 +107,7 @@
             break;
         }
         for (NSString *key in [headers allKeys]) {
-            HSLogTrace(@"header: %@ = %@", key, [headers objectForKey:key]);
+            HSLogTrace(@"writing %@: %@\\r\\n", key, [headers objectForKey:key]);
             if (![writer write:key error:error]
                 || ![writer write:@": " error:error]
                 || ![writer write:[headers objectForKey:key] error:error]
@@ -113,6 +115,7 @@
                 break;
             }
         }
+        HSLogTrace(@"writing \\r\\n");
         if (![writer write:@"\r\n" error:error]) {
             break;
         }

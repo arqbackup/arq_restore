@@ -44,7 +44,12 @@
 - (BOOL)booleanValue {
 	return value;
 }
-
+- (BOOL)isEqualToBooleanNode:(BooleanNode *)other {
+    if (self == other) {
+        return YES;
+    }
+    return value == [other booleanValue];
+}
 
 #pragma mark PListNode protocol
 
@@ -52,9 +57,27 @@
 	return PLN_BOOLEAN;
 }
 
+#pragma mark NSCopying protocol
+- (id)copyWithZone:(NSZone *)zone {
+    return [[BooleanNode alloc] initWithBoolean:value];
+}
 
 #pragma mark NSObject protocol
-
+- (BOOL)isEqual:(id)other {
+    if (other == self) {
+        return YES;
+    }
+    if (other == nil || ![other isKindOfClass:[self class]]) {
+        return NO;
+    }
+    return [self isEqualToBooleanNode:other];
+}
+- (NSUInteger)hash {
+    NSUInteger prime = 31;
+    NSUInteger result = 1;
+    result = prime * result + (value ? 1231 : 1237);
+    return result;
+}
 - (NSString *)description {
     return [NSString stringWithFormat:@"<BooleanNode 0x%x %@>", self, (value ? @"YES" : @"NO")];
 }

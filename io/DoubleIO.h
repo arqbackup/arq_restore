@@ -31,11 +31,13 @@
  */ 
 
 #import <Cocoa/Cocoa.h>
-#import "BufferedInputStream.h"
+@class BufferedInputStream;
+@protocol OutputStream;
 
 @interface DoubleIO : NSObject {
 
 }
 + (void)write:(double)d to:(NSMutableData *)data;
-+ (BOOL)read:(double *)value from:(id <BufferedInputStream>)is error:(NSError **)error;
++ (BOOL)write:(double)d to:(id <OutputStream>)os error:(NSError **)error;
++ (BOOL)read:(double *)value from:(BufferedInputStream *)is error:(NSError **)error;
 @end

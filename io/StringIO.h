@@ -31,7 +31,7 @@
  */ 
 
 #import <Cocoa/Cocoa.h>
-#import "BufferedInputStream.h"
+@class BufferedInputStream;
 #import "OutputStream.h"
 
 @interface StringIO : NSObject {
@@ -39,5 +39,6 @@
 }
 + (void)write:(NSString *)value to:(NSMutableData *)data;
 + (BOOL)write:(NSString *)str to:(id <OutputStream>)os error:(NSError **)error;
-+ (BOOL)read:(NSString **)value from:(id <BufferedInputStream>)is error:(NSError **)error;
++ (BOOL)read:(NSString **)value from:(BufferedInputStream *)is error:(NSError **)error;
++ (BOOL)newString:(NSString **)value from:(BufferedInputStream *)is error:(NSError **)error;
 @end

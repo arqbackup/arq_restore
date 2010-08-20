@@ -32,6 +32,7 @@
 
 
 #define HTTP_1_1 @"1.1"
+#define HTTP_OK (200)
 #define HTTP_INTERNAL_SERVER_ERROR (500)
 #define HTTP_FORBIDDEN (403)
 #define HTTP_BAD_REQUEST (400)

@@ -30,27 +30,26 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
+#import <Cocoa/Cocoa.h>
+
 #import "DataIO.h"
 #import "IntegerIO.h"
 #import "Streams.h"
+#import "BufferedInputStream.h"
 
 @implementation DataIO
 + (void)write:(NSData *)data to:(NSMutableData *)outData {
     [IntegerIO writeUInt64:(uint64_t)[data length] to:outData];
     [outData appendBytes:[data bytes] length:[data length]];
 }
-+ (BOOL)read:(NSData **)value from:(id <BufferedInputStream>)is error:(NSError **)error {
-    *value = NO;
++ (BOOL)read:(NSData **)value from:(BufferedInputStream *)is error:(NSError **)error {
+    *value = nil;
     uint64_t length = 0;
     if (![IntegerIO readUInt64:&length from:is error:error]) {
         return NO;
     }
-    unsigned char *bytes = [is readExactly:length error:error];
-    if (!bytes) {
-        return NO;
-    }
-    *value = [NSData dataWithBytes:bytes length:length];
-    return YES;
+    *value = [is readExactly:length error:error];
+    return *value != nil;
 }
 
 @end

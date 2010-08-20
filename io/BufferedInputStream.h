@@ -33,8 +33,16 @@
 #import <Cocoa/Cocoa.h>
 #import "InputStream.h"
 
-@protocol BufferedInputStream <InputStream>
-- (unsigned char *)readExactly:(NSUInteger)exactLength error:(NSError **)error;
-- (unsigned char *)readMaximum:(NSUInteger)maximum length:(NSUInteger *)length error:(NSError **)error;
+@interface BufferedInputStream : NSObject <InputStream> {
+    id <InputStream> underlyingStream;
+    unsigned char *buf;
+    NSUInteger pos;
+    NSUInteger len;
+    uint64_t totalBytesReceived;
+}
++ (NSString *)errorDomain;
+- (id)initWithUnderlyingStream:(id <InputStream>)theUnderlyingStream;
+- (NSData *)readExactly:(NSUInteger)exactLength error:(NSError **)error;
+- (BOOL)readExactly:(NSUInteger)exactLength into:(unsigned char *)buf error:(NSError **)error;
 - (uint64_t)bytesReceived;
 @end

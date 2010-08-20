@@ -39,4 +39,5 @@
 - (id)initWithDouble:(double)value;
 - (id)initWithString:(NSString *)theValue error:(NSError **)error;
 - (double)doubleValue;
+- (BOOL)isEqualToRealNode:(RealNode *)other;
 @end

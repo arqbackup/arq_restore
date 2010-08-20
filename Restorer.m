@@ -47,14 +47,19 @@
 #import "NSFileManager_extra.h"
 #import "CFStreamPair.h"
 #import "NSErrorCodes.h"
+#import "BufferedInputStream.h"
+#import "StreamPairFactory.h"
+
+#define MAX_RETRIES (10)
+#define MY_BUF_SIZE (8192)
 
 @interface Restorer (internal)
 - (BOOL)addRestoreNodesForTreeSHA1:(NSString *)treeSHA1 relativePath:(NSString *)relativePath error:(NSError **)error;
 - (BOOL)restoreRestoreNode:(RestoreNode *)rn error:(NSError **)error;
 - (BOOL)createFile:(Node *)node atPath:(NSString *)path error:(NSError **)error;
 - (BOOL)createFileAtPath:(NSString *)path fromSHA1s:(NSArray *)dataSHA1s error:(NSError **)error;
-- (BOOL)createFileOnceAtPath:(NSString *)path fromSHA1s:(NSArray *)dataSHA1s error:(NSError **)error;
 - (BOOL)appendBlobForSHA1:(NSString *)sha1 toFile:(FileOutputStream *)fos error:(NSError **)error;
+- (BOOL)doAppendBlobForSHA1:(NSString *)sha1 toFile:(FileOutputStream *)fos error:(NSError **)error;
 - (BOOL)applyTree:(Tree *)tree toPath:(NSString *)restorePath error:(NSError **)error;
 - (BOOL)applyNode:(Node *)node toPath:(NSString *)restorePath error:(NSError **)error;
 - (BOOL)applyACLSHA1:(NSString *)aclSHA1 toFileAttributes:(FileAttributes *)fa error:(NSError **)error;
@@ -354,26 +359,6 @@
     return YES;
 }
 - (BOOL)createFileAtPath:(NSString *)path fromSHA1s:(NSArray *)dataSHA1s error:(NSError **)error {
-    BOOL ret = YES;
-    for (;;) {
-        NSError *myError = nil;
-        if (![self createFileOnceAtPath:path fromSHA1s:dataSHA1s error:&myError]) {
-            if ([[myError domain] isEqualToString:[CFStreamPair errorDomain]]) {
-                HSLogDebug(@"network error restoring %@ (retrying): %@", path, [myError localizedDescription]);
-            } else {
-                if (error != NULL) {
-                    *error = myError;
-                }
-                ret = NO;
-                break;
-            }
-        } else {
-            break;
-        }
-    }
-    return ret;
-}
-- (BOOL)createFileOnceAtPath:(NSString *)path fromSHA1s:(NSArray *)dataSHA1s error:(NSError **)error {
     FileOutputStream *fos = [[FileOutputStream alloc] initWithPath:path append:NO];
     BOOL ret = YES;
     for (NSString *sha1 in dataSHA1s) {
@@ -386,35 +371,76 @@
     return ret;
 }
 - (BOOL)appendBlobForSHA1:(NSString *)sha1 toFile:(FileOutputStream *)fos error:(NSError **)error {
-    ServerBlob *dataBlob = [repo newServerBlobForSHA1:sha1 error:error];
-    if (dataBlob == nil) {
-        HSLogError(@"error getting server blob for %@", sha1);
+    int i = 0;
+    BOOL ret = NO;
+    NSError *myError = nil;
+    NSAutoreleasePool *pool = nil;
+    for (;;) {
+        [pool drain];
+        pool = [[NSAutoreleasePool alloc] init];
+        if ([self doAppendBlobForSHA1:sha1 toFile:fos error:&myError]) {
+            ret = YES;
+            break;
+        }
+        [[StreamPairFactory theFactory] clear];
+        BOOL isNetworkError = [[myError domain] isEqualToString:[CFStreamPair errorDomain]];
+        // Retry indefinitely on network errors:
+        if (!isNetworkError && (++i >= MAX_RETRIES)) {
+            HSLogError(@"failed to get blob %@ after %d retries: %@", sha1, i, [myError localizedDescription]);
+            break;
+        }
+        HSLogWarn(@"error appending blob %@ to file %@ (retrying): %@", sha1, [fos path], [myError localizedDescription]);
+        // Seek back to the starting offset for this blob:
+        if (![fos seekTo:writtenToCurrentFile error:&myError]) {
+            ret = NO;
+            break;
+        }
+    }
+    [myError retain];
+    [pool drain];
+    [myError autorelease];
+    if (error != NULL) {
+        *error = myError;
+    }
+    return ret;
+}
+- (BOOL)doAppendBlobForSHA1:(NSString *)sha1 toFile:(FileOutputStream *)fos error:(NSError **)error {
+    if (error != NULL) {
+        *error = nil;
+    }
+    ServerBlob *sb = [[repo newServerBlobForSHA1:sha1 error:error] autorelease];
+    if (sb == nil) {
         return NO;
     }
-    id <InputStream> is = [dataBlob newInputStream];
-    [dataBlob release];
+    id <InputStream> is = [[sb newInputStream] autorelease];
     BOOL ret = YES;
+    NSAutoreleasePool *pool = nil;
+    unsigned char *buf = (unsigned char *)malloc(MY_BUF_SIZE);
     for (;;) {
-        NSUInteger received = 0;
-        NSError *myError = nil;
-        unsigned char *buf = [is read:&received error:&myError];
-        if (buf == nil) {
-            if ([myError code] != ERROR_EOF) {
-                ret = NO;
-                HSLogError(@"error reading from stream for blob %@: %@", sha1, [myError localizedDescription]);
-                if (error != NULL) {
-                    *error = myError;
-                }
-            }
+        [pool drain];
+        pool = [[NSAutoreleasePool alloc] init];
+        NSUInteger received = [is read:buf bufferLength:MY_BUF_SIZE error:error];
+        if (received < 0) {
+            ret = NO;
+            break;
+        }
+        if (received == 0) {
             break;
         }
         if (![fos write:buf length:received error:error]) {
             ret = NO;
             break;
         }
-        [NSThread sleepForTimeInterval:0.01];
+        writtenToCurrentFile += received;
     }
-    [is release];
+    free(buf);
+    if (error != NULL) {
+        [*error retain];
+    }
+    [pool drain];
+    if (error != NULL) {
+        [*error autorelease];
+    }
     return ret;
 }
 - (BOOL)createSymLink:(Node *)node path:(NSString *)symLinkFile target:(NSString *)target error:(NSError **)error {
@@ -450,7 +476,9 @@
             return NO;
         }
         DataInputStream *is = [xattrsData newInputStream];
-        XAttrSet *set = [[[XAttrSet alloc] initWithBufferedInputStream:is error:error] autorelease];
+        BufferedInputStream *bis = [[BufferedInputStream alloc] initWithUnderlyingStream:is];
+        XAttrSet *set = [[[XAttrSet alloc] initWithBufferedInputStream:bis error:error] autorelease];
+        [bis release];
         [is release];
         if (!set) {
             return NO;

@@ -31,12 +31,14 @@
  */ 
 
 #import <Cocoa/Cocoa.h>
-#import "BufferedInputStream.h"
+
+#import <Cocoa/Cocoa.h>
+@class BufferedInputStream;
 
 @interface DataIO : NSObject {
 
 }
 + (void)write:(NSData *)data to:(NSMutableData *)data;
-+ (BOOL)read:(NSData **)value from:(id <BufferedInputStream>)is error:(NSError **)error;
++ (BOOL)read:(NSData **)value from:(BufferedInputStream *)is error:(NSError **)error;
 
 @end

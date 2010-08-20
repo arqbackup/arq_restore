@@ -39,12 +39,14 @@
 @class StringNode;
 #import "PListNode.h"
 
-@interface DictNode : NSObject <PListNode> {
+@interface DictNode : NSObject <PListNode, NSCopying> {
 	NSMutableDictionary *dict;
 	NSMutableArray *orderedKeys;
 }
 + (DictNode *)dictNodeWithContentsOfXMLFile:(NSString *)path error:(NSError **)error;
 + (DictNode *)dictNodeWithXMLData:(NSData *)data error:(NSError **)error;
++ (DictNode *)dictNodeWithContentsOfBinaryFile:(NSString *)path error:(NSError **)error;
++ (DictNode *)dictNodeWithBinaryData:(NSData *)data error:(NSError **)error;
 
 - (int)size;
 - (BOOL)containsKey:(NSString *)key;
@@ -70,4 +72,8 @@
 
 - (BOOL)writeXMLToFile:(NSString *)path error:(NSError **)error;
 - (NSData *)XMLData;
+- (BOOL)writeAtomicallyToBinaryFile:(NSString *)path error:(NSError **)error;
+- (NSData *)binaryData;
+
+- (BOOL)isEqualToDictNode:(DictNode *)dictNode;
 @end

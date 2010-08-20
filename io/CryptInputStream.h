@@ -43,8 +43,12 @@ typedef int (*CryptFinalFunc)(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl
     CryptUpdateFunc cryptUpdate;
     CryptFinalFunc cryptFinal;
     id <InputStream> is;
+    unsigned char *inBuf;
+    NSUInteger inBufSize;
     unsigned char *outBuf;
-    NSUInteger outBufLen;
+    NSInteger outBufLen;
+    NSUInteger outBufSize;
+    NSUInteger outBufPos;
     const EVP_CIPHER *cipher;
     EVP_CIPHER_CTX cipherContext;
     unsigned char evp_key[EVP_MAX_KEY_LENGTH];

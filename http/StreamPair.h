@@ -31,10 +31,10 @@
  */ 
 
 #import <Cocoa/Cocoa.h>
-#import "BufferedInputStream.h"
+#import "InputStream.h"
 #import "OutputStream.h"
 
-@protocol StreamPair <BufferedInputStream, OutputStream>
+@protocol StreamPair <InputStream, OutputStream>
 - (void)setCloseRequested;
 - (BOOL)isUsable;
 

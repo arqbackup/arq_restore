@@ -48,15 +48,15 @@
     [delegate release];
     [super dealloc];
 }
-- (unsigned char *)read:(NSUInteger *)length error:(NSError **)error {
-    unsigned char *buf = [underlyingStream read:length error:error];
-    if (buf != NULL) {
-        if (![delegate monitoredInputStream:self receivedBytes:*length error:error]) {
-            return NULL;
-        }
-        bytesReceived += (unsigned long long)*length;
+
+#pragma mark InputStream
+- (NSInteger)read:(unsigned char *)buf bufferLength:(NSUInteger)bufferLength error:(NSError **)error {
+    NSInteger ret = [underlyingStream read:buf bufferLength:bufferLength error:error];
+    if (ret < 0) {
+        return ret;
     }
-    return buf;
+    bytesReceived += (unsigned long long)ret;
+    return ret;
 }
 - (NSData *)slurp:(NSError **)error {
     NSData *data = [underlyingStream slurp:error];

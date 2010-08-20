@@ -41,7 +41,7 @@ static StreamPairFactory *theFactory = nil;
 @interface StreamPairMap : NSObject {
     NSMutableDictionary *streamPairs;
 }
-- (id <StreamPair>)newStreamPairToHost:(NSString *)host useSSL:(BOOL)useSSL maxLifeTimeSeconds:(NSTimeInterval)theMaxLifetime error:(NSError **)error;
+- (id <StreamPair>)newStreamPairToHost:(NSString *)host port:(int)thePort useSSL:(BOOL)useSSL maxLifeTimeSeconds:(NSTimeInterval)theMaxLifetime error:(NSError **)error;
 - (void)dropUnusableStreamPairs;
 @end
 
@@ -56,8 +56,8 @@ static StreamPairFactory *theFactory = nil;
     [streamPairs release];
     [super dealloc];
 }
-- (id <StreamPair>)newStreamPairToHost:(NSString *)host useSSL:(BOOL)useSSL maxLifeTimeSeconds:(NSTimeInterval)theMaxLifetime error:(NSError **)error {
-    NSString *key = [NSString stringWithFormat:@"%@:%@", [host lowercaseString], (useSSL ? @"SSL" : @"noSSL")];
+- (id <StreamPair>)newStreamPairToHost:(NSString *)host port:(int)thePort useSSL:(BOOL)useSSL maxLifeTimeSeconds:(NSTimeInterval)theMaxLifetime error:(NSError **)error {
+    NSString *key = [NSString stringWithFormat:@"%@:%d:%@", [host lowercaseString], thePort, (useSSL ? @"SSL" : @"noSSL")];
     id <StreamPair> streamPair = [streamPairs objectForKey:key];
     if (streamPair != nil) {
         if (![streamPair isUsable]) {
@@ -68,7 +68,7 @@ static StreamPairFactory *theFactory = nil;
         }
     }
     if (streamPair == nil) {
-        streamPair = [[CFStreamPair alloc] initWithHost:host useSSL:useSSL maxLifetime:theMaxLifetime];
+        streamPair = [[CFStreamPair alloc] initWithHost:host port:thePort useSSL:useSSL maxLifetime:theMaxLifetime];
         [streamPairs setObject:streamPair forKey:key];
     }
     return streamPair;
@@ -133,7 +133,7 @@ static StreamPairFactory *theFactory = nil;
 - (void)setMaxStreamPairLifetime:(NSTimeInterval)theMaxLifetime {
     maxStreamPairLifetime = theMaxLifetime;
 }
-- (id <StreamPair>)newStreamPairToHost:(NSString *)theHost useSSL:(BOOL)isUseSSL error:(NSError **)error {
+- (id <StreamPair>)newStreamPairToHost:(NSString *)theHost port:(int)thePort useSSL:(BOOL)isUseSSL error:(NSError **)error {
     void *pthreadPtr = pthread_self();
 #ifdef __LP64__
     NSNumber *threadID = [NSNumber numberWithUnsignedLongLong:(uint64_t)pthreadPtr];
@@ -147,7 +147,7 @@ static StreamPairFactory *theFactory = nil;
         [threadMap setObject:map forKey:threadID];
         [map release];
     }
-    id <StreamPair> streamPair = [map newStreamPairToHost:theHost useSSL:isUseSSL maxLifeTimeSeconds:maxStreamPairLifetime error:error];
+    id <StreamPair> streamPair = [map newStreamPairToHost:theHost port:thePort useSSL:isUseSSL maxLifeTimeSeconds:maxStreamPairLifetime error:error];
     [lock unlock];
     return streamPair;
 }

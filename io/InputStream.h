@@ -34,6 +34,6 @@
 
 
 @protocol InputStream <NSObject>
-- (unsigned char *)read:(NSUInteger *)length error:(NSError **)error;
+- (NSInteger)read:(unsigned char *)buf bufferLength:(NSUInteger)bufferLength error:(NSError **)error;
 - (NSData *)slurp:(NSError **)error;
 @end

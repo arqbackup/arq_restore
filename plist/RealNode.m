@@ -55,7 +55,12 @@
 - (double)doubleValue {
 	return value;
 }
-
+- (BOOL)isEqualToRealNode:(RealNode *)other {
+    if (other == self) {
+        return YES;
+    }
+    return value = [other doubleValue];
+}
 
 #pragma mark PListNode protocol
 
@@ -63,9 +68,27 @@
 	return PLN_REAL;
 }
 
+#pragma mark NSCopying protocol
+- (id)copyWithZone:(NSZone *)zone {
+    return [[RealNode alloc] initWithDouble:value];
+}
 
 #pragma mark NSObject protocol
-
+- (BOOL)isEqual:(id)other {
+    if (other == self) {
+        return YES;
+    }
+    if (other == nil || ![other isKindOfClass:[self class]]) {
+        return NO;
+    }
+    return [self isEqualToRealNode:other];
+}
+- (NSUInteger)hash {
+    NSUInteger prime = 31;
+    NSUInteger result = 1;
+    result = prime * result + (NSUInteger)value;
+    return result;
+}
 - (NSString *)description {
     return [NSString stringWithFormat:@"<RealNode 0x%x %f>", self, value];
 }

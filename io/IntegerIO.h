@@ -32,7 +32,7 @@
 
 #import <Cocoa/Cocoa.h>
 #import "OutputStream.h"
-#import "BufferedInputStream.h"
+@class BufferedInputStream;
 
 @interface IntegerIO : NSObject {
 
@@ -49,10 +49,10 @@
 + (BOOL)writeInt64:(int64_t)i to:(id <OutputStream>)os error:(NSError **)error;
 + (BOOL)writeUInt64:(uint64_t)i to:(id <OutputStream>)os error:(NSError **)error;
 
-+ (BOOL)readInt32:(int32_t *)value from:(id <BufferedInputStream>)is error:(NSError **)error;
-+ (BOOL)readUInt32:(uint32_t *)value from:(id <BufferedInputStream>)is error:(NSError **)error;
++ (BOOL)readInt32:(int32_t *)value from:(BufferedInputStream *)is error:(NSError **)error;
++ (BOOL)readUInt32:(uint32_t *)value from:(BufferedInputStream *)is error:(NSError **)error;
 
-+ (BOOL)readInt64:(int64_t *)value from:(id <BufferedInputStream>)is error:(NSError **)error;
-+ (BOOL)readUInt64:(uint64_t *)value from:(id <BufferedInputStream>)is error:(NSError **)error;
++ (BOOL)readInt64:(int64_t *)value from:(BufferedInputStream *)is error:(NSError **)error;
++ (BOOL)readUInt64:(uint64_t *)value from:(BufferedInputStream *)is error:(NSError **)error;
 
 @end

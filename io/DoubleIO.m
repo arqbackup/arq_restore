@@ -33,6 +33,7 @@
 #import "DoubleIO.h"
 #import "StringIO.h"
 #import "SetNSError.h"
+#import "BufferedInputStream.h"
 
 
 //FIXME: Delete this class? It's not used anywhere.
@@ -43,13 +44,17 @@
 	NSString *str = [NSString stringWithFormat:@"%f", d];
 	[StringIO write:str to:data];
 }
-+ (BOOL)read:(double *)value from:(id <BufferedInputStream>)is error:(NSError **)error {
++ (BOOL)write:(double)d to:(id <OutputStream>)os error:(NSError **)error {
+    NSString *str = [NSString stringWithFormat:@"%f", d];
+    return [StringIO write:str to:os error:error];
+}
++ (BOOL)read:(double *)value from:(BufferedInputStream *)is error:(NSError **)error {
     if (error) {
         *error = 0;
     }
     *value = 0;
 	NSString *str;
-    if (![StringIO read:&str from:is error:error]) {
+    if (![StringIO newString:&str from:is error:error]) {
         return NO;
     }
     if (!str) {
@@ -57,6 +62,7 @@
         return NO;
     }
 	BOOL ret = [[NSScanner scannerWithString:str] scanDouble:value];
+    [str release];
     if (!ret) {
         SETNSERROR(@"DoubleIOErrorDomain", -1, @"%@ does not contain a double", str);
     }

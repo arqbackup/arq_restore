@@ -37,8 +37,9 @@
 @interface SHA1Hash : NSObject {
 
 }
++ (NSString *)errorDomain;
 + (NSString *)hashData:(NSData *)data;
 + (NSString *)hashBlob:(Blob *)blob blobLength:(unsigned long long *)blobLength error:(NSError **)error;
-+ (NSString *)hashStream:(id <InputStream>)is withlength:(uint64_t)length error:(NSError **)error;
++ (NSString *)hashStream:(id <InputStream>)is withLength:(uint64_t)length error:(NSError **)error;
 + (NSString *)hashFile:(NSString *)path error:(NSError **)error;
 @end

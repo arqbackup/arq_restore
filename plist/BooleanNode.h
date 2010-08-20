@@ -38,4 +38,5 @@
 }
 - (id)initWithBoolean:(BOOL)value;
 - (BOOL)booleanValue;
+- (BOOL)isEqualToBooleanNode:(BooleanNode *)other;
 @end

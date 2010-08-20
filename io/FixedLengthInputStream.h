@@ -32,12 +32,12 @@
 
 #import <Cocoa/Cocoa.h>
 #import "InputStream.h"
-@protocol BufferedInputStream;
+@class BufferedInputStream;
 
 @interface FixedLengthInputStream : NSObject <InputStream> {
-    id <BufferedInputStream> underlyingStream;
+    BufferedInputStream *underlyingStream;
     unsigned long long fixedLength;
     unsigned long long totalReceived;
 }
-- (id)initWithUnderlyingStream:(id <BufferedInputStream>)is length:(unsigned long long)theLength;
+- (id)initWithUnderlyingStream:(BufferedInputStream *)is length:(unsigned long long)theLength;
 @end

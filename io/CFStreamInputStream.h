@@ -31,9 +31,9 @@
  */ 
 
 #import <Cocoa/Cocoa.h>
-#import "BufferedInputStream.h"
+#import "InputStream.h"
 
-@interface CFStreamInputStream : NSObject <BufferedInputStream> {
+@interface CFStreamInputStream : NSObject <InputStream> {
     CFReadStreamRef readStream;
     BOOL isOpen;
     uint64_t bytesReceived;

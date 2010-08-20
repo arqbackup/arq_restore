@@ -31,12 +31,13 @@
  */ 
 
 #import <Cocoa/Cocoa.h>
-@protocol InputStream;
-@protocol OutputStream;
+#import "InputStream.h"
+#import "OutputStream.h"
 
 @interface Streams : NSObject {
 
 }
 + (BOOL)transferFrom:(id <InputStream>)is to:(id <OutputStream>)os error:(NSError **)error;
++ (BOOL)transferFrom:(id <InputStream>)is to:(id <OutputStream>)os bytesWritten:(unsigned long long *)written error:(NSError **)error;
 + (BOOL)transferFrom:(id <InputStream>)is atomicallyToFile:(NSString *)path bytesWritten:(unsigned long long *)written error:(NSError **)error;
 @end

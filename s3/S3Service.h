@@ -72,6 +72,8 @@ enum {
 - (NSData *)dataAtPath:(NSString *)path error:(NSError **)error;
 - (ServerBlob *)newServerBlobAtPath:(NSString *)path error:(NSError **)error;
 
+- (BOOL)aclXMLData:(NSData **)aclXMLData atPath:(NSString *)path error:(NSError **)error;
+- (BOOL)acl:(int *)acl atPath:(NSString *)path error:(NSError **)error;
 - (NSArray *)commonPrefixesForPathPrefix:(NSString *)prefix delimiter:(NSString *)delimiter error:(NSError **)error;
 
 @end

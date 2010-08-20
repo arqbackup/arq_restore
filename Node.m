@@ -42,7 +42,7 @@
 @synthesize ctime_sec, ctime_nsec, createTime_sec, createTime_nsec, st_nlink, st_ino;
 @dynamic treeSHA1, dataSHA1s;
 
-- (id)initWithInputStream:(id <BufferedInputStream>)is treeVersion:(int)theTreeVersion error:(NSError **)error {
+- (id)initWithInputStream:(BufferedInputStream *)is treeVersion:(int)theTreeVersion error:(NSError **)error {
     if (self = [super init]) {
         treeVersion = theTreeVersion;
         dataSHA1s = [[NSMutableArray alloc] init];

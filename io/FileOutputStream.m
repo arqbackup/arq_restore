@@ -73,7 +73,6 @@
     return path;
 }
 
-#pragma mark OutputStream
 - (BOOL)write:(const unsigned char *)buf length:(NSUInteger)len error:(NSError **)error {
     if (fd == -1 && ![self open:error]) {
         return NO;
@@ -98,7 +97,6 @@
     return bytesWritten;
 }
 @end
-
 @implementation FileOutputStream (internal)
 - (BOOL)open:(NSError **)error {
     int oflag = O_WRONLY|O_CREAT;

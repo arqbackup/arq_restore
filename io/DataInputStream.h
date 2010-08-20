@@ -31,9 +31,11 @@
  */ 
 
 #import <Cocoa/Cocoa.h>
-#import "BufferedInputStream.h"
 
-@interface DataInputStream : NSObject <BufferedInputStream> {
+#import <Cocoa/Cocoa.h>
+#import "InputStream.h"
+
+@interface DataInputStream : NSObject <InputStream> {
     NSData *data;
     NSUInteger pos;
 }

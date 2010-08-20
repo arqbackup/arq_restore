@@ -34,6 +34,7 @@
 #import "InputStream.h"
 #import "OutputStream.h"
 #import "Streams.h"
+#import "BufferedInputStream.h"
 
 @implementation IntegerIO
 //
@@ -67,30 +68,28 @@
     uint64_t nboValue = OSSwapHostToBigInt64(value);
     return [os write:(const unsigned char *)&nboValue length:8 error:error];
 }
-+ (BOOL)readInt32:(int32_t *)value from:(id <BufferedInputStream>)is error:(NSError **)error {
++ (BOOL)readInt32:(int32_t *)value from:(BufferedInputStream *)is error:(NSError **)error {
     return [IntegerIO readUInt32:(uint32_t *)value from:is error:error];
 }
-+ (BOOL)readUInt32:(uint32_t *)value from:(id <BufferedInputStream>)is error:(NSError **)error {
++ (BOOL)readUInt32:(uint32_t *)value from:(BufferedInputStream *)is error:(NSError **)error {
     *value = 0;
-    unsigned char *buf = [is readExactly:4 error:error];
-    if (!buf) {
+    uint32_t nboValue = 0;
+    if (![is readExactly:sizeof(uint32_t) into:(unsigned char *)&nboValue error:error]) {
         return NO;
     }
-    uint32_t *nboValue = (uint32_t *)buf;
-    *value = OSSwapBigToHostInt32(*nboValue);
+    *value = OSSwapBigToHostInt32(nboValue);
     return YES;
 }
-+ (BOOL)readInt64:(int64_t *)value from:(id <BufferedInputStream>)is error:(NSError **)error {
++ (BOOL)readInt64:(int64_t *)value from:(BufferedInputStream *)is error:(NSError **)error {
     return [IntegerIO readUInt64:(uint64_t *)value from:is error:error];
 }
-+ (BOOL)readUInt64:(uint64_t *)value from:(id <BufferedInputStream>)is error:(NSError **)error {
++ (BOOL)readUInt64:(uint64_t *)value from:(BufferedInputStream *)is error:(NSError **)error {
     *value = 0;
-    unsigned char *buf = [is readExactly:8 error:error];
-    if (!buf) {
+    uint64_t nboValue = 0;
+    if (![is readExactly:sizeof(uint64_t) into:(unsigned char *)&nboValue error:error]) {
         return NO;
     }
-    uint64_t *nboValue = (uint64_t *)buf;
-    *value = OSSwapBigToHostInt64(*nboValue);
+    *value = OSSwapBigToHostInt64(nboValue);
     return YES;
 }
 @end

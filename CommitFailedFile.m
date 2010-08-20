@@ -35,7 +35,7 @@
 #import "BufferedInputStream.h"
 
 @implementation CommitFailedFile
-- (id)initWithInputStream:(id <BufferedInputStream>)is error:(NSError **)error {
+- (id)initWithInputStream:(BufferedInputStream *)is error:(NSError **)error {
     if (self = [super init]) {
         if (![StringIO read:&relativePath from:is error:error]
             || ![StringIO read:&errorMessage from:is error:error]) {

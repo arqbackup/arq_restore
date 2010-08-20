@@ -35,7 +35,7 @@
 #import "InputStreams.h"
 #import "NSErrorCodes.h"
 
-#define MY_BUF_SIZE (4096)
+#define MY_BUF_SIZE (8192)
 
 @interface FileInputStream (internal)
 - (void)close;
@@ -47,7 +47,6 @@
         fd = -1;
         path = [thePath retain];
         fileLength = theOffset + theLength;
-        buf = (unsigned char *)malloc(MY_BUF_SIZE);
         offset = theOffset;
     }
     return self;
@@ -55,83 +54,46 @@
 - (void)dealloc {
     [self close];
     [path release];
-    free(buf);
     [super dealloc];
 }
-- (unsigned char *)read:(NSUInteger *)length error:(NSError **)error {
-    return [self readMaximum:MY_BUF_SIZE length:length error:error];
-}
-- (unsigned char *)readMaximum:(NSUInteger)maximum length:(NSUInteger *)length error:(NSError **)error {
+
+#pragma mark InputStream
+- (NSInteger)read:(unsigned char *)buf bufferLength:(NSUInteger)bufferLength error:(NSError **)error {
     if (fd == -1) {
         fd = open([path fileSystemRepresentation], O_RDONLY|O_NOFOLLOW);
         if (fd == -1) {
             SETNSERROR(@"UnixErrorDomain", errno, @"%s", strerror(errno));
-            return NO;
+            return -1;
         }
         HSLogTrace(@"opened fd %d (%@)", fd, path);
         if (offset > 0) {
             if (lseek(fd, (off_t)offset, SEEK_SET) == -1) {
                 SETNSERROR(@"UnixErrorDomain", errno, @"lseek(%@, %qu): %s", path, offset, strerror(errno));
-                return NO;
+                return -1;
             }
         }
     }
-    int ret;
-    unsigned long long remaining = fileLength - offset;
-    unsigned long long toRead = (maximum > remaining) ? remaining : maximum;
-    if (toRead > MY_BUF_SIZE) {
-        toRead = MY_BUF_SIZE;
-    }
+    unsigned long long fileRemaining = fileLength - offset;
+    unsigned long long toRead = fileRemaining > bufferLength ? bufferLength : fileRemaining;
     if (toRead == 0) {
-        SETNSERROR(@"StreamsErrorDomain", ERROR_EOF, @"reached EOF");
-        return NULL;
+        return 0;
     }
+    
+    NSInteger ret = 0;
 read_again:
     ret = read(fd, buf, (size_t)toRead);
     if ((ret == -1) && (errno == EINTR)) {
         goto read_again;
     }
-    if (ret == -1) {
+    if (ret < 0) {
         SETNSERROR(@"UnixErrorDomain", errno, @"read: %s", strerror(errno));
-        return NULL;
+    } else {
+        offset += ret;
     }
-    if (ret == 0) {
-        SETNSERROR(@"StreamsErrorDomain", ERROR_EOF, @"EOF on %@", path);
-        return NULL;
-    }
-    offset += (unsigned long long)ret;
-    *length = (NSUInteger)ret;
-    bytesReceived += (uint64_t)ret;
-    return buf;
+    return ret;
 }
 - (NSData *)slurp:(NSError **)error {
     return [InputStreams slurp:self error:error];
-}
-
-#pragma mark BufferedInputStream
-- (unsigned char *)readExactly:(NSUInteger)exactLength error:(NSError **)error {
-    if (exactLength > 2147483648) {
-        SETNSERROR(@"InputStreamErrorDomain", -1, @"absurd length %u requested", exactLength);
-        return NULL;
-    }
-    NSMutableData *data = [NSMutableData dataWithLength:exactLength];
-    unsigned char *dataBuf = [data mutableBytes];
-    NSUInteger total = 0;
-    while (total < exactLength) {
-        NSUInteger maximum = exactLength - total;
-        NSUInteger length;
-        unsigned char *ibuf = [self readMaximum:maximum length:&length error:error];
-        if (ibuf == NULL) {
-            return NULL;
-        }
-        NSAssert(length > 0, @"expected more than 0 bytes");
-        memcpy(dataBuf + total, ibuf, length);
-        total += length;
-    }
-    return dataBuf;
-}
-- (uint64_t)bytesReceived {
-    return bytesReceived;
 }
 
 #pragma mark NSObject protocol

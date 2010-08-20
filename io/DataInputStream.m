@@ -30,6 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
+#import <Cocoa/Cocoa.h>
+
 #import "DataInputStream.h"
 #import "SetNSError.h"
 #import "NSErrorCodes.h"
@@ -53,58 +55,27 @@
 }
 
 #pragma mark InputStream protocol
-- (unsigned char *)read:(NSUInteger *)length error:(NSError **)error {
-    if (pos >= [data length]) {
-        SETNSERROR(@"StreamsErrorDomain", ERROR_EOF, @"EOF on data");
-        return NULL;
-    }
+- (NSInteger)read:(unsigned char *)buf bufferLength:(NSUInteger)bufferLength error:(NSError **)error {
+    NSInteger ret = 0;
     NSUInteger remaining = [data length] - pos;
-    *length = remaining;
-    unsigned char *ret = (unsigned char *)[data bytes] + pos;
-    pos = [data length];
+    if (remaining > 0) {
+        ret = remaining > bufferLength ? bufferLength : remaining;
+        unsigned char *bytes = (unsigned char *)[data bytes];
+        memcpy(buf, bytes + pos, ret);
+        pos += ret;
+    }
     return ret;
-}
-- (unsigned char *)readMaximum:(NSUInteger)maximum length:(NSUInteger *)length error:(NSError **)error {
-    if (pos >= [data length]) {
-        SETNSERROR(@"StreamsErrorDomain", ERROR_EOF, @"EOF on data");
-        return NULL;
-    }
-    NSUInteger len = [data length] - pos;
-    if (len > maximum) {
-        len = maximum;
-    }
-    unsigned char *buf = (unsigned char *)[data bytes] + pos;
-    pos += len;
-    return buf;
 }
 - (NSData *)slurp:(NSError **)error {
+    NSData *ret = nil;
     if (pos == 0) {
-        /* This is both a short-circuit and a hack.
-         * The short-circuit part is avoiding copying 'data'.
-         * The hack part is if [data length] == 0, we return the empty 'data' instead of an EOF error.
-         */
-        return [[data retain] autorelease];
+        ret = [[data retain] autorelease];
+    } else if (pos >= [data length]) {
+        ret = [NSData data];
+    } else {
+        ret = [data subdataWithRange:NSMakeRange(pos, [data length] - pos)];
+        pos = [data length];
     }
-    if (pos >= [data length]) {
-        SETNSERROR(@"StreamsErrorDomain", ERROR_EOF, @"EOF on data");
-        return NULL;
-    }
-    NSData *ret = [data subdataWithRange:NSMakeRange(pos, [data length] - pos)];
-    pos = [data length];
     return ret;
-}
-- (uint64_t)bytesReceived {
-    return (uint64_t)pos;
-}
-
-#pragma mark BufferedInputStream protocol
-- (unsigned char *)readExactly:(NSUInteger)exactLength error:(NSError **)error {
-    if (([data length] - pos) < exactLength) {
-        SETNSERROR(@"StreamsErrorDomain", ERROR_EOF, @"EOF");
-        return NULL;
-    }
-    unsigned char *buf = (unsigned char *)[data bytes] + pos;
-    pos += exactLength;
-    return buf;
 }
 @end

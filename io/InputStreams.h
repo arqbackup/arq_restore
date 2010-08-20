@@ -32,12 +32,12 @@
 
 #import <Cocoa/Cocoa.h>
 #import "InputStream.h"
-@class FDInputStream;
+@class BufferedInputStream;
 
 @interface InputStreams : NSObject {
 
 }
 + (NSData *)slurp:(id <InputStream>)is error:(NSError **)error;
-+ (NSString *)readLineWithCRLF:(FDInputStream *)is maxLength:(NSUInteger)maxLength error:(NSError **)error;
-+ (NSString *)readLine:(FDInputStream *)is error:(NSError **)error;
++ (NSString *)readLineWithCRLF:(BufferedInputStream *)bis maxLength:(NSUInteger)maxLength error:(NSError **)error;
++ (NSString *)readLine:(BufferedInputStream *)bis error:(NSError **)error;
 @end

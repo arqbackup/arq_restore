@@ -34,6 +34,7 @@
 #import "DiskPack.h"
 #import "SetNSError.h"
 #import "FDInputStream.h"
+#import "BufferedInputStream.h"
 #import "StringIO.h"
 #import "IntegerIO.h"
 #import "ServerBlob.h"
@@ -51,7 +52,7 @@
 
 @interface DiskPack (internal)
 - (BOOL)savePack:(ServerBlob *)sb bytesWritten:(unsigned long long *)written error:(NSError **)error;
-- (NSArray *)sortedPackIndexEntriesFromStream:(id <BufferedInputStream>)fis error:(NSError **)error;
+- (NSArray *)sortedPackIndexEntriesFromStream:(BufferedInputStream *)fis error:(NSError **)error;
 @end
 
 @implementation DiskPack
@@ -113,6 +114,7 @@
     }
     ServerBlob *ret = nil;
     FDInputStream *fdis = [[FDInputStream alloc] initWithFD:fd];
+    BufferedInputStream *bis = [[BufferedInputStream alloc] initWithUnderlyingStream:fdis];
     do {
         if (lseek(fd, offset, SEEK_SET) == -1) {
             SETNSERROR(@"UnixErrorDomain", errno, @"lseek(%@, %qu): %s", localPath, offset, strerror(errno));
@@ -120,26 +122,26 @@
         }
         NSString *mimeType;
         NSString *downloadName;
-        if (![StringIO read:&mimeType from:fdis error:error] || ![StringIO read:&downloadName from:fdis error:error]) {
+        if (![StringIO read:&mimeType from:bis error:error] || ![StringIO read:&downloadName from:bis error:error]) {
             break;
         }
         uint64_t dataLen = 0;
-        if (![IntegerIO readUInt64:&dataLen from:fdis error:error]) {
+        if (![IntegerIO readUInt64:&dataLen from:bis error:error]) {
             break;
         }
         NSData *data = nil;
         if (dataLen > 0) {
-            const unsigned char *bytes = [fdis readExactly:dataLen error:error];
-            if (bytes == NULL) {
+            data = [bis readExactly:dataLen error:error];
+            if (data == nil) {
                 break;
             }
-            data = [NSData dataWithBytes:bytes length:dataLen];
         } else {
             data = [NSData data];
         }
         ret = [[ServerBlob alloc] initWithData:data mimeType:mimeType downloadName:downloadName];
     } while (0);
     close(fd);
+    [bis release];
     [fdis release];
     return ret;
 }
@@ -158,7 +160,9 @@
         return NO;
     }
     FileInputStream *fis = [[FileInputStream alloc] initWithPath:localPath offset:0 length:length];
-    NSArray *ret = [self sortedPackIndexEntriesFromStream:fis error:error];
+    BufferedInputStream *bis = [[BufferedInputStream alloc] initWithUnderlyingStream:fis];
+    NSArray *ret = [self sortedPackIndexEntriesFromStream:bis error:error];
+    [bis release];
     [fis release];
     return ret;
 }
@@ -183,7 +187,7 @@
     [is release];
     return ret;
 }
-- (NSArray *)sortedPackIndexEntriesFromStream:(id <BufferedInputStream>)is error:(NSError **)error {
+- (NSArray *)sortedPackIndexEntriesFromStream:(BufferedInputStream *)is error:(NSError **)error {
     uint32_t packSig;
     uint32_t packVersion;
     if (![IntegerIO readUInt32:&packSig from:is error:error] || ![IntegerIO readUInt32:&packVersion from:is error:error]) {
@@ -210,7 +214,7 @@
         if (![StringIO read:&mimeType from:is error:error] || ![StringIO read:&name from:is error:error] || ![IntegerIO readUInt64:&length from:is error:error]) {
             return NO;
         }
-        NSString *objectSHA1 = [SHA1Hash hashStream:is withlength:length error:error];
+        NSString *objectSHA1 = [SHA1Hash hashStream:is withLength:length error:error];
         if (objectSHA1 == nil) {
             return NO;
         }

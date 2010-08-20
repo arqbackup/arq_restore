@@ -75,4 +75,16 @@
     }
     return YES;
 }
+- (BOOL)createUniqueTempDirectoryWithTemplate:(NSString *)pathTemplate createdDirectory:(NSString **)createdPath error:(NSError **)error {
+    *createdPath = nil;
+    char *cTemplate = strdup([pathTemplate fileSystemRepresentation]);
+    char *tempDir = mkdtemp(cTemplate);
+    if (tempDir != NULL) {
+        *createdPath = [NSString stringWithUTF8String:tempDir];
+    } else {
+        SETNSERROR(@"UnixErrorDomain", errno, @"mkdtemp(%@): %s", pathTemplate, strerror(errno));
+    }
+    free(cTemplate);
+    return tempDir != NULL;
+}
 @end

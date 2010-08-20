@@ -35,9 +35,10 @@
 #import "SetNSError.h"
 #import "NSErrorCodes.h"
 #import "FDInputStream.h"
+#import "BufferedInputStream.h"
 
 @implementation FixedLengthInputStream
-- (id)initWithUnderlyingStream:(id <BufferedInputStream>)is length:(unsigned long long)theLength {
+- (id)initWithUnderlyingStream:(BufferedInputStream *)is length:(unsigned long long)theLength {
     if (self = [super init]) {
         underlyingStream = [is retain];
         fixedLength = theLength;
@@ -48,27 +49,23 @@
     [underlyingStream release];
     [super dealloc];
 }
-- (unsigned char *)read:(NSUInteger *)length error:(NSError **)error {
-    unsigned long long maximum = fixedLength - totalReceived;
-    if (maximum == 0) {
-        SETNSERROR(@"StreamsErrorDomain", ERROR_EOF, @"EOF on fixed length input stream");
-        return NULL;
-    }
-    NSError *myError = nil;
-    unsigned char *buf = [underlyingStream readMaximum:maximum length:length error:&myError];
-    if (buf == NULL) {
-        if ([myError code] == ERROR_EOF) {
-            HSLogError(@"unexpected EOF when only %qu of %qu bytes received", totalReceived, fixedLength);
-            SETNSERROR(@"StreamsErrorDomain", -1, @"unexpected EOF when only %qu of %qu bytes received", totalReceived, fixedLength);
-            return NULL;
+
+#pragma mark InputStream
+- (NSInteger)read:(unsigned char *)buf bufferLength:(NSUInteger)bufferLength error:(NSError **)error {
+    NSInteger ret = 0;
+    unsigned long long remaining = fixedLength - totalReceived;
+    if (remaining > 0) {
+        NSUInteger toRead = remaining;
+        if (toRead > bufferLength) {
+            toRead = bufferLength;
         }
-        if (error != NULL) {
-            *error = myError;
+        ret = [underlyingStream read:buf bufferLength:toRead error:error];
+        if (ret < 0) {
+            return -1;
         }
-        return NULL;
     }
-    totalReceived += (unsigned long long)(*length);
-    return buf;
+    totalReceived += ret;
+    return ret;
 }
 - (NSData *)slurp:(NSError **)error {
     return [InputStreams slurp:self error:error];

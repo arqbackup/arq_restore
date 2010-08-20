@@ -36,4 +36,5 @@
 @interface NSFileManager (extra)
 - (BOOL)ensureParentPathExistsForPath:(NSString *)path error:(NSError **)error;
 - (BOOL)touchFileAtPath:(NSString *)path error:(NSError **)error;
+- (BOOL)createUniqueTempDirectoryWithTemplate:(NSString *)pathTemplate createdDirectory:(NSString **)createdPath error:(NSError **)error;
 @end

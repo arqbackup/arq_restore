@@ -55,4 +55,5 @@
 - (StringNode *)stringNodeAtIndex:(int)index;
 - (void)add:(id <PListNode>)node;
 - (void)add:(id <PListNode>)node atIndex:(int)index;
+- (BOOL)isEqualToArrayNode:(ArrayNode *)other;
 @end

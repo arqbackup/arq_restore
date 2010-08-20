@@ -65,7 +65,17 @@
 - (long long)longlongValue {
 	return value;
 }
+- (BOOL)isEqualToIntegerNode:(IntegerNode *)other {
+    if (self == other) {
+        return YES;
+    }
+    return value = [other longlongValue];
+}
 
+#pragma mark NSCopying protocol
+- (id)copyWithZone:(NSZone *)zone {
+    return [[IntegerNode alloc] initWithLongLong:value];
+}
 
 #pragma mark PListNode protocol
 
@@ -75,7 +85,21 @@
 
 
 #pragma mark NSObject protocol
-
+- (BOOL)isEqual:(id)other {
+    if (other == self) {
+        return YES;
+    }
+    if (other == nil || ![other isKindOfClass:[self class]]) {
+        return NO;
+    }
+    return [self isEqualToIntegerNode:other];
+}
+- (NSUInteger)hash {
+    NSUInteger prime = 31;
+    NSUInteger result = 1;
+    result = prime * result + (NSUInteger)value;
+    return result;
+}
 - (NSString *)description {
     return [NSString stringWithFormat:@"<IntegerNode 0x%x %qi>", self, value];
 }

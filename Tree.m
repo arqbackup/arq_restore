@@ -37,12 +37,13 @@
 #import "Tree.h"
 #import "Blob.h"
 #import "DataInputStream.h"
+#import "BufferedInputStream.h"
 #import "SetNSError.h"
 #import "RegexKitLite.h"
 #import "NSErrorCodes.h"
 
 @interface Tree (internal)
-- (BOOL)readHeader:(id <BufferedInputStream>)is error:(NSError **)error;
+- (BOOL)readHeader:(BufferedInputStream *)is error:(NSError **)error;
 @end
 
 @implementation Tree
@@ -52,7 +53,7 @@
 + (NSString *)errorDomain {
     return @"TreeErrorDomain";
 }
-- (id)initWithBufferedInputStream:(id <BufferedInputStream>)is error:(NSError **)error {
+- (id)initWithBufferedInputStream:(BufferedInputStream *)is error:(NSError **)error {
 	if (self = [super init]) {
         if (![self readHeader:is error:error]) {
             [self release];
@@ -164,12 +165,12 @@ initDone:
 @end
 
 @implementation Tree (internal)
-- (BOOL)readHeader:(id <BufferedInputStream>)is error:(NSError **)error {
-    unsigned char *headerBytes = [is readExactly:TREE_HEADER_LENGTH error:error];
-    if (headerBytes == NULL) {
+- (BOOL)readHeader:(BufferedInputStream *)is error:(NSError **)error {
+    NSData *headerData = [is readExactly:TREE_HEADER_LENGTH error:error];
+    if (headerData == nil) {
         return NO;
     }
-    NSString *header = [[[NSString alloc] initWithBytes:headerBytes length:TREE_HEADER_LENGTH encoding:NSASCIIStringEncoding] autorelease];
+    NSString *header = [[[NSString alloc] initWithData:headerData encoding:NSUTF8StringEncoding] autorelease];
     NSRange versionRange = [header rangeOfRegex:@"^TreeV(\\d{3})$" capture:1];
     treeVersion = 0;
     if (versionRange.location != NSNotFound) {

@@ -39,9 +39,6 @@
 #import "CFStreamOutputStream.h"
 #import "DNS_SDErrors.h"
 
-static uint32_t HTTP_PORT = 80;
-static uint32_t HTTPS_PORT = 443;
-
 @implementation CFStreamPair
 + (NSString *)errorDomain {
     return @"CFStreamPairErrorDomain";
@@ -133,12 +130,12 @@ static uint32_t HTTPS_PORT = 443;
     CFRelease(userInfo);
     return [NSError errorWithDomain:[CFStreamPair errorDomain] code:code userInfo:[NSDictionary dictionaryWithObjectsAndKeys:localizedDescription, NSLocalizedDescriptionKey, nil]];
 }
-- (id)initWithHost:(NSString *)theHost useSSL:(BOOL)isUseSSL maxLifetime:(NSTimeInterval)theMaxLifetime {
+- (id)initWithHost:(NSString *)theHost port:(int)thePort useSSL:(BOOL)isUseSSL maxLifetime:(NSTimeInterval)theMaxLifetime {
     if (self = [super init]) {
         description = [[NSString alloc] initWithFormat:@"<CFStreamPair host=%@ ssl=%@>", theHost, (isUseSSL ? @"YES" : @"NO")];
         CFReadStreamRef readStream;
         CFWriteStreamRef writeStream;
-        CFStreamCreatePairWithSocketToHost(kCFAllocatorDefault, (CFStringRef)theHost, (isUseSSL ? HTTPS_PORT : HTTP_PORT), &readStream, &writeStream);
+        CFStreamCreatePairWithSocketToHost(kCFAllocatorDefault, (CFStringRef)theHost, thePort, &readStream, &writeStream);
         if (isUseSSL) {
             NSDictionary *sslProperties = [NSDictionary dictionaryWithObjectsAndKeys:
                                            (NSString *)kCFStreamSocketSecurityLevelNegotiatedSSL, kCFStreamSSLLevel,
@@ -193,18 +190,9 @@ static uint32_t HTTPS_PORT = 443;
     return YES;
 }
 
-#pragma mark BufferedInputStream
-- (unsigned char *)readExactly:(NSUInteger)exactLength error:(NSError **)error {
-    return [is readExactly:exactLength error:error];
-}
-- (unsigned char *)readMaximum:(NSUInteger)maximum length:(NSUInteger *)length error:(NSError **)error {
-    return [is readMaximum:maximum length:length error:error];
-}
-- (uint64_t)bytesReceived {
-    return [is bytesReceived];
-}
-- (unsigned char *)read:(NSUInteger *)length error:(NSError **)error {
-    return [is read:length error:error];
+#pragma mark InputStream
+- (NSInteger)read:(unsigned char *)buf bufferLength:(NSUInteger)bufferLength error:(NSError **)error {
+    return [is read:buf bufferLength:bufferLength error:error];
 }
 - (NSData *)slurp:(NSError **)error {
     return [is slurp:error];

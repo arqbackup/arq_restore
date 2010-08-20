@@ -34,12 +34,12 @@
 #import "SetNSError.h"
 #import "InputStreams.h"
 #import "NSErrorCodes.h"
-#import "FDInputStream.h"
+#import "BufferedInputStream.h"
 
 #define MAX_CHUNK_LENGTH_LINE_LENGTH (1024)
 
 @implementation ChunkedInputStream
-- (id)initWithUnderlyingStream:(FDInputStream *)is {
+- (id)initWithUnderlyingStream:(BufferedInputStream *)is {
     if (self = [super init]) {
         underlyingStream = [is retain];
     }
@@ -49,40 +49,43 @@
     [underlyingStream release];
     [super dealloc];
 }
-- (unsigned char *)read:(NSUInteger *)length error:(NSError **)error {
+
+#pragma mark InputStream protocol
+- (NSInteger)read:(unsigned char *)buf bufferLength:(NSUInteger)bufferLength error:(NSError **)error {
     if (received >= chunkLength) {
         received = 0;
         NSString *line = [InputStreams readLineWithCRLF:underlyingStream maxLength:MAX_CHUNK_LENGTH_LINE_LENGTH error:error];
         if (line == nil) {
-            return NULL;
+            return -1;
         }
         NSScanner *scanner = [NSScanner scannerWithString:line];
         if (![scanner scanHexInt:&chunkLength]) {
             SETNSERROR(@"StreamErrorDomain", -1, @"invalid chunk length: %@", line);
-            return NULL;
+            return -1;
         }
         HSLogTrace(@"chunk length = %u", chunkLength);
     }
-    unsigned char *buf = NULL;
     if (chunkLength == 0) {
-        SETNSERROR(@"StreamsErrorDomain", ERROR_EOF, @"EOF (zero chunk length)");
-    } else {
-        buf = [underlyingStream readMaximum:(chunkLength - received) length:length error:error];
-        if (buf) {
-            received += *length;
-        }
+        return 0;
     }
+    NSUInteger remaining = chunkLength - received;
+    NSUInteger toRead = remaining > bufferLength ? bufferLength : remaining;
+    NSInteger ret = [underlyingStream read:buf bufferLength:toRead error:error];
+    if (ret < 0) {
+        return -1;
+    }
+    received += ret;
     if (received >= chunkLength) {
         NSString *line = [InputStreams readLineWithCRLF:underlyingStream maxLength:MAX_CHUNK_LENGTH_LINE_LENGTH error:error];
         if (line == nil) {
-            return NULL;
+            return -1;
         }
         if (![line isEqualToString:@"\r\n"]) {
             SETNSERROR(@"StreamErrorDomain", -1, @"missing CRLF at end of chunk!");
-            return NULL;
+            return -1;
         }
     }
-    return buf;
+    return ret;
 }
 - (NSData *)slurp:(NSError **)error {
     return [InputStreams slurp:self error:error];

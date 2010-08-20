@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -31,21 +31,12 @@
  */ 
 
 #import <Cocoa/Cocoa.h>
-#import "StreamPair.h"
-@class CFStreamInputStream;
-@class CFStreamOutputStream;
+#import "BufferedInputStream.h"
+@class DictNode;
 
-@interface CFStreamPair : NSObject <StreamPair> {
-    NSString *description;
-    CFStreamInputStream *is;
-    CFStreamOutputStream *os;
-    NSTimeInterval createTime;
-    NSTimeInterval maxLifetime;
-    BOOL closeRequested;
-    
+@interface BinaryPListReader : NSObject {
+    BufferedInputStream *is;
 }
-+ (NSString *)errorDomain;
-+ (NSError *)NSErrorWithNetworkError:(CFErrorRef)err;
-- (id)initWithHost:(NSString *)theHost useSSL:(BOOL)isUseSSL maxLifetime:(NSTimeInterval)theMaxLifetime;
-
+- (id)initWithStream:(BufferedInputStream *)theIS;
+- (DictNode *)read:(NSError **)error;
 @end
