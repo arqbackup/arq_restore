@@ -68,8 +68,6 @@ Example output:
     S3 bucket: akiaiyuk3n3tme6l4hfa.com.haystacksoftware.arq.ap-southeast-1    (no computers found)
 
 
-The `s3 path` value is of the form `/<s3 bucket name>/<computer uuid>/buckets/<folder uuid>`.
-
 (The word "buckets" in the path should be "folders", but it's not for historical reasons).
 
 
