@@ -45,6 +45,7 @@
 + (NSString *)errorDomain;
 
 - (BOOL)verifyTree:(BlobKey *)theTreeBlobKey path:(NSString *)path error:(NSError **)error;
+- (BOOL)verifyTree:(BlobKey *)theTreeBlobKey path:(NSString *)path childNodeName:(NSString *)childNodeName node:(Node *)node error:(NSError **)error;
 - (BOOL)verify:(BlobKey *)theBlobKey error:(NSError **)error;
 @end
 
@@ -93,19 +94,38 @@
 	} else {
         printf("head commit for s3Bucket %s computerUUID %s bucketUUID %s is %s\n", [s3BucketName UTF8String], [computerUUID UTF8String], [bucketUUID UTF8String], [[headBlobKey description] UTF8String]);
         BlobKey *commitBlobKey = headBlobKey;
+        BOOL ret = YES;
+        NSAutoreleasePool *pool = nil;
         while (commitBlobKey != nil) {
+            [commitBlobKey retain];
+            [pool drain];
+            pool = [[NSAutoreleasePool alloc] init];
+            [commitBlobKey autorelease];
+            
             printf("verifying commit %s bucketUUID %s\n", [[commitBlobKey description] UTF8String], [bucketUUID UTF8String]);
             Commit *commit = [repo commitForBlobKey:commitBlobKey error:error];
             if (commit == nil) {
-                return NO;
+                ret = NO;
+                break;
             }
             if (verbose) {
                 printf("commit %s's tree is %s\n", [[commitBlobKey description] UTF8String], [[[commit treeBlobKey] description] UTF8String]);
             }
             if (![self verifyTree:[commit treeBlobKey] path:@"/" error:error]) {
-                return NO;
+                ret = NO;
+                break;
             }
             commitBlobKey = [[commit parentCommitBlobKeys] anyObject];
+        }
+        if (!ret && error != NULL) {
+            [*error retain];
+        }
+        [pool drain];
+        if (!ret && error != NULL) {
+            [*error autorelease];
+        }
+        if (!ret) {
+            return NO;
         }
     }
     printf("%qu packed blobs; %qu non-packed blobs\n", packedBlobCount, nonPackedBlobCount);
@@ -145,61 +165,83 @@
 			return NO;
 		}
 	}
-    for (NSString *childNodeName in [tree childNodeNames]) {
+    BOOL ret = YES;
+    NSArray *childNodeNames = [tree childNodeNames];
+    NSAutoreleasePool *pool = nil;
+    for (NSString *childNodeName in childNodeNames) {
+        [childNodeName retain];
+        [pool release];
+        pool = [[NSAutoreleasePool alloc] init];
+        [childNodeName autorelease];
+        
         Node *node = [tree childNodeWithName:childNodeName];
-        NSArray *dataBlobKeys = [node dataBlobKeys];
-		NSString *childPath = [path stringByAppendingPathComponent:childNodeName];
-        if ([node isTree]) {
-            NSAssert([dataBlobKeys count] == 1, ([NSString stringWithFormat:@"tree %@ node %@ must have exactly 1 dataBlobKey", [[theTreeBlobKey description] UTF8String], childNodeName]));
-            if (![self verifyTree:[dataBlobKeys objectAtIndex:0] path:childPath error:error]) {
+        if (![self verifyTree:theTreeBlobKey path:path childNodeName:childNodeName node:node error:error]) {
+            ret = NO;
+            break;
+        }
+    }
+    if (!ret && error != NULL) {
+        [*error retain];
+    }
+    [pool drain];
+    if (!ret && error != NULL) {
+        [*error autorelease];
+    }
+    return ret;
+}
+- (BOOL)verifyTree:(BlobKey *)theTreeBlobKey path:(NSString *)path childNodeName:(NSString *)childNodeName node:(Node *)node error:(NSError **)error {
+    NSArray *dataBlobKeys = [node dataBlobKeys];
+    NSString *childPath = [path stringByAppendingPathComponent:childNodeName];
+    if ([node isTree]) {
+        NSAssert([dataBlobKeys count] == 1, ([NSString stringWithFormat:@"tree %@ node %@ must have exactly 1 dataBlobKey", [[theTreeBlobKey description] UTF8String], childNodeName]));
+        if (![self verifyTree:[dataBlobKeys objectAtIndex:0] path:childPath error:error]) {
+            return NO;
+        }
+    } else {
+        if (verbose) {
+            printf("verifying data sha1s for node %s\n", [childPath UTF8String]);
+        }
+        for (BlobKey *dataBlobKey in dataBlobKeys) {
+            if (![self verify:dataBlobKey error:error]) {
+                SETNSERROR([BucketVerifier errorDomain], -1, @"missing data blobkey %@ for node %@ in tree %@", dataBlobKey, childNodeName, theTreeBlobKey);
                 return NO;
             }
-        } else {
+        }
+        if ([node thumbnailBlobKey] != nil) {
             if (verbose) {
-                printf("verifying data sha1s for node %s\n", [childPath UTF8String]);
+                printf("verifying thumbnailSHA1 for node %s\n", [childPath UTF8String]);
             }
-            for (BlobKey *dataBlobKey in dataBlobKeys) {
-                if (![self verify:dataBlobKey error:error]) {
-                    SETNSERROR([BucketVerifier errorDomain], -1, @"missing data blobkey %@ for node %@ in tree %@", dataBlobKey, childNodeName, theTreeBlobKey);
-                    return NO;
-                }
+            if (![self verify:[node thumbnailBlobKey] error:error]) {
+                SETNSERROR([BucketVerifier errorDomain], -1, @"missing thumbnail blobkey %@ for node %@ in tree %@", [node thumbnailBlobKey], childNodeName, theTreeBlobKey);
+                return NO;
             }
-			if ([node thumbnailBlobKey] != nil) {
-                if (verbose) {
-                    printf("verifying thumbnailSHA1 for node %s\n", [childPath UTF8String]);
-                }
-				if (![self verify:[node thumbnailBlobKey] error:error]) {
-					SETNSERROR([BucketVerifier errorDomain], -1, @"missing thumbnail blobkey %@ for node %@ in tree %@", [node thumbnailBlobKey], childNodeName, theTreeBlobKey);
-					return NO;
-				}
-			}
-			if ([node previewBlobKey] != nil) {
-                if (verbose) {
-                    printf("verifying previewSHA1 for node %s\n", [childPath UTF8String]);
-                }
-				if (![self verify:[node previewBlobKey] error:error]) {
-					SETNSERROR([BucketVerifier errorDomain], -1, @"missing preview blobkey %@ for node %@ in tree %@", [node previewBlobKey], childNodeName, theTreeBlobKey);
-					return NO;
-				}
-			}
-			if ([node xattrsBlobKey] != nil) {
-                if (verbose) {
-                    printf("verifying xattrsSHA1 for node %s\n", [childPath UTF8String]);
-                }
-				if (![self verify:[node xattrsBlobKey] error:error]) {
-					SETNSERROR([BucketVerifier errorDomain], -1, @"missing xattrs blobkey %@ for node %@ in tree %@", [node xattrsBlobKey], childNodeName, theTreeBlobKey);
-					return NO;
-				}
-			}
-			if ([node aclBlobKey] != nil) {
-                if (verbose) {
-                    printf("verifying aclSHA1 for node %s\n", [childPath UTF8String]);
-                }
-				if (![self verify:[node aclBlobKey] error:error]) {
-					SETNSERROR([BucketVerifier errorDomain], -1, @"missing acl blobkey %@ for node %@ in tree %@", [node aclBlobKey], childNodeName, theTreeBlobKey);
-					return NO;
-				}
-			}
+        }
+        if ([node previewBlobKey] != nil) {
+            if (verbose) {
+                printf("verifying previewSHA1 for node %s\n", [childPath UTF8String]);
+            }
+            if (![self verify:[node previewBlobKey] error:error]) {
+                SETNSERROR([BucketVerifier errorDomain], -1, @"missing preview blobkey %@ for node %@ in tree %@", [node previewBlobKey], childNodeName, theTreeBlobKey);
+                return NO;
+            }
+        }
+        if ([node xattrsBlobKey] != nil) {
+            if (verbose) {
+                printf("verifying xattrsSHA1 for node %s\n", [childPath UTF8String]);
+            }
+            if (![self verify:[node xattrsBlobKey] error:error]) {
+                SETNSERROR([BucketVerifier errorDomain], -1, @"missing xattrs blobkey %@ for node %@ in tree %@", [node xattrsBlobKey], childNodeName, theTreeBlobKey);
+                return NO;
+            }
+        }
+        if ([node aclBlobKey] != nil) {
+            if (verbose) {
+                printf("verifying aclSHA1 for node %s\n", [childPath UTF8String]);
+            }
+            if (![self verify:[node aclBlobKey] error:error]) {
+                SETNSERROR([BucketVerifier errorDomain], -1, @"missing acl blobkey %@ for node %@ in tree %@", [node aclBlobKey], childNodeName, theTreeBlobKey);
+                return NO;
+            }
         }
     }
     return YES;
