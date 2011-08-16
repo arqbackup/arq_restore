@@ -261,9 +261,9 @@ static OSStatus SymlinkPathMakeRef(const UInt8 *path, FSRef *ref, Boolean *isDir
 - (BOOL)applyFinderFileType:(NSString *)fft finderFileCreator:(NSString *)ffc error:(NSError **)error {
     if (targetExists && (![fft isEqualToString:finderFileType] || ![ffc isEqualToString:finderFileCreator])) {
         if ([fft length] != 4) {
-            HSLogWarn(@"not applying finder file type '%@' to %@: invalid length (must be 4 characters)", fft, path);
+            HSLogTrace(@"not applying finder file type '%@' to %@: invalid length (must be 4 characters)", fft, path);
         } else if ([ffc length] != 4) {
-            HSLogWarn(@"not applying finder file type '%@' to %@: invalid length (must be 4 characters)", ffc, path);
+            HSLogTrace(@"not applying finder file type '%@' to %@: invalid length (must be 4 characters)", ffc, path);
         } else {
             FSRef fsRef;
             Boolean isDirectory;
