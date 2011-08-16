@@ -145,6 +145,7 @@
             } else {
                 printf("    (unknown computer)");
             }
+            printf(" UUID %s", [computerUUID UTF8String]);
             NSString *computerUUIDPath = [computerUUIDPrefix stringByAppendingPathComponent:computerUUID];
             NSString *computerBucketsPrefix = [computerUUIDPath stringByAppendingPathComponent:@"buckets"];
             NSArray *s3BucketUUIDPaths = [s3 pathsWithPrefix:computerBucketsPrefix error:error];
