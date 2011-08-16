@@ -13,5 +13,5 @@
 
 }
 + (NSString *)s3PathForS3BucketName:(NSString *)s3BucketName computerUUID:(NSString *)computerUUID sha1:(NSString *)sha1;
-+ (NSString *)s3PathForBucketDataPath:(NSString *)bucketDataPath s3BucketName:(NSString *)s3BucketName computerUUID:(NSString *)computerUUID;
++ (NSString *)s3PathForBucketDataRelativePath:(NSString *)bucketDataRelativePath s3BucketName:(NSString *)s3BucketName computerUUID:(NSString *)computerUUID;
 @end

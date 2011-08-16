@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -30,57 +30,40 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
-#import "CFStreamOutputStream.h"
-#import "SetNSError.h"
-#import "CFStreamPair.h"
+#import <Cocoa/Cocoa.h>
 
-@implementation CFStreamOutputStream
-- (id)initWithCFWriteStream:(CFWriteStreamRef)streamRef {
+#import "EncryptedInputStreamFactory.h"
+#import "EncryptedInputStream.h"
+#import "NSData-Encrypt.h"
+
+@implementation EncryptedInputStreamFactory
+- (id)initWithCryptoKey:(CryptoKey *)theCryptoKey underlyingFactory:(id <InputStreamFactory>)theUnderlyingFactory {
     if (self = [super init]) {
-        writeStream = streamRef;
-        CFRetain(streamRef);
+        cryptoKey = [theCryptoKey retain];
+        underlyingFactory = [theUnderlyingFactory retain];
     }
     return self;
 }
 - (void)dealloc {
-    CFWriteStreamClose(writeStream);
-    CFRelease(writeStream);
+    [cryptoKey release];
+    [underlyingFactory release];
     [super dealloc];
 }
 
-#pragma mark OutputStream
-- (BOOL)write:(const unsigned char *)buf length:(NSUInteger)len error:(NSError **)error {
-    if (!isOpen) {
-        Boolean ret = CFWriteStreamOpen(writeStream);
-        if (ret == false) {
-            SETNSERROR(@"CFStreamErrorDomain", -1, @"error opening write stream");
-            return NO;
-        }
-        isOpen = YES;
+#pragma mark InputStreamFactory
+- (id <InputStream>) newInputStream {
+    id <InputStream> underlying = [underlyingFactory newInputStream];
+    NSError *error = nil;
+    EncryptedInputStream *eis = [[EncryptedInputStream alloc] initWithInputStream:underlying cryptoKey:cryptoKey error:&error];
+    [underlying release];
+    if (eis == nil) {
+        @throw [NSException exceptionWithName:@"EncryptedInputStreamInitException" reason:[error localizedDescription] userInfo:nil];
     }
-    CFIndex index = 0;
-    NSUInteger written = 0;
-    while ((len - written) > 0) {
-    write_again:
-        index = CFWriteStreamWrite(writeStream, &(buf[written]), len - written);
-        if (index == -1) {
-            if (error != NULL) {
-                CFErrorRef err = CFWriteStreamCopyError(writeStream);
-                if (err == NULL) {
-                    SETNSERROR(@"CFStreamPairErrorDomain", -1, @"unknown network error");
-                } else {
-                    *error = [CFStreamPair NSErrorWithNetworkError:err];
-                    CFRelease(err);
-                }
-            }
-            return NO;
-        }
-        written += (unsigned long long)index;
-        bytesWritten += (unsigned long long)index;
-    }
-    return YES;
+    return eis;
 }
-- (unsigned long long)bytesWritten {
-    return bytesWritten;
+
+#pragma mark NSObject
+- (NSString *)description {
+    return [NSString stringWithFormat:@"<EncryptedISF: %@>", [underlyingFactory description]];
 }
 @end

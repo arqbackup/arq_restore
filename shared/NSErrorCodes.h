@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -41,3 +41,6 @@
 #define ERROR_AGENT_COMMUNICATION (-10)
 #define ERROR_TIMEOUT (-11)
 #define ERROR_ACCESS_DENIED (-12)
+#define ERROR_MISSING_REQUIRED_OBJECT (-13)
+#define ERROR_PAUSE_REQUESTED (-14)
+#define ERROR_HELPER_CRASHED (-15)

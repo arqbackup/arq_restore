@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -36,11 +36,11 @@
 #import "InputStreams.h"
 #import "SetNSError.h"
 
-#define MY_BUF_SIZE (8192)
+#define MY_BUF_SIZE (4096)
 
 @implementation BufferedInputStream
 + (NSString *)errorDomain {
-    return @"BufInputStreamErrorDomain";
+    return @"BufferedInputStreamErrorDomain";
 }
 - (id)initWithUnderlyingStream:(id <InputStream>)theUnderlyingStream {
     if (self = [super init]) {
@@ -76,13 +76,53 @@
             return NO;
         }
         if (ret == 0) {
-            SETNSERROR([BufferedInputStream errorDomain], ERROR_EOF, @"EOF after %u of %u bytes received", received, exactLength);
+            SETNSERROR([BufferedInputStream errorDomain], ERROR_EOF, @"%@ EOF after %u of %u bytes received", self, received, exactLength);
             return NO;
         }
         received += ret;
-        totalBytesReceived += ret;
     }
     return YES;
+}
+- (NSString *)readLineWithCRLFWithMaxLength:(NSUInteger)maxLength error:(NSError **)error {
+    unsigned char *lineBuf = (unsigned char *)malloc(maxLength);
+    NSUInteger received = 0;
+    for (;;) {
+        if (received > maxLength) {
+            SETNSERROR(@"InputStreamErrorDomain", -1, @"exceeded maxLength %u before finding CRLF", maxLength);
+            free(lineBuf);
+            return nil;
+        }
+        if (![self readExactly:1 into:(lineBuf + received) error:error]) {
+            free(lineBuf);
+            return nil;
+        }
+        received++;
+        if (received >= 2 && lineBuf[received - 1] == '\n' && lineBuf[received - 2] == '\r') {
+            break;
+        }
+    }
+    NSString *ret = [[[NSString alloc] initWithBytes:lineBuf length:received encoding:NSUTF8StringEncoding] autorelease];
+    free(lineBuf);
+    HSLogTrace(@"got line <%@>", ret);
+    return ret;
+}
+- (NSString *)readLine:(NSError **)error {
+    NSMutableData *data = [NSMutableData data];
+    unsigned char charBuf[1];
+    NSUInteger received = 0;
+    for (;;) {
+        if (![self readExactly:1 into:charBuf error:error]) {
+            return nil;
+        }
+        if (*charBuf == '\n') {
+            break;
+        }
+        [data appendBytes:charBuf length:1];
+        received++;
+    }
+    NSString *ret = [[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] autorelease];
+    HSLogTrace(@"got line <%@> followed by \\n", ret);
+    return ret;
 }
 - (uint64_t)bytesReceived {
     return totalBytesReceived;
@@ -110,15 +150,23 @@
         len = myRet;
         if (len > 0) {
             ret = len > outBufLen ? outBufLen : len;
-            memcpy(outBuf, buf + pos, ret);
+            memcpy(outBuf, buf, ret);
             pos += ret;
        } else {
            ret = 0;
        }
     }
+    if (ret > 0) {
+        totalBytesReceived += ret;
+    }
     return ret;
 }
 - (NSData *)slurp:(NSError **)error {
     return [InputStreams slurp:self error:error];
+}
+
+#pragma mark NSObject
+- (NSString *)description {
+    return [NSString stringWithFormat:@"<BufferedInputStream %@>", underlyingStream];
 }
 @end

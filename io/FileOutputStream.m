@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -30,6 +30,9 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
+#include <sys/stat.h>
+#import <Cocoa/Cocoa.h>
+
 #import "FileOutputStream.h"
 #import "SetNSError.h"
 
@@ -46,10 +49,22 @@
     }
     return self;
 }
+- (id)initWithPath:(NSString *)thePath targetUID:(uid_t)theTargetUID targetGID:(gid_t)theTargetGID append:(BOOL)isAppend {
+    if (self = [super init]) {
+        path = [thePath copy];
+        targetUID = [[NSNumber alloc] initWithUnsignedInt:theTargetUID];
+        targetGID = [[NSNumber alloc] initWithUnsignedInt:theTargetGID];
+        append = isAppend;
+        fd = -1;
+    }
+    return self;
+}
 - (void)dealloc {
     if (fd != -1) {
         close(fd);
     }
+    [targetUID release];
+    [targetGID release];
     [path release];
     [super dealloc];
 }
@@ -64,7 +79,9 @@
         return NO;
     }
     if (lseek(fd, (off_t)offset, SEEK_SET) == -1) {
-        SETNSERROR(@"UnixErrorDomain", errno, @"lseek(%@, %qu): %s", path, offset, strerror(errno));
+        int errnum = errno;
+        HSLogError(@"lseek(%@, %qu) error %d: %s", path, offset, errnum, strerror(errnum));
+        SETNSERROR(@"UnixErrorDomain", errnum, @"failed to seek to %qu in %@: %s", offset, path, strerror(errnum));
         return NO;
     }
     return YES;
@@ -72,31 +89,35 @@
 - (NSString *)path {
     return path;
 }
-
-- (BOOL)write:(const unsigned char *)buf length:(NSUInteger)len error:(NSError **)error {
+- (NSInteger)write:(const unsigned char *)buf length:(NSUInteger)len error:(NSError **)error {
     if (fd == -1 && ![self open:error]) {
-        return NO;
+        return -1;
     }
-    int ret = 0;
-    NSUInteger written = 0;
-    while ((len - written) > 0) {
-    write_again:
-        ret = write(fd, &(buf[written]), len - written);
-        if ((ret == -1) && (errno == EINTR)) {
-            goto write_again;
-        } else if (ret == -1) {
-            SETNSERROR(@"UnixErrorDomain", errno, @"write: %s", strerror(errno));
-            return NO;
-        }
-        written += (NSUInteger)ret;
-        bytesWritten += (NSUInteger)ret;
+    NSInteger ret = 0;
+write_again:
+    ret = write(fd, buf, len);
+    if ((ret < 0) && (errno == EINTR)) {
+        goto write_again;
     }
-    return YES;
+    if (ret < 0) {
+        int errnum = errno;
+        HSLogError(@"write(%@) error %d: %s", path, errnum, strerror(errnum));
+        SETNSERROR(@"UnixErrorDomain", errnum, @"error writing to %@: %s", path, strerror(errnum));
+        return ret;
+    }
+    bytesWritten += (NSUInteger)ret;
+    return ret;
 }
 - (unsigned long long)bytesWritten {
     return bytesWritten;
 }
+
+#pragma mark NSObject
+- (NSString *)description {
+    return [NSString stringWithFormat:@"<FileOutputStream: path=%@>", path];
+}
 @end
+
 @implementation FileOutputStream (internal)
 - (BOOL)open:(NSError **)error {
     int oflag = O_WRONLY|O_CREAT;
@@ -108,9 +129,20 @@
     mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
     fd = open([path fileSystemRepresentation], oflag, mode);
     if (fd == -1) {
-        SETNSERROR(@"UnixErrorDomain", errno, @"%s", strerror(errno));
+        int errnum = errno;
+        HSLogError(@"open(%@) error %d: %s", path, errnum, strerror(errnum));
+        SETNSERROR(@"UnixErrorDomain", errnum, @"failed to open %@: %s", path, strerror(errnum));
         return NO;
+    }
+    if (targetUID != nil && targetGID != nil) {
+        if (fchown(fd, [targetUID unsignedIntValue], [targetGID unsignedIntValue]) == -1) {
+            int errnum = errno;
+            HSLogError(@"fchown(%@) error %d: %s", path, errnum, strerror(errnum));
+            SETNSERROR(@"UnixErrorDomain", errnum, @"failed to change ownership of %@: %s", path, strerror(errnum));
+            return NO;
+        }
     }
     return YES;
 }
 @end
+

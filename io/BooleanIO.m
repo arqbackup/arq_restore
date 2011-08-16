@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -31,18 +31,17 @@
  */ 
 
 #import "BooleanIO.h"
-#import "Streams.h"
 #import "BufferedInputStream.h"
+#import "BufferedOutputStream.h"
 
 @implementation BooleanIO
 + (void)write:(BOOL)b to:(NSMutableData *)data {
     char c = b ? 1 : 0;
     [data appendBytes:&c length:1];
 }
-+ (BOOL)write:(BOOL)b to:(id <OutputStream>)os error:(NSError **)error {
++ (BOOL)write:(BOOL)b to:(BufferedOutputStream *)os error:(NSError **)error {
     unsigned char c = b ? 1 : 0;
-    return [os write:&c length:1 error:error];
-    
+    return [os writeFully:&c length:1 error:error];
 }
 + (BOOL)read:(BOOL *)value from:(BufferedInputStream *)is error:(NSError **)error {
     *value = NO;

@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -30,26 +30,14 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
-#import "ArqFolder.h"
-#import "DictNode.h"
+#import <Cocoa/Cocoa.h>
 
-@implementation ArqFolder
-- (id)initWithS3Path:(NSString *)theS3Path plist:(DictNode *)plist {
-    if (self = [super init]) {
-        s3Path = [theS3Path copy];
-        localPath = [[[plist stringNodeForKey:@"LocalPath"] stringValue] copy];
-    }
-    return self;
+#import <Cocoa/Cocoa.h>
+#import "OutputStream.h"
+
+@interface DataOutputStream : NSObject <OutputStream> {
+    NSMutableData *mutableData;
+    unsigned long long bytesWritten;
 }
-- (void)dealloc {
-    [s3Path release];
-    [localPath release];
-    [super dealloc];
-}
-- (NSString *)s3Path {
-    return s3Path;
-}
-- (NSString *)localPath {
-    return localPath;
-}
+- (id)initWithMutableData:(NSMutableData *)theMutableData;
 @end

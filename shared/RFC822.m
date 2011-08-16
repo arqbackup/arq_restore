@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -40,7 +40,7 @@
 @implementation RFC822
 + (NSDate *)dateFromString:(NSString *)dateString error:(NSError **)error {
     if ([dateString rangeOfRegex:FMT822].location == NSNotFound) {
-        SETNSERROR([S3Service amazonErrorDomain], -1, @"invalid date '%@'", dateString);
+        SETNSERROR([S3Service errorDomain], S3SERVICE_INVALID_PARAMETERS, @"invalid date '%@'", dateString);
         return nil;
     }
     return [NSCalendarDate dateWithYear:[[dateString stringByMatching:FMT822 capture:1] intValue] 

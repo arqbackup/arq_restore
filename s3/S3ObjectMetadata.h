@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -31,7 +31,8 @@
  */ 
 
 #import <Cocoa/Cocoa.h>
-
+@class BufferedInputStream;
+@class BufferedOutputStream;
 
 @interface S3ObjectMetadata : NSObject {
 	NSString *path;
@@ -41,6 +42,8 @@
 }
 - (id)initWithS3BucketName:(NSString *)s3BucketName node:(NSXMLNode *)node error:(NSError **)error;
 - (id)initWithPath:(NSString *)thePath lastModified:(NSDate *)theLastModified size:(long)theSize storageClass:(NSString *)theStorageClass;
+- (id)initFromBufferedInputStream:(BufferedInputStream *)theBIS error:(NSError **)error;
+- (BOOL)writeToBufferedOutputStream:(BufferedOutputStream *)theBOS error:(NSError **)error;
 - (NSString *)path;
 - (NSDate *)lastModified;
 - (long)size;

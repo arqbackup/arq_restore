@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -30,11 +30,12 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
+#import <Cocoa/Cocoa.h>
+
 #import "FixedLengthInputStream.h"
 #import "InputStreams.h"
 #import "SetNSError.h"
 #import "NSErrorCodes.h"
-#import "FDInputStream.h"
 #import "BufferedInputStream.h"
 
 @implementation FixedLengthInputStream
@@ -69,5 +70,10 @@
 }
 - (NSData *)slurp:(NSError **)error {
     return [InputStreams slurp:self error:error];
+}
+
+#pragma mark NSObject
+- (NSString *)description {
+    return [NSString stringWithFormat:@"<FixedLengthInputStream: length=%qu underlying=%@>", fixedLength, underlyingStream];
 }
 @end

@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -45,6 +45,32 @@
             return @"Bad file name";
         case fnfErr:
             return @"File not found";
+        case errAuthorizationSuccess:
+            return @"The operation completed successfully.";
+        case errAuthorizationInvalidSet:
+            return @"The set parameter is invalid.";
+        case errAuthorizationInvalidRef:
+            return @"The authorization parameter is invalid.";
+        case errAuthorizationInvalidPointer:
+            return @"The authorizedRights parameter is invalid.";
+        case errAuthorizationDenied:
+            return @"The Security Server denied authorization for one or more requested rights. This error is also returned if there was no definition found in the policy database, or a definition could not be created.";
+        case errAuthorizationCanceled:
+            return @"The user canceled the operation";
+        case errAuthorizationInteractionNotAllowed:
+            return @"The Security Server denied authorization because no user interaction is allowed.";
+        case errAuthorizationInternal:
+            return @"An unrecognized internal error occurred.";
+        case errAuthorizationExternalizeNotAllowed:
+            return @"The Security Server denied externalization of the authorization reference.";
+        case errAuthorizationInternalizeNotAllowed:
+            return @"The Security Server denied internalization of the authorization reference.";
+        case errAuthorizationInvalidFlags:
+            return @"The flags parameter is invalid.";
+        case errAuthorizationToolExecuteFailure:
+            return @"The tool failed to execute.";
+        case errAuthorizationToolEnvironmentError:
+            return @"The attempt to execute the tool failed to return a success or an error code.";
     }
     [NSString stringWithUTF8String:GetMacOSStatusCommentString(status)];
     if ([msg length] == 0) {

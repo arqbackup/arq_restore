@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -44,5 +44,7 @@
 - (id)initWithUnderlyingStream:(id <InputStream>)theUnderlyingStream;
 - (NSData *)readExactly:(NSUInteger)exactLength error:(NSError **)error;
 - (BOOL)readExactly:(NSUInteger)exactLength into:(unsigned char *)buf error:(NSError **)error;
+- (NSString *)readLineWithCRLFWithMaxLength:(NSUInteger)maxLength error:(NSError **)error;
+- (NSString *)readLine:(NSError **)error;
 - (uint64_t)bytesReceived;
 @end

@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -33,9 +33,11 @@
 
 #define HTTP_1_1 @"1.1"
 #define HTTP_OK (200)
+#define HTTP_NO_CONTENT (204)
 #define HTTP_INTERNAL_SERVER_ERROR (500)
 #define HTTP_FORBIDDEN (403)
 #define HTTP_BAD_REQUEST (400)
+#define HTTP_METHOD_NOT_ALLOWED (405)
 #define HTTP_CONFLICT (409)
 #define HTTP_REQUESTED_RANGE_NOT_SATISFIABLE (416)
 #define HTTP_LENGTH_REQUIRED (411)

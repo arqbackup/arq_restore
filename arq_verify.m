@@ -35,7 +35,7 @@
 #import "ArqVerifyCommand.h"
 
 static void printUsage(const char *exeName) {
-	fprintf(stderr, "usage: %s [s3_bucket_name [computer_uuid [folder_uuid]]]\n", exeName);
+	fprintf(stderr, "usage: %s [-v]  all | s3_bucket_name [computer_uuid [folder_uuid]]]\n", exeName);
 }
 int main (int argc, const char * argv[]) {
     NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
@@ -64,27 +64,37 @@ int main (int argc, const char * argv[]) {
 	NSString *encryptionPassword = [[[NSString alloc] initWithUTF8String:cEncryptionPassword] autorelease];
     ArqVerifyCommand *cmd = [[[ArqVerifyCommand alloc] initWithAccessKey:accessKey secretKey:secretKey encryptionPassword:encryptionPassword] autorelease];
     NSError *error = nil;
+    BOOL verbose = NO;
+    int index = 1;
+    if (argc > 1 && !strcmp(argv[1], "-v")) {
+        verbose = YES;
+        index++;
+    }
+    [cmd setVerbose:verbose];
 	BOOL ret = NO;
-    if (argc == 1) {
-		if (![cmd verifyAll:&error]) {
-			NSLog(@"%@", [error localizedDescription]);
-			goto main_error;
-		}
-	} else if (argc == 2) {
-		if (!strcmp(argv[1], "-?") || !strcmp(argv[1], "-h")) {
+    if ((argc - index) == 0) {
+        printUsage(exeName);
+        goto main_error;
+	} else if ((argc - index) == 1) {
+		if (!strcmp(argv[index], "-?") || !strcmp(argv[index], "-h")) {
 			printUsage(exeName);
 			goto main_error;
-		} else if (![cmd verifyS3BucketName:[NSString stringWithUTF8String:argv[1]] error:&error]) {
+        } else if (!strcmp(argv[index], "all")) {
+            if (![cmd verifyAll:&error]) {
+                NSLog(@"%@", [error localizedDescription]);
+                goto main_error;
+            }
+		} else if (![cmd verifyS3BucketName:[NSString stringWithUTF8String:argv[index]] error:&error]) {
 			NSLog(@"%@", [error localizedDescription]);
 			goto main_error;
 		}
-	} else if (argc == 3) {
-		if (![cmd verifyS3BucketName:[NSString stringWithUTF8String:argv[1]] computerUUID:[NSString stringWithUTF8String:argv[2]] error:&error]) {
+	} else if ((argc - index) == 2) {
+		if (![cmd verifyS3BucketName:[NSString stringWithUTF8String:argv[index]] computerUUID:[NSString stringWithUTF8String:argv[index+1]] error:&error]) {
 			NSLog(@"%@", [error localizedDescription]);
 			goto main_error;
 		}
-	} else if (argc == 4) {
-		if (![cmd verifyS3BucketName:[NSString stringWithUTF8String:argv[1]] computerUUID:[NSString stringWithUTF8String:argv[2]] bucketUUID:[NSString stringWithUTF8String:argv[3]] error:&error]) {
+	} else if ((argc - index) == 3) {
+		if (![cmd verifyS3BucketName:[NSString stringWithUTF8String:argv[index]] computerUUID:[NSString stringWithUTF8String:argv[index+1]] bucketUUID:[NSString stringWithUTF8String:argv[index+2]] error:&error]) {
 			NSLog(@"%@", [error localizedDescription]);
 			goto main_error;
 		}

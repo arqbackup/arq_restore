@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -30,14 +30,19 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
-#import "S3Signature.h"
 #import "S3AuthorizationProvider.h"
-
+#import "LocalS3Signer.h"
+#import "HTTPConnection.h"
 
 /*
  * WARNING: 
  * This class *must* be reentrant!
  */
+
+@interface S3AuthorizationProvider (internal)
+- (NSString *)authorizationForString:(NSString *)stringToSign error:(NSError **)error;
+- (NSString *)stringToSignForS3BucketName:(NSString *)theS3BucketName connection:(id <HTTPConnection>)theConnection;
+@end
 
 @implementation S3AuthorizationProvider
 - (id)initWithAccessKey:(NSString *)access secretKey:(NSString *)secret {
@@ -45,24 +50,40 @@
         NSAssert(access != nil, @"access key can't be nil");
         NSAssert(secret != nil, @"secret key can't be nil");
 		accessKey = [access copy];
-		secretKey = [secret copy];
+        signer = [[LocalS3Signer alloc] initWithSecretKey:secret];
 	}
 	return self;
 }
 - (void)dealloc {
 	[accessKey release];
-	[secretKey release];
+	[signer release];
 	[super dealloc];
 }
 - (NSString *)accessKey {
 	return accessKey;
 }
-- (NSString *)authorizationForParameters:(S3AuthorizationParameters *)params {
+- (BOOL)setAuthorizationRequestHeaderOnHTTPConnection:(id <HTTPConnection>)conn usingS3BucketName:(NSString *)s3BucketName error:(NSError **)error {
+    NSString *stringToSign = [self stringToSignForS3BucketName:s3BucketName connection:conn];
+    NSString *authorization = [self authorizationForString:stringToSign error:error];
+    if (authorization == nil) {
+        return NO;
+    }
+    [conn setRequestHeader:authorization forKey:@"Authorization"];
+    return YES;
+}
+@end
+
+@implementation S3AuthorizationProvider (internal)
+- (NSString *)authorizationForString:(NSString *)stringToSign error:(NSError **)error {
+    NSString *signature = [signer sign:stringToSign error:error];
+    if (signature == nil) {
+        return nil;
+    }
 	NSMutableString *buf = [[[NSMutableString alloc] init] autorelease];
 	[buf appendString:@"AWS "];
 	[buf appendString:accessKey];
 	[buf appendString:@":"];
-	[buf appendString:[S3Signature signatureWithSecretKey:secretKey s3AuthorizationParameters:params]];
+	[buf appendString:signature];
 	NSString *ret = [NSString stringWithString:buf];
 	if ([ret hasSuffix:@"\n"]) {
 		NSUInteger length = [ret length];
@@ -70,5 +91,57 @@
 	}
 	return ret;
 }
-
+- (NSString *)stringToSignForS3BucketName:(NSString *)theS3BucketName connection:(id <HTTPConnection>)theConnection {
+    NSMutableString *buf = [[[NSMutableString alloc] init] autorelease];
+	[buf appendString:[theConnection requestMethod]];
+	[buf appendString:@"\n"];
+    NSString *contentMd5 = [theConnection requestHeaderForKey:@"Content-Md5"];
+    if (contentMd5 != nil) {
+        [buf appendString:contentMd5];
+    }
+    [buf appendString:@"\n"];
+    NSString *contentType = [theConnection requestHeaderForKey:@"Content-Type"];
+    if (contentType != nil) {
+        [buf appendString:contentType];
+    }
+	[buf appendString:@"\n"];
+	[buf appendString:[theConnection requestHeaderForKey:@"Date"]];
+	[buf appendString:@"\n"];
+    NSMutableArray *xamzHeaders = [NSMutableArray array];
+    for (NSString *headerName in [theConnection requestHeaderKeys]) {
+        NSString *lower = [headerName lowercaseString];
+        if ([lower hasPrefix:@"x-amz-"]) {
+            [xamzHeaders addObject:[NSString stringWithFormat:@"%@:%@\n", lower, [theConnection requestHeaderForKey:headerName]]];
+        }
+    }
+    [xamzHeaders sortUsingSelector:@selector(compare:)];
+    for (NSString *xamz in xamzHeaders) {
+        [buf appendString:xamz];
+    }
+	if ([theS3BucketName length] > 0) {
+		[buf appendString:@"/"];
+		[buf appendString:theS3BucketName];
+	}
+	[buf appendString:[theConnection requestPathInfo]];
+    NSString *queryString = [theConnection requestQueryString];
+    if ([queryString isEqualToString:@"?acl"]
+        || [queryString isEqualToString:@"?logging"] 
+        || [queryString isEqualToString:@"?torrent"] 
+        || [queryString isEqualToString:@"?location"]) {
+        [buf appendString:queryString];
+    }
+#if 0
+    {
+        HSLogDebug(@"string to sign: <%@>", buf);
+        const char *stringToSignBytes = [buf UTF8String];
+        int stringToSignLen = strlen(stringToSignBytes);
+        NSMutableString *displayBytes = [[[NSMutableString alloc] init] autorelease];
+        for (int i = 0; i < stringToSignLen; i++) {
+            [displayBytes appendString:[NSString stringWithFormat:@"%02x ", stringToSignBytes[i]]];
+        }
+        HSLogDebug(@"string to sign bytes: <%@>", displayBytes);
+    }
+#endif
+    return buf;
+}
 @end

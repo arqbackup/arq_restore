@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -30,12 +30,17 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
+#import <Cocoa/Cocoa.h>
+
 #import "DecryptedInputStream.h"
 #include <openssl/evp.h>
 
 @implementation DecryptedInputStream
-- (id)initWithInputStream:(id <InputStream>)theIS cipherName:(NSString *)theCipherName key:(NSString *)theKey error:(NSError **)error {
-    self = [super initWithCryptInitFunc:&EVP_DecryptInit cryptUpdateFunc:&EVP_DecryptUpdate cryptFinalFunc:&EVP_DecryptFinal inputStream:theIS cipherName:theCipherName key:theKey error:error];
+- (id)initWithInputStream:(id <InputStream>)theIS cryptoKey:(CryptoKey *)theCryptoKey error:(NSError **)error {
+    self = [super initWithCryptInitFunc:&EVP_DecryptInit cryptUpdateFunc:&EVP_DecryptUpdate cryptFinalFunc:&EVP_DecryptFinal inputStream:theIS cryptoKey:theCryptoKey label:@"decrypt" error:error];
     return self;
+}
+- (NSString *)description {
+    return [NSString stringWithFormat:@"<DecryptedInputStream %@>", is];
 }
 @end

@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -36,5 +36,5 @@
 
 
 @interface NSError (S3)
-+ (NSError *)errorFromAmazonXMLData:(NSData *)data statusCode:(int)statusCode;
++ (NSError *)amazonErrorWithHTTPStatusCode:(int)theHTTPStatusCode responseBody:(NSData *)theResponseBody;
 @end

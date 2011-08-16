@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -31,13 +31,10 @@
  */ 
 
 #import <Cocoa/Cocoa.h>
-
-#define ARQ_DEFAULT_CIPHER_NAME @"aes256"
+@class CryptoKey;
 
 @interface NSData (Encrypt)
-+ (NSString *)encryptErrorDomain;
-+ (NSString *)decryptErrorDomain;
-- (NSData *)encryptWithCipher:(NSString *)cipherName key:(NSString *)key error:(NSError **)error;
-- (NSData *)decryptWithCipher:(NSString *)cipherName key:(NSString *)key error:(NSError **)error;
+- (NSData *)encryptWithCryptoKey:(CryptoKey *)theCryptoKey error:(NSError **)error;
+- (NSData *)decryptWithCryptoKey:(CryptoKey *)theCryptoKey error:(NSError **)error;
 
 @end

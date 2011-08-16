@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -30,39 +30,11 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
-#import "HSLog.h"
+#import <Cocoa/Cocoa.h>
 
-unsigned int global_hslog_level = HSLOG_LEVEL_WARN;
 
-void setHSLogLevel(int level) {
-    global_hslog_level = level;
+@interface Computer : NSObject {
+
 }
-extern int hsLogLevelForName(NSString *levelName) {
-    if ([[levelName lowercaseString] isEqualToString:@"error"]) {
-        return HSLOG_LEVEL_ERROR;
-    } else if ([[levelName lowercaseString] isEqualToString:@"warn"]) {
-        return HSLOG_LEVEL_WARN;
-    } else if ([[levelName lowercaseString] isEqualToString:@"info"]) {
-        return HSLOG_LEVEL_INFO;
-    } else if ([[levelName lowercaseString] isEqualToString:@"debug"]) {
-        return HSLOG_LEVEL_DEBUG;
-    } else if ([[levelName lowercaseString] isEqualToString:@"trace"]) {
-        return HSLOG_LEVEL_TRACE;
-    }
-    return HSLOG_LEVEL_NONE;
-}
-extern NSString *nameForHSLogLevel(int level) {
-    switch (level) {
-        case HSLOG_LEVEL_ERROR:
-            return @"Error";
-        case HSLOG_LEVEL_WARN:
-            return @"Warn";
-        case HSLOG_LEVEL_INFO:
-            return @"Info";
-        case HSLOG_LEVEL_DEBUG:
-            return @"Debug";
-        case HSLOG_LEVEL_TRACE:
-            return @"Trace";
-    }
-    return @"none";
-}
++ (NSString *)name;
+@end

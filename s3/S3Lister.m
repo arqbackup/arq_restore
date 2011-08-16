@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -33,32 +33,30 @@
 #import "RFC2616DateFormatter.h"
 #import "NSError_S3.h"
 #import "S3AuthorizationProvider.h"
-#import "S3AuthorizationParameters.h"
 #import "S3Lister.h"
 #import "SetNSError.h"
-#import "HTTPRequest.h"
-#import "HTTPResponse.h"
 #import "HTTP.h"
 #import "S3Service.h"
 #import "S3Request.h"
 
 @interface S3Lister (internal)
-- (BOOL)getWithMax:(int)max error:(NSError **)error;
+- (BOOL)get:(NSError **)error;
 @end
 
 @implementation S3Lister
-- (id)initWithS3AuthorizationProvider:(S3AuthorizationProvider *)theSAP useSSL:(BOOL)isUseSSL retryOnNetworkError:(BOOL)retry max:(int)theMax prefix:(NSString *)thePrefix receiver:(id)theReceiver {
+- (id)initWithS3AuthorizationProvider:(S3AuthorizationProvider *)theSAP useSSL:(BOOL)isUseSSL retryOnTransientError:(BOOL)retry prefix:(NSString *)thePrefix delimiter:(NSString *)theDelimiter receiver:(id)theReceiver {
 	if (self = [super init]) {
         dateFormatter = [[RFC2616DateFormatter alloc] init];
 		sap = [theSAP retain];
         useSSL = isUseSSL;
-        retryOnNetworkError = retry;
-		maxRequested = theMax;
+        retryOnTransientError = retry;
 		received = 0;
 		isTruncated = YES;
 		prefix = [thePrefix copy];
+        delimiter = [theDelimiter copy];
 		receiver = [theReceiver retain];
 		marker = nil;
+        foundPrefixes = [[NSMutableArray alloc] init];
 	}
 	return self;
 }
@@ -66,8 +64,10 @@
     [dateFormatter release];
 	[sap release];
 	[prefix release];
+    [delimiter release];
 	[receiver release];
     [marker release];
+    [foundPrefixes release];
 	[super dealloc];
 }
 - (BOOL)listObjects:(NSError **)error {
@@ -80,17 +80,10 @@
 	while (isTruncated) {
         [pool drain];
         pool = [[NSAutoreleasePool alloc] init];
-		if (maxRequested < 0) {
-            if (![self getWithMax:-1 error:error]) {
-                ret = NO;
-                break;
-            }
-		} else {
-			if (![self getWithMax:(maxRequested - received) error:error]) {
-                ret = NO;
-                break;
-            }
-		}
+        if (![self get:error]) {
+            ret = NO;
+            break;
+        }
 	}
 
 	if (error != NULL) {
@@ -102,33 +95,37 @@
 	}
     return ret;
 }
+- (NSArray *)foundPrefixes {
+    return foundPrefixes;
+}
 @end
 
 @implementation S3Lister (internal)
-- (BOOL)getWithMax:(int)max error:(NSError **)error {
+- (BOOL)get:(NSError **)error {
 	if (![prefix hasPrefix:@"/"]) {
-        SETNSERROR([S3Service errorDomain], -1, @"path must start with /");
+        SETNSERROR([S3Service errorDomain], S3SERVICE_INVALID_PARAMETERS, @"path must start with /");
         return NO;
 	}
 	NSString *strippedPrefix = [prefix substringFromIndex:1];
 	NSRange range = [strippedPrefix rangeOfString:@"/"];
 	if (range.location == NSNotFound) {
-        SETNSERROR([S3Service errorDomain], -1, @"path must contain S3 bucket name plus path");
+        SETNSERROR([S3Service errorDomain], S3SERVICE_INVALID_PARAMETERS, @"path must contain S3 bucket name plus path");
         return NO;
 	}
 	NSString *s3BucketName = [strippedPrefix substringToIndex:range.location];
 	NSString *pathPrefix = [strippedPrefix substringFromIndex:range.location];
 	NSMutableString *queryString = [NSMutableString stringWithFormat:@"?prefix=%@", [[pathPrefix substringFromIndex:1] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
-	if (maxRequested > 0) {
-		[queryString appendString:[NSString stringWithFormat:@"&max-keys=%d", maxRequested]];
-	}
+    if (delimiter != nil) {
+        [queryString appendString:@"&delimiter="];
+        [queryString appendString:[delimiter stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    }
 	if (marker != nil) {
         NSAssert([marker hasPrefix:s3BucketName], @"marker must start with S3 bucket name");
         NSString *suffix = [marker substringFromIndex:([s3BucketName length] + 1)];
 		[queryString appendString:[NSString stringWithFormat:@"&marker=%@", [suffix stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]]];
 	}
     
-    S3Request *s3r = [[S3Request alloc] initWithMethod:@"GET" path:[NSString stringWithFormat:@"/%@/", s3BucketName] queryString:queryString authorizationProvider:sap useSSL:useSSL retryOnNetworkError:retryOnNetworkError];
+    S3Request *s3r = [[S3Request alloc] initWithMethod:@"GET" path:[NSString stringWithFormat:@"/%@/", s3BucketName] queryString:queryString authorizationProvider:sap useSSL:useSSL retryOnTransientError:retryOnTransientError];
     ServerBlob *sb = [s3r newServerBlob:error];
     [s3r release];
     if (sb == nil) {
@@ -150,6 +147,17 @@
         return NO;
     }
     isTruncated = [[[isTruncatedNodes objectAtIndex:0] stringValue] isEqualToString:@"true"];
+    if (delimiter != nil) {
+        NSArray *prefixNodes = [rootElement nodesForXPath:@"//ListBucketResult/CommonPrefixes/Prefix" error:error];
+        if (prefixNodes == nil) {
+            return NO;
+        }
+        for (NSXMLNode *prefixNode in prefixNodes) {
+            NSString *thePrefix = [prefixNode stringValue];
+            thePrefix = [thePrefix substringToIndex:([thePrefix length] - 1)];
+            [foundPrefixes addObject:[NSString stringWithFormat:@"/%@/%@", s3BucketName, thePrefix]];
+        }
+    }
     NSArray *objects = [rootElement nodesForXPath:@"//ListBucketResult/Contents" error:error];
     if (!objects) {
         return NO;
@@ -166,10 +174,6 @@
         lastPath = [[[md path] retain] autorelease];
         [md release];
         received++;
-        if (maxRequested > 0 && received >= maxRequested) {
-            isTruncated = NO;
-            break;
-        }
     }
     if (lastPath != nil) {
         [marker release];

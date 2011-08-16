@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -32,17 +32,16 @@
 
 #import "S3Request.h"
 #import "HTTP.h"
-#import "HTTPConnection.h"
-#import "HTTPConnection_S3.h"
+#import "URLConnection.h"
 #import "ServerBlob.h"
 #import "S3Service.h"
-#import "NSXMLNode_extra.h"
 #import "SetNSError.h"
-#import "CFStreamPair.h"
 #import "RegexKitLite.h"
 #import "NSErrorCodes.h"
-#import "MonitoredInputStream.h"
 #import "NSError_extra.h"
+#import "S3AuthorizationProvider.h"
+#import "NSError_S3.h"
+
 
 #define INITIAL_RETRY_SLEEP (0.5)
 #define RETRY_SLEEP_GROWTH_FACTOR (1.5)
@@ -50,11 +49,13 @@
 
 @interface S3Request (internal)
 - (ServerBlob *)newServerBlobOnce:(NSError **)error;
-- (BOOL)setError:(NSError **)error withHTTPResponseCode:(int)code responseData:(NSData *)response;
 @end
 
 @implementation S3Request
-- (id)initWithMethod:(NSString *)theMethod path:(NSString *)thePath queryString:(NSString *)theQueryString authorizationProvider:(S3AuthorizationProvider *)theSAP useSSL:(BOOL)ssl retryOnNetworkError:(BOOL)retry {
+- (id)initWithMethod:(NSString *)theMethod path:(NSString *)thePath queryString:(NSString *)theQueryString authorizationProvider:(S3AuthorizationProvider *)theSAP useSSL:(BOOL)ssl retryOnTransientError:(BOOL)retry {
+    return [self initWithMethod:theMethod path:thePath queryString:theQueryString authorizationProvider:theSAP useSSL:ssl retryOnTransientError:retry urlConnectionDelegate:nil];
+}
+- (id)initWithMethod:(NSString *)theMethod path:(NSString *)thePath queryString:(NSString *)theQueryString authorizationProvider:(S3AuthorizationProvider *)theSAP useSSL:(BOOL)ssl retryOnTransientError:(BOOL)retry urlConnectionDelegate:(id)theURLConnectionDelegate {
     if (self = [super init]) {
         method = [theMethod copy];
         path = [thePath copy];
@@ -65,7 +66,8 @@
         queryString = [theQueryString copy];
         sap = [theSAP retain];
         withSSL = ssl;
-        retryOnNetworkError = retry;
+        retryOnTransientError = retry;
+        urlConnectionDelegate = theURLConnectionDelegate; // Don't retain it.
         extraHeaders = [[NSMutableDictionary alloc] init];
     }
     return self;
@@ -76,17 +78,11 @@
     [queryString release];
     [sap release];
     [blob release];
+    [blobData release];
     [virtualHost release];
     [virtualPath release];
     [extraHeaders release];
-    [delegate release];
     [super dealloc];
-}
-- (void)setDelegate:(id)theDelegate {
-    if (delegate != theDelegate) {
-        [delegate release];
-        delegate = [theDelegate retain];
-    }
 }
 - (void)setBlob:(Blob *)theBlob length:(uint64_t)theLength {
     if (blob != theBlob) {
@@ -111,60 +107,84 @@
         NSString *pattern = @"^/([^/]+)(.+)$";
         NSRange s3BucketRange = [path rangeOfRegex:pattern capture:1];
         if (s3BucketRange.location == NSNotFound) {
-            SETNSERROR([S3Service errorDomain], -1, @"invalid path-style path -- missing s3 bucket name");
+            SETNSERROR([S3Service errorDomain], S3SERVICE_INVALID_PARAMETERS, @"invalid path-style path -- missing s3 bucket name");
             return nil;
         }
         NSRange pathRange = [path rangeOfRegex:pattern capture:2];
         if (pathRange.location == NSNotFound) {
-            SETNSERROR([S3Service errorDomain], -1, @"invalid path-style path -- missing path");
+            SETNSERROR([S3Service errorDomain], S3SERVICE_INVALID_PARAMETERS, @"invalid path-style path -- missing path");
             return nil;
         }
         virtualHost = [[[path substringWithRange:s3BucketRange] stringByAppendingString:@".s3.amazonaws.com"] retain];
         virtualPath = [[path substringWithRange:pathRange] retain];
     }
+    
+    [blobData release];
+    blobData = nil;
+    if (blob != nil) {
+        blobData = [[blob slurp:error] retain];
+        if (blobData == nil) {
+            return nil;
+        }
+    }
     NSAutoreleasePool *pool = nil;
     NSTimeInterval sleepTime = INITIAL_RETRY_SLEEP;
     ServerBlob *sb = nil;
     NSError *myError = nil;
+    BOOL loggedRetry = NO;
     for (;;) {
         [pool drain];
         pool = [[NSAutoreleasePool alloc] init];
+        BOOL transientError = NO;
+        BOOL needSleep = NO;
         myError = nil;
         sb = [self newServerBlobOnce:&myError];
-        [myError retain];
-        [myError autorelease];
         if (sb != nil) {
             break;
-        }
-        BOOL needSleep = NO;
-        if ([[myError domain] isEqualToString:[S3Service amazonErrorDomain]]) {
-            NSString *amazonErrorCode = [[myError userInfo] objectForKey:@"Code"];
-            if ([myError code] == HTTP_INTERNAL_SERVER_ERROR) {
-                HSLogInfo(@"S3 returned %u; retrying", HTTP_INTERNAL_SERVER_ERROR);
-                needSleep = YES;
-            } else if ([myError code] == HTTP_BAD_REQUEST && [amazonErrorCode isEqualToString:@"RequestTimeout"]) {
-                HSLogInfo(@"s3 RequestTimeout; retrying");
-            } else if ([myError code] == HTTP_SERVICE_NOT_AVAILABLE) {
-                HSLogInfo(@"S3 returned @u; retrying", HTTP_SERVICE_NOT_AVAILABLE);
-                needSleep = YES;
-            } else if ([myError code] == HTTP_MOVED_TEMPORARILY) {
+        } else if ([myError isErrorWithDomain:[S3Service errorDomain] code:ERROR_NOT_FOUND]) {
+            break;
+        } else if ([myError isErrorWithDomain:[S3Service errorDomain] code:S3SERVICE_ERROR_AMAZON_ERROR]) {
+            int httpStatusCode = [[[myError userInfo] objectForKey:@"HTTPStatusCode"] intValue];
+            NSString *amazonCode = [[myError userInfo] objectForKey:@"AmazonCode"];
+            
+            if (httpStatusCode == HTTP_MOVED_TEMPORARILY) {
                 [virtualHost release];
-                virtualHost = [[[myError userInfo] objectForKey:@"Endpoint"] copy];
-                HSLogDebug(@"S3 redirect to %@", virtualHost);
+                virtualHost = [[[myError userInfo] objectForKey:@"AmazonEndpoint"] copy];
+                HSLogInfo(@"S3 redirect to %@", virtualHost);
+                
+            } else if (retryOnTransientError && [amazonCode isEqualToString:@"RequestTimeout"]) {
+                transientError = YES;
+                
+            } else if (httpStatusCode == HTTP_INTERNAL_SERVER_ERROR) {
+                transientError = YES;
+                needSleep = YES;
+                
+            } else if (retryOnTransientError && httpStatusCode == HTTP_SERVICE_NOT_AVAILABLE) {
+                transientError = YES;
+                needSleep = YES;
+                
             } else {
-                if ([myError code] != HTTP_NOT_FOUND) {
-                    HSLogError(@"error getting %@: %@", virtualPath, [myError localizedDescription]);
-                }
+                HSLogError(@"%@ %@ (blob %@): %@", method, virtualPath, blob, myError);
                 break;
             }
-        } else if ([myError isErrorWithDomain:@"UnixErrorDomain" code:ETIMEDOUT]) {
-            HSLogDebug(@"timeout error (retrying): %@", [myError description]);
+            
+        } else if (retryOnTransientError && [myError isTransientError]) {
+            transientError = YES;
             needSleep = YES;
-        } else if ([[myError domain] isEqualToString:[CFStreamPair errorDomain]] && retryOnNetworkError) {
-            HSLogDebug(@"network error (retrying): %@", [myError localizedDescription]);
-            needSleep = YES;
+
         } else {
+            HSLogError(@"%@ %@ (blob %@): %@", method, virtualPath, blob, myError);
             break;
+        }
+        
+        if (transientError) {
+            if (!loggedRetry) {
+                HSLogWarn(@"retrying %@ %@ (request body %@): %@", method, virtualPath, blob, myError);
+                loggedRetry = YES;
+
+            } else {
+                HSLogDebug(@"retrying %@ %@ (request body %@): %@", method, virtualPath, blob, myError);
+            }
         }
         if (needSleep) {
             [NSThread sleepForTimeInterval:sleepTime];
@@ -177,24 +197,23 @@
     [myError retain];
     [pool drain];
     [myError autorelease];
-    if (sb == nil && error != NULL) {
-        NSAssert(myError != nil, @"myError must be set");
-        *error = myError;
-    }
+    if (error != NULL) { *error = myError; }
     return sb;
 }
 @end
 
 @implementation S3Request (internal)
 - (ServerBlob *)newServerBlobOnce:(NSError **)error {
-    HTTPConnection *conn = [[[HTTPConnection alloc] initWithHost:virtualHost useSSL:withSSL error:error] autorelease];
+    NSString *urlString = [NSString stringWithFormat:@"http%@://%@%@", (withSSL ? @"s" : @""), virtualHost, [virtualPath stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    if (queryString) {
+        urlString = [urlString stringByAppendingString:queryString];
+    }
+    id <HTTPConnection> conn = [[[URLConnection alloc] initWithURL:[NSURL URLWithString:urlString] method:method delegate:urlConnectionDelegate] autorelease];
     if (conn == nil) {
         return nil;
     }
-    [conn setRequestMethod:method pathInfo:[virtualPath stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding] queryString:queryString protocol:HTTP_1_1];
     [conn setRequestHostHeader];
     [conn setRFC822DateRequestHeader];
-    [conn setRequestKeepAliveHeader];
     if (blob != nil) {
         if ([blob mimeType] != nil) {
             [conn setRequestHeader:[blob mimeType] forKey:@"Content-Type"];
@@ -207,39 +226,28 @@
     for (NSString *headerKey in [extraHeaders allKeys]) {
         [conn setRequestHeader:[extraHeaders objectForKey:headerKey] forKey:headerKey];
     }
-    [conn setAuthorizationRequestHeaderUsingProvider:sap s3BucketName:s3BucketName];
-    id <InputStream> requestBody = nil;
-    if (blob != nil) {
-        requestBody = [[[blob inputStreamFactory] newInputStream] autorelease];
-        if (delegate != nil) {
-            requestBody = [[[MonitoredInputStream alloc] initWithUnderlyingStream:requestBody delegate:self] autorelease];
-        }
-        bytesUploaded = 0;
+    if (![sap setAuthorizationRequestHeaderOnHTTPConnection:conn usingS3BucketName:s3BucketName error:error]) {
+        return nil;
     }
-    BOOL execRet = [conn executeRequestWithBody:requestBody error:error];
+    bytesUploaded = 0;
+    BOOL execRet = [conn executeRequestWithBody:blobData error:error];
     if (!execRet) {
         return nil;
     }
     ServerBlob *ret = nil;
+    id <InputStream> bodyStream = [conn newResponseBodyStream:error];
+    if (bodyStream == nil) {
+        return nil;
+    }
     int code = [conn responseCode];
+    
     if (code >= 200 && code <= 299) {
-        id <InputStream> bodyStream = [conn newResponseBodyStream:error];
-        if (bodyStream == nil) {
-            return nil;
-        }
-        ret = [[ServerBlob alloc] initWithInputStream:bodyStream mimeType:[conn responseMimeType] downloadName:[conn responseDownloadName]];
+        ret = [[ServerBlob alloc] initWithInputStream:bodyStream mimeType:[conn responseContentType] downloadName:[conn responseDownloadName]];
         [bodyStream release];
         return ret;
     }
     
-    if ([delegate respondsToSelector:@selector(s3Request:bytesFailedToUpload:)]) {
-        [delegate s3Request:self bytesFailedToUpload:bytesUploaded];
-    }
-    if (code >= 400 && code != HTTP_NOT_FOUND) {
-        HSLogDebug(@"S3 HTTP response code was %d; requesting close on connection", code);
-        [conn setCloseRequested];
-    }
-    NSData *response = [conn slurpResponseBody:error];
+    NSData *response = [bodyStream slurp:error];
     if (response == nil) {
         return nil;
     }
@@ -249,66 +257,11 @@
         return nil;
     }
     
-    NSError *amazonError = nil;
-    [self setError:&amazonError withHTTPResponseCode:code responseData:response];
-    HSLogError(@"S3 error: %@", [amazonError description]);
+    NSError *myError = [NSError amazonErrorWithHTTPStatusCode:code responseBody:response];
+    HSLogDebug(@"%@ %@: %@", method, conn, myError);
     if (error != NULL) {
-        *error = amazonError;
+        *error = myError;
     }
     return nil;
-}
-- (BOOL)setError:(NSError **)error withHTTPResponseCode:(int)code responseData:(NSData *)response {
-    NSAssert(error != NULL, @"NSError **error must not be NULL");
-    NSString *errorXML = [[[NSString alloc] initWithData:response encoding:NSUTF8StringEncoding] autorelease];
-    HSLogDebug(@"amazon HTTP error code=%d; xml=%@", code, errorXML);
-    NSError *xmlError = nil;
-    NSXMLDocument *xmlDoc = [[[NSXMLDocument alloc] initWithData:response options:0 error:&xmlError] autorelease];
-    if (xmlDoc == nil) {
-        HSLogError(@"error parsing Amazon error XML: %@", [xmlError localizedDescription]);
-        SETNSERROR([S3Service errorDomain], code, @"Amazon error (failed to parse XML); xml=%@", errorXML);
-        return YES;
-    }
-    
-    HSLogTrace(@"error XML: %@", [xmlDoc description]);
-    NSXMLElement *rootElement = [xmlDoc rootElement];
-    NSArray *errorNodes = [rootElement nodesForXPath:@"//Error" error:&xmlError];
-    
-    if (errorNodes == nil) {
-        HSLogError(@"error finding Error node in Amazon error XML: %@", [xmlError localizedDescription]);
-        SETNSERROR([S3Service errorDomain], code, @"Amazon error (failed to parse Error node in XML); xml=%@", errorXML);
-        return YES;
-    }
-    
-    if ([errorNodes count] == 0) {
-        HSLogWarn(@"missing Error node in S3 XML response %@", errorXML);
-        SETNSERROR([S3Service errorDomain], code, @"Amazon error (no Error node found); xml=%@", errorXML);
-        return YES;
-    }
-    
-    if ([errorNodes count] > 1) {
-        HSLogWarn(@"ignoring additional S3 errors");
-    }
-    NSXMLNode *errorNode = [errorNodes objectAtIndex:0];
-    NSString *errorCode = [[errorNode childNodeNamed:@"Code"] stringValue];
-    NSString *errorMessage = [[errorNode childNodeNamed:@"Message"] stringValue];
-    NSString *endpoint = (code == HTTP_MOVED_TEMPORARILY) ? [[errorNode childNodeNamed:@"Endpoint"] stringValue] : nil;
-    NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:
-                              (errorCode != nil ? errorCode : @""), @"Code",
-                              (errorMessage != nil ? errorMessage : @""), @"Message",
-                              (errorMessage != nil ? errorMessage : @""), NSLocalizedDescriptionKey,
-                              (endpoint != nil ? endpoint : @""), @"Endpoint",
-                              nil];
-    NSError *myError = [NSError errorWithDomain:[S3Service amazonErrorDomain] code:code userInfo:userInfo];
-    *error = myError;
-    return YES;
-}
-
-#pragma mark MonitoredInputStream
-- (BOOL)monitoredInputStream:(MonitoredInputStream *)stream receivedBytes:(unsigned long long)theLength error:(NSError **)error {
-    bytesUploaded += theLength;
-    if (delegate != nil && ![delegate s3Request:self willUploadBytes:theLength error:error]) {
-        return NO;
-    }
-    return YES;
 }
 @end

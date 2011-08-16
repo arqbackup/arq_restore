@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -30,14 +30,17 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
+#import <Cocoa/Cocoa.h>
+
 #import "IntegerIO.h"
 #import "StringIO.h"
-#import "InputStream.h"
 #import "DataInputStream.h"
 #import "Streams.h"
 #import "NSData-InputStream.h"
 #import "BooleanIO.h"
 #import "BufferedInputStream.h"
+#import "BufferedOutputStream.h"
+#import "SetNSError.h"
 
 @implementation StringIO
 + (void)write:(NSString *)str to:(NSMutableData *)data {
@@ -49,11 +52,11 @@
         [data appendBytes:utf8 length:len];
     }
 }
-+ (BOOL)write:(NSString *)str to:(id <OutputStream>)os error:(NSError **)error {
++ (BOOL)write:(NSString *)str to:(BufferedOutputStream *)os error:(NSError **)error {
     //FIXME: This is really inefficient!
     NSMutableData *data = [[NSMutableData alloc] init];
     [StringIO write:str to:data];
-    BOOL ret = [os write:[data bytes] length:[data length] error:error];
+    BOOL ret = [os writeFully:[data bytes] length:[data length] error:error];
     [data release];
     return ret;
 }
@@ -73,6 +76,10 @@
     if (isNotNil) {
         uint64_t len;
         if (![IntegerIO readUInt64:&len from:is error:error]) {
+            return NO;
+        }
+        if (len > 2147483648) {
+            SETNSERROR(@"InputStreamErrorDomain", -1, @"absurd string length %u in [StringIO newString:]", len);
             return NO;
         }
         unsigned char *buf = (unsigned char *)malloc(len);

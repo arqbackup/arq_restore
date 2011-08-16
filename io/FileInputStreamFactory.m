@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -30,6 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
+#import <Cocoa/Cocoa.h>
+
 #include <sys/stat.h>
 #import "FileInputStreamFactory.h"
 #import "FileInputStream.h"
@@ -47,7 +49,9 @@
 - (id)initWithPath:(NSString *)thePath error:(NSError **)error {
     struct stat st;
     if (lstat([thePath fileSystemRepresentation], &st) == -1) {
-        SETNSERROR(@"UnixErrorDomain", errno, @"lstat(%@): %s", path, strerror(errno));
+        int errnum = errno;
+        HSLogError(@"lstat(%@) error %d: %s", thePath, errnum, strerror(errnum));
+        SETNSERROR(@"UnixErrorDomain", errnum, @"%@: %s", thePath, strerror(errnum));
         return nil;
     }
     return [self initWithPath:thePath offset:0 length:(unsigned long long)st.st_size];
@@ -62,6 +66,6 @@
 
 #pragma mark NSObject
 - (NSString *)description {
-    return [NSString stringWithFormat:@"<FileISF: %@,length=%qu>", path, length];
+    return [NSString stringWithFormat:@"<FileISF: %@,offset=%qu,length=%qu,endingoffset=%qu>", path, offset, length, (offset+length)];
 }
 @end

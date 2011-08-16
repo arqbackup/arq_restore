@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -32,8 +32,10 @@
 
 #import <Cocoa/Cocoa.h>
 
-
 @protocol InputStream <NSObject>
-- (NSInteger)read:(unsigned char *)buf bufferLength:(NSUInteger)bufferLength error:(NSError **)error;
+/*
+ * Returns 0 on EOF, just like read(2).
+ */
+- (NSInteger)read:(unsigned char *)theBuf bufferLength:(NSUInteger)theBufferLength error:(NSError **)error;
 - (NSData *)slurp:(NSError **)error;
 @end

@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -29,16 +29,22 @@
  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
-#import "HTTPConnection_S3.h"
-#import "S3AuthorizationParameters.h"
-#import "S3AuthorizationProvider.h"
-#import "HTTPRequest.h"
 
-@implementation HTTPConnection (S3)
-- (void)setAuthorizationRequestHeaderUsingProvider:(S3AuthorizationProvider *)sap s3BucketName:(NSString *)s3BucketName {
-    S3AuthorizationParameters *params = [[S3AuthorizationParameters alloc] initWithHTTPRequest:request s3BucketName:s3BucketName];
-    [request setHeader:[sap authorizationForParameters:params] forKey:@"Authorization"];
-    [params release];
+#import "UserLibrary.h"
+
+
+@implementation UserLibrary
+- (id)initWithPath:(NSString *)thePath {
+    if (self = [super init]) {
+        path = [thePath copy];
+    }
+    return self;
 }
-
+- (void)dealloc {
+    [path release];
+    [super dealloc];
+}
+- (NSString *)path {
+    return path;
+}
 @end

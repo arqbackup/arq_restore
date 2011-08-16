@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -30,7 +30,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
+#import <Cocoa/Cocoa.h>
+
 #include <sys/time.h>
+#include <sys/stat.h>
 #import "NSFileManager_extra.h"
 #import "SetNSError.h"
 #import "FileInputStream.h"
@@ -39,21 +42,68 @@
 
 @implementation NSFileManager (extra)
 - (BOOL)ensureParentPathExistsForPath:(NSString *)path error:(NSError **)error {
-	NSFileManager *fm = [NSFileManager defaultManager];
     NSString *parentPath = [path stringByDeletingLastPathComponent];
     BOOL isDirectory = NO;
-    if ([fm fileExistsAtPath:parentPath isDirectory:&isDirectory]) {
+    if ([self fileExistsAtPath:parentPath isDirectory:&isDirectory]) {
         if (!isDirectory) {
             SETNSERROR(@"FileErrorDomain", -1, @"parent path %@ exists and is not a directory", parentPath);
             return NO;
         }
-    } else if (![fm createDirectoryAtPath:parentPath withIntermediateDirectories:YES attributes:nil error:error]) {
+    } else if (![self createDirectoryAtPath:parentPath withIntermediateDirectories:YES attributes:nil error:error]) {
         return NO;
     }
     return YES;
 }
+- (BOOL)ensureParentPathExistsForPath:(NSString *)path 
+                            targetUID:(uid_t)theTargetUID 
+                            targetGID:(gid_t)theTargetGID
+                                error:(NSError **)error {
+    NSString *parentPath = [path stringByDeletingLastPathComponent];
+    if (![self fileExistsAtPath:parentPath] && ![self createDirectoryAtPath:parentPath 
+                                                withIntermediateDirectories:YES attributes:nil 
+                                                                  targetUID:theTargetUID 
+                                                                  targetGID:theTargetGID
+                                                                      error:error]) {
+        return NO;
+    }
+    return YES;
+}
+- (BOOL)createDirectoryAtPath:(NSString *)path 
+  withIntermediateDirectories:(BOOL)withIntermediate
+                   attributes:(NSDictionary *)attributes 
+                    targetUID:(uid_t)theTargetUID 
+                    targetGID:(gid_t)theTargetGID
+                        error:(NSError **)error {
+    if (![self fileExistsAtPath:path]) {
+        if (![path isEqualToString:@"/"]) {
+            if (![self ensureParentPathExistsForPath:path targetUID:theTargetUID targetGID:theTargetGID error:error]) {
+                return NO;
+            }
+        }
+        if (mkdir([path fileSystemRepresentation], 0777) == -1) {
+            int errnum = errno;
+            HSLogError(@"mkdir(%@) error %d: %s", path, errnum, strerror(errnum));
+            SETNSERROR(@"UnixErrorDomain", errnum, @"failed to make directory %@: %s", path, strerror(errnum));
+            return NO;
+        }
+        // According to mkdir(2), we have to explicitly set the sticky/executable bits after calling mkdir:
+        if (chmod([path fileSystemRepresentation], 0777) == -1) {
+            int errnum = errno;
+            HSLogError(@"chmod(%@) error %d: %s", path, errnum, strerror(errnum));
+            SETNSERROR(@"UnixErrorDomain", errnum, @"failed to change permissions of %@: %s", path, strerror(errnum));
+            return NO;
+        }
+        if (chown([path fileSystemRepresentation], theTargetUID, theTargetGID) == -1) {
+            int errnum = errno;
+            HSLogError(@"chown(%@) error %d: %s", path, errnum, strerror(errnum));
+            SETNSERROR(@"UnixErrorDomain", errnum, @"failed to change ownership of %@: %s", path, strerror(errnum));
+            return NO;
+        }
+    }
+    return YES;
+}
 - (BOOL)touchFileAtPath:(NSString *)path error:(NSError **)error {
-    if ([[NSFileManager defaultManager] fileExistsAtPath:path]) {
+    if ([self fileExistsAtPath:path]) {
         time_t theTime = time(NULL);
         struct timespec spec;
         spec.tv_sec = theTime;
@@ -62,13 +112,54 @@
         TIMESPEC_TO_TIMEVAL(&(timevals[0]), &spec);
         TIMESPEC_TO_TIMEVAL(&(timevals[1]), &spec);
         if (utimes([path fileSystemRepresentation], timevals) == -1) {
-            SETNSERROR(@"UnixErrorDomain", errno, @"utimes(%@): %s", path, strerror(errno));
+            int errnum = errno;
+            HSLogError(@"utimes(%@) error %d: %s", path, errnum, strerror(errnum));
+            SETNSERROR(@"UnixErrorDomain", errnum, @"failed to change timestamps of %@: %s", path, strerror(errnum));
             return NO;
         }
     } else {
         int fd = open([path fileSystemRepresentation], O_CREAT, S_IRWXU | S_IRWXG | S_IRWXO);
         if (fd == -1) {
-            SETNSERROR(@"UnixErrorDomain", errno, @"%s", strerror(errno));
+            int errnum = errno;
+            HSLogError(@"open(%@) error %d: %s", path, errnum, strerror(errnum));
+            SETNSERROR(@"UnixErrorDomain", errnum, @"failed to open %@: %s", path, strerror(errnum));
+            return NO;
+        }
+        close(fd);
+    }
+    return YES;
+}
+- (BOOL)touchFileAtPath:(NSString *)path 
+              targetUID:(uid_t)theTargetUID 
+              targetGID:(gid_t)theTargetGID
+                  error:(NSError **)error {
+    if ([self fileExistsAtPath:path]) {
+        time_t theTime = time(NULL);
+        struct timespec spec;
+        spec.tv_sec = theTime;
+        spec.tv_nsec = 0;
+        struct timeval timevals[2];
+        TIMESPEC_TO_TIMEVAL(&(timevals[0]), &spec);
+        TIMESPEC_TO_TIMEVAL(&(timevals[1]), &spec);
+        if (utimes([path fileSystemRepresentation], timevals) == -1) {
+            int errnum = errno;
+            HSLogError(@"utimes(%@) error %d: %s", path, errnum, strerror(errnum));
+            SETNSERROR(@"UnixErrorDomain", errnum, @"failed to change timestamps of %@: %s", path, strerror(errnum));
+            return NO;
+        }
+    } else {
+        int fd = open([path fileSystemRepresentation], O_CREAT, S_IRWXU | S_IRWXG | S_IRWXO);
+        if (fd == -1) {
+            int errnum = errno;
+            HSLogError(@"open(%@) error %d: %s", path, errnum, strerror(errnum));
+            SETNSERROR(@"UnixErrorDomain", errnum, @"failed to open %@: %s", path, strerror(errnum));
+            return NO;
+        }
+        if (fchown(fd, theTargetUID, theTargetGID) == -1) {
+            close(fd);
+            int errnum = errno;
+            HSLogError(@"fchown(%@) error %d: %s", path, errnum, strerror(errnum));
+            SETNSERROR(@"UnixErrorDomain", errnum, @"failed to change ownership of %@: %s", path, strerror(errnum));
             return NO;
         }
         close(fd);
@@ -82,7 +173,9 @@
     if (tempDir != NULL) {
         *createdPath = [NSString stringWithUTF8String:tempDir];
     } else {
-        SETNSERROR(@"UnixErrorDomain", errno, @"mkdtemp(%@): %s", pathTemplate, strerror(errno));
+        int errnum = errno;
+        HSLogError(@"mkdtemp(%@) error %d: %s", pathTemplate, errnum, strerror(errnum));
+        SETNSERROR(@"UnixErrorDomain", errnum, @"failed to make temporary directory with template %@: %s", pathTemplate, strerror(errnum));
     }
     free(cTemplate);
     return tempDir != NULL;

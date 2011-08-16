@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -30,33 +30,66 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
+#import <Cocoa/Cocoa.h>
+
 #import "FDInputStream.h"
 #import "SetNSError.h"
 #import "InputStreams.h"
 #import "NSErrorCodes.h"
 
-#define MY_BUF_SIZE (8192)
+#define MY_BUF_SIZE (4096)
 #define DEFAULT_READ_TIMEOUT_SECONDS (60)
 
-static time_t readTimeoutSeconds = DEFAULT_READ_TIMEOUT_SECONDS;
-
 @implementation FDInputStream
-+ (void)setReadTimeoutSeconds:(time_t)timeout {
-    readTimeoutSeconds = timeout;
-    HSLogInfo(@"network read timeout set to %d seconds", timeout);
+- (id)initWithFD:(int)theFD label:(NSString *)theLabel {
+    return [self initWithFD:theFD timeoutSeconds:0 label:theLabel];
 }
-- (id)initWithFD:(int)theFD {
+- (id)initWithFD:(int)theFD offset:(unsigned long long)theOffset length:(unsigned long long)theLength label:(NSString *)theLabel {
     if (self = [super init]) {
         fd = theFD;
+        offset = theOffset;
+        length = theLength;
+        label = [theLabel retain];
+        needsSeek = YES;
+        hasLength = YES;
+    }
+    return self;
+}
+- (id)initWithFD:(int)theFD timeoutSeconds:(NSUInteger)theTimeoutSeconds label:(NSString *)theLabel {
+    if (self = [super init]) {
+        fd = theFD;
+        timeoutSeconds = theTimeoutSeconds;
+        label = [theLabel retain];
     }
     return self;
 }
 - (void)dealloc {
+    [label release];
     [super dealloc];
 }
 
 #pragma mark InputStream
 - (NSInteger)read:(unsigned char *)buf bufferLength:(NSUInteger)bufferLength error:(NSError **)error {
+    if (needsSeek) {
+        if (lseek(fd, offset, SEEK_SET) == -1) {
+            int errnum = errno;
+            HSLogError(@"lseek(%d) error %d: %s", fd, errnum, strerror(errnum));
+            SETNSERROR(@"UnixErrorDomain", errnum, @"failed to seek to %qu in file descriptor %d: %s", offset, fd, strerror(errnum));
+            return -1;
+        }
+        needsSeek = NO;
+    }
+    
+    if (hasLength) {
+        unsigned long long remaining = length - bytesReceived;
+        if (remaining == 0) {
+            return 0;
+        }
+        if ((unsigned long long)bufferLength > remaining) {
+            bufferLength = (NSUInteger)remaining;
+        }
+    }
+    
     NSInteger ret = 0;
     fd_set readSet;
     fd_set exceptSet;
@@ -64,18 +97,23 @@ static time_t readTimeoutSeconds = DEFAULT_READ_TIMEOUT_SECONDS;
     FD_SET((unsigned int)fd, &readSet);
     FD_ZERO(&exceptSet);
     FD_SET((unsigned int)fd, &exceptSet);
+    
     struct timeval timeout;
-    struct timeval *pTimeout;
+    struct timeval *pTimeout = NULL;
+    if (timeoutSeconds > 0) {
+        timeout.tv_sec = timeoutSeconds;
+        timeout.tv_usec = 0;
+        pTimeout = &timeout;
+    }
     
 select_again:
-    timeout.tv_sec = readTimeoutSeconds;
-    timeout.tv_usec = 0;
-    pTimeout = (readTimeoutSeconds > 0) ? &timeout : 0;
     ret = select(fd + 1, &readSet, 0, &exceptSet, pTimeout);
     if ((ret == -1) && (errno == EINTR)) {
         goto select_again;
     } else if (ret == -1) {
-        SETNSERROR(@"UnixErrorDomain", errno, @"select: %s", strerror(errno));
+        int errnum = errno;
+        HSLogError(@"select(%d) error %d: %s", fd, errnum, strerror(errnum));
+        SETNSERROR(@"UnixErrorDomain", errnum, @"select: %s", strerror(errnum));
         return -1;
     } else if (ret == 0) {
         SETNSERROR(@"InputStreamErrorDomain", ERROR_TIMEOUT, @"read timeout");
@@ -87,8 +125,13 @@ read_again:
     if ((ret == -1) && (errno == EINTR)) {
         goto read_again;
     } else if (ret == -1) {
-        SETNSERROR(@"UnixErrorDomain", errno, @"read: %s", strerror(errno));
+        int errnum = errno;
+        HSLogError(@"read(%d) error %d: %s", fd, errnum, strerror(errnum));
+        SETNSERROR(@"UnixErrorDomain", errnum, @"failed to read from file descriptor %d: %s", fd, strerror(errnum));
         return -1;
+    }
+    if (ret > 0) {
+        bytesReceived += ret;
     }
     return ret;
 }
@@ -98,6 +141,14 @@ read_again:
 
 #pragma mark NSObject protocol
 - (NSString *)description {
-    return [NSString stringWithFormat:@"<FDInputStream: fd=%d>", fd];
+    NSMutableString *ret = [NSMutableString stringWithFormat:@"<FDInputStream fd=%d", fd];
+    if (hasLength) {
+        [ret appendFormat:@" offset=%qu length=%qu", offset, length];
+    }
+    if (label != nil) {
+        [ret appendString:@" "];
+        [ret appendString:label];
+    }
+    return ret;
 }
 @end

@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -35,6 +35,7 @@
 #import "Blob.h"
 #import "InputStream.h"
 @class S3AuthorizationProvider;
+@class S3Owner;
 @class ServerBlob;
 
 #define S3_INITIAL_RETRY_SLEEP (0.5)
@@ -45,35 +46,40 @@ enum {
     BUCKET_REGION_US_STANDARD = 0,
     BUCKET_REGION_US_WEST = 1,
     BUCKET_REGION_EU = 2,
-    BUCKET_REGION_AP_SOUTHEAST_1 = 3
+    BUCKET_REGION_AP_SOUTHEAST_1 = 3,
+    BUCKET_REGION_AP_NORTHEAST_1 = 4
+};
+
+enum {
+    S3SERVICE_ERROR_UNEXPECTED_RESPONSE = -51001,
+    S3SERVICE_ERROR_AMAZON_ERROR = -51002,
+    S3SERVICE_INVALID_PARAMETERS = -51003
 };
 
 @interface S3Service : NSObject {
 	S3AuthorizationProvider *sap;
     BOOL useSSL;
-    BOOL retryOnNetworkError;
+    BOOL retryOnTransientError;
 }
 + (NSString *)errorDomain;
-+ (NSString *)amazonErrorDomain;
 + (NSString *)displayNameForBucketRegion:(int)region;
 + (NSString *)s3BucketNameForAccessKeyID:(NSString *)theAccessKeyId region:(int)s3BucketRegion;
 + (NSArray *)s3BucketNamesForAccessKeyID:(NSString *)theAccessKeyId;
 + (int)s3BucketRegionForS3BucketName:(NSString *)s3BucketName;
-- (id)initWithS3AuthorizationProvider:(S3AuthorizationProvider *)theSAP useSSL:(BOOL)useSSL retryOnNetworkError:(BOOL)retry;
+- (id)initWithS3AuthorizationProvider:(S3AuthorizationProvider *)theSAP useSSL:(BOOL)useSSL retryOnTransientError:(BOOL)retry;
 - (NSArray *)s3BucketNames:(NSError **)error;
 - (BOOL)s3BucketExists:(NSString *)s3BucketName;
 
 - (NSArray *)pathsWithPrefix:(NSString *)prefix error:(NSError **)error;
+- (NSArray *)pathsWithPrefix:(NSString *)prefix delimiter:(NSString *)delimiter error:(NSError **)error;
+- (NSArray *)commonPrefixesForPathPrefix:(NSString *)prefix delimiter:(NSString *)delimiter error:(NSError **)error;
 - (NSArray *)objectsWithPrefix:(NSString *)prefix error:(NSError **)error;
 - (BOOL)listObjectsWithPrefix:(NSString *)prefix receiver:(id <S3Receiver>)receiver error:(NSError **)error;
-- (BOOL)listObjectsWithMax:(int)maxResults prefix:(NSString *)prefix receiver:(id <S3Receiver>)receiver error:(NSError **)error;
-- (BOOL)containsBlob:(BOOL *)contains atPath:(NSString *)path error:(NSError **)error;
+- (BOOL)containsBlob:(BOOL *)contains atPath:(NSString *)path dataSize:(unsigned long long *)dataSize error:(NSError **)error;
 
 - (NSData *)dataAtPath:(NSString *)path error:(NSError **)error;
 - (ServerBlob *)newServerBlobAtPath:(NSString *)path error:(NSError **)error;
 
 - (BOOL)aclXMLData:(NSData **)aclXMLData atPath:(NSString *)path error:(NSError **)error;
 - (BOOL)acl:(int *)acl atPath:(NSString *)path error:(NSError **)error;
-- (NSArray *)commonPrefixesForPathPrefix:(NSString *)prefix delimiter:(NSString *)delimiter error:(NSError **)error;
-
 @end

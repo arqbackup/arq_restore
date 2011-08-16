@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -30,12 +30,14 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
+#import <Cocoa/Cocoa.h>
+
 #import "InputStreams.h"
 #import "SetNSError.h"
 #import "NSErrorCodes.h"
 #import "BufferedInputStream.h"
 
-#define MY_BUF_SIZE (8192)
+#define MY_BUF_SIZE (4096)
 
 @implementation InputStreams
 + (NSData *)slurp:(id <InputStream>)is error:(NSError **)error {
@@ -54,43 +56,5 @@
         return nil;
     }
     return data;
-}
-+ (NSString *)readLineWithCRLF:(BufferedInputStream *)bis maxLength:(NSUInteger)maxLength error:(NSError **)error {
-    unsigned char *buf = (unsigned char *)malloc(maxLength);
-    NSUInteger received = 0;
-    for (;;) {
-        if (received > maxLength) {
-            SETNSERROR(@"InputStreamErrorDomain", -1, @"exceeded maxLength %u before finding CRLF", maxLength);
-            return nil;
-        }
-        if (![bis readExactly:1 into:(buf + received) error:error]) {
-            return nil;
-        }
-        received++;
-        if (received >= 2 && buf[received - 1] == '\n' && buf[received - 2] == '\r') {
-            break;
-        }
-    }
-    NSString *ret = [[[NSString alloc] initWithBytes:buf length:received encoding:NSUTF8StringEncoding] autorelease];
-    HSLogTrace(@"got line <%@>", ret);
-    return ret;
-}
-+ (NSString *)readLine:(BufferedInputStream *)bis error:(NSError **)error {
-    NSMutableData *data = [NSMutableData data];
-    unsigned char buf[1];
-    NSUInteger received = 0;
-    for (;;) {
-        if (![bis readExactly:1 into:buf error:error]) {
-            return nil;
-        }
-        if (*buf == '\n') {
-            break;
-        }
-        [data appendBytes:buf length:1];
-        received++;
-    }
-    NSString *ret = [[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] autorelease];
-    HSLogTrace(@"got line <%@> followed by \\n", ret);
-    return ret;
 }
 @end

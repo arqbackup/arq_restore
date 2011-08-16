@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -37,8 +37,9 @@ extern unsigned int global_hslog_level;
 extern void setHSLogLevel(int level);
 extern int hsLogLevelForName(NSString *levelName);
 extern NSString *nameForHSLogLevel(int level);
-#define HSLOG_LEVEL_TRACE (5)
-#define HSLOG_LEVEL_DEBUG (4)
+#define HSLOG_LEVEL_TRACE (6)
+#define HSLOG_LEVEL_DEBUG (5)
+#define HSLOG_LEVEL_DETAIL (4)
 #define HSLOG_LEVEL_INFO (3)
 #define HSLOG_LEVEL_WARN (2)
 #define HSLOG_LEVEL_ERROR (1)
@@ -47,6 +48,7 @@ extern NSString *nameForHSLogLevel(int level);
 #define HSLogTrace( s, ... ) { if (global_hslog_level >= HSLOG_LEVEL_TRACE) { NSLog(@"TRACE [thread %x] %p %@:%d %@", pthread_mach_thread_np(pthread_self()), self, [@__FILE__ lastPathComponent], __LINE__, [NSString stringWithFormat:(s), ##__VA_ARGS__]); } }
 #define HSLogDebug( s, ... ) { if (global_hslog_level >= HSLOG_LEVEL_DEBUG) { NSLog(@"DEBUG [thread %x] %p %@:%d %@", pthread_mach_thread_np(pthread_self()), self, [@__FILE__ lastPathComponent], __LINE__, [NSString stringWithFormat:(s), ##__VA_ARGS__]); } }
 #define HSLogDebugStatic( s, ... ) { if (global_hslog_level >= HSLOG_LEVEL_DEBUG) { NSLog(@"DEBUG [thread %x] %@:%d %@", pthread_mach_thread_np(pthread_self()), [@__FILE__ lastPathComponent], __LINE__, [NSString stringWithFormat:(s), ##__VA_ARGS__]); } }
+#define HSLogDetail( s, ... ) { if (global_hslog_level >= HSLOG_LEVEL_DETAIL) { NSLog(@"DETAIL [thread %x]  %@", pthread_mach_thread_np(pthread_self()), [NSString stringWithFormat:(s), ##__VA_ARGS__]); } }
 #define HSLogInfo( s, ... ) { if (global_hslog_level >= HSLOG_LEVEL_INFO) { NSLog(@"INFO [thread %x]  %@", pthread_mach_thread_np(pthread_self()), [NSString stringWithFormat:(s), ##__VA_ARGS__]); } }
 #define HSLogWarn( s, ... ) { if (global_hslog_level >= HSLOG_LEVEL_WARN) { NSLog(@"WARN [thread %x]  %@", pthread_mach_thread_np(pthread_self()), [NSString stringWithFormat:(s), ##__VA_ARGS__]); } }
 #define HSLogError( s, ... ) { if (global_hslog_level >= HSLOG_LEVEL_ERROR) { NSLog(@"ERROR [thread %x] %@", pthread_mach_thread_np(pthread_self()), [NSString stringWithFormat:(s), ##__VA_ARGS__]); } }

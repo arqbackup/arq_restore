@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -30,48 +30,41 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
+#import <Cocoa/Cocoa.h>
+
 #import "CryptInputStream.h"
 #import "SetNSError.h"
 #import "OpenSSL.h"
 #import "InputStreams.h"
 #import "NSErrorCodes.h"
+#import "CryptoKey.h"
+#import "Encryption.h"
 
-#define MY_BUF_SIZE (8192)
+#define MY_BUF_SIZE (4096)
 
 @interface CryptInputStream (internal)
 - (BOOL)fillOutBuf:(NSError **)error;
 @end
 
 @implementation CryptInputStream
-+ (NSString *)errorDomain {
-    return @"CryptInputStreamErrorDomain";
-}
-- (id)initWithCryptInitFunc:(void *)theCryptInit cryptUpdateFunc:(void *)theCryptUpdate cryptFinalFunc:(void *)theCryptFinal inputStream:(id <InputStream>)theIS cipherName:(NSString *)theCipherName key:(NSString *)theKey error:(NSError **)error {
+- (id)initWithCryptInitFunc:(void *)theCryptInit 
+            cryptUpdateFunc:(void *)theCryptUpdate 
+             cryptFinalFunc:(void *)theCryptFinal 
+                inputStream:(id <InputStream>)theIS 
+                  cryptoKey:(CryptoKey *)theCryptoKey
+                      label:(NSString *)theLabel
+                      error:(NSError **)error {
     if (self = [super init]) {
+        label = [theLabel retain];
         cryptInit = (CryptInitFunc)theCryptInit;
         cryptUpdate = (CryptUpdateFunc)theCryptUpdate;
         cryptFinal = (CryptFinalFunc)theCryptFinal;
         BOOL ret = NO;
         do {
             is = [theIS retain];
-            NSData *keyData = [theKey dataUsingEncoding:NSUTF8StringEncoding];
-            if ([keyData length] > EVP_MAX_KEY_LENGTH) {
-                SETNSERROR([CryptInputStream errorDomain], -1, @"encryption key must be less than or equal to %d bytes", EVP_MAX_KEY_LENGTH);
-                break;
-            }
-            if (![OpenSSL initializeSSL:error]) {
-                break;
-            }
-            cipher = EVP_get_cipherbyname([theCipherName UTF8String]);
-            if (!cipher) {
-                SETNSERROR([CryptInputStream errorDomain], -1, @"failed to load %@ cipher: %@", theCipherName, [OpenSSL errorMessage]);
-                break;
-            }
-            evp_key[0] = 0;
-            EVP_BytesToKey(cipher, EVP_md5(), NULL, [keyData bytes], [keyData length], 1, evp_key, iv);
             EVP_CIPHER_CTX_init(&cipherContext);
-            if (!(*cryptInit)(&cipherContext, cipher, evp_key, iv)) {
-                SETNSERROR([CryptInputStream errorDomain], -1, @"EVP_EncryptInit: %@",  [OpenSSL errorMessage]);
+            if (!(*cryptInit)(&cipherContext, [theCryptoKey cipher], [theCryptoKey evpKey], [theCryptoKey iv])) {
+                SETNSERROR([Encryption errorDomain], -1, @"%@ initialization error: %@",  label, [OpenSSL errorMessage]);
                 break;
             }
             EVP_CIPHER_CTX_set_key_length(&cipherContext, EVP_MAX_KEY_LENGTH);
@@ -91,6 +84,7 @@
     return self;
 }
 - (void)dealloc {
+    [label release];
     if (initialized) {
         EVP_CIPHER_CTX_cleanup(&cipherContext);
     }
@@ -135,7 +129,7 @@
 @implementation CryptInputStream (internal)
 - (BOOL)fillOutBuf:(NSError **)error {
     if (finalized) {
-        SETNSERROR([CryptInputStream errorDomain], ERROR_EOF, @"EOF");
+        SETNSERROR([Encryption errorDomain], ERROR_EOF, @"EOF");
         return NO;
     }
     outBufLen = 0;
@@ -146,15 +140,21 @@
     }
     if (recvd == 0) {
         finalized = YES;
-        if (!(cryptFinal)(&cipherContext, outBuf, &outBufLen)) {
-            SETNSERROR(@"OpenSSLErrorDomain", -1, @"crypt final: %@", [OpenSSL errorMessage]);
+        int theBufLen = 0;
+        if (!(cryptFinal)(&cipherContext, outBuf, &theBufLen)) {
+            SETNSERROR([Encryption errorDomain], -1, @"%@ error: %@", label, [OpenSSL errorMessage]);
             return NO;
         }
+        HSLogTrace(@"%@ final: outBufLen = %d", label, (NSInteger)outBufLen);
+        outBufLen = (NSInteger)theBufLen;
     } else {
-        if (!(*cryptUpdate)(&cipherContext, outBuf, &outBufLen, inBuf, recvd)) {
-            SETNSERROR(@"OpenSSLErrorDomain", -1, @"crypt update: %@", [OpenSSL errorMessage]);
+        int theBufLen = 0;
+        if (!(*cryptUpdate)(&cipherContext, outBuf, &theBufLen, inBuf, recvd)) {
+            SETNSERROR([Encryption errorDomain], -1, @"%@ error: %@", label, [OpenSSL errorMessage]);
             return NO;
         }
+        HSLogTrace(@"%@ update: inBufLen = %d, outBufLen = %d", label, recvd, (NSInteger)outBufLen);
+        outBufLen = (NSInteger)theBufLen;
     }
     return YES;
 }

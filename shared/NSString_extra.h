@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -33,7 +33,9 @@
 #import <Cocoa/Cocoa.h>
 
 @interface NSString (extra)
-+ (NSString *)hexStringWithBytes:(unsigned char *)bytes length:(unsigned int)length;
++ (NSString *)hexStringWithBytes:(const unsigned char *)bytes length:(unsigned int)length;
 - (NSString *)stringWithUniquePath;
 - (NSData *)hexStringToData;
+- (NSData *)decodeBase64;
+- (NSComparisonResult)compareByLength:(NSString *)value;
 @end

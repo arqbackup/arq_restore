@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -42,23 +42,19 @@
     NSString *queryString;
     S3AuthorizationProvider *sap;
     BOOL withSSL;
-    BOOL retryOnNetworkError;
+    BOOL retryOnTransientError;
+    id urlConnectionDelegate;
     Blob *blob;
+    NSData *blobData;
     uint64_t length;
     NSString *virtualHost;
     NSString *virtualPath;
     NSMutableDictionary *extraHeaders;
-    id delegate;
     unsigned long long bytesUploaded;
 }
-- (id)initWithMethod:(NSString *)theMethod path:(NSString *)thePath queryString:(NSString *)theQueryString authorizationProvider:(S3AuthorizationProvider *)theSAP useSSL:(BOOL)ssl retryOnNetworkError:(BOOL)retry;
-- (void)setDelegate:(id)theDelegate;
+- (id)initWithMethod:(NSString *)theMethod path:(NSString *)thePath queryString:(NSString *)theQueryString authorizationProvider:(S3AuthorizationProvider *)theSAP useSSL:(BOOL)ssl retryOnTransientError:(BOOL)retry;
+- (id)initWithMethod:(NSString *)theMethod path:(NSString *)thePath queryString:(NSString *)theQueryString authorizationProvider:(S3AuthorizationProvider *)theSAP useSSL:(BOOL)ssl retryOnTransientError:(BOOL)retry urlConnectionDelegate:(id)theURLConnectionDelegate;
 - (void)setBlob:(Blob *)theBlob length:(uint64_t)theLength;
 - (void)setHeader:(NSString *)value forKey:(NSString *)key;
 - (ServerBlob *)newServerBlob:(NSError **)error;
-@end
-
-@interface NSObject (S3RequestDelegate)
-- (BOOL)s3Request:(S3Request *)s3r willUploadBytes:(unsigned long long)theLength error:(NSError **)error;
-- (void)s3Request:(S3Request *)s3r bytesFailedToUpload:(unsigned long long)theLength;
 @end

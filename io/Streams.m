@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -30,12 +30,19 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
+#import <Cocoa/Cocoa.h>
+
 #import "Streams.h"
 #import "SetNSError.h"
 #import "FDOutputStream.h"
+#import "BufferedOutputStream.h"
 #import "NSErrorCodes.h"
 
-#define MY_BUF_SIZE (8192)
+#define MY_BUF_SIZE (4096)
+
+@interface Streams (internal)
++ (BOOL)transferFrom:(id <InputStream>)is toBufferedOutputStream:(BufferedOutputStream *)bos bytesWritten:(unsigned long long *)written error:(NSError **)error;
+@end
 
 @implementation Streams
 + (BOOL)transferFrom:(id <InputStream>)is to:(id <OutputStream>)os error:(NSError **)error {
@@ -43,23 +50,18 @@
     return [Streams transferFrom:is to:os bytesWritten:&written error:error];
 }
 + (BOOL)transferFrom:(id <InputStream>)is to:(id <OutputStream>)os bytesWritten:(unsigned long long *)written error:(NSError **)error {
-    NSInteger received = 0;
-    unsigned char *buf = (unsigned char *)malloc(MY_BUF_SIZE);
-    for (;;) {
-        received = [is read:buf bufferLength:MY_BUF_SIZE error:error];
-        if (received <= 0) {
-            break;
-        }
-        if (![os write:buf length:received error:error]) {
-            received = -1;
-            break;
-        }
-        *written += (unsigned long long)received;
+    BufferedOutputStream *bos = [[BufferedOutputStream alloc] initWithUnderlyingOutputStream:os];
+    BOOL ret = [self transferFrom:is toBufferedOutputStream:bos bytesWritten:written error:error];
+    if (ret && ![bos flush:error]) {
+        ret = NO;
     }
-    free(buf);
-    return received >= 0;
+    [bos release];
+    return ret;
 }
 + (BOOL)transferFrom:(id <InputStream>)is atomicallyToFile:(NSString *)path bytesWritten:(unsigned long long *)written error:(NSError **)error {
+    return [Streams transferFrom:is atomicallyToFile:path targetUID:getuid() targetGID:getgid() bytesWritten:written error:error];
+}
++ (BOOL)transferFrom:(id <InputStream>)is atomicallyToFile:(NSString *)path targetUID:(uid_t)theTargetUID targetGID:(gid_t)theTargetGID bytesWritten:(unsigned long long *)written error:(NSError **)error {
     NSString *tempFileTemplate = [path stringByAppendingString:@".XXXXXX"];
     const char *tempFileTemplateCString = [tempFileTemplate fileSystemRepresentation];
     char *tempFileCString = strdup(tempFileTemplateCString);
@@ -67,15 +69,28 @@
     NSString *tempFile = [[NSFileManager defaultManager] stringWithFileSystemRepresentation:tempFileCString length:strlen(tempFileCString)];
     free(tempFileCString);
     if (fd == -1) {
-        SETNSERROR(@"UnixErrorDomain", errno, @"mkstemp(%s): %s", tempFileCString, strerror(errno));
+        int errnum = errno;
+        HSLogError(@"mkstemp(%@) error %d: %s", tempFileTemplate, errnum, strerror(errnum));
+        SETNSERROR(@"UnixErrorDomain", errnum, @"failed to make temp file with template %@: %s", tempFileTemplate, strerror(errnum));
         return NO;
     }
+    if (fchown(fd, theTargetUID, theTargetGID) == -1) {
+        int errnum = errno;
+        HSLogError(@"fchown(%@) error %d: %s", tempFile, errnum, strerror(errnum));
+        SETNSERROR(@"UnixErrorDomain", errnum, @"failed to change ownership of %@: %s", tempFile, strerror(errnum));
+        return NO;
+    }
+    
     FDOutputStream *fos = [[FDOutputStream alloc] initWithFD:fd];
     BOOL ret = [Streams transferFrom:is to:fos error:error];
     if (ret) {
         if (rename([tempFile fileSystemRepresentation], [path fileSystemRepresentation]) == -1) {
-            SETNSERROR(@"UnixErrorDomain", errno, @"rename(%@, %@): %s", tempFile, path, strerror(errno));
+            int errnum = errno;
+            HSLogError(@"rename(%@, %@) error %d: %s", tempFile, path, errnum, strerror(errnum));
+            SETNSERROR(@"UnixErrorDomain", errnum, @"failed to rename %@ to %@: %s", tempFile, path, strerror(errnum));
             ret = NO;
+        } else {
+            [[NSFileManager defaultManager] removeItemAtPath:tempFile error:NULL];
         }
     }
     if (ret) {
@@ -86,5 +101,28 @@
     [fos release];
     close(fd);
     return ret;
+}
+@end
+
+@implementation Streams (internal)
++ (BOOL)transferFrom:(id <InputStream>)is toBufferedOutputStream:(BufferedOutputStream *)bos bytesWritten:(unsigned long long *)written error:(NSError **)error {
+    NSInteger received = 0;
+    unsigned char *buf = (unsigned char *)malloc(MY_BUF_SIZE);
+    for (;;) {
+        received = [is read:buf bufferLength:MY_BUF_SIZE error:error];
+        if (received <= 0) {
+            break;
+        }
+        if (![bos writeFully:buf length:received error:error]) {
+            received = -1;
+            break;
+        }
+        *written += (unsigned long long)received;
+    }
+    free(buf);
+    if (![bos flush:error]) {
+        received = -1;
+    }
+    return received >= 0;
 }
 @end

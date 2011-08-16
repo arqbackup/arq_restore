@@ -7,9 +7,17 @@
 //
 
 #import "UserAndComputer.h"
+#import "Computer.h"
 #import "DictNode.h"
 
 @implementation UserAndComputer
+- (id)init {
+    if (self = [super init]) {
+        userName = [NSUserName() copy];
+        computerName = [[Computer name] copy];
+    }
+    return self;
+}
 - (id)initWithXMLData:(NSData *)theXMLData error:(NSError **)error {
     if (self = [super init]) {
         DictNode *plist = [DictNode dictNodeWithXMLData:theXMLData error:error];
@@ -19,6 +27,13 @@
         }
         userName = [[[plist stringNodeForKey:@"userName"] stringValue] copy];
         computerName = [[[plist stringNodeForKey:@"computerName"] stringValue] copy];
+    }
+    return self;
+}
+- (id)initWithUserName:(NSString *)theUserName computerName:(NSString *)theComputerName {
+    if (self = [super init]) {
+        userName = [theUserName retain];
+        computerName = [theComputerName retain];
     }
     return self;
 }

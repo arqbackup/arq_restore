@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -30,18 +30,20 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
-#import <Cocoa/Cocoa.h>
-
 #import "DataIO.h"
 #import "IntegerIO.h"
-#import "Streams.h"
 #import "BufferedInputStream.h"
+#import "BufferedOutputStream.h"
 
 @implementation DataIO
 + (void)write:(NSData *)data to:(NSMutableData *)outData {
     [IntegerIO writeUInt64:(uint64_t)[data length] to:outData];
     [outData appendBytes:[data bytes] length:[data length]];
 }
++ (BOOL)write:(NSData *)data to:(BufferedOutputStream *)os error:(NSError **)error {
+    return ([IntegerIO writeUInt64:[data length] to:os error:error] && [os writeFully:[data bytes] length:[data length] error:error]);
+}
+
 + (BOOL)read:(NSData **)value from:(BufferedInputStream *)is error:(NSError **)error {
     *value = nil;
     uint64_t length = 0;

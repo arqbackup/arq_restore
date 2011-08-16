@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -31,15 +31,21 @@
  */ 
 
 #import <Cocoa/Cocoa.h>
+
+#import <Cocoa/Cocoa.h>
 #import "OutputStream.h"
 
 @interface FileOutputStream : NSObject <OutputStream> {
+    NSNumber *targetUID;
+    NSNumber *targetGID;
     BOOL append;
     int fd;
     NSString *path;
     unsigned long long bytesWritten;
 }
 - (id)initWithPath:(NSString *)thePath append:(BOOL)isAppend;
+- (id)initWithPath:(NSString *)thePath targetUID:(uid_t)theTargetUID targetGID:(gid_t)theTargetGID append:(BOOL)isAppend;
+- (NSString *)path;
 - (void)close;
 - (BOOL)seekTo:(unsigned long long)offset error:(NSError **)error;
 - (NSString *)path;

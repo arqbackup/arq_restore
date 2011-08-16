@@ -20,7 +20,7 @@
 - (id)initWithS3Service:(S3Service *)theS3
            s3BucketName:(NSString *)theS3BucketName
            computerUUID:(NSString *)theComputerUUID;
-- (NSData *)bucketDataForPath:(NSString *)bucketDataPath error:(NSError **)error;
+- (NSData *)bucketDataForRelativePath:(NSString *)bucketDataRelativePath error:(NSError **)error;
 - (NSData *)dataForSHA1:(NSString *)sha1 error:(NSError **)error;
 - (ServerBlob *)newServerBlobForSHA1:(NSString *)sha1 error:(NSError **)error;
 @end

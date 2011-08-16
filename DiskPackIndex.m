@@ -1,34 +1,10 @@
-/*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
- 
- All rights reserved.
- 
- Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions are met:
- 
- * Redistributions of source code must retain the above copyright
- notice, this list of conditions and the following disclaimer.
- 
- * Redistributions in binary form must reproduce the above copyright
- notice, this list of conditions and the following disclaimer in the
- documentation and/or other materials provided with the distribution.
- 
- * Neither the names of PhotoMinds LLC or Haystack Software, nor the names of 
- their contributors may be used to endorse or promote products derived from
- this software without specific prior written permission.
- 
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
- TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */ 
+//
+//  DiskPackIndex.m
+//  Arq
+//
+//  Created by Stefan Reitshamer on 12/30/09.
+//  Copyright 2009 __MyCompanyName__. All rights reserved.
+//
 
 #include <sys/stat.h>
 #include <sys/mman.h>
@@ -49,7 +25,9 @@
 #import "BlobACL.h"
 #import "FileInputStreamFactory.h"
 #import "PackIndexWriter.h"
-#import "ArqUserLibrary.h"
+#import "UserLibrary_Arq.h"
+#import "NSError_extra.h"
+#import "RegexKitLite.h"
 
 typedef struct index_object {
     uint64_t nbo_offset;
@@ -66,7 +44,7 @@ typedef struct pack_index {
 } pack_index;
 
 @interface DiskPackIndex (internal)
-- (BOOL)savePackIndex:(ServerBlob *)sb bytesWritten:(unsigned long long *)written error:(NSError **)error;
+- (BOOL)savePackIndex:(ServerBlob *)sb error:(NSError **)error;
 - (PackIndexEntry *)doEntryForSHA1:(NSString *)sha1 error:(NSError **)error;
 - (PackIndexEntry *)findEntryForSHA1:(NSString *)sha1 fd:(int)fd betweenStartIndex:(uint32_t)startIndex andEndIndex:(uint32_t)endIndex error:(NSError **)error;
 - (BOOL)readFanoutStartIndex:(uint32_t *)start fanoutEndIndex:(uint32_t *)end fromFD:(int)fd forSHA1FirstByte:(unsigned int)firstByte error:(NSError **)error;
@@ -76,10 +54,48 @@ typedef struct pack_index {
 + (NSString *)s3PathWithS3BucketName:(NSString *)theS3BucketName computerUUID:(NSString *)theComputerUUID packSetName:(NSString *)thePackSetName packSHA1:(NSString *)thePackSHA1 {
     return [NSString stringWithFormat:@"/%@/%@/packsets/%@/%@.index", theS3BucketName, theComputerUUID, thePackSetName, thePackSHA1];
 }
-+ (NSString *)localPathWithComputerUUID:(NSString *)theComputerUUID packSetName:(NSString *)thePackSetName packSHA1:(NSString *)thePackSHA1 {
-    return [NSString stringWithFormat:@"%@/%@/packsets/%@/%@/%@.index", [ArqUserLibrary arqCachesPath], theComputerUUID, thePackSetName, [thePackSHA1 substringToIndex:2], [thePackSHA1 substringFromIndex:2]];
++ (NSString *)localPathWithS3BucketName:theS3BucketName computerUUID:(NSString *)theComputerUUID packSetName:(NSString *)thePackSetName packSHA1:(NSString *)thePackSHA1 {
+    return [NSString stringWithFormat:@"%@/%@/%@/packsets/%@/%@/%@.index", [UserLibrary arqCachePath], theS3BucketName, theComputerUUID, thePackSetName, [thePackSHA1 substringToIndex:2], [thePackSHA1 substringFromIndex:2]];
 }
-- (id)initWithS3Service:(S3Service *)theS3 s3BucketName:(NSString *)theS3BucketName computerUUID:(NSString *)theComputerUUID packSetName:(NSString *)thePackSetName packSHA1:(NSString *)thePackSHA1 {
++ (NSArray *)diskPackIndexesForS3Service:(S3Service *)theS3
+                            s3BucketName:theS3BucketName 
+                            computerUUID:(NSString *)theComputerUUID 
+                             packSetName:(NSString *)thePackSetName 
+                               targetUID:(uid_t)theTargetUID 
+                               targetGID:(gid_t)theTargetGID
+                                   error:(NSError **)error {
+    NSMutableArray *diskPackIndexes = [NSMutableArray array];
+    NSString *packSetsPrefix = [NSString stringWithFormat:@"/%@/%@/packsets/%@/", theS3BucketName, theComputerUUID, thePackSetName];
+    NSArray *paths = [theS3 pathsWithPrefix:packSetsPrefix error:error];
+    if (paths == nil) {
+        return nil;
+    }
+    for (NSString *thePath in paths) {
+        NSRange sha1Range = [thePath rangeOfRegex:@"/(\\w+)\\.pack$" capture:1];
+        if (sha1Range.location != NSNotFound) {
+            NSString *thePackSHA1 = [thePath substringWithRange:sha1Range];
+            DiskPackIndex *index = [[DiskPackIndex alloc] initWithS3Service:theS3 
+                                                               s3BucketName:theS3BucketName
+                                                               computerUUID:theComputerUUID 
+                                                                packSetName:thePackSetName 
+                                                                   packSHA1:thePackSHA1 
+                                                                  targetUID:theTargetUID 
+                                                                  targetGID:theTargetGID];
+            [diskPackIndexes addObject:index];
+            [index release];
+        }            
+    }
+    return diskPackIndexes;
+}
+
+
+- (id)initWithS3Service:(S3Service *)theS3 
+           s3BucketName:(NSString *)theS3BucketName 
+           computerUUID:(NSString *)theComputerUUID 
+            packSetName:(NSString *)thePackSetName 
+               packSHA1:(NSString *)thePackSHA1
+              targetUID:(uid_t)theTargetUID 
+              targetGID:(gid_t)theTargetGID {
     if (self = [super init]) {
         s3 = [theS3 retain];
         s3BucketName = [theS3BucketName retain];
@@ -87,7 +103,9 @@ typedef struct pack_index {
         packSetName = [thePackSetName retain];
         packSHA1 = [thePackSHA1 retain];
         s3Path = [[DiskPackIndex s3PathWithS3BucketName:s3BucketName computerUUID:computerUUID packSetName:packSetName packSHA1:packSHA1] retain];
-        localPath = [[DiskPackIndex localPathWithComputerUUID:computerUUID packSetName:packSetName packSHA1:packSHA1] retain];
+        localPath = [[DiskPackIndex localPathWithS3BucketName:s3BucketName computerUUID:computerUUID packSetName:packSetName packSHA1:packSHA1] retain];
+        targetUID = theTargetUID;
+        targetGID = theTargetGID;
     }
     return self;
 }
@@ -103,37 +121,55 @@ typedef struct pack_index {
 }
 - (BOOL)makeLocal:(NSError **)error {
     NSFileManager *fm = [NSFileManager defaultManager];
-    BOOL ret = NO;
+    BOOL ret = YES;
     if (![fm fileExistsAtPath:localPath]) {
-        HSLogDebug(@"packset %@: making pack index %@ local", packSetName, packSHA1);
-        ServerBlob *sb = [s3 newServerBlobAtPath:s3Path error:error];
-        if (sb == nil) {
-            ret = NO;
-        } else {
-            unsigned long long bytesWritten;
-            ret = [self savePackIndex:sb bytesWritten:&bytesWritten error:error];
-            [sb release];
+        for (;;) {
+            HSLogDebug(@"packset %@: making pack index %@ local", packSetName, packSHA1);
+            NSError *myError = nil;
+            ServerBlob *sb = [s3 newServerBlobAtPath:s3Path error:&myError];
+            if (sb != nil) {
+                ret = [self savePackIndex:sb error:error];
+                [sb release];
+                break;
+            }
+            if (![myError isTransientError]) {
+                HSLogError(@"error getting S3 pack index %@: %@", s3Path, myError);
+                if (error != NULL) {
+                    *error = myError;
+                }
+                ret = NO;
+                break;
+            }
+            HSLogWarn(@"network error making pack index %@ local (retrying): %@", s3Path, myError);
+            NSError *rmError = nil;
+            if (![[NSFileManager defaultManager] removeItemAtPath:localPath error:&rmError]) {
+                HSLogError(@"error deleting incomplete downloaded pack index %@: %@", localPath, rmError);
+            }
         }
-    } else {
-        ret = YES;
     }
     return ret;
 }
 - (NSArray *)allPackIndexEntries:(NSError **)error {
     int fd = open([localPath fileSystemRepresentation], O_RDONLY);
     if (fd == -1) {
-        SETNSERROR(@"UnixErrorDomain", errno, @"%s: %@", strerror(errno), localPath);
+        int errnum = errno;
+        HSLogError(@"open(%@) error %d: %s", localPath, errnum, strerror(errnum));
+        SETNSERROR(@"UnixErrorDomain", errnum, @"failed to open %@: %s", localPath, strerror(errnum));
         return nil;
     }
     struct stat st;
     if (fstat(fd, &st) == -1) {
-        SETNSERROR(@"UnixErrorDomain", errno, @"fstat(%@): %s", localPath, strerror(errno));
+        int errnum = errno;
+        HSLogError(@"fstat(%@) error %d: %s", localPath, errnum, strerror(errnum));
+        SETNSERROR(@"UnixErrorDomain", errnum, @"%@: %s", localPath, strerror(errnum));
         close(fd);
         return nil;
     }
     pack_index *the_pack_index = mmap(0, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
     if (the_pack_index == MAP_FAILED) {
-        SETNSERROR(@"UnixErrorDomain", errno, @"mmap: %s", strerror(errno));
+        int errnum = errno;
+        HSLogError(@"mmap(%@) error %d: %s", localPath, errnum, strerror(errnum));
+        SETNSERROR(@"UnixErrorDomain", errnum, @"error mapping %@ to memory: %s", localPath, strerror(errnum));
         close(fd);
         return NO;
     }
@@ -150,7 +186,8 @@ typedef struct pack_index {
         [pool drain];
     }
     if (munmap(the_pack_index, st.st_size) == -1) {
-        HSLogError(@"munmap: %s", strerror(errno));
+        int errnum = errno;
+        HSLogError(@"munmap: %s", strerror(errnum));
     }
     close(fd);
     return ret;
@@ -172,18 +209,30 @@ typedef struct pack_index {
     }
     return ret;
 }
+- (NSString *)packSetName {
+    return packSetName;
+}
+- (NSString *)packSHA1 {
+    return packSHA1;
+}
+
+#pragma mark NSObject
+- (NSString *)description {
+    return [NSString stringWithFormat:@"<DiskPackIndex: computerUUID=%@ packset=%@ packSHA1=%@>", computerUUID, packSetName, packSHA1];
+}
 @end
 
 @implementation DiskPackIndex (internal)
-- (BOOL)savePackIndex:(ServerBlob *)sb bytesWritten:(unsigned long long *)written error:(NSError **)error {
-    if (![[NSFileManager defaultManager] ensureParentPathExistsForPath:localPath error:error]) {
+- (BOOL)savePackIndex:(ServerBlob *)sb error:(NSError **)error {
+    if (![[NSFileManager defaultManager] ensureParentPathExistsForPath:localPath targetUID:targetUID targetGID:targetGID error:error]) {
         return NO;
     }
     id <InputStream> is = [sb newInputStream];
     NSError *myError = nil;
-    BOOL ret = [Streams transferFrom:is atomicallyToFile:localPath bytesWritten:written error:&myError];
+    unsigned long long written = 0;
+    BOOL ret = [Streams transferFrom:is atomicallyToFile:localPath targetUID:targetUID targetGID:targetGID bytesWritten:&written error:&myError];
     if (ret) {
-        HSLogDebug(@"wrote %qu bytes to %@", *written, localPath);
+        HSLogDebug(@"wrote %qu bytes to %@", written, localPath);
     } else {
         if (error != NULL) {
             *error = myError;
@@ -199,7 +248,9 @@ typedef struct pack_index {
     HSLogTrace(@"looking for sha1 %@ in packindex %@", sha1, packSHA1);
     int fd = open([localPath fileSystemRepresentation], O_RDONLY);
     if (fd == -1) {
-        SETNSERROR(@"UnixErrorDomain", errno, @"%s: %@", strerror(errno), localPath);
+        int errnum = errno;
+        HSLogError(@"open(%@) error %d: %s", localPath, errnum, strerror(errnum));
+        SETNSERROR(@"UnixErrorDomain", errnum, @"failed to open %@: %s", localPath, strerror(errnum));
         return nil;
     }
     uint32_t startIndex;
@@ -215,7 +266,9 @@ typedef struct pack_index {
     }
     fd = open([localPath fileSystemRepresentation], O_RDONLY);
     if (fd == -1) {
-        SETNSERROR(@"UnixErrorDomain", errno, @"%s: %@", strerror(errno), localPath);
+        int errnum = errno;
+        HSLogError(@"open(%@) error %d: %s", localPath, errnum, strerror(errnum));
+        SETNSERROR(@"UnixErrorDomain", errnum, @"failed to open %@: %s", localPath, strerror(errnum));
         return nil;
     }
     PackIndexEntry *ret = [self findEntryForSHA1:sha1 fd:fd betweenStartIndex:startIndex andEndIndex:endIndex error:error];
@@ -231,7 +284,9 @@ typedef struct pack_index {
     uint32_t lengthToMap = 4 + 4 + 256*4 + endIndex * sizeof(index_object);
     pack_index *the_pack_index = mmap(0, lengthToMap, PROT_READ, MAP_SHARED, fd, 0);
     if (the_pack_index == MAP_FAILED) {
-        SETNSERROR(@"UnixErrorDomain", errno, @"mmap: %s", strerror(errno));
+        int errnum = errno;
+        HSLogError(@"mmap(%@) error %d: %s", localPath, errnum, strerror(errnum));
+        SETNSERROR(@"UnixErrorDomain", errnum, @"error mapping %@ to memory: %s", localPath, strerror(errnum));
         return NO;
     }
     int64_t left = startIndex;
@@ -263,7 +318,8 @@ typedef struct pack_index {
         }
     }
     if (munmap(the_pack_index, lengthToMap) == -1) {
-        HSLogError(@"munmap: %s", strerror(errno));
+        int errnum = errno;
+        HSLogError(@"munmap: %s", strerror(errnum));
     }
     if (pie == nil) {
         SETNSERROR(@"PackErrorDomain", ERROR_NOT_FOUND, @"sha1 %@ not found in pack %@", sha1, packSHA1);
@@ -274,7 +330,9 @@ typedef struct pack_index {
     size_t len = 4 + 4 + 4*256;
     uint32_t *map = mmap(0, len, PROT_READ, MAP_SHARED, fd, 0);
     if (map == MAP_FAILED) {
-        SETNSERROR(@"UnixErrorDomain", errno, @"mmap: %s", strerror(errno));
+        int errnum = errno;
+        HSLogError(@"mmap(%@) error %d: %s", localPath, errnum, strerror(errnum));
+        SETNSERROR(@"UnixErrorDomain", errnum, @"error mapping %@ to memory: %s", localPath, strerror(errnum));
         return NO;
     }
     BOOL ret = YES;
@@ -292,7 +350,8 @@ typedef struct pack_index {
         *end = OSSwapBigToHostInt32(fanoutTable[firstByte]);
     }
     if (munmap(map, len) == -1) {
-        HSLogError(@"munmap: %s", strerror(errno));
+        int errnum = errno;
+        HSLogError(@"munmap: %s", strerror(errnum));
     }
     return ret;
 }

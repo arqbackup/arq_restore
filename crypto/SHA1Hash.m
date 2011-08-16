@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -39,11 +39,12 @@
 #import "Blob.h"
 #import "BufferedInputStream.h"
 
-#define MY_BUF_SIZE (8192)
+#define MY_BUF_SIZE (4096)
 
 @interface SHA1Hash (internal)
 + (NSString *)hashStream:(id <InputStream>)is error:(NSError **)error;
 + (NSString *)hashStream:(id <InputStream>)is streamLength:(unsigned long long *)streamLength error:(NSError **)error;
++ (BOOL)updateSHA1:(SHA_CTX *)ctx fromStream:(id <InputStream>)is length:(unsigned long long)theLength error:(NSError **)error;
 @end
 
 static NSString *digest2String(unsigned char *digest) {
@@ -80,7 +81,9 @@ static NSString *digest2String(unsigned char *digest) {
 + (NSString *)hashFile:(NSString *)path error:(NSError **)error {
     struct stat st;
     if (lstat([path fileSystemRepresentation], &st) == -1) {
-        SETNSERROR(@"UnixErrorDomain", errno, @"lstat(%@): %s", path, strerror(errno));
+        int errnum = errno;
+        HSLogError(@"lstat(%@) error %d: %s", path, errnum, strerror(errnum));
+        SETNSERROR(@"UnixErrorDomain", errnum, @"%@: %s", path, strerror(errnum));
         return NO;
     }
     unsigned long long length = (unsigned long long)st.st_size;
@@ -103,7 +106,7 @@ static NSString *digest2String(unsigned char *digest) {
             break;
         }
         if (ret == 0) {
-            SETNSERROR([SHA1Hash errorDomain], -1, @"unexpected EOF after %qu of %qu bytes", received, length);
+            SETNSERROR([SHA1Hash errorDomain], ERROR_EOF, @"unexpected EOF in %@ after %qu of %qu bytes", is, received, length);
             break;
         }
         SHA1_Update(&ctx, buf, ret);
@@ -145,5 +148,27 @@ static NSString *digest2String(unsigned char *digest) {
 	unsigned char md[SHA_DIGEST_LENGTH];
 	SHA1_Final(md, &ctx);
     return digest2String(md);
+}
++ (BOOL)updateSHA1:(SHA_CTX *)ctx fromStream:(id <InputStream>)is length:(unsigned long long)theLength error:(NSError **)error {
+    unsigned char *imageBuf = (unsigned char *)malloc(MY_BUF_SIZE);
+    uint64_t recvd = 0;
+    NSInteger ret = 0;
+    while (recvd < theLength) {
+        uint64_t needed = theLength - recvd;
+        uint64_t toRead = needed > MY_BUF_SIZE ? MY_BUF_SIZE : needed;
+        ret = [is read:imageBuf bufferLength:toRead error:error];
+        if (ret < 0) {
+            break;
+        }
+        if (ret == 0) {
+            SETNSERROR([SHA1Hash errorDomain], -1, @"unexpected EOF reading image data from %@", is);
+            break;
+        }
+        SHA1_Update(
+                    ctx, imageBuf, ret);
+        recvd += (uint64_t)ret;
+    }
+    free(imageBuf);
+    return ret > 0;
 }
 @end

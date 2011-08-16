@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -32,9 +32,38 @@
 
 #import "NSError_extra.h"
 
-
 @implementation NSError (extra)
++ (NSError *)errorWithDomain:(NSString *)domain code:(NSInteger)code description:(NSString *)theDescription {
+    return [NSError errorWithDomain:domain code:code userInfo:[NSDictionary dictionaryWithObject:theDescription forKey:NSLocalizedDescriptionKey]];
+}
+- (id)initWithDomain:(NSString *)domain code:(NSInteger)code description:(NSString *)theDescription {
+    return [self initWithDomain:domain code:code userInfo:[NSDictionary dictionaryWithObject:theDescription forKey:NSLocalizedDescriptionKey]];
+}
 - (BOOL)isErrorWithDomain:(NSString *)theDomain code:(int)theCode {
     return [self code] == theCode && [[self domain] isEqualToString:theDomain];
+}
+- (BOOL)isTransientError {
+    if ([[self domain] isEqualToString:@"UnixErrorDomain"] && [self code] == ETIMEDOUT) {
+        return YES;
+    }
+    if ([[self domain] isEqualToString:@"NSPOSIXErrorDomain"] && [self code] == ETIMEDOUT) {
+        return YES;
+    }
+    if ([[self domain] isEqualToString:@"NSPOSIXErrorDomain"] && [self code] == ENOTCONN) {
+        return YES;
+    }
+    if ([[self domain] isEqualToString:NSURLErrorDomain]) {
+        if ([self code] == NSURLErrorTimedOut
+            || [self code] == NSURLErrorCannotFindHost
+            || [self code] == NSURLErrorCannotConnectToHost
+            || [self code] == NSURLErrorNetworkConnectionLost
+            || [self code] == NSURLErrorDNSLookupFailed
+            || [self code] == NSURLErrorResourceUnavailable
+            || [self code] == NSURLErrorNotConnectedToInternet) {
+            return YES;
+        }
+    }
+    HSLogDebug(@"%@ not a transient error", self);
+    return NO;
 }
 @end

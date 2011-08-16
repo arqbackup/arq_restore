@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -66,7 +66,8 @@ static SSL_CTX *ctx;
         if ([msg length] > 0) {
             [msg appendString:@"; "];
         }
-        [msg appendFormat:@"%s", ERR_error_string(err, NULL)];
+        HSLogTrace(@"%s", ERR_error_string(err, NULL));
+        [msg appendFormat:@"%s", ERR_reason_error_string(err)];
     }
     if ([msg length] == 0) {
         [msg appendString:@"(no error)"];

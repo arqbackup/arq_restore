@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -31,21 +31,11 @@
  */ 
 
 #import <Cocoa/Cocoa.h>
-@protocol InputStream;
-@class FDInputStream;
-@class BufferedInputStream;
 
-@interface HTTPResponse : NSObject {
-    int code;
-    NSString *protocol;
-    NSMutableDictionary *headers;
-    NSString *requestMethod;
+
+@interface UserLibrary : NSObject {
+    NSString *path;
 }
-- (id)init;
-- (BOOL)readHead:(BufferedInputStream *)is requestMethod:(NSString *)requestMethod error:(NSError **)error;
-- (int)code;
-- (NSString *)protocol;
-- (NSString *)headerForKey:(NSString *)key;
-- (unsigned long long)contentLength;
-- (id <InputStream>)newResponseInputStream:(BufferedInputStream *)underlyingStream error:(NSError **)error;
+- (id)initWithPath:(NSString *)thePath;
+- (NSString *)path;
 @end

@@ -32,18 +32,25 @@
 
 #import <Cocoa/Cocoa.h>
 @class S3Service;
-@class S3Fark;
-@class S3Repo;
+@class ArqRepo;
 
 @interface BucketVerifier : NSObject {
 	S3Service *s3;
 	NSString *s3BucketName;
 	NSString *computerUUID;
 	NSString *bucketUUID;
-	NSArray *objectSHA1s;
-	S3Fark *fark;
-	S3Repo *repo;
+	NSSet *objectSHA1s;
+    BOOL verbose;
+    ArqRepo *repo;
+    uint64_t packedBlobCount;
+    uint64_t nonPackedBlobCount;
 }
-- (id)initWithS3Service:(S3Service *)theS3 s3BucketName:(NSString *)theS3BucketName computerUUID:(NSString *)theComputerUUID bucketUUID:(NSString *)theBucketUUID s3ObjectSHA1s:(NSArray *)theObjectSHA1s encryptionKey:(NSString *)encryptionKey;
+- (id)initWithS3Service:(S3Service *)theS3
+           s3BucketName:(NSString *)theS3BucketName
+           computerUUID:(NSString *)theComputerUUID 
+             bucketUUID:(NSString *)theBucketUUID
+          s3ObjectSHA1s:(NSSet *)theObjectSHA1s 
+                verbose:(BOOL)isVerbose
+                   repo:(ArqRepo *)theRepo;
 - (BOOL)verify:(NSError **)error;
 @end

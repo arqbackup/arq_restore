@@ -13,7 +13,7 @@
 + (NSString *)s3PathForS3BucketName:(NSString *)s3BucketName computerUUID:(NSString *)computerUUID sha1:(NSString *)sha1 {
     return [NSString stringWithFormat:@"/%@/%@/objects/%@", s3BucketName, computerUUID, sha1];
 }
-+ (NSString *)s3PathForBucketDataPath:(NSString *)bucketDataPath s3BucketName:(NSString *)s3BucketName computerUUID:(NSString *)computerUUID {
-    return [[NSString stringWithFormat:@"/%@/%@/bucketdata", s3BucketName, computerUUID] stringByAppendingPathComponent:bucketDataPath];
++ (NSString *)s3PathForBucketDataRelativePath:(NSString *)bucketDataRelativePath s3BucketName:(NSString *)s3BucketName computerUUID:(NSString *)computerUUID {
+    return [[NSString stringWithFormat:@"/%@/%@/bucketdata", s3BucketName, computerUUID] stringByAppendingPathComponent:bucketDataRelativePath];
 }
 @end

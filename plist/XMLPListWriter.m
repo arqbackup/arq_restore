@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -106,11 +106,16 @@
 	NSXMLElement *dictElem = [[NSXMLElement alloc] initWithName:@"dict"];
 	NSArray *orderedKeys = [node orderedKeySet];
 	for (NSString *key in orderedKeys) {
-		NSXMLElement *keyElem = [[NSXMLElement alloc] initWithName:@"key"];
-		[keyElem setStringValue:key];
-		[dictElem addChild:keyElem];
-		[keyElem release];
-		[self writePListNode:[node nodeForKey:key] toElement:dictElem];
+        id <PListNode> childNode = [node nodeForKey:key];
+        if ([childNode type] == PLN_STRING && [(StringNode*)childNode stringValue ] == nil) {
+            HSLogTrace(@"skipping nil string dict entry '%@'", key);
+        } else {
+            NSXMLElement *keyElem = [[NSXMLElement alloc] initWithName:@"key"];
+            [keyElem setStringValue:key];
+            [dictElem addChild:keyElem];
+            [keyElem release];
+            [self writePListNode:[node nodeForKey:key] toElement:dictElem];
+        }
 	}
 	[elem addChild:dictElem];
 	[dictElem release];
@@ -128,6 +133,10 @@
 	[realElem release];
 }
 - (void)writeString:(StringNode *)node toElement:(NSXMLElement *)elem {
+    if ([node stringValue] == nil) {
+        HSLogWarn(@"not writing nil string value to XML plist");
+        return;
+    }
 	NSXMLElement *stringElem = [[NSXMLElement alloc] initWithName:@"string"];
 	NSString *value = (NSString *)CFXMLCreateStringByEscapingEntities(kCFAllocatorDefault, (CFStringRef)[node stringValue], NULL);
 	[stringElem setStringValue:value];

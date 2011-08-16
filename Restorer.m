@@ -33,7 +33,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #import "Restorer.h"
-#import "ArqFark.h"
 #import "ArqRepo.h"
 #import "SetNSError.h"
 #import "Tree.h"
@@ -45,214 +44,350 @@
 #import "XAttrSet.h"
 #import "FileOutputStream.h"
 #import "NSFileManager_extra.h"
-#import "CFStreamPair.h"
 #import "NSErrorCodes.h"
 #import "BufferedInputStream.h"
-#import "StreamPairFactory.h"
+#import "BufferedOutputStream.h"
+#import "NSData-Gzip.h"
+#import "GunzipInputStream.h"
+#import "FileACL.h"
 
 #define MAX_RETRIES (10)
 #define MY_BUF_SIZE (8192)
 
 @interface Restorer (internal)
-- (BOOL)addRestoreNodesForTreeSHA1:(NSString *)treeSHA1 relativePath:(NSString *)relativePath error:(NSError **)error;
-- (BOOL)restoreRestoreNode:(RestoreNode *)rn error:(NSError **)error;
-- (BOOL)createFile:(Node *)node atPath:(NSString *)path error:(NSError **)error;
-- (BOOL)createFileAtPath:(NSString *)path fromSHA1s:(NSArray *)dataSHA1s error:(NSError **)error;
-- (BOOL)appendBlobForSHA1:(NSString *)sha1 toFile:(FileOutputStream *)fos error:(NSError **)error;
-- (BOOL)doAppendBlobForSHA1:(NSString *)sha1 toFile:(FileOutputStream *)fos error:(NSError **)error;
++ (NSString *)errorDomain;
+
+- (BOOL)restoreTree:(Tree *)theTree toPath:(NSString *)thePath error:(NSError **)error;
+- (BOOL)restoreNode:(Node *)theNode ofTree:(Tree *)theTree toPath:(NSString *)thePath error:(NSError **)error;
+- (BOOL)needSuperUserForTree:(Tree *)theTree;
+- (BOOL)needSuperUserForTree:(Tree *)theTree node:(Node *)theNode;
+- (BOOL)performSuperUserOps:(NSError **)error;
+- (BOOL)chownNode:(Node *)theNode ofTree:(Tree *)theTree atPath:(NSString *)thePath error:(NSError **)error;
+- (BOOL)chownTree:(Tree *)theTree atPath:(NSString *)thePath error:(NSError **)error;
+- (BOOL)applyUID:(int)theUID gid:(int)theGID mode:(int)theMode rdev:(int)theRdev toPath:(NSString *)thePath error:(NSError **)error;
 - (BOOL)applyTree:(Tree *)tree toPath:(NSString *)restorePath error:(NSError **)error;
 - (BOOL)applyNode:(Node *)node toPath:(NSString *)restorePath error:(NSError **)error;
-- (BOOL)applyACLSHA1:(NSString *)aclSHA1 toFileAttributes:(FileAttributes *)fa error:(NSError **)error;
-- (BOOL)applyXAttrsSHA1:(NSString *)xattrsSHA1 toFile:(NSString *)path error:(NSError **)error;
+- (BOOL)createFile:(Node *)node atPath:(NSString *)path error:(NSError **)error;
+- (BOOL)createFileAtPath:(NSString *)path fromBlobKeys:(NSArray *)dataBlobKeys uncompress:(BOOL)uncompress error:(NSError **)error;
+- (BOOL)appendBlobForBlobKey:(BlobKey *)theBlobKey uncompress:(BOOL)uncompress to:(FileOutputStream *)fos error:(NSError **)error;
+- (BOOL)doAppendBlobForBlobKey:(BlobKey *)theBlobKey uncompress:(BOOL)uncompress to:(BufferedOutputStream *)bos error:(NSError **)error;
 - (BOOL)createSymLink:(Node *)node path:(NSString *)symLinkFile target:(NSString *)target error:(NSError **)error;
+- (BOOL)applyACLBlobKey:(BlobKey *)aclBlobKey uncompress:(BOOL)uncompress toPath:(NSString *)path error:(NSError **)error;
+- (BOOL)applyXAttrsBlobKey:(BlobKey *)xattrsBlobKey uncompress:(BOOL)uncompress toFile:(NSString *)path error:(NSError **)error;
 @end
 
 @implementation Restorer
-- (id)initWithS3Service:(S3Service *)theS3 s3BucketName:(NSString *)theS3BucketName computerUUID:(NSString *)theComputerUUID bucketUUID:(NSString *)theBucketUUID bucketName:(NSString *)theBucketName encryptionKey:(NSString *)theEncryptionKey {
+- (id)initWithRepo:(ArqRepo *)theArqRepo bucketName:(NSString *)theBucketName {
     if (self = [super init]) {
-        fark = [[ArqFark alloc] initWithS3Service:theS3 s3BucketName:theS3BucketName computerUUID:theComputerUUID];
-        repo = [[ArqRepo alloc] initWithS3Service:theS3 s3BucketName:theS3BucketName computerUUID:theComputerUUID bucketUUID:theBucketUUID encryptionKey:theEncryptionKey];
+        repo = [theArqRepo retain];
         bucketName = [theBucketName copy];
         rootPath = [[[[NSFileManager defaultManager] currentDirectoryPath] stringByAppendingPathComponent:theBucketName] copy];
         restoreNodes = [[NSMutableArray alloc] init];
         hardlinks = [[NSMutableDictionary alloc] init];
+        errorsByPath = [[NSMutableDictionary alloc] init];
+        myUID = geteuid();
+        myGID = getgid();
     }
     return self;
 }
 - (void)dealloc {
-    [fark release];
     [repo release];
     [bucketName release];
     [rootPath release];
     [restoreNodes release];
     [hardlinks release];
+    [errorsByPath release];
+    [headBlobKey release];
+    [head release];
+    [headTree release];
     [super dealloc];
 }
 - (BOOL)restore:(NSError **)error {
     if ([[NSFileManager defaultManager] fileExistsAtPath:rootPath]) {
-        SETNSERROR(@"RestorerErrorDomain", -1, @"%@ already exists", rootPath);
+        SETNSERROR([Restorer errorDomain], -1, @"%@ already exists", rootPath);
         return NO;
     }
     if (![[NSFileManager defaultManager] createDirectoryAtPath:rootPath withIntermediateDirectories:YES attributes:nil error:error]) {
         HSLogError(@"failed to create directory %@", rootPath);
         return NO;
     }
-    NSString *headSHA1 = [repo headSHA1:error];
-    if (headSHA1 == nil) {
+    headBlobKey = [[repo headBlobKey:error] retain];
+    if (headBlobKey == nil) {
+        SETNSERROR([Restorer errorDomain], -1, @"no backup found");
         return NO;
     }
-    if (headSHA1 == nil) {
-        SETNSERROR(@"RestorerErrorDomain", -1, @"no backup found");
-        return NO;
-    }
-    Commit *head = [repo commitForSHA1:headSHA1 error:error];
+    head = [[repo commitForBlobKey:headBlobKey error:error] retain];
     if (head == nil) {
         return NO;
     }
-    if (![self addRestoreNodesForTreeSHA1:[head treeSHA1] relativePath:@"" error:error]) {
+    headTree = [[repo treeForBlobKey:[head treeBlobKey] error:error] retain];
+    if (headTree == nil) {
         return NO;
     }
-    for (RestoreNode *rn in restoreNodes) {
-        NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-        NSError *myError = nil;
-        BOOL ret = [self restoreRestoreNode:rn error:&myError];
-        [myError retain];
-        [pool drain];
-        [myError autorelease];
-        if (!ret) {
-            if (error != NULL) {
-                *error = myError;
-            }
-            return NO;
-        }
+    if (![self restoreTree:headTree toPath:rootPath error:error]) {
+        return NO;
     }
     return YES;
 }
 @end
 
 @implementation Restorer (internal)
-- (BOOL)addRestoreNodesForTreeSHA1:(NSString *)treeSHA1 relativePath:(NSString *)relativePath error:(NSError **)error {
-    Tree *tree = [repo treeForSHA1:treeSHA1 error:error];
-    if (tree == nil) {
-        return NO;
++ (NSString *)errorDomain {
+    return @"RestorerErrorDomain";
+}
+
+- (BOOL)restoreTree:(Tree *)theTree toPath:(NSString *)thePath error:(NSError **)error {
+    NSNumber *inode = [NSNumber numberWithInt:[theTree st_ino]];
+    NSString *existing = nil;
+    if ([theTree st_nlink] > 1) {
+        existing = [hardlinks objectForKey:inode];
     }
-    RestoreNode *treeRN = [[RestoreNode alloc] initWithTree:tree nodeName:nil relativePath:relativePath];
-    [restoreNodes addObject:treeRN];
-    [treeRN release];
-    for (NSString *childNodeName in [tree childNodeNames]) {
-        Node *childNode = [tree childNodeWithName:childNodeName];
-        NSString *childRelativePath = [NSString stringWithFormat:@"%@/%@", relativePath, childNodeName];
-        if ([childNode isTree]) {
-            if (![self addRestoreNodesForTreeSHA1:[childNode treeSHA1] relativePath:childRelativePath error:error]) {
-                return NO;
+    if (existing != nil) {
+        // Link.
+        if (link([existing fileSystemRepresentation], [thePath fileSystemRepresentation]) == -1) {
+            int errnum = errno;
+            SETNSERROR([Restorer errorDomain], -1, @"link(%@,%@): %s", existing, thePath, strerror(errnum));
+            HSLogError(@"link() failed");
+            return NO;
+        }
+    } else {
+        if (![[NSFileManager defaultManager] fileExistsAtPath:thePath] 
+            && ![[NSFileManager defaultManager] createDirectoryAtPath:thePath withIntermediateDirectories:YES attributes:nil error:error]) {
+            return NO;
+        }
+        NSAutoreleasePool *pool = nil;
+        BOOL ret = YES;
+        for (NSString *childNodeName in [theTree childNodeNames]) {
+            [pool drain];
+            pool = [[NSAutoreleasePool alloc] init];
+            Node *childNode = [theTree childNodeWithName:childNodeName];
+            NSString *childPath = [thePath stringByAppendingPathComponent:childNodeName];
+            if ([childNode isTree]) {
+                Tree *childTree = [repo treeForBlobKey:[childNode treeBlobKey] error:error];
+                if (childTree == nil) {
+                    ret = NO;
+                    break;
+                }
+                NSError *restoreError = nil;
+                if (![self restoreTree:childTree toPath:childPath error:&restoreError]) {
+                    HSLogDebug(@"error restoring %@: %@", childPath, restoreError);
+                    if ([restoreError isErrorWithDomain:[Restorer errorDomain] code:ERROR_ABORT_REQUESTED]) {
+                        ret = NO;
+                        if (error != NULL) {
+                            *error = restoreError;
+                        }
+                        break;
+                    }
+                    [self performSelectorOnMainThread:@selector(addError:) withObject:[NSArray arrayWithObjects:restoreError, childPath, nil] waitUntilDone:YES];
+                }
+            } else {
+                NSError *restoreError = nil;
+                if (![self restoreNode:childNode ofTree:theTree toPath:childPath error:&restoreError]) {
+                    if ([restoreError isErrorWithDomain:[Restorer errorDomain] code:ERROR_ABORT_REQUESTED]) {
+                        ret = NO;
+                        if (error != NULL) {
+                            *error = restoreError;
+                        }
+                        break;
+                    }
+                    HSLogDebug(@"error restoring %@: %@", childPath, restoreError);
+                    [self performSelectorOnMainThread:@selector(addError:) withObject:[NSArray arrayWithObjects:restoreError, childPath, nil] waitUntilDone:YES];
+                }
             }
-        } else {
-            RestoreNode *childRN = [[RestoreNode alloc] initWithTree:tree nodeName:childNodeName relativePath:childRelativePath];
-            [restoreNodes addObject:childRN];
-            [childRN release];
+        }
+        if (error != NULL) { [*error retain]; }
+        [pool drain];
+        if (error != NULL) { [*error autorelease]; }
+        if (!ret) {
+            return NO;
+        }
+        
+        if (![self applyTree:theTree toPath:thePath error:error]) {
+            return NO;
+        }
+        [hardlinks setObject:thePath forKey:inode];
+        if ([self needSuperUserForTree:theTree]) {
+            superUserNodeCount++;
         }
     }
     return YES;
 }
-- (BOOL)restoreRestoreNode:(RestoreNode *)rn error:(NSError **)error {
-    printf("restoring %s%s\n", [bucketName UTF8String], [[rn relativePath] UTF8String]);
-    NSString *restorePath = [rootPath stringByAppendingPathComponent:[rn relativePath]];
-    NSString *parentPath = [restorePath stringByDeletingLastPathComponent];
-    if (![[NSFileManager defaultManager] fileExistsAtPath:parentPath] 
-        && ![[NSFileManager defaultManager] createDirectoryAtPath:parentPath withIntermediateDirectories:YES attributes:nil error:error]) {
-        HSLogError(@"failed to create directory %@", parentPath);
-        return NO;
+- (BOOL)restoreNode:(Node *)theNode ofTree:(Tree *)theTree toPath:(NSString *)thePath error:(NSError **)error {
+    NSAssert(theNode != nil, @"theNode can't be nil");
+    NSAssert(theTree != nil, @"theTree can't be nil");
+    
+    NSNumber *inode = [NSNumber numberWithInt:[theNode st_ino]];
+    NSString *existing = nil;
+    if ([theNode st_nlink] > 1) {
+        existing = [hardlinks objectForKey:inode];
     }
-    BOOL createdFile = NO;
-    int nlink = [rn node] == nil ? [[rn tree] st_nlink] : [[rn node] st_nlink];
-    if (nlink > 1) {
-        int ino = [rn node] == nil ? [[rn tree] st_ino] : [[rn node] st_ino];
-        NSNumber *inode = [NSNumber numberWithInt:ino];
-        RestoreNode *existing = [hardlinks objectForKey:inode];
-        if (existing != nil) {
-            // Link.
-            NSString *existingPath = [rootPath stringByAppendingPathComponent:[existing relativePath]];
-            if (([existing node] == nil) != ([rn node] == nil)) {
-                SETNSERROR(@"RestoreErrorDomain", -1, @"cannot link a directory to a file");
-                HSLogError(@"can't link directory to a file");
-                return NO;
-            }
-            if (link([existingPath fileSystemRepresentation], [restorePath fileSystemRepresentation]) == -1) {
-                SETNSERROR(@"RestoreErrorDomain", -1, @"link(%@,%@): %s", existingPath, restorePath, strerror(errno));
-                HSLogError(@"link() failed");
-                return NO;
-            }
-            createdFile = YES;
-        } else {
-            [hardlinks setObject:rn forKey:inode];
-        }
-    }
-    if (!createdFile) {
-        Node *node = [rn node];
-        if (node == nil) {
-            Tree *tree = [rn tree];
-            if (![[NSFileManager defaultManager] fileExistsAtPath:restorePath] && ![[NSFileManager defaultManager] createDirectoryAtPath:restorePath withIntermediateDirectories:NO attributes:nil error:error]) {
-                HSLogError(@"error creating %@", restorePath);
-                return NO;
-            }
-            if (![self applyTree:tree toPath:restorePath error:error]) {
-                HSLogError(@"applyTree error");
-                return NO;
-            }
-        } else {
-            int mode = [node mode];
-            BOOL isFifo = (mode & S_IFIFO) == S_IFIFO;
-            if (isFifo) {
-                if (mkfifo([restorePath fileSystemRepresentation], mode) == -1) {
-                    SETNSERROR(@"RestoreErrorDomain", errno, @"mkfifo(%@): %s", restorePath, strerror(errno));
-                    return NO;
-                }
-                if (![self applyNode:node toPath:restorePath error:error]) {
-                    HSLogError(@"applyNode error");
-                    return NO;
-                }
-            } else if ((mode & S_IFSOCK) == S_IFSOCK) {
-                // Skip socket -- restoring it doesn't make any sense.
-            } else if ((mode & S_IFREG) == 0 && ((mode & S_IFCHR) == S_IFCHR || (mode & S_IFBLK) == S_IFBLK)) {
-                if (![[NSFileManager defaultManager] ensureParentPathExistsForPath:restorePath error:error]) {
-                    return NO;
-                }
-                if (mknod([restorePath fileSystemRepresentation], mode, [node st_rdev]) == -1) {
-                    SETNSERROR(@"RestorerErrorDomain", -1, @"mknod(%@): %s", restorePath, strerror(errno));
-                    return NO;
-                }
-            } else {
-                if (![self createFile:node atPath:restorePath error:error]) {
-                    HSLogError(@"createFile error");
-                    return NO;
-                }
-                if (![self applyNode:node toPath:restorePath error:error]) {
-                    HSLogError(@"applyNode error");
-                    return NO;
-                }
-            }
-        }
-        FileAttributes *fa = [[[FileAttributes alloc] initWithPath:restorePath error:error] autorelease];
-        if (fa == nil) {
+    if (existing != nil) {
+        // Link.
+        if (link([existing fileSystemRepresentation], [thePath fileSystemRepresentation]) == -1) {
+            int errnum = errno;
+            SETNSERROR([Restorer errorDomain], -1, @"link(%@,%@): %s", existing, thePath, strerror(errnum));
+            HSLogError(@"link() failed");
             return NO;
         }
-        int flags = [fa flags];
-        if (flags) {
-            // Clear the flags temporarily so we can change ownership of the file.
-            if (![fa applyFlags:0 error:error]) {
+    } else {
+        int mode = [theNode mode];
+        if (S_ISFIFO(mode)) {
+            if (mkfifo([thePath fileSystemRepresentation], mode) == -1) {
+                int errnum = errno;
+                SETNSERROR([Restorer errorDomain], errnum, @"mkfifo(%@): %s", thePath, strerror(errnum));
+                return NO;
+            }
+            if (![self applyNode:theNode toPath:thePath error:error]) {
+                HSLogError(@"applyNode error");
+                return NO;
+            }
+        } else if (S_ISSOCK(mode)) {
+            // Skip socket -- restoring it doesn't make any sense.
+        } else if (S_ISCHR(mode)) {
+            // character device: needs to be done as super-user.
+        } else if (S_ISBLK(mode)) {
+            // block device: needs to be done as super-user.
+        } else {
+            if (![self createFile:theNode atPath:thePath error:error]) {
+                HSLogError(@"createFile error");
+                return NO;
+            }
+            if (![self applyNode:theNode toPath:thePath error:error]) {
+                HSLogError(@"applyNode error");
                 return NO;
             }
         }
-        int uid = [rn node] == nil ? [[rn tree] uid] : [[rn node] uid];
-        int gid = [rn node] == nil ? [[rn tree] gid] : [[rn node] gid];
-        NSError *chownError;
-        if (![fa applyUID:uid gid:gid error:&chownError]) {
-            fprintf(stderr, "error applying UID and GID to %s: %s\n", [restorePath fileSystemRepresentation], [[chownError localizedDescription] UTF8String]);
+        [hardlinks setObject:thePath forKey:inode];
+        if ([self needSuperUserForTree:theTree node:theNode]) {
+            superUserNodeCount++;
         }
-        if (flags) {
-            if (![fa applyFlags:flags error:error]) {
-                return NO;
+    }    
+    return YES;
+}
+- (BOOL)needSuperUserForTree:(Tree *)theTree {
+    NSAssert(theTree != nil, @"theTree can't be nil");
+    
+    int uid = [theTree uid];
+    int gid = [theTree gid];
+    int mode = [theTree mode];
+    if ((uid != myUID) || (gid != myGID)) {
+        return YES;
+    }
+    if (mode & (S_ISUID|S_ISGID|S_ISVTX)) {
+        return YES;
+    }
+    return NO;
+}
+- (BOOL)needSuperUserForTree:(Tree *)theTree node:(Node *)theNode {
+    NSAssert(theNode != nil, @"theNode can't be nil");
+    NSAssert(theTree != nil, @"theTree can't be nil");
+    
+    int uid = [theNode uid];
+    int gid = [theNode gid];
+    int mode = [theNode mode];
+    if ([theTree treeVersion] >= 7 && (S_ISCHR(mode) || S_ISBLK(mode))) {
+        return YES;
+    }
+    if ((uid != myUID) || (gid != myGID)) {
+        return YES;
+    }
+    if (mode & (S_ISUID|S_ISGID|S_ISVTX)) {
+        return YES;
+    }
+    return NO;
+}
+- (BOOL)performSuperUserOps:(NSError **)error {
+    return [self chownTree:headTree atPath:rootPath error:error];
+}
+- (BOOL)chownNode:(Node *)theNode ofTree:(Tree *)theTree atPath:(NSString *)thePath error:(NSError **)error {
+    if ([[errorsByPath allKeys] containsObject:thePath]) {
+        HSLogDebug(@"error restoring %@; skipping chownNode", thePath);
+        return YES;
+    }
+    if ([self needSuperUserForTree:theTree node:theNode]) {
+        if (![self applyUID:[theNode uid] gid:[theNode gid] mode:[theNode mode] rdev:[theNode st_rdev] toPath:thePath error:error]) {
+            return NO;
+        }
+    }
+    return YES;
+}
+- (BOOL)chownTree:(Tree *)theTree atPath:(NSString *)thePath error:(NSError **)error {
+    if ([[errorsByPath allKeys] containsObject:thePath]) {
+        HSLogDebug(@"error restoring %@; skipping chownTree", thePath);
+        return YES;
+    }
+    
+    NSAutoreleasePool *pool = nil;
+    BOOL ret = YES;
+    for (NSString *childNodeName in [theTree childNodeNames]) {
+        [pool drain];
+        pool = [[NSAutoreleasePool alloc] init];
+        Node *childNode = [theTree childNodeWithName:childNodeName];
+        NSString *childPath = [thePath stringByAppendingPathComponent:childNodeName];
+        if ([childNode isTree]) {
+            Tree *childTree = [repo treeForBlobKey:[childNode treeBlobKey] error:error];
+            if (childTree == nil) {
+                ret = NO;
+                break;
             }
+            if (![self chownTree:childTree atPath:childPath error:error]) {
+                ret = NO;
+                break;
+            }
+        } else {
+            if (![self chownNode:childNode ofTree:theTree atPath:childPath error:error]) {
+                ret = NO;
+                break;
+            }
+        }
+    }
+    if (error != NULL) { [*error retain]; }
+    [pool drain];
+    if (error != NULL) { [*error autorelease]; }
+    if (!ret) {
+        return NO;
+    }
+    
+    if ([self needSuperUserForTree:theTree]) {
+        if (![self applyUID:[theTree uid] gid:[theTree gid] mode:[theTree mode] rdev:[theTree st_rdev] toPath:thePath error:error]) {
+            return NO;
+        }
+    }
+    return YES;
+}
+- (BOOL)applyUID:(int)theUID gid:(int)theGID mode:(int)theMode rdev:(int)theRdev toPath:(NSString *)thePath error:(NSError **)error {
+    if (S_ISCHR(theMode) || S_ISBLK(theMode)) {
+        if (![[NSFileManager defaultManager] ensureParentPathExistsForPath:thePath error:error]) {
+            return NO;
+        }
+        HSLogDebug(@"mknod(%@, %d, %d)", thePath, theMode, theRdev);
+        if (mknod([thePath fileSystemRepresentation], theMode, theRdev) == -1) {
+            int errnum = errno;
+            HSLogError(@"mknod(%@) error %d: %s", thePath, errnum, strerror(errnum));
+            SETNSERROR([Restorer errorDomain], -1, @"failed to make device node %@: %s", thePath, strerror(errnum));
+            return NO;
+        }
+    }
+    FileAttributes *fa = [[[FileAttributes alloc] initWithPath:thePath error:error] autorelease];
+    if (fa == nil) {
+        return NO;
+    }
+    int flags = [fa flags];
+    if (flags) {
+        // Clear the flags temporarily so we can change ownership of the file.
+        if (![fa applyFlags:0 error:error]) {
+            return NO;
+        }
+    }
+    if (![fa applyMode:theMode error:error]) {
+        return NO;
+    }
+    if (![fa applyUID:theUID gid:theGID error:error]) {
+        return NO;
+    }
+    if (flags) {
+        if (![fa applyFlags:flags error:error]) {
+            return NO;
         }
     }
     return YES;
@@ -262,26 +397,26 @@
     if (!fa) {
         return NO;
     }
+    if (![self applyXAttrsBlobKey:[tree xattrsBlobKey] uncompress:[tree xattrsAreCompressed] toFile:path error:error]) {
+        return NO;
+    }
     if (![fa applyFinderFlags:[tree finderFlags] error:error]
         || ![fa applyExtendedFinderFlags:[tree extendedFinderFlags] error:error]) {
         return NO;
     }
-    if (![self applyACLSHA1:[tree aclSHA1] toFileAttributes:fa error:error]) {
+    if (([tree mode] & (S_ISUID|S_ISGID|S_ISVTX)) && ![fa applyMode:[tree mode] error:error]) {
         return NO;
     }
-    if (![self applyXAttrsSHA1:[tree xattrsSHA1] toFile:path error:error]) {
-        return NO;
-    }
-    if (([tree mode] & (S_ISUID|S_ISGID|S_ISVTX) != 0) && ![fa applyMode:[tree mode] error:error]) {
-        return NO;
-    }
-    if (([tree mode] & S_IFLNK) != S_IFLNK && [tree treeVersion] >= 7 && ![fa applyMTimeSec:tree.mtime_sec mTimeNSec:tree.mtime_nsec error:error]) {
+    if (!S_ISLNK([tree mode]) && [tree treeVersion] >= 7 && ![fa applyMTimeSec:tree.mtime_sec mTimeNSec:tree.mtime_nsec error:error]) {
         return NO;
     }
     if (([tree treeVersion] >= 7) && ![fa applyCreateTimeSec:tree.createTime_sec createTimeNSec:tree.createTime_nsec error:error]) {
         return NO;
     }
     if (![fa applyFlags:[tree flags] error:error]) {
+        return NO;
+    }
+    if (![self applyACLBlobKey:[tree aclBlobKey] uncompress:[tree aclIsCompressed] toPath:path error:error]) {
         return NO;
     }
     return YES;
@@ -291,28 +426,31 @@
     if (!fa) {
         return NO;
     }
-    if (![self applyACLSHA1:[node aclSHA1] toFileAttributes:fa error:error]) {
+    if (![self applyXAttrsBlobKey:[node xattrsBlobKey] uncompress:[node xattrsAreCompressed] toFile:path error:error]) {
         return NO;
     }
-    BOOL isFifo = ([node mode] & S_IFIFO) == S_IFIFO;
-    if (!isFifo) {
+    if (![self applyACLBlobKey:[node aclBlobKey] uncompress:[node aclIsCompressed] toPath:path error:error]) {
+        return NO;
+    }
+    if (!S_ISFIFO([node mode])) {
         if (![fa applyFinderFlags:[node finderFlags] error:error]
             || ![fa applyExtendedFinderFlags:[node extendedFinderFlags] error:error]
-            || ![self applyXAttrsSHA1:[node xattrsSHA1] toFile:path error:error]
             || ![fa applyFinderFileType:[node finderFileType] finderFileCreator:[node finderFileCreator] error:error]) {
             return NO;
         }
     }
-    if (([node mode] & (S_ISUID|S_ISGID|S_ISVTX) != 0) && ![fa applyMode:[node mode] error:error]) {
-        return NO;
+    if (!([node mode] & (S_ISUID|S_ISGID|S_ISVTX))) {
+        if (![fa applyMode:[node mode] error:error]) {
+            return NO;
+        }
     }
-    if (([node mode] & S_IFLNK) != S_IFLNK && [node treeVersion] >= 7 && ![fa applyMTimeSec:node.mtime_sec mTimeNSec:node.mtime_nsec error:error]) {
+    if (!S_ISLNK([node mode]) && [node treeVersion] >= 7 && ![fa applyMTimeSec:node.mtime_sec mTimeNSec:node.mtime_nsec error:error]) {
         return NO;
     }
     if (([node treeVersion] >= 7) && ![fa applyCreateTimeSec:node.createTime_sec createTimeNSec:node.createTime_nsec error:error]) {
         return NO;
     }
-    if (!isFifo) {
+    if (!S_ISFIFO([node mode])) {
         if (![fa applyFlags:[node flags] error:error]) {
             return NO;
         }
@@ -330,39 +468,53 @@
             return NO;
         }
     }
-    HSLogTrace(@"%qu bytes -> %@", [node dataSize], path);
-    if (([node mode] & S_IFLNK) == S_IFLNK) {
-        NSData *data = [repo blobDataForSHA1s:[node dataSHA1s] error:error];
-        if (data == nil) {
-            HSLogError(@"error getting data for %@", [node dataSHA1s]);
-            return NO;
+    HSLogTrace(@"%qu bytes -> %@", [node uncompressedDataSize], path);
+    if (S_ISLNK([node mode])) {
+        NSMutableData *data = [NSMutableData data];
+        for (BlobKey *dataBlobKey in [node dataBlobKeys]) {
+            NSData *blobData = [repo blobDataForBlobKey:dataBlobKey error:error];
+            if (blobData == nil) {
+                HSLogError(@"error getting data for %@", dataBlobKey);
+                return NO;
+            }
+            if ([node dataAreCompressed]) {
+                blobData = [blobData gzipInflate];
+            }
+            [data appendData:blobData];
         }
         NSString *target = [[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] autorelease];
         if (![self createSymLink:node path:path target:target error:error]) {
             HSLogError(@"error creating sym link %@", path);
             return NO;
         }
-    } else if ([node dataSize] > 0) {
-        if (![self createFileAtPath:path fromSHA1s:[node dataSHA1s] error:error]) {
+    } else if ([node uncompressedDataSize] > 0) {
+        if (![self createFileAtPath:path fromBlobKeys:[node dataBlobKeys] uncompress:[node dataAreCompressed] error:error]) {
+            NSError *myError = nil;
+            if ([[NSFileManager defaultManager] fileExistsAtPath:path] && ![[NSFileManager defaultManager] removeItemAtPath:path error:&myError]) {
+                HSLogError(@"error deleting incorrectly-restored file %@: %@", path, myError);
+            }
             return NO;
         }
     } else {
         // It's a zero-byte file.
-        int fd = open([path fileSystemRepresentation], O_CREAT|O_EXCL, [node mode]);
+        int fd = open([path fileSystemRepresentation], O_CREAT|O_EXCL, S_IRWXU);
         if (fd == -1) {
-            SETNSERROR(@"UnixErrorDomain", errno, @"%s: %@", strerror(errno), path);
-            HSLogError(@"error opening %@", path);
+            int errnum = errno;
+            HSLogError(@"open(%@) error %d: %s", path, errnum, strerror(errnum));
+            SETNSERROR(@"UnixErrorDomain", errnum, @"failed to open %@: %s", path, strerror(errnum));
             return NO;
         }
         close(fd);
     }
+    HSLogDetail(@"restored %@", path);
     return YES;
 }
-- (BOOL)createFileAtPath:(NSString *)path fromSHA1s:(NSArray *)dataSHA1s error:(NSError **)error {
+- (BOOL)createFileAtPath:(NSString *)path fromBlobKeys:(NSArray *)dataBlobKeys uncompress:(BOOL)uncompress error:(NSError **)error {
     FileOutputStream *fos = [[FileOutputStream alloc] initWithPath:path append:NO];
     BOOL ret = YES;
-    for (NSString *sha1 in dataSHA1s) {
-        if (![self appendBlobForSHA1:sha1 toFile:fos error:error]) {
+    writtenToCurrentFile = 0;
+    for (BlobKey *dataBlobKey in dataBlobKeys) {
+        if (![self appendBlobForBlobKey:dataBlobKey uncompress:uncompress to:fos error:error]) {
             ret = NO;
             break;
         }
@@ -370,26 +522,33 @@
     [fos release];
     return ret;
 }
-- (BOOL)appendBlobForSHA1:(NSString *)sha1 toFile:(FileOutputStream *)fos error:(NSError **)error {
-    int i = 0;
+- (BOOL)appendBlobForBlobKey:(BlobKey *)theBlobKey uncompress:(BOOL)uncompress to:(FileOutputStream *)fos error:(NSError **)error {
     BOOL ret = NO;
     NSError *myError = nil;
     NSAutoreleasePool *pool = nil;
+    unsigned long long transferredSoFar = transferred;
+    unsigned long long writtenToCurrentFileSoFar = writtenToCurrentFile;
     for (;;) {
         [pool drain];
         pool = [[NSAutoreleasePool alloc] init];
-        if ([self doAppendBlobForSHA1:sha1 toFile:fos error:&myError]) {
+        BufferedOutputStream *bos = [[[BufferedOutputStream alloc] initWithUnderlyingOutputStream:fos] autorelease];
+        if ([self doAppendBlobForBlobKey:theBlobKey uncompress:uncompress to:bos error:&myError] && [bos flush:&myError]) {
             ret = YES;
             break;
         }
-        [[StreamPairFactory theFactory] clear];
-        BOOL isNetworkError = [[myError domain] isEqualToString:[CFStreamPair errorDomain]];
-        // Retry indefinitely on network errors:
-        if (!isNetworkError && (++i >= MAX_RETRIES)) {
-            HSLogError(@"failed to get blob %@ after %d retries: %@", sha1, i, [myError localizedDescription]);
+        if ([myError isErrorWithDomain:[Restorer errorDomain] code:ERROR_ABORT_REQUESTED]) {
+            HSLogInfo(@"restore canceled");
             break;
         }
-        HSLogWarn(@"error appending blob %@ to file %@ (retrying): %@", sha1, [fos path], [myError localizedDescription]);
+        if (![myError isTransientError]) {
+            HSLogError(@"error getting appending blob %@ to %@: %@", theBlobKey, bos, myError);
+            ret = NO;
+            break;
+        }
+        HSLogWarn(@"error appending blob %@ to %@ (retrying): %@", theBlobKey, bos, [myError localizedDescription]);
+        // Reset transferred:
+        transferred = transferredSoFar;
+        writtenToCurrentFile = writtenToCurrentFileSoFar;
         // Seek back to the starting offset for this blob:
         if (![fos seekTo:writtenToCurrentFile error:&myError]) {
             ret = NO;
@@ -404,22 +563,24 @@
     }
     return ret;
 }
-- (BOOL)doAppendBlobForSHA1:(NSString *)sha1 toFile:(FileOutputStream *)fos error:(NSError **)error {
-    if (error != NULL) {
-        *error = nil;
-    }
-    ServerBlob *sb = [[repo newServerBlobForSHA1:sha1 error:error] autorelease];
+- (BOOL)doAppendBlobForBlobKey:(BlobKey *)theBlobKey uncompress:(BOOL)uncompress to:(BufferedOutputStream *)bos error:(NSError **)error {
+    ServerBlob *sb = [[repo newServerBlobForBlobKey:theBlobKey error:error] autorelease];
     if (sb == nil) {
         return NO;
     }
     id <InputStream> is = [[sb newInputStream] autorelease];
+    if (uncompress) {
+        is = [[[GunzipInputStream alloc] initWithUnderlyingStream:is] autorelease];
+    }
+    HSLogDebug(@"writing %@ to %@", is, bos);
     BOOL ret = YES;
+    NSError *myError = nil;
     NSAutoreleasePool *pool = nil;
     unsigned char *buf = (unsigned char *)malloc(MY_BUF_SIZE);
     for (;;) {
         [pool drain];
         pool = [[NSAutoreleasePool alloc] init];
-        NSUInteger received = [is read:buf bufferLength:MY_BUF_SIZE error:error];
+        NSInteger received = [is read:buf bufferLength:MY_BUF_SIZE error:&myError];
         if (received < 0) {
             ret = NO;
             break;
@@ -427,19 +588,20 @@
         if (received == 0) {
             break;
         }
-        if (![fos write:buf length:received error:error]) {
+        if (![bos writeFully:buf length:received error:error]) {
             ret = NO;
             break;
         }
+        
+        transferred += received;
         writtenToCurrentFile += received;
     }
     free(buf);
-    if (error != NULL) {
-        [*error retain];
-    }
+    [myError retain];
     [pool drain];
+    [myError autorelease];
     if (error != NULL) {
-        [*error autorelease];
+        *error = myError;
     }
     return ret;
 }
@@ -451,35 +613,52 @@
         }
     }
     if (symlink([target fileSystemRepresentation], [symLinkFile fileSystemRepresentation]) == -1) {
-        SETNSERROR(@"UnixErrorDomain", errno, @"symlink(%@): %s", symLinkFile, strerror(errno));
+        int errnum = errno;
+        HSLogError(@"symlink(%@, %@) error %d: %s", target, symLinkFile, errnum, strerror(errnum));
+        SETNSERROR(@"UnixErrorDomain", errnum, @"failed to create symlink %@ to %@: %s", symLinkFile, target, strerror(errnum));
         return NO;
     }
     return YES;
 }
-- (BOOL)applyACLSHA1:(NSString *)aclSHA1 toFileAttributes:(FileAttributes *)fa error:(NSError **)error {
-    if (aclSHA1 != nil) {
-        NSData *data = [repo blobDataForSHA1:aclSHA1 error:error];
+- (BOOL)applyACLBlobKey:(BlobKey *)aclBlobKey uncompress:(BOOL)uncompress toPath:(NSString *)path error:(NSError **)error {
+    if (aclBlobKey != nil) {
+        NSData *data = [repo blobDataForBlobKey:aclBlobKey error:error];
         if (data == nil) {
             return NO;
         }
+        if (uncompress) {
+            data = [data gzipInflate];
+        }
         NSString *aclString = [[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] autorelease];
-        if (![fa applyAcl:aclString error:error]) {
+        
+        NSString *currentAclString = nil;
+        if (![FileACL aclText:&currentAclString forFile:path error:error]) {
             return NO;
+        }
+        if (![currentAclString isEqualToString:aclString] && [aclString length] > 0) {
+            if (![FileACL writeACLText:aclString toFile:path error:error]) {
+                return NO;
+            }
         }
     }
     return YES;
 }
-- (BOOL)applyXAttrsSHA1:(NSString *)xattrsSHA1 toFile:(NSString *)path error:(NSError **)error {
-    if (xattrsSHA1 != nil) {
-        NSData *xattrsData = [repo blobDataForSHA1:xattrsSHA1 error:error];
+- (BOOL)applyXAttrsBlobKey:(BlobKey *)xattrsBlobKey uncompress:(BOOL)uncompress toFile:(NSString *)path error:(NSError **)error {
+    if (xattrsBlobKey != nil) {
+        NSData *xattrsData = [repo blobDataForBlobKey:xattrsBlobKey error:error];
         if (xattrsData == nil) {
             return NO;
         }
-        DataInputStream *is = [xattrsData newInputStream];
+        id <InputStream> is = [xattrsData newInputStream];
+        if (uncompress) {
+            id <InputStream> uncompressed = [[GunzipInputStream alloc] initWithUnderlyingStream:is];
+            [is release];
+            is = uncompressed;
+        }
         BufferedInputStream *bis = [[BufferedInputStream alloc] initWithUnderlyingStream:is];
+        [is release];
         XAttrSet *set = [[[XAttrSet alloc] initWithBufferedInputStream:bis error:error] autorelease];
         [bis release];
-        [is release];
         if (!set) {
             return NO;
         }

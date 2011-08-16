@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
-#import <Cocoa/Cocoa.h>
-
 #import "BooleanIO.h"
 #import "IntegerIO.h"
 #import "DateIO.h"
@@ -45,6 +43,19 @@
 		long long millisecondsSince1970 = (long long)([date timeIntervalSince1970] * 1000.0);
 		[IntegerIO writeInt64:millisecondsSince1970 to:data];
 	}
+}
++ (BOOL)write:(NSDate *)date to:(BufferedOutputStream *)bos error:(NSError **)error {
+	BOOL dateNotNil = (date != nil);
+    if (![BooleanIO write:dateNotNil to:bos error:error]) {
+        return NO;
+    }
+    if (dateNotNil) {
+		long long millisecondsSince1970 = (long long)([date timeIntervalSince1970] * 1000.0);
+        if (![IntegerIO writeInt64:millisecondsSince1970 to:bos error:error]) {
+            return NO;
+        }
+    }
+    return YES;
 }
 + (BOOL)read:(NSDate **)date from:(BufferedInputStream *)is error:(NSError **)error {
     *date = nil;

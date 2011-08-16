@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -31,13 +31,12 @@
  */ 
 
 #import <Cocoa/Cocoa.h>
-#import "BufferedInputStream.h"
-#import "OutputStream.h"
-
+@class BufferedInputStream;
+@class BufferedOutputStream;
 @interface BooleanIO : NSObject {
 
 }
 + (void)write:(BOOL)b to:(NSMutableData *)data;
-+ (BOOL)write:(BOOL)b to:(id <OutputStream>)os error:(NSError **)error;
++ (BOOL)write:(BOOL)b to:(BufferedOutputStream *)os error:(NSError **)error;
 + (BOOL)read:(BOOL *)value from:(BufferedInputStream *)is error:(NSError **)error;
 @end

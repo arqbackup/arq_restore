@@ -13,11 +13,14 @@
 @class Commit;
 @class Tree;
 @class ServerBlob;
+@class CryptoKey;
+@class BlobKey;
 
 @interface ArqRepo : NSObject {
     NSString *bucketUUID;
-    NSString *encryptionKey;
     ArqFark *arqFark;
+    CryptoKey *cryptoKey;
+    CryptoKey *stretchedCryptoKey;
     ArqPackSet *treesPackSet;
     ArqPackSet *blobsPackSet;
 }
@@ -26,12 +29,15 @@
            s3BucketName:(NSString *)theS3BucketName 
            computerUUID:(NSString *)theComputerUUID
              bucketUUID:(NSString *)theBucketUUID 
-          encryptionKey:(NSString *)theEncryptionKey;
+     encryptionPassword:(NSString *)theEncryptionPassword
+                   salt:(NSData *)theEncryptionSalt
+                  error:(NSError **)error;
 
-- (NSString *)headSHA1:(NSError **)error;
-- (Commit *)commitForSHA1:(NSString *)theSHA1 error:(NSError **)error;
-- (Tree *)treeForSHA1:(NSString *)theSHA1 error:(NSError **)error;
-- (NSData *)blobDataForSHA1:(NSString *)sha1 error:(NSError **)error;
-- (NSData *)blobDataForSHA1s:(NSArray *)sha1s error:(NSError **)error;
-- (ServerBlob *)newServerBlobForSHA1:(NSString *)sha1 error:(NSError **)error;
+- (NSString *)bucketUUID;
+- (BlobKey *)headBlobKey:(NSError **)error;
+- (Commit *)commitForBlobKey:(BlobKey *)treeBlobKey error:(NSError **)error;
+- (Tree *)treeForBlobKey:(BlobKey *)treeBlobKey error:(NSError **)error;
+- (NSData *)blobDataForBlobKey:(BlobKey *)treeBlobKey error:(NSError **)error;
+- (ServerBlob *)newServerBlobForBlobKey:(BlobKey *)treeBlobKey error:(NSError **)error;
+- (BOOL)containsPackedBlob:(BOOL *)contains forBlobKey:(BlobKey *)theBlobKey packSetName:(NSString **)packSetName packSHA1:(NSString **)packSHA1 error:(NSError **)error;
 @end

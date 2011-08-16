@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -31,9 +31,12 @@
  */ 
 
 #import <Cocoa/Cocoa.h>
+
+#import <Cocoa/Cocoa.h>
 #import "CryptInputStream.h"
+@class CryptoKey;
 
 @interface DecryptedInputStream : CryptInputStream {
 }
-- (id)initWithInputStream:(id <InputStream>)theIS cipherName:(NSString *)theCipherName key:(NSString *)theKey error:(NSError **)error;
+- (id)initWithInputStream:(id <InputStream>)theIS cryptoKey:(CryptoKey *)theCryptoKey error:(NSError **)error;
 @end

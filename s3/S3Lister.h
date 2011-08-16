@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -37,16 +37,18 @@
 
 @interface S3Lister : NSObject {
     RFC2616DateFormatter *dateFormatter;
-	S3AuthorizationProvider *sap;
+    S3AuthorizationProvider *sap;
     BOOL useSSL;
-    BOOL retryOnNetworkError;
-	int maxRequested;
+    BOOL retryOnTransientError;
 	int received;
 	BOOL isTruncated;
 	NSString *prefix;
+    NSString *delimiter;
 	id receiver;
 	NSString *marker;
+    NSMutableArray *foundPrefixes;
 }
-- (id)initWithS3AuthorizationProvider:(S3AuthorizationProvider *)theSAP useSSL:(BOOL)isUseSSL retryOnNetworkError:(BOOL)retry max:(int)theMax prefix:(NSString *)thePrefix receiver:(id)theReceiver;
+- (id)initWithS3AuthorizationProvider:(S3AuthorizationProvider *)theSAP useSSL:(BOOL)isUseSSL retryOnTransientError:(BOOL)retry prefix:(NSString *)thePrefix delimiter:(NSString *)theDelimiter receiver:(id)theReceiver;
 - (BOOL)listObjects:(NSError **)error;
+- (NSArray *)foundPrefixes;
 @end

@@ -1,34 +1,10 @@
-/*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
- 
- All rights reserved.
- 
- Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions are met:
- 
- * Redistributions of source code must retain the above copyright
- notice, this list of conditions and the following disclaimer.
- 
- * Redistributions in binary form must reproduce the above copyright
- notice, this list of conditions and the following disclaimer in the
- documentation and/or other materials provided with the distribution.
- 
- * Neither the names of PhotoMinds LLC or Haystack Software, nor the names of 
- their contributors may be used to endorse or promote products derived from
- this software without specific prior written permission.
- 
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
- TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */ 
+//
+//  XAttrSet.m
+//  Backup
+//
+//  Created by Stefan Reitshamer on 4/27/09.
+//  Copyright 2009 PhotoMinds LLC. All rights reserved.
+//
 
 #include <sys/stat.h>
 #include <sys/xattr.h>
@@ -38,11 +14,12 @@
 #import "IntegerIO.h"
 #import "Blob.h"
 #import "DataInputStream.h"
-#import "BufferedInputStream.h"
 #import "SetNSError.h"
 #import "NSErrorCodes.h"
 #import "Streams.h"
 #import "NSError_extra.h"
+#import "BufferedInputStream.h"
+#import "NSData-Gzip.h"
 
 #define HEADER_LENGTH (12)
 
@@ -64,9 +41,10 @@
                     *error = myError;
                 }
                 [self release];
-                self = nil;
+                return nil;
             }
         }
+        path = [thePath retain];
     }
     return self;
 }
@@ -82,20 +60,19 @@
 }
 - (void)dealloc {
     [xattrs release];
+    [path release];
     [super dealloc];
 }
-- (Blob *)toBlob {
-    NSMutableData *data = [[NSMutableData alloc] init];
-    [data appendBytes:"XAttrSetV002" length:HEADER_LENGTH];
+- (NSData *)toData {
+    NSMutableData *mutableData = [[[NSMutableData alloc] init] autorelease];
+    [mutableData appendBytes:"XAttrSetV002" length:HEADER_LENGTH];
     uint64_t count = (uint64_t)[xattrs count];
-    [IntegerIO writeUInt64:count to:data];
+    [IntegerIO writeUInt64:count to:mutableData];
     for (NSString *name in [xattrs allKeys]) {
-        [StringIO write:name to:data];
-        [DataIO write:[xattrs objectForKey:name] to:data];
+        [StringIO write:name to:mutableData];
+        [DataIO write:[xattrs objectForKey:name] to:mutableData];
     }
-    Blob *ret = [[[Blob alloc] initWithData:data mimeType:@"binary/octet-stream" downloadName:@"xattrset"] autorelease];    
-    [data release];
-    return ret;
+    return mutableData;
 }
 - (NSUInteger)count {
     return [xattrs count];
@@ -111,15 +88,17 @@
 - (NSArray *)names {
     return [xattrs allKeys];
 }
-- (BOOL)applyToFile:(NSString *)path error:(NSError **)error {
-    XAttrSet *current = [[[XAttrSet alloc] initWithPath:path error:error] autorelease];
+- (BOOL)applyToFile:(NSString *)thePath error:(NSError **)error {
+    XAttrSet *current = [[[XAttrSet alloc] initWithPath:thePath error:error] autorelease];
     if (!current) {
         return NO;
     }
-    const char *pathChars = [path fileSystemRepresentation];
+    const char *pathChars = [thePath fileSystemRepresentation];
     for (NSString *name in [current names]) {
         if (removexattr(pathChars, [name UTF8String], XATTR_NOFOLLOW) == -1) {
-            SETNSERROR(@"UnixErrorDomain", errno, @"removexattr: %s", strerror(errno));
+            int errnum = errno;
+            HSLogError(@"removexattr(%@, %@) error %d: %s", thePath, name, errnum, strerror(errnum));
+            SETNSERROR(@"UnixErrorDomain", errnum, @"failed to remove extended attribute %@ from %@: %s", name, thePath, strerror(errnum));
             return NO;
         }
     }
@@ -131,7 +110,9 @@
                      [value length],
                      0,
                      XATTR_NOFOLLOW) == -1) {
-            SETNSERROR(@"UnixErrorDomain", errno, @"setxattr: %s", strerror(errno));
+            int errnum = errno;
+            HSLogError(@"setxattr(%@, %@) error %d: %s", thePath, key, errnum, strerror(errnum));
+            SETNSERROR(@"UnixErrorDomain", errnum, @"failed to set extended attribute %@ on %@: %s", key, thePath, strerror(errnum));
             return NO;
         }
     }
@@ -143,37 +124,47 @@
 - (BOOL)loadFromPath:(NSString *)thePath error:(NSError **)error {
     struct stat st;
     if (lstat([thePath fileSystemRepresentation], &st) == -1) {
-        SETNSERROR(@"UnixErrorDomain", errno, @"lstat(%@): %s", thePath, strerror(errno));
+        int errnum = errno;
+        HSLogError(@"lstat(%@) error %d: %s", thePath, errnum, strerror(errnum));
+        SETNSERROR(@"UnixErrorDomain", errnum, @"%@: %s", thePath, strerror(errnum));
         return NO;
     }
     if (S_ISREG(st.st_mode) || S_ISDIR(st.st_mode) || S_ISLNK(st.st_mode)) {
-        const char *path = [thePath fileSystemRepresentation];
-        ssize_t xattrsize = listxattr(path, NULL, 0, XATTR_NOFOLLOW);
+        const char *cpath = [thePath fileSystemRepresentation];
+        ssize_t xattrsize = listxattr(cpath, NULL, 0, XATTR_NOFOLLOW);
         if (xattrsize == -1) {
-            SETNSERROR(@"UnixErrorDomain", errno, @"%s", strerror(errno));
+            int errnum = errno;
+            HSLogError(@"listxattr(%@) error %d: %s", thePath, errnum, strerror(errnum));
+            SETNSERROR(@"UnixErrorDomain", errnum, @"failed to list extended attributes of %@: %s", thePath, strerror(errnum));
             return NO;
         } 
         if (xattrsize > 0) {
             char *xattrbuf = (char *)malloc(xattrsize);
-            xattrsize = listxattr(path, xattrbuf, xattrsize, XATTR_NOFOLLOW);
+            xattrsize = listxattr(cpath, xattrbuf, xattrsize, XATTR_NOFOLLOW);
             if (xattrsize == -1) {
-                SETNSERROR(@"UnixErrorDomain", errno, @"%s", strerror(errno));
+                int errnum = errno;
+                HSLogError(@"listxattr(%@) error %d: %s", thePath, errnum, strerror(errnum));
+                SETNSERROR(@"UnixErrorDomain", errnum, @"failed to list extended attributes of %@: %s", thePath, strerror(errnum));
                 free(xattrbuf);
                 return NO;
             }
             for (char *name = xattrbuf; name < (xattrbuf + xattrsize); name += strlen(name) + 1) {
                 NSString *theName = [NSString stringWithUTF8String:name];
-                ssize_t valuesize = getxattr(path, name, NULL, 0, 0, XATTR_NOFOLLOW);
+                ssize_t valuesize = getxattr(cpath, name, NULL, 0, 0, XATTR_NOFOLLOW);
                 NSData *xattrData = nil;
                 if (valuesize == -1) {
-                    SETNSERROR(@"UnixErrorDomain", errno, @"Error reading extended attribute %s: %s", name, strerror(errno));
+                    int errnum = errno;
+                    HSLogError(@"getxattr(%s, %s) error %d: %s", cpath, name, errnum, strerror(errnum));
+                    SETNSERROR(@"UnixErrorDomain", errnum, @"failed to read extended attribute %s of %@: %s", name, thePath, strerror(errnum));
                     free(xattrbuf);
                     return NO;
                 }
                 if (valuesize > 0) {
                     void *value = malloc(valuesize);
-                    if (getxattr(path, name, value, valuesize, 0, XATTR_NOFOLLOW) == -1) {
-                        SETNSERROR(@"UnixErrorDomain", errno, @"getxattr: %s", strerror(errno));
+                    if (getxattr(cpath, name, value, valuesize, 0, XATTR_NOFOLLOW) == -1) {
+                        int errnum = errno;
+                        HSLogError(@"getxattr(%s, %s) error %d: %s", cpath, name, errnum, strerror(errnum));
+                        SETNSERROR(@"UnixErrorDomain", errnum, @"failed to read extended attribute %s of %@: %s", name, thePath, strerror(errnum));
                         free(value);
                         free(xattrbuf);
                         return NO;
@@ -191,29 +182,33 @@
     return YES;
 }
 - (BOOL)loadFromInputStream:(BufferedInputStream *)is error:(NSError **)error {
-    NSData *headerData = [is readExactly:HEADER_LENGTH error:error];
-    if (headerData == nil) {
-        return NO;
+    BOOL ret = NO;
+    unsigned char *buf = (unsigned char *)malloc(HEADER_LENGTH);
+    if (![is readExactly:HEADER_LENGTH into:buf error:error]) {
+        goto load_error;
     }
-    if (strncmp((const char *)[headerData bytes], "XAttrSetV002", HEADER_LENGTH)) {
+    if (strncmp((const char *)buf, "XAttrSetV002", HEADER_LENGTH)) {
         SETNSERROR(@"XAttrSetErrorDomain", ERROR_INVALID_OBJECT_VERSION, @"invalid XAttrSet header");
-        return NO;
+        goto load_error;
     }
     uint64_t count;
     if (![IntegerIO readUInt64:&count from:is error:error]) {
-        return NO;
+        goto load_error;
     }
     for (uint64_t i = 0; i < count; i++) {
         NSString *name;
         if (![StringIO read:&name from:is error:error]) {
-            return NO;
+            goto load_error;
         }
         NSData *value;
         if (![DataIO read:&value from:is error:error]) {
-            return NO;
+            goto load_error;
         }
         [xattrs setObject:value forKey:name];
     }
-    return YES;
+    ret = YES;
+load_error:
+    free(buf);
+    return ret;
 }
 @end

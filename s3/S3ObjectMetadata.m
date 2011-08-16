@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -32,6 +32,9 @@
 
 #import "S3ObjectMetadata.h"
 #import "RFC822.h"
+#import "StringIO.h"
+#import "DateIO.h"
+#import "IntegerIO.h"
 
 @implementation S3ObjectMetadata
 - (id)initWithS3BucketName:(NSString *)s3BucketName node:(NSXMLNode *)node error:(NSError **)error {
@@ -93,11 +96,35 @@ init_done:
     }
     return self;
 }
+- (id)initFromBufferedInputStream:(BufferedInputStream *)theBIS error:(NSError **)error {
+    if (self = [super init]) {
+        int64_t theSize = 0;
+        BOOL ret = [StringIO read:&path from:theBIS error:error]
+        && [DateIO read:&lastModified from:theBIS error:error]
+        && [IntegerIO readInt64:&theSize from:theBIS error:error]
+        && [StringIO read:&storageClass from:theBIS error:error];
+        [path retain];
+        [lastModified retain];
+        size = (long)theSize;
+        [storageClass retain];
+        if (!ret) {
+            [self release];
+            return nil;
+        }
+    }
+    return self;
+}
 - (void)dealloc {
 	[path release];
 	[lastModified release];
     [storageClass release];
 	[super dealloc];
+}
+- (BOOL)writeToBufferedOutputStream:(BufferedOutputStream *)theBOS error:(NSError **)error {
+    return [StringIO write:path to:theBOS error:error]
+    && [DateIO write:lastModified to:theBOS error:error]
+    && [IntegerIO writeInt64:(int64_t)size to:theBOS error:error]
+    && [StringIO write:storageClass to:theBOS error:error];
 }
 - (NSString *)path {
 	return path;
@@ -110,5 +137,16 @@ init_done:
 }
 - (NSString *)storageClass {
     return storageClass;
+}
+
+#pragma mark NSObject
+- (NSString *)description {
+    return [NSString stringWithFormat:@"<S3ObjectMetadata: %18s; mod %@; %12ld bytes; %@", 
+            [storageClass UTF8String], 
+            [lastModified descriptionWithCalendarFormat:@"%Y-%m-%d %H:%M:%S" 
+                                               timeZone:nil
+                                                 locale:[[NSUserDefaults standardUserDefaults] dictionaryRepresentation]],
+            size, 
+            path];
 }
 @end

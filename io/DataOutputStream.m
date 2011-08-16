@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -32,9 +32,32 @@
 
 #import <Cocoa/Cocoa.h>
 
+#import "DataOutputStream.h"
 
-@interface ArqUserLibrary : NSObject {
 
+@implementation DataOutputStream
+- (id)initWithMutableData:(NSMutableData *)theMutableData {
+    if (self = [super init]) {
+        mutableData = [theMutableData retain];
+    }
+    return self;
 }
-+ (NSString *)arqCachesPath;
+- (void)dealloc {
+    [mutableData release];
+    [super dealloc];
+}
+#pragma mark OutputStream protocol
+- (NSInteger)write:(const unsigned char *)buf length:(NSUInteger)len error:(NSError **)error {
+    [mutableData appendBytes:buf length:len];
+    bytesWritten += len;
+    return len;
+}
+- (unsigned long long)bytesWritten {
+    return bytesWritten;
+}
+
+#pragma mark NSObject
+- (NSString *)description {
+    return @"<DataOutputStream>";
+}
 @end

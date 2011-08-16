@@ -1,34 +1,10 @@
-/*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
- 
- All rights reserved.
- 
- Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions are met:
- 
- * Redistributions of source code must retain the above copyright
- notice, this list of conditions and the following disclaimer.
- 
- * Redistributions in binary form must reproduce the above copyright
- notice, this list of conditions and the following disclaimer in the
- documentation and/or other materials provided with the distribution.
- 
- * Neither the names of PhotoMinds LLC or Haystack Software, nor the names of 
- their contributors may be used to endorse or promote products derived from
- this software without specific prior written permission.
- 
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
- TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */ 
+//
+//  FileAttributes.m
+//  Backup
+//
+//  Created by Stefan Reitshamer on 4/22/09.
+//  Copyright 2009 PhotoMinds LLC. All rights reserved.
+//
 
 #include <CoreServices/CoreServices.h>
 #include <sys/attr.h>
@@ -40,6 +16,7 @@
 #import "FileACL.h"
 #import "SetNSError.h"
 #import "OSStatusDescription.h"
+#import "NSError_extra.h"
 
 #define kCouldNotCreateCFString	4
 #define kCouldNotGetStringData	5
@@ -103,7 +80,9 @@ static OSStatus SymlinkPathMakeRef(const UInt8 *path, FSRef *ref, Boolean *isDir
     struct stat theStat;
     int ret = lstat([thePath fileSystemRepresentation], &theStat);
     if (ret == -1) {
-        SETNSERROR(@"UnixErrorDomain", errno, @"%s", strerror(errno));
+        int errnum = errno;
+        HSLogError(@"lstat(%@) error %d: %s", thePath, errnum, strerror(errnum));
+        SETNSERROR(@"UnixErrorDomain", errnum, @"%@: %s", thePath, strerror(errnum));
         return nil;
     }
     return [self initWithPath:thePath stat:&theStat error:error];
@@ -133,7 +112,7 @@ static OSStatus SymlinkPathMakeRef(const UInt8 *path, FSRef *ref, Boolean *isDir
             if (oss == bdNamErr) {
                 HSLogInfo(@"skipping finder flags for %s: %@", cPath, [OSStatusDescription descriptionForMacOSStatus:oss]);
             }else if (oss != noErr) {
-                SETNSERROR(@"MacFilesErrorDomain", oss, @"%@", [OSStatusDescription descriptionForMacOSStatus:oss]);
+                SETNSERROR(@"MacFilesErrorDomain", oss, @"error making FSRef for %@: %@", thePath, [OSStatusDescription descriptionForMacOSStatus:oss]);
                 [self release];
                 self = nil;
                 return self;
@@ -141,11 +120,21 @@ static OSStatus SymlinkPathMakeRef(const UInt8 *path, FSRef *ref, Boolean *isDir
                 FSCatalogInfo catalogInfo;
                 OSErr oserr = FSGetCatalogInfo(&fsRef, kFSCatInfoCreateDate | kFSCatInfoFinderInfo | kFSCatInfoFinderXInfo, &catalogInfo, NULL, NULL, NULL);
                 if (oserr) {
-                    SETNSERROR(@"MacFilesErrorDomain", oss, @"%@", [OSStatusDescription descriptionForMacOSStatus:(OSStatus)oserr]);
+                    SETNSERROR(@"MacFilesErrorDomain", oss, @"FSGetCatalogInfo(%@): %@", thePath, [OSStatusDescription descriptionForMacOSStatus:(OSStatus)oserr]);
                     [self release];
                     self = nil;
                     return self;
                 }
+                
+                CFTimeInterval theCreateTime; // double: seconds since reference date
+                if (UCConvertUTCDateTimeToCFAbsoluteTime(&catalogInfo.createDate, &theCreateTime) != noErr) {
+                    HSLogError(@"error converting create time %f to CFAbsoluteTime", catalogInfo.createDate);
+                } else {
+                    createTime.tv_sec = (int64_t)(theCreateTime + NSTimeIntervalSince1970);
+                    CFTimeInterval subsecond = theCreateTime - (double)((int64_t)theCreateTime);
+                    createTime.tv_nsec = (int64_t)(subsecond * 1000000000.0);
+                }
+                
                 finderFlags = 0;
                 extendedFinderFlags = 0;
                 if (isDirectory) {
@@ -178,49 +167,17 @@ static OSStatus SymlinkPathMakeRef(const UInt8 *path, FSRef *ref, Boolean *isDir
                 }
             }
         }
-        
-        if (![FileACL aclText:&aclString forFile:path error:error]) {
-            [self release];
-            self = nil;
-            return self;
-        }
-        [aclString retain];
-        
-        struct attrlist attrList;
-        memset(&attrList, 0, sizeof(attrList));
-        attrList.bitmapcount = ATTR_BIT_MAP_COUNT;
-        attrList.commonattr = ATTR_CMN_CRTIME;
-        struct createDateBuf createDateBuf;
-        if (getattrlist(cPath, &attrList, &createDateBuf, sizeof(createDateBuf), FSOPT_NOFOLLOW) == -1) {
-            SETNSERROR(@"UnixErrorDomain", errno, @"Error getting create date for %@: %s", thePath, strerror(errno));
-            [self release];
-            self = nil;
-            return self;
-        }
-        createTime.tv_sec = createDateBuf.createTime.tv_sec;
-        createTime.tv_nsec = createDateBuf.createTime.tv_nsec;
     }
     return self;
 }
 - (void)dealloc {
     [path release];
-    [aclString release];
     [finderFileType release];
     [finderFileCreator release];
     [super dealloc];
 }
 - (unsigned long long)fileSize {
     return (unsigned long long)st.st_size;
-}
-- (NSString *)aclString {
-    return aclString;
-}
-- (NSString *)aclSHA1 {
-    NSString *sha1 = nil;
-    if (aclString) {
-        sha1 = [SHA1Hash hashData:[aclString dataUsingEncoding:NSUTF8StringEncoding]];
-    }
-    return sha1;
 }
 - (int)uid {
     return st.st_uid;
@@ -368,23 +325,14 @@ static OSStatus SymlinkPathMakeRef(const UInt8 *path, FSRef *ref, Boolean *isDir
     if (targetExists && flags != st.st_flags) {
         HSLogTrace(@"chflags(%s, %d)", cPath, flags);
         if (chflags(cPath, flags) == -1) {
-            SETNSERROR(@"UnixErrorDomain", errno, @"chflags: %s", strerror(errno));
+            int errnum = errno;
+            HSLogError(@"chflags(%s, %d) error %d: %s", cPath, flags, errnum, strerror(errnum));
+            SETNSERROR(@"UnixErrorDomain", errnum, @"error changing flags of %s: %s", cPath, strerror(errnum));
             return NO;
         }
         st.st_flags = flags;
     }
     return YES;
-}
-- (BOOL)applyAcl:(NSString *)theACLString error:(NSError **)error {
-    BOOL ret = YES;
-    if (![theACLString isEqualToString:aclString]) {
-        ret = [FileACL writeACLText:theACLString toFile:path error:error];
-        if (ret) {
-            [aclString release];
-            aclString = [theACLString retain];
-        }
-    }
-    return ret;
 }
 - (BOOL)applyFinderFlags:(int)ff error:(NSError **)error {
     if (targetExists && ff != finderFlags) {
@@ -486,8 +434,9 @@ static OSStatus SymlinkPathMakeRef(const UInt8 *path, FSRef *ref, Boolean *isDir
 - (BOOL)applyUID:(int)uid gid:(int)gid error:(NSError **)error {
     if (uid != st.st_uid || gid != st.st_gid) {
         if (lchown(cPath, uid, gid) == -1) {
-            HSLogError(@"lchown failed");
-            SETNSERROR(@"UnixErrorDomain", errno, @"lchown: %s", strerror(errno));
+            int errnum = errno;
+            HSLogError(@"lchown(%s) error %d: %s", cPath, errnum, strerror(errnum));
+            SETNSERROR(@"UnixErrorDomain", errnum, @"error changing ownership of %s: %s", cPath, strerror(errnum));
             return NO;
         }
         HSLogDebug(@"lchown(%s, %d, %d); euid=%d", cPath, uid, gid, geteuid());
@@ -501,20 +450,26 @@ static OSStatus SymlinkPathMakeRef(const UInt8 *path, FSRef *ref, Boolean *isDir
         if (S_ISDIR(st.st_mode)) {
             int ret = chmod(cPath, mode);
             if (ret == -1) {
-                SETNSERROR(@"UnixErrorDomain", errno, @"Setting permissions on %@: %s", path, strerror(errno));
+                int errnum = errno;
+                HSLogError(@"chmod(%s, %d) error %d: %s", cPath, mode, errnum, strerror(errnum));
+                SETNSERROR(@"UnixErrorDomain", errnum, @"failed to set permissions on %@: %s", path, strerror(errnum));
                 return NO;
             }
             HSLogDebug(@"chmod(%s, 0%6o)", cPath, mode);
         } else {
             int fd = open(cPath, O_RDWR|O_SYMLINK);
             if (fd == -1) {
-                SETNSERROR(@"UnixErrorDomain", errno, @"%s", strerror(errno));
+                int errnum = errno;
+                HSLogError(@"open(%s) error %d: %s", cPath, errnum, strerror(errnum));
+                SETNSERROR(@"UnixErrorDomain", errnum, @"failed to open %@: %s", path, strerror(errnum));
                 return NO;
             }
             int ret = fchmod(fd, mode);
             close(fd);
             if (ret == -1) {
-                SETNSERROR(@"UnixErrorDomain", errno, @"Setting permissions on %@: %s", path, strerror(errno));
+                int errnum = errno;
+                HSLogError(@"fchmod(%@) error %d: %s", path, errnum, strerror(errnum));
+                SETNSERROR(@"UnixErrorDomain", errnum, @"failed to set permissions on %@: %s", path, strerror(errnum));
                 return NO;
             }
             HSLogDebug(@"fchmod(%s, 0%6o)", cPath, mode);
@@ -535,7 +490,9 @@ static OSStatus SymlinkPathMakeRef(const UInt8 *path, FSRef *ref, Boolean *isDir
         timevals[0] = atimeVal;
         timevals[1] = mtimeVal;
         if (utimes(cPath, timevals) == -1) {
-            SETNSERROR(@"UnixErrorDomain", errno, @"utimes(%@): %s", path, strerror(errno));
+            int errnum = errno;
+            HSLogError(@"utimes(%@) error %d: %s", path, errnum, strerror(errnum));
+            SETNSERROR(@"UnixErrorDomain", errnum, @"failed to set timestamps on %@: %s", path, strerror(errnum));
             return NO;
         }
     }
@@ -543,17 +500,41 @@ static OSStatus SymlinkPathMakeRef(const UInt8 *path, FSRef *ref, Boolean *isDir
 }
 - (BOOL)applyCreateTimeSec:(int64_t)theCreateTime_sec createTimeNSec:(int64_t)theCreateTime_nsec error:(NSError **)error {
     if (createTime.tv_sec != theCreateTime_sec || createTime.tv_nsec != theCreateTime_nsec) {
-        createTime.tv_sec = theCreateTime_sec;
-        createTime.tv_nsec = theCreateTime_nsec;
-        
-        struct attrlist attrList;
-        memset(&attrList, 0, sizeof(attrList));
-        attrList.bitmapcount = ATTR_BIT_MAP_COUNT;
-        attrList.commonattr = ATTR_CMN_CRTIME;
-        if (setattrlist(cPath, &attrList, &createTime, sizeof(createTime), FSOPT_NOFOLLOW) == -1) {
-            SETNSERROR(@"UnixErrorDomain", errno, @"Error setting create date on %@: %s", path, strerror(errno));
+        FSRef fsRef;
+        Boolean isDirectory;
+        OSStatus oss = 0;
+        if (S_ISLNK(st.st_mode)) {
+            oss = SymlinkPathMakeRef((UInt8*)cPath, &fsRef, &isDirectory);
+        } else {
+            oss = FSPathMakeRef((UInt8*)cPath, &fsRef, &isDirectory);
+        }
+        if (oss != noErr) {
+            if (oss == bdNamErr) {
+                HSLogInfo(@"not setting create time on %s: bad name", cPath);
+                return YES;
+            } else {
+                SETNSERROR(@"FileManagerErrorDomain", -1, @"%@", [OSStatusDescription descriptionForMacOSStatus:oss]);
+                return NO;
+            }
+        }
+        FSCatalogInfo catalogInfo;
+        OSErr oserr = FSGetCatalogInfo(&fsRef, kFSCatInfoCreateDate, &catalogInfo, NULL, NULL, NULL);
+        if (oserr) {
+            SETNSERROR(@"FileManagerErrorDomain", -1, @"%@", [OSStatusDescription descriptionForMacOSStatus:(OSStatus)oserr]);
             return NO;
         }
+        CFTimeInterval theCreateTime = (double)theCreateTime_sec - NSTimeIntervalSince1970 + (double)theCreateTime_nsec / 1000000000.0;
+        if (UCConvertCFAbsoluteTimeToUTCDateTime(theCreateTime, &catalogInfo.createDate) != noErr) {
+            SETNSERROR(@"FileManagerErrorDomain", -1, @"unable to convert CFAbsoluteTime %f to UTCDateTime", theCreateTime);
+            return NO;
+        }
+        oserr = FSSetCatalogInfo(&fsRef, kFSCatInfoCreateDate, &catalogInfo);
+        if (oserr) {
+            SETNSERROR(@"FileManagerErrorDomain", -1, @"%@", [OSStatusDescription descriptionForMacOSStatus:(OSStatus)oserr]);
+            return NO;
+        }
+        createTime.tv_sec = theCreateTime_sec;
+        createTime.tv_nsec = theCreateTime_nsec;
     }
     return YES;
 }

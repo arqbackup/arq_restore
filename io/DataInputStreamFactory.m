@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -37,14 +37,16 @@
 #import "NSData-InputStream.h"
 
 @implementation DataInputStreamFactory
-- (id)initWithData:(NSData *)theData {
+- (id)initWithData:(NSData *)theData dataDescription:(NSString *)theDataDescription {
     if (self = [super init]) {
         data = [theData retain];
+        dataDescription = [theDataDescription retain];
     }
     return self;
 }
 - (void)dealloc {
     [data release];
+    [dataDescription release];
     [super dealloc];
 }
 
@@ -55,6 +57,6 @@
 
 #pragma mark NSObject
 - (NSString *)description {
-    return [NSString stringWithFormat:@"<DataISF: %u>", [data length]];
+    return [NSString stringWithFormat:@"<DataISF: %u bytes: %@>", [data length], dataDescription];
 }
 @end

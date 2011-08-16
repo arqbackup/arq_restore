@@ -33,7 +33,7 @@
 #include <libgen.h>
 #import <Foundation/Foundation.h>
 #import "ArqRestoreCommand.h"
-#import "ArqFolder.h"
+
 
 static void printUsage(const char *exeName) {
 	fprintf(stderr, "Usage:\n");

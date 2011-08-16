@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -32,8 +32,7 @@
 
 #import <Cocoa/Cocoa.h>
 
-
 @protocol OutputStream <NSObject>
-- (BOOL)write:(const unsigned char *)buf length:(NSUInteger)len error:(NSError **)error;
+- (NSInteger)write:(const unsigned char *)buf length:(NSUInteger)len error:(NSError **)error;
 - (unsigned long long)bytesWritten;
 @end

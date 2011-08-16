@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -32,12 +32,12 @@
 
 #import <Cocoa/Cocoa.h>
 @class BufferedInputStream;
-@protocol OutputStream;
+@class BufferedOutputStream;
 
 @interface DoubleIO : NSObject {
 
 }
 + (void)write:(double)d to:(NSMutableData *)data;
-+ (BOOL)write:(double)d to:(id <OutputStream>)os error:(NSError **)error;
++ (BOOL)write:(double)d to:(BufferedOutputStream *)os error:(NSError **)error;
 + (BOOL)read:(double *)value from:(BufferedInputStream *)is error:(NSError **)error;
 @end

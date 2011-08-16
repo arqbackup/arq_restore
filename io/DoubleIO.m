@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -34,7 +34,7 @@
 #import "StringIO.h"
 #import "SetNSError.h"
 #import "BufferedInputStream.h"
-
+#import "BufferedOutputStream.h"
 
 //FIXME: Delete this class? It's not used anywhere.
 
@@ -44,7 +44,7 @@
 	NSString *str = [NSString stringWithFormat:@"%f", d];
 	[StringIO write:str to:data];
 }
-+ (BOOL)write:(double)d to:(id <OutputStream>)os error:(NSError **)error {
++ (BOOL)write:(double)d to:(BufferedOutputStream *)os error:(NSError **)error {
     NSString *str = [NSString stringWithFormat:@"%f", d];
     return [StringIO write:str to:os error:error];
 }
@@ -61,11 +61,8 @@
         SETNSERROR(@"DoubleIOErrorDomain", -1, @"nil string; expected a double");
         return NO;
     }
-	BOOL ret = [[NSScanner scannerWithString:str] scanDouble:value];
+    *value = strtod([str UTF8String], NULL);
     [str release];
-    if (!ret) {
-        SETNSERROR(@"DoubleIOErrorDomain", -1, @"%@ does not contain a double", str);
-    }
-    return ret;
+    return YES;
 }
 @end

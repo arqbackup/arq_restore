@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -29,11 +29,21 @@
  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
+
 #import <Cocoa/Cocoa.h>
-#import "HTTPConnection.h"
-@class S3AuthorizationProvider;
 
-@interface HTTPConnection (S3)
-- (void)setAuthorizationRequestHeaderUsingProvider:(S3AuthorizationProvider *)sap s3BucketName:(NSString *)s3BucketName;
+#import <Cocoa/Cocoa.h>
+#import "InputStream.h"
+#include <zlib.h>
 
+@interface GunzipInputStream : NSObject <InputStream> {
+    id <InputStream> underlyingStream;
+    z_stream stream;
+    BOOL initialized;
+    BOOL eof;
+    int flush;
+    unsigned char *inBuf;
+}
++ (NSString *)errorDomain;
+- (id)initWithUnderlyingStream:(id <InputStream>)theUnderlyingStream;
 @end

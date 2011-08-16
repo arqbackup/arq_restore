@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -72,7 +72,9 @@
 + (DictNode *)dictNodeWithContentsOfBinaryFile:(NSString *)path error:(NSError **)error {
     struct stat st;
     if (stat([path fileSystemRepresentation], &st) == -1) {
-        SETNSERROR(@"UnixErrorDomain", errno, @"%s", strerror(errno));
+        int errnum = errno;
+        HSLogError(@"lstat(%@) error %d: %s", path, errnum, strerror(errnum));
+        SETNSERROR(@"UnixErrorDomain", errnum, @"%@: %s", path, strerror(errnum));
         return nil;
     }
     FileInputStream *fis = [[FileInputStream alloc] initWithPath:path offset:0 length:(unsigned long long)st.st_size];
@@ -200,6 +202,17 @@
     BOOL ret = [data writeToFile:path options:NSAtomicWrite error:error];
     [data release];
     return ret;
+}
+- (BOOL)writeXMLToFile:(NSString *)path targetUID:(uid_t)theTargetUID targetGID:(uid_t)theTargetGID error:(NSError **)error {
+    if (![self writeXMLToFile:path error:error]) {
+        return NO;
+    }
+    if (chown([path fileSystemRepresentation], theTargetUID, theTargetGID) == -1) {
+        int errnum = errno;
+        SETNSERROR(@"UnixErrorDomain", errnum, @"chown(%@, %d, %d): %s", path, theTargetUID, theTargetGID, strerror(errnum));
+        return NO;
+    }
+    return YES;
 }
 - (NSData *)XMLData {
     NSMutableData *data = [NSMutableData data];

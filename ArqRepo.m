@@ -18,6 +18,10 @@
 #import "NSData-Encrypt.h"
 #import "SetNSError.h"
 #import "NSError_extra.h"
+#import "GunzipInputStream.h"
+#import "CryptoKey.h"
+#import "BlobKey.h"
+#import "Encryption.h"
 
 @implementation ArqRepo
 + (NSString *)errorDomain {
@@ -27,10 +31,29 @@
            s3BucketName:(NSString *)theS3BucketName 
            computerUUID:(NSString *)theComputerUUID
              bucketUUID:(NSString *)theBucketUUID 
-          encryptionKey:(NSString *)theEncryptionKey {
+     encryptionPassword:(NSString *)theEncryptionPassword 
+                   salt:(NSData *)theEncryptionSalt
+                  error:(NSError **)error {
     if (self = [super init]) {
         bucketUUID = [theBucketUUID retain];
-        encryptionKey = [theEncryptionKey retain];
+        
+        if (theEncryptionPassword == nil) {
+            SETNSERROR([Encryption errorDomain], -1, @"missing encryption password");
+            [self release];
+            return nil;
+        }
+        
+        cryptoKey = [[CryptoKey alloc] initLegacyWithPassword:theEncryptionPassword error:error];
+        if (cryptoKey == nil) {
+            [self release];
+            return nil;
+        }
+        stretchedCryptoKey = [[CryptoKey alloc] initWithPassword:theEncryptionPassword salt:theEncryptionSalt error:error];
+        if (stretchedCryptoKey == nil) {
+            [self release];
+            return nil;
+        }
+
         arqFark = [[ArqFark alloc] initWithS3Service:theS3 s3BucketName:theS3BucketName computerUUID:theComputerUUID];
         treesPackSet = [[ArqPackSet alloc] initWithS3Service:theS3 s3BucketName:theS3BucketName computerUUID:theComputerUUID packSetName:[theBucketUUID stringByAppendingString:@"-trees"]];
         blobsPackSet = [[ArqPackSet alloc] initWithS3Service:theS3 s3BucketName:theS3BucketName computerUUID:theComputerUUID packSetName:[theBucketUUID stringByAppendingString:@"-blobs"]];
@@ -39,16 +62,20 @@
 }
 - (void)dealloc {
     [bucketUUID release];
-    [encryptionKey release];
+    [cryptoKey release];
+    [stretchedCryptoKey release];
     [arqFark release];
     [treesPackSet release];
     [blobsPackSet release];
     [super dealloc];
 }
-- (NSString *)headSHA1:(NSError **)error {
-    NSString *bucketDataPath = [NSString stringWithFormat:@"/%@/refs/heads/master", bucketUUID];
+- (NSString *)bucketUUID {
+    return bucketUUID;
+}
+- (BlobKey *)headBlobKey:(NSError **)error {
+    NSString *bucketDataRelativePath = [NSString stringWithFormat:@"/%@/refs/heads/master", bucketUUID];
     NSError *myError = nil;
-    NSData *data = [arqFark bucketDataForPath:bucketDataPath error:&myError];
+    NSData *data = [arqFark bucketDataForRelativePath:bucketDataRelativePath error:&myError];
     if (data == nil) {
         if ([myError isErrorWithDomain:[ArqFark errorDomain] code:ERROR_NOT_FOUND]) {
             SETNSERROR([ArqRepo errorDomain], ERROR_NOT_FOUND, @"no head for bucketUUID %@", bucketUUID);
@@ -59,28 +86,39 @@
         }
         return nil;
     }
-    return [[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] autorelease];
+    NSString *sha1 = [[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] autorelease];
+    BOOL stretch = NO;
+    if ([sha1 length] > 40) {
+        stretch = [sha1 characterAtIndex:40] == 'Y';
+        sha1 = [sha1 substringToIndex:40];
+    }
+    return [[[BlobKey alloc] initWithSHA1:sha1 stretchEncryptionKey:stretch] autorelease];
 }
-- (Commit *)commitForSHA1:(NSString *)theSHA1 error:(NSError **)error {
+- (Commit *)commitForBlobKey:(BlobKey *)commitBlobKey error:(NSError **)error {
     NSError *myError = nil;
-    ServerBlob *sb = [treesPackSet newServerBlobForSHA1:theSHA1 error:&myError];
+    ServerBlob *sb = [treesPackSet newServerBlobForSHA1:[commitBlobKey sha1] error:&myError];
     if (sb == nil) {
         if ([myError isErrorWithDomain:[ArqPackSet errorDomain] code:ERROR_NOT_FOUND]) {
-            HSLogDebug(@"commit %@ not found in pack set %@", theSHA1, [treesPackSet packSetName]);
-            SETNSERROR([ArqRepo errorDomain], ERROR_NOT_FOUND, @"commit not found for sha1 %@", theSHA1);
+            HSLogDebug(@"commit %@ not found in pack set %@", commitBlobKey, [treesPackSet packSetName]);
+            SETNSERROR([ArqRepo errorDomain], ERROR_NOT_FOUND, @"commit %@ not found", commitBlobKey);
         } else {
-            HSLogError(@"commit not found for %@: %@", theSHA1, [myError localizedDescription]);
+            HSLogError(@"commit %@ not found for: %@", commitBlobKey, [myError localizedDescription]);
             if (error != NULL) {
                 *error = myError;
             }
         }
         return nil;
     }
-    NSData *data = [[sb slurp:error] decryptWithCipher:ARQ_DEFAULT_CIPHER_NAME key:encryptionKey error:error];
+    NSData *encrypted = [sb slurp:error];
     [sb release];
+    if (encrypted == nil) {
+        return nil;
+    }
+    NSData *data = [encrypted decryptWithCryptoKey:([commitBlobKey stretchEncryptionKey] ? stretchedCryptoKey : cryptoKey) error:error];
     if (data == nil) {
         return nil;
     }
+
     DataInputStream *dis = [[DataInputStream alloc] initWithData:data];
     BufferedInputStream *bis = [[BufferedInputStream alloc] initWithUnderlyingStream:dis];
     Commit *commit = [[[Commit alloc] initWithBufferedInputStream:bis error:error] autorelease];
@@ -90,26 +128,31 @@
 }
 
 // Returns NO if commit not found:
-- (Tree *)treeForSHA1:(NSString *)theSHA1 error:(NSError **)error {
+- (Tree *)treeForBlobKey:(BlobKey *)blobKey error:(NSError **)error {
     NSError *myError = nil;
-    ServerBlob *sb = [treesPackSet newServerBlobForSHA1:theSHA1 error:error];
+    ServerBlob *sb = [treesPackSet newServerBlobForSHA1:[blobKey sha1] error:&myError];
     if (sb == nil) {
         if ([myError isErrorWithDomain:[ArqPackSet errorDomain] code:ERROR_NOT_FOUND]) {
-            HSLogDebug(@"tree %@ not found in pack set %@", theSHA1, [treesPackSet packSetName]);
-            SETNSERROR([ArqRepo errorDomain], ERROR_NOT_FOUND, @"commit not found for sha1 %@", theSHA1);
+            HSLogDebug(@"tree %@ not found in pack set %@", blobKey, [treesPackSet packSetName]);
+            SETNSERROR([ArqRepo errorDomain], ERROR_NOT_FOUND, @"tree %@ not found", blobKey);
         } else {
-            HSLogError(@"tree not found for %@: %@", theSHA1, [myError localizedDescription]);
+            HSLogError(@"error reading tree %@: %@", blobKey, [myError localizedDescription]);
             if (error != NULL) {
                 *error = myError;
             }
         }
         return nil;
     }
-    NSData *data = [[sb slurp:error] decryptWithCipher:ARQ_DEFAULT_CIPHER_NAME key:encryptionKey error:error];
+    NSData *encrypted = [sb slurp:error];
     [sb release];
+    if (encrypted == nil) {
+        return nil;
+    }
+    NSData *data = [encrypted decryptWithCryptoKey:([blobKey stretchEncryptionKey] ? stretchedCryptoKey : cryptoKey) error:error];
     if (data == nil) {
         return nil;
     }
+
     DataInputStream *dis = [[DataInputStream alloc] initWithData:data];
     BufferedInputStream *bis = [[BufferedInputStream alloc] initWithUnderlyingStream:dis];
     Tree *tree = [[[Tree alloc] initWithBufferedInputStream:bis error:error] autorelease];
@@ -117,8 +160,8 @@
     [dis release];
     return tree;
 }
-- (NSData *)blobDataForSHA1:(NSString *)sha1 error:(NSError **)error {
-    ServerBlob *sb = [self newServerBlobForSHA1:sha1 error:error];
+- (NSData *)blobDataForBlobKey:(BlobKey *)treeBlobKey error:(NSError **)error {
+    ServerBlob *sb = [self newServerBlobForBlobKey:treeBlobKey error:error];
     if (sb == nil) {
         return nil;
     }
@@ -126,28 +169,16 @@
     [sb release];
     return data;
 }
-- (NSData *)blobDataForSHA1s:(NSArray *)sha1s error:(NSError **)error {
-    //FIXME: This is very inefficient!
-    NSMutableData *ret = [NSMutableData data];
-    for (NSString *sha1 in sha1s) {
-        NSData *data = [self blobDataForSHA1:sha1 error:error];
-        if (data == nil) {
-            return nil;
-        }
-        [ret appendData:data];
-    }
-    return ret;
-}
-- (ServerBlob *)newServerBlobForSHA1:(NSString *)sha1 error:(NSError **)error {
+- (ServerBlob *)newServerBlobForBlobKey:(BlobKey *)theBlobKey error:(NSError **)error {
     NSError *myError = nil;
-    ServerBlob *sb = [blobsPackSet newServerBlobForSHA1:sha1 error:&myError];
+    ServerBlob *sb = [blobsPackSet newServerBlobForSHA1:[theBlobKey sha1] error:&myError];
     if (sb == nil) {
         if ([myError isErrorWithDomain:[ArqPackSet errorDomain] code:ERROR_NOT_FOUND]) {
-            HSLogTrace(@"sha1 %@ not found in pack set %@; looking in S3", sha1, [blobsPackSet packSetName]);
-            sb = [arqFark newServerBlobForSHA1:sha1 error:&myError];
+            HSLogTrace(@"%@ not found in pack set %@; looking in S3", theBlobKey, [blobsPackSet packSetName]);
+            sb = [arqFark newServerBlobForSHA1:[theBlobKey sha1] error:&myError];
             if (sb == nil) {
                 if ([myError isErrorWithDomain:[ArqFark errorDomain] code:ERROR_NOT_FOUND]) {
-                    SETNSERROR([ArqRepo errorDomain], ERROR_NOT_FOUND, @"sha1 %@ not found", sha1);
+                    SETNSERROR([ArqRepo errorDomain], ERROR_NOT_FOUND, @"object %@ not found", theBlobKey);
                 } else {
                     if (error != NULL) {
                         *error = myError;
@@ -161,21 +192,45 @@
             }
         }
     }
-    if (sb != nil) {
-        id <InputStream> is = [sb newInputStream];
-        NSString *mimeType = [sb mimeType];
-        NSString *downloadName = [sb downloadName];
-        [sb autorelease];
-        sb = nil;
-        DecryptedInputStream *dis = [[DecryptedInputStream alloc] initWithInputStream:is cipherName:ARQ_DEFAULT_CIPHER_NAME key:encryptionKey error:error];
-        [is release];
-        if (dis != nil) {
-            sb = [[ServerBlob alloc] initWithInputStream:dis mimeType:mimeType downloadName:downloadName];
-            [dis release];
-        }
+    if (sb == nil) {
+        return nil;
     }
+
+    NSString *mimeType = [sb mimeType];
+    NSString *downloadName = [sb downloadName];
+    NSData *encrypted = [sb slurp:error];
+    [sb release];
+    sb = nil;
+    if (encrypted == nil) {
+        return nil;
+    }
+    NSData *data = [encrypted decryptWithCryptoKey:([theBlobKey stretchEncryptionKey] ? stretchedCryptoKey : cryptoKey) error:error];
+    if (data == nil) {
+        return nil;
+    }
+    id <InputStream> blobIS = [[DataInputStream alloc] initWithData:data];
+    sb = [[ServerBlob alloc] initWithInputStream:blobIS mimeType:mimeType downloadName:downloadName];
+    [blobIS release];
     return sb;
 }
+- (BOOL)containsPackedBlob:(BOOL *)contains forBlobKey:(BlobKey *)theBlobKey packSetName:(NSString **)packSetName packSHA1:(NSString **)packSHA1 error:(NSError **)error {
+    if (![blobsPackSet containsBlob:contains forSHA1:[theBlobKey sha1] packSHA1:packSHA1 error:error]) {
+        return NO;
+    }
+    if (*contains) {
+        *packSetName = [blobsPackSet packSetName];
+        return YES;
+    }
+    
+    if (![treesPackSet containsBlob:contains forSHA1:[theBlobKey sha1] packSHA1:packSHA1 error:error]) {
+        return NO;
+    }
+    if (*contains) {
+        *packSetName = [treesPackSet packSetName];
+    }
+    return YES;
+}
+
 
 #pragma mark NSObject
 - (NSString *)description {

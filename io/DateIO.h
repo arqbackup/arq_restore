@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -32,10 +32,12 @@
 
 #import <Cocoa/Cocoa.h>
 @class BufferedInputStream;
+@class BufferedOutputStream;
 
 @interface DateIO : NSObject {
 
 }
 + (void)write:(NSDate *)date to:(NSMutableData *)data;
++ (BOOL)write:(NSDate *)date to:(BufferedOutputStream *)bos error:(NSError **)error;
 + (BOOL)read:(NSDate **)date from:(BufferedInputStream *)is error:(NSError **)error;
 @end

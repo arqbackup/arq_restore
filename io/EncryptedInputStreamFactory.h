@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -31,12 +31,14 @@
  */ 
 
 #import <Cocoa/Cocoa.h>
-#import "InputStream.h"
 
-@interface CFStreamInputStream : NSObject <InputStream> {
-    CFReadStreamRef readStream;
-    BOOL isOpen;
-    uint64_t bytesReceived;
+#import <Cocoa/Cocoa.h>
+#import "InputStreamFactory.h"
+@class CryptoKey;
+
+@interface EncryptedInputStreamFactory : NSObject <InputStreamFactory> {
+    CryptoKey *cryptoKey;
+    id <InputStreamFactory> underlyingFactory;
 }
-- (id)initWithCFReadStream:(CFReadStreamRef)streamRef;
+- (id)initWithCryptoKey:(CryptoKey *)theCryptoKey underlyingFactory:(id <InputStreamFactory>)theUnderlyingFactory;
 @end

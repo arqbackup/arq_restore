@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -31,10 +31,9 @@
  */ 
 
 #import "IntegerIO.h"
-#import "InputStream.h"
-#import "OutputStream.h"
 #import "Streams.h"
 #import "BufferedInputStream.h"
+#import "BufferedOutputStream.h"
 
 @implementation IntegerIO
 //
@@ -47,12 +46,12 @@
     uint32_t nboValue = OSSwapHostToBigInt32(value);
     [data appendBytes:&nboValue length:4];
 }
-+ (BOOL)writeInt32:(int32_t)value to:(id <OutputStream>)os error:(NSError **)error {
++ (BOOL)writeInt32:(int32_t)value to:(BufferedOutputStream *)os error:(NSError **)error {
     return [IntegerIO writeUInt32:(uint32_t)value to:os error:error];
 }
-+ (BOOL)writeUInt32:(uint32_t)value to:(id <OutputStream>)os error:(NSError **)error {
++ (BOOL)writeUInt32:(uint32_t)value to:(BufferedOutputStream *)os error:(NSError **)error {
     uint32_t nboValue = OSSwapHostToBigInt32(value);
-    return [os write:(const unsigned char *)&nboValue length:4 error:error];
+    return [os writeFully:(const unsigned char *)&nboValue length:4 error:error];
 }
 + (void)writeInt64:(int64_t)value to:(NSMutableData *)data {
     [IntegerIO writeUInt64:(uint64_t)value to:data];
@@ -61,12 +60,12 @@
     uint64_t nboValue = OSSwapHostToBigInt64(value);
     [data appendBytes:&nboValue length:8];
 }
-+ (BOOL)writeInt64:(int64_t)value to:(id <OutputStream>)os error:(NSError **)error {
++ (BOOL)writeInt64:(int64_t)value to:(BufferedOutputStream *)os error:(NSError **)error {
     return [IntegerIO writeUInt64:(uint64_t)value to:os error:error];
 }
-+ (BOOL)writeUInt64:(uint64_t)value to:(id <OutputStream>)os error:(NSError **)error {
++ (BOOL)writeUInt64:(uint64_t)value to:(BufferedOutputStream *)os error:(NSError **)error {
     uint64_t nboValue = OSSwapHostToBigInt64(value);
-    return [os write:(const unsigned char *)&nboValue length:8 error:error];
+    return [os writeFully:(const unsigned char *)&nboValue length:8 error:error];
 }
 + (BOOL)readInt32:(int32_t *)value from:(BufferedInputStream *)is error:(NSError **)error {
     return [IntegerIO readUInt32:(uint32_t *)value from:is error:error];

@@ -32,18 +32,29 @@
 
 #import <Cocoa/Cocoa.h>
 @class S3Service;
-@class ArqFark;
 @class ArqRepo;
+@class BlobKey;
+@class Commit;
+@class Tree;
 
 @interface Restorer : NSObject {
-    ArqFark *fark;
     ArqRepo *repo;
     NSString *bucketName;
     NSString *rootPath;
+    NSUInteger superUserNodeCount;
     NSMutableArray *restoreNodes;
     NSMutableDictionary *hardlinks;
     unsigned long long writtenToCurrentFile;
+    NSMutableDictionary *errorsByPath;
+    int myUID;
+    int myGID;
+    unsigned long long transferred;
+    unsigned long long total;
+
+    BlobKey *headBlobKey;
+    Commit *head;
+    Tree *headTree;
 }
-- (id)initWithS3Service:(S3Service *)theS3 s3BucketName:(NSString *)theS3BucketName computerUUID:(NSString *)theComputerUUID bucketUUID:(NSString *)theBucketUUID bucketName:(NSString *)theBucketName encryptionKey:(NSString *)theEncryptionKey;
+- (id)initWithRepo:(ArqRepo *)theRepo bucketName:(NSString *)theBucketName;
 - (BOOL)restore:(NSError **)error;
 @end

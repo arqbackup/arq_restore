@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -71,6 +71,7 @@
 - (void)removeAllObjects;
 
 - (BOOL)writeXMLToFile:(NSString *)path error:(NSError **)error;
+- (BOOL)writeXMLToFile:(NSString *)path targetUID:(uid_t)theTargetUID targetGID:(uid_t)theTargetGID error:(NSError **)error;
 - (NSData *)XMLData;
 - (BOOL)writeAtomicallyToBinaryFile:(NSString *)path error:(NSError **)error;
 - (NSData *)binaryData;

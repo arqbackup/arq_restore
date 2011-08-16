@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -31,12 +31,21 @@
  */ 
 
 #import <Cocoa/Cocoa.h>
+
+#import <Cocoa/Cocoa.h>
 #import "InputStream.h"
 
 @interface FDInputStream : NSObject <InputStream> {
     int fd;
+    unsigned long long offset;
+    unsigned long long length;
+    NSString *label;
+    BOOL needsSeek;
+    BOOL hasLength;
+    NSUInteger timeoutSeconds;
     uint64_t bytesReceived;
 }
-+ (void)setReadTimeoutSeconds:(time_t)timeout;
-- (id)initWithFD:(int)theFD;
+- (id)initWithFD:(int)theFD label:(NSString *)theLabel;
+- (id)initWithFD:(int)theFD offset:(unsigned long long)theOffset length:(unsigned long long)theLength label:(NSString *)theLabel;
+- (id)initWithFD:(int)theFD timeoutSeconds:(NSUInteger)theTimeoutSeconds label:(NSString *)theLabel;
 @end

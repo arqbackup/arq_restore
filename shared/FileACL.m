@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -34,6 +34,7 @@
 #include <stdio.h>
 #import "FileACL.h"
 #import "SetNSError.h"
+#import "NSError_extra.h"
 
 @implementation FileACL
 + (BOOL)aclText:(NSString **)aclText forFile:(NSString *)path error:(NSError **)error {
@@ -42,14 +43,18 @@
     acl_t acl = acl_get_link_np(pathChars, ACL_TYPE_EXTENDED);
     if (!acl) {
         if (errno != ENOENT) {
-            SETNSERROR(@"UnixErrorDomain", errno, @"acl_get_link_np: %s", strerror(errno));
+            int errnum = errno;
+            HSLogError(@"acl_get_link_np(%@) error %d: %s", path, errnum, strerror(errnum));
+            SETNSERROR(@"UnixErrorDomain", errnum, @"failed to get ACL of %@: %s", path, strerror(errnum));
             return NO;
         }
     } else {
         char *aclTextChars = acl_to_text(acl, NULL);
         if (!aclTextChars) {
             acl_free(acl);
-            SETNSERROR(@"UnixErrorDomain", errno, @"acl_to_text: %s", strerror(errno));
+            int errnum = errno;
+            HSLogError(@"acl_to_text from %@ error %d: %s", path, errnum, strerror(errnum));
+            SETNSERROR(@"UnixErrorDomain", errnum, @"failed to convert ACL of @% to text: %s", path, strerror(errnum));
             return NO;
         }
         *aclText = [NSString stringWithUTF8String:aclTextChars];
@@ -59,15 +64,20 @@
     return YES;
 }
 + (BOOL)writeACLText:(NSString *)aclText toFile:(NSString *)path error:(NSError **)error {
+    HSLogTrace(@"applying ACL %@ to %@", aclText, path);
     const char *pathChars = [path fileSystemRepresentation];
     acl_t acl = acl_from_text([aclText UTF8String]);
     if (!acl) {
-        SETNSERROR(@"UnixErrorDomain", errno,  @"acl_from_text: %s", strerror(errno));
+        int errnum = errno;
+        HSLogError(@"acl_from_text(%@) error %d: %s", aclText, errnum, strerror(errnum));
+        SETNSERROR(@"UnixErrorDomain", errnum,  @"failed to convert ACL text '%@' to ACL: %s", aclText, strerror(errnum));
         return NO;
     }
     struct stat st;
     if (lstat(pathChars, &st) == -1) {
-        SETNSERROR(@"UnixErrorDomain", errno, @"%s", strerror(errno));
+        int errnum = errno;
+        HSLogError(@"lstat(%@) error %d: %s", path, errnum, strerror(errnum));
+        SETNSERROR(@"UnixErrorDomain", errnum, @"%@: %s", path, strerror(errnum));
         return NO;
     }
     int ret = 0;
@@ -77,7 +87,9 @@
         ret = acl_set_file(pathChars, ACL_TYPE_EXTENDED, acl);
     }
     if (ret == -1) {
-        SETNSERROR(@"UnixErrorDomain", errno, @"acl_set: %s", strerror(errno));
+        int errnum = errno;
+        HSLogError(@"acl_set(%@) error %d: %s", path, errnum, strerror(errnum));
+        SETNSERROR(@"UnixErrorDomain", errnum, @"failed to set ACL '%@' on %@: %s", aclText, path, strerror(errnum));
         return NO;
     }
     return YES;

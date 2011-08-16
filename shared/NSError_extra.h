@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -33,5 +33,8 @@
 #import <Cocoa/Cocoa.h>
 
 @interface NSError (extra)
++ (NSError *)errorWithDomain:(NSString *)domain code:(NSInteger)code description:(NSString *)theDescription;
+- (id)initWithDomain:(NSString *)domain code:(NSInteger)code description:(NSString *)theDescription;
 - (BOOL)isErrorWithDomain:(NSString *)theDomain code:(int)theCode;
+- (BOOL)isTransientError;
 @end

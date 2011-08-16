@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -41,7 +41,7 @@
         return nil;
     }
     if ([childNodes count] == 0) {
-        HSLogWarn(@"child node %@ not found for node %@", name, [self description]);
+        HSLogTrace(@"child node %@ not found for node %@", name, [self description]);
         return nil;
     }
     if ([childNodes count] > 1) {

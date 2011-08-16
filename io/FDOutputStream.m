@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -30,8 +30,11 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
+#import <Cocoa/Cocoa.h>
+
 #import "FDOutputStream.h"
 #import "SetNSError.h"
+#import "NSError_extra.h"
 
 @implementation FDOutputStream
 - (id)initWithFD:(int)theFD {
@@ -40,23 +43,21 @@
     }
     return self;
 }
-- (BOOL)write:(const unsigned char *)buf length:(NSUInteger)len error:(NSError **)error {
-    int ret = 0;
-    NSUInteger written = 0;
-    while ((len - written) > 0) {
-    write_again:
-        ret = write(fd, &(buf[written]), len - written);
-        if ((ret == -1) && (errno == EINTR)) {
-            goto write_again;
-        }
-        if (ret == -1) {
-            SETNSERROR(@"UnixErrorDomain", errno, @"write: %s", strerror(errno));
-            return NO;
-        }
-        written += (NSUInteger)ret;
-        bytesWritten += (NSUInteger)ret;
+- (NSInteger)write:(const unsigned char *)buf length:(NSUInteger)len error:(NSError **)error {
+    NSInteger ret = 0;
+write_again:
+    ret = write(fd, buf, len);
+    if ((ret == -1) && (errno == EINTR)) {
+        goto write_again;
     }
-    return YES;
+    if (ret == -1) {
+        int errnum = errno;
+        HSLogError(@"write(%d) error %d: %s", fd, errnum, strerror(errnum));
+        SETNSERROR(@"UnixErrorDomain", errnum, @"failed to write to file descriptor: %s", strerror(errnum));
+        return -1;
+    }
+    bytesWritten += (NSUInteger)ret;
+    return ret;
 }
 - (unsigned long long)bytesWritten {
     return bytesWritten;

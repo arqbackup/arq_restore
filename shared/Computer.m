@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -30,32 +30,15 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
-#import <Cocoa/Cocoa.h>
-#import "OutputStream.h"
-@class RFC2616DateFormatter;
+#import "Computer.h"
+#include <SystemConfiguration/SCDynamicStoreCopySpecific.h>
 
-@interface HTTPRequest : NSObject {
-    NSString *host;
-    NSString *method;
-    NSString *pathInfo;
-    NSString *queryString;
-    NSString *protocol;
-    NSMutableDictionary *headers;
-    RFC2616DateFormatter *dateFormatter;
+@implementation Computer
++ (NSString *)name {
+    NSString *theName = (NSString *)SCDynamicStoreCopyComputerName(NULL,NULL);
+    if (theName == nil) {
+        theName = [[NSString alloc] initWithString:@"unknown-computer-name"];
+    }
+    return [theName autorelease];
 }
-@property (copy, readonly) NSString *host;
-@property (copy) NSString *method;
-@property (copy) NSString *pathInfo;
-@property (copy) NSString *queryString;
-@property (copy) NSString *protocol;
-
-- (id)initWithHost:(NSString *)host;
-- (void)setHeader:(NSString *)value forKey:(NSString *)key;
-- (void)setHostHeader;
-- (void)setKeepAliveHeader;
-- (void)setRFC822DateHeader;
-- (void)setContentDispositionHeader:(NSString *)downloadName;
-- (NSString *)headerForKey:(NSString *)key;
-- (NSArray *)allHeaderKeys;
-- (BOOL)write:(id <OutputStream>)os error:(NSError **)error;
 @end

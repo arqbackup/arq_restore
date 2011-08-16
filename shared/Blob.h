@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -32,6 +32,7 @@
 
 #import <Cocoa/Cocoa.h>
 #import "InputStreamFactory.h"
+@class CryptoKey;
 
 @interface Blob : NSObject {
     NSString *mimeType;
@@ -39,9 +40,10 @@
     id <InputStreamFactory> inputStreamFactory;
 }
 - (id)initWithInputStreamFactory:(id <InputStreamFactory>)theFactory mimeType:(NSString *)theMimeType downloadName:(NSString *)theDownloadName;
-- (id)initWithData:(NSData *)theData mimeType:(NSString *)theMimeType downloadName:(NSString *)theDownloadName;
+- (id)initWithData:(NSData *)theData mimeType:(NSString *)theMimeType downloadName:(NSString *)theDownloadName dataDescription:(NSString *)theDataDescription;
 - (NSString *)mimeType;
 - (NSString *)downloadName;
 - (id <InputStreamFactory>)inputStreamFactory;
 - (NSData *)slurp:(NSError **)error;
+- (Blob *)encryptedBlobWithCryptoKey:(CryptoKey *)theCryptoKey error:(NSError **)error;
 @end

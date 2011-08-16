@@ -42,7 +42,9 @@
     
     // Encode all the data
     BIO_write(mem, [self bytes], [self length]);
-    BIO_flush(mem);
+    if (BIO_flush(mem) < 1) {
+        HSLogError(@"BIO_flush error");
+    }
     
     // Create a new string from the data in the memory buffer
     char * base64Pointer;
@@ -53,5 +55,4 @@
     BIO_free_all(mem);
     return base64String;
 }
-
 @end

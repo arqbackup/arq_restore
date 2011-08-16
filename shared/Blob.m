@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -32,6 +32,9 @@
 
 #import "Blob.h"
 #import "DataInputStreamFactory.h"
+#import "NSData-Base64Extensions.h"
+#import "EncryptedInputStreamFactory.h"
+#import "NSData-Encrypt.h"
 
 @implementation Blob
 - (id)initWithInputStreamFactory:(id <InputStreamFactory>)theFactory mimeType:(NSString *)theMimeType downloadName:(NSString *)theDownloadName {
@@ -42,11 +45,11 @@
     }
     return self;
 }
-- (id)initWithData:(NSData *)theData mimeType:(NSString *)theMimeType downloadName:(NSString *)theDownloadName {
+- (id)initWithData:(NSData *)theData mimeType:(NSString *)theMimeType downloadName:(NSString *)theDownloadName dataDescription:(NSString *)theDataDescription {
     if (self = [super init]) {
         mimeType = [theMimeType copy];
         downloadName = [theDownloadName copy];
-        inputStreamFactory = [[DataInputStreamFactory alloc] initWithData:theData];
+        inputStreamFactory = [[DataInputStreamFactory alloc] initWithData:theData dataDescription:theDataDescription];
     }
     return self;
 }
@@ -71,9 +74,30 @@
     [is release];
     return data;
 }
+- (Blob *)encryptedBlobWithCryptoKey:(CryptoKey *)theCryptoKey error:(NSError **)error {
+    NSString *base64EncryptedDownloadName = nil;
+    if (downloadName != nil) {
+        NSData *encryptedDownloadNameData = [[downloadName dataUsingEncoding:NSUTF8StringEncoding] encryptWithCryptoKey:theCryptoKey error:error];
+        if (encryptedDownloadNameData == nil) {
+            return nil;
+        }
+        base64EncryptedDownloadName = [encryptedDownloadNameData encodeBase64];
+    }
+    EncryptedInputStreamFactory *eisf = [[EncryptedInputStreamFactory alloc] initWithCryptoKey:theCryptoKey underlyingFactory:inputStreamFactory];
+    NSString *dataDescription = [eisf description];
+    id <InputStream> is = [eisf newInputStream];
+    NSData *encryptedData = [is slurp:error];
+    [is release];
+    [eisf release];
+    if (encryptedData == nil) {
+        return nil;
+    }
+    Blob *blob = [[[Blob alloc] initWithData:encryptedData mimeType:mimeType downloadName:base64EncryptedDownloadName dataDescription:dataDescription] autorelease];
+    return blob;
+}
 
 #pragma mark NSObject
 - (NSString *)description {
-    return [NSString stringWithFormat:@"<Blob: isf=%@>", [inputStreamFactory description]];
+    return [NSString stringWithFormat:@"<Blob: %@>", [inputStreamFactory description]];
 }
 @end

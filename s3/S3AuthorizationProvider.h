@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -31,14 +31,14 @@
  */ 
 
 #import <Cocoa/Cocoa.h>
-@class S3AuthorizationParameters;
+@protocol S3Signer;
+@protocol HTTPConnection;
 
 @interface S3AuthorizationProvider : NSObject {
 	NSString *accessKey;
-	NSString *secretKey;
+    id <S3Signer> signer;
 }
-- (NSString *)accessKey;
 - (id)initWithAccessKey:(NSString *)access secretKey:(NSString *)secret;
-- (NSString *)authorizationForParameters:(S3AuthorizationParameters *)params;
-
+- (NSString *)accessKey;
+- (BOOL)setAuthorizationRequestHeaderOnHTTPConnection:(id <HTTPConnection>)conn usingS3BucketName:(NSString *)s3BucketName error:(NSError **)error;
 @end

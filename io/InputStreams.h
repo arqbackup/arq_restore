@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -31,6 +31,8 @@
  */ 
 
 #import <Cocoa/Cocoa.h>
+
+#import <Cocoa/Cocoa.h>
 #import "InputStream.h"
 @class BufferedInputStream;
 
@@ -38,6 +40,4 @@
 
 }
 + (NSData *)slurp:(id <InputStream>)is error:(NSError **)error;
-+ (NSString *)readLineWithCRLF:(BufferedInputStream *)bis maxLength:(NSUInteger)maxLength error:(NSError **)error;
-+ (NSString *)readLine:(BufferedInputStream *)bis error:(NSError **)error;
 @end

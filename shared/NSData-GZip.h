@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -30,11 +30,12 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
-#import "ArqUserLibrary.h"
+#import <Cocoa/Cocoa.h>
 
 
-@implementation ArqUserLibrary
-+ (NSString *)arqCachesPath {
-    return [NSHomeDirectory() stringByAppendingPathComponent:@"/Library/Arq/Caches.noindex"];
-}
+@interface NSData (GZip)
+
+- (NSData *)gzipInflate;
+- (NSData *)gzipDeflate;
+
 @end

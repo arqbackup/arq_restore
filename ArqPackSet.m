@@ -22,39 +22,13 @@
 
 @interface ArqPackSet (internal)
 - (ServerBlob *)newInternalServerBlobForSHA1:(NSString *)sha1 error:(NSError **)error;
+- (BOOL)loadPackIndexEntries:(NSError **)error;
 - (NSDictionary *)doLoadPackIndexEntries:(NSError **)error;
 @end
 
 @implementation ArqPackSet
 + (NSString *)errorDomain {
     return @"ArqPackSetErrorDomain";
-}
-+ (BOOL)cachePackSetIndexesForS3BucketName:(NSString *)theS3BucketName computerUUID:(NSString *)theComputerUUID error:(NSError **)error {
-    NSString *accessKeyID;
-    NSString *secretAccessKey;
-    if (![AppKeychain accessKeyID:&accessKeyID secretAccessKey:&secretAccessKey error:error]) {
-        return NO;
-    }
-    S3AuthorizationProvider *sap = [[[S3AuthorizationProvider alloc] initWithAccessKey:accessKeyID secretKey:secretAccessKey] autorelease];
-    S3Service *theS3 = [[[S3Service alloc] initWithS3AuthorizationProvider:sap useSSL:YES retryOnNetworkError:YES] autorelease];
-    NSString *packSetsPrefix = [NSString stringWithFormat:@"/%@/%@/packsets/", theS3BucketName, theComputerUUID];
-    NSArray *packPaths = [theS3 pathsWithPrefix:packSetsPrefix error:error];
-    if (packPaths == nil) {
-        return NO;
-    }
-    for (NSString *packPath in packPaths) {
-        NSString *pattern = [NSString stringWithFormat:@"/%@/%@/packsets/([^/]+)/(\\w+)\\.pack",  theS3BucketName, theComputerUUID];
-        NSRange sha1Range = [packPath rangeOfRegex:pattern capture:2];
-        if (sha1Range.location != NSNotFound) {
-            NSString *packSHA1 = [packPath substringWithRange:sha1Range];
-            NSString *thePackSetName = [packPath substringWithRange:[packPath rangeOfRegex:pattern capture:1]];
-            DiskPackIndex *dpi = [[[DiskPackIndex alloc] initWithS3Service:theS3 s3BucketName:theS3BucketName computerUUID:theComputerUUID packSetName:thePackSetName packSHA1:packSHA1] autorelease];
-            if (![dpi makeLocal:error]) {
-                return NO;
-            }
-        }
-    }
-    return YES;
 }
 
 - (id)initWithS3Service:(S3Service *)theS3
@@ -80,26 +54,15 @@
 - (NSString *)packSetName {
     return packSetName;
 }
-- (BOOL)packSHA1:(NSString **)packSHA1 forPackedSHA1:(NSString *)packedSHA1 error:(NSError **)error {
-    if (packIndexEntries == nil) {
-        NSDictionary *entries = [self doLoadPackIndexEntries:error];
-        if (entries == nil) {
-            return NO;
-        }
-        packIndexEntries = [entries retain];
-    }
-    *packSHA1 = nil;
-    PackIndexEntry *pie = [packIndexEntries objectForKey:packedSHA1];
-    if (pie != nil) {
-        *packSHA1 = [pie packSHA1];
-    }
-    return YES;
-}
 - (ServerBlob *)newServerBlobForSHA1:(NSString *)sha1 error:(NSError **)error {
     ServerBlob *sb = nil;
     NSError *myError = nil;
     NSUInteger i = 0;
+    NSAutoreleasePool *pool = nil;
     for (i = 0; i < MAX_RETRIES; i++) {
+        [pool drain];
+        pool = [[NSAutoreleasePool alloc] init];
+        myError = nil;
         sb = [self newInternalServerBlobForSHA1:sha1 error:&myError];
         if (sb == nil) {
             if ([myError isErrorWithDomain:[ArqPackSet errorDomain] code:ERROR_PACK_INDEX_ENTRY_NOT_RESOLVABLE]) {
@@ -113,6 +76,9 @@
             break;
         }
     }
+    [myError retain];
+    [pool drain];
+    [myError autorelease];
     if (sb == nil) {
         if ([myError isErrorWithDomain:[ArqPackSet errorDomain] code:ERROR_PACK_INDEX_ENTRY_NOT_RESOLVABLE]) {
             SETNSERROR([ArqPackSet errorDomain], ERROR_NOT_FOUND, @"failed %u times to load blob for sha1 %@ from pack set %@", i, sha1, packSetName);
@@ -122,23 +88,36 @@
     }
     return sb;
 }
+- (BOOL)containsBlob:(BOOL *)contains forSHA1:(NSString *)sha1 packSHA1:(NSString **)packSHA1 error:(NSError **)error {
+    if (packIndexEntries == nil && ![self loadPackIndexEntries:error]) {
+        return NO;
+    }
+    PackIndexEntry *pie = [packIndexEntries objectForKey:sha1];
+    *contains = (pie != nil);
+    if (pie != nil) {
+        *packSHA1 = [pie packSHA1];
+    }
+    return YES;
+}
 @end
 
 @implementation ArqPackSet (internal)
 - (ServerBlob *)newInternalServerBlobForSHA1:(NSString *)sha1 error:(NSError **)error {
-    if (packIndexEntries == nil) {
-        NSDictionary *entries = [self doLoadPackIndexEntries:error];
-        if (entries == nil) {
-            return nil;
-        }
-        packIndexEntries = [entries retain];
+    if (packIndexEntries == nil && ![self loadPackIndexEntries:error]) {
+        return nil;
     }
     PackIndexEntry *pie = [packIndexEntries objectForKey:sha1];
     if (pie == nil) {
         SETNSERROR([ArqPackSet errorDomain], ERROR_NOT_FOUND, @"sha1 %@ not found in pack set %@", sha1, packSetName);
         return NO;
     }
-    DiskPack *diskPack = [[DiskPack alloc] initWithS3Service:s3 s3BucketName:s3BucketName computerUUID:computerUUID packSetName:packSetName packSHA1:[pie packSHA1]];
+    DiskPack *diskPack = [[DiskPack alloc] initWithS3Service:s3 
+                                                s3BucketName:s3BucketName 
+                                                computerUUID:computerUUID 
+                                                 packSetName:packSetName 
+                                                    packSHA1:[pie packSHA1]
+                                                   targetUID:getuid()
+                                                   targetGID:getgid()];
     ServerBlob *sb = nil;
     do {
         NSError *myError = nil;
@@ -157,6 +136,38 @@
     [diskPack release];
     return sb;
 }
+- (BOOL)loadPackIndexEntries:(NSError **)error {
+    BOOL ret = YES;
+    NSAutoreleasePool *pool = nil;
+    for (;;) {
+        [pool drain];
+        pool = [[NSAutoreleasePool alloc] init];
+        NSError *myError = nil;
+        NSDictionary *entries = [self doLoadPackIndexEntries:&myError];
+        if (entries != nil) {
+            packIndexEntries = [entries retain];
+            break;
+        }
+        if ([myError code] != ERROR_NOT_FOUND) {
+            if (error != NULL) {
+                *error = myError;
+            }
+            ret = NO;
+            break;
+        }
+        // If it's a not-found error, it can be because Arq Agent replaced a pack with another one between when we got
+        // the S3 list and when we tried to make them local.
+        HSLogDebug(@"error loading pack index entries (retrying): %@", myError);
+    }
+    if (!ret && error != NULL) {
+        [*error retain];
+    }
+    [pool drain];
+    if (!ret && error != NULL) {
+        [*error autorelease];
+    }
+    return ret;
+}
 - (NSDictionary *)doLoadPackIndexEntries:(NSError **)error {
     NSMutableDictionary *entries = [NSMutableDictionary dictionary];
     NSString *packSHA1Prefix = [NSString stringWithFormat:@"/%@/%@/packsets/%@/", s3BucketName, computerUUID, packSetName];
@@ -169,7 +180,13 @@
         if (sha1Range.location != NSNotFound) {
             NSString *packSHA1 = [packSHA1Path substringWithRange:sha1Range];
             BOOL ret = NO;
-            DiskPackIndex *index = [[DiskPackIndex alloc] initWithS3Service:s3 s3BucketName:s3BucketName computerUUID:computerUUID packSetName:packSetName packSHA1:packSHA1];
+            DiskPackIndex *index = [[DiskPackIndex alloc] initWithS3Service:s3 
+                                                               s3BucketName:s3BucketName 
+                                                               computerUUID:computerUUID 
+                                                                packSetName:packSetName 
+                                                                   packSHA1:packSHA1
+                                                                  targetUID:getuid()
+                                                                  targetGID:getgid()];
             do {
                 if (![index makeLocal:error]) {
                     break;
@@ -178,7 +195,7 @@
                 if (pies == nil) {
                     break;
                 }
-                HSLogDebug(@"found %u entries in s3 pack sha1 %@ packset %@ computer %@ s3bucket %@", [pies count], packSHA1, packSetName, computerUUID, s3BucketName);
+                HSLogTrace(@"found %u entries in s3 pack sha1 %@ packset %@ computer %@ s3bucket %@", [pies count], packSHA1, packSetName, computerUUID, s3BucketName);
                 for (PackIndexEntry *pie in pies) {
                     [entries setObject:pie forKey:[pie objectSHA1]];
                 }

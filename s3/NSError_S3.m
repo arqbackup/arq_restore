@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -31,29 +31,72 @@
  */ 
 
 #import "NSError_S3.h"
+#import "S3Service.h"
+#import "NSXMLNode_extra.h"
+#import "NSError_extra.h"
 
+
+@interface NSError (S3Internal)
++ (NSXMLNode *)errorNodeWithinXMLData:(NSData *)theXMLData;
+@end
 
 @implementation NSError (S3)
-+ (NSError *)errorFromAmazonXMLData:(NSData *)data statusCode:(int)statusCode {
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-	NSString *message = nil;
-    NSError *tmpError;
-	NSXMLDocument *xmlDoc = [[[NSXMLDocument alloc] initWithData:data options:0 error:&tmpError] autorelease];
-	if (xmlDoc != nil) {
-        HSLogDebug(@"amazon error XML: %@", [xmlDoc description]);
-		NSArray *messages = [xmlDoc nodesForXPath:@"//Error/Message" error:&tmpError];
-		if (messages && [messages count] > 0) {
-			message = [NSString stringWithFormat:@"Amazon S3 error: %@", [[messages objectAtIndex:0] stringValue]];
-		}
-    } else {
-        HSLogError(@"unable to parse S3 error XML: %@; xml=%@", [tmpError localizedDescription], [[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] autorelease]);
++ (NSError *)amazonErrorWithHTTPStatusCode:(int)theHTTPStatusCode responseBody:(NSData *)theResponseBody {
+    NSXMLNode *errorNode = [NSError errorNodeWithinXMLData:theResponseBody];
+    if (errorNode == nil) {
+        return [NSError errorWithDomain:[S3Service errorDomain] code:S3SERVICE_ERROR_UNEXPECTED_RESPONSE userInfo:[NSDictionary dictionaryWithObject:@"error parsing S3 response" forKey:NSLocalizedDescriptionKey]];
     }
-    if (message == nil) {
-        message = [NSString stringWithFormat:@"Amazon S3 error %d", statusCode];
+    NSString *errorCode = [[errorNode childNodeNamed:@"Code"] stringValue];
+    NSString *errorMessage = [[errorNode childNodeNamed:@"Message"] stringValue];
+    NSString *endpoint = [[errorNode childNodeNamed:@"Endpoint"] stringValue];
+    NSMutableDictionary *userInfo = [NSMutableDictionary dictionary];
+    [userInfo setObject:[NSNumber numberWithInt:theHTTPStatusCode] forKey:@"HTTPStatusCode"];
+    if (errorCode != nil) {
+        [userInfo setObject:errorCode forKey:@"AmazonCode"];
     }
-    NSError *error = [NSError errorWithDomain:S3_ERROR_DOMAIN code:statusCode userInfo:[NSDictionary dictionaryWithObjectsAndKeys:message, NSLocalizedDescriptionKey, nil]];
-    [error retain];
-    [pool drain];
-    return [error autorelease];
+    if (errorMessage != nil) {
+        [userInfo setObject:errorMessage forKey:@"AmazonMessage"];
+    }
+    if (endpoint != nil) {
+        [userInfo setObject:endpoint forKey:@"AmazonEndpoint"];
+    }
+    NSString *description = @"Amazon error";
+    if (errorCode != nil && errorMessage != nil) {
+        description = errorMessage;
+        NSMutableString *details = [NSMutableString stringWithFormat:@"Code=%@; Message=%@", errorCode, errorMessage];
+        if (endpoint != nil) {
+            [details appendFormat:@"; Endpoint=%@", endpoint];
+        }
+        NSError *underlying = [NSError errorWithDomain:@"AmazonErrorDomain" code:theHTTPStatusCode description:details];
+        [userInfo setObject:underlying forKey:NSUnderlyingErrorKey];
+    }
+    [userInfo setObject:description forKey:NSLocalizedDescriptionKey];
+    return [NSError errorWithDomain:[S3Service errorDomain] code:S3SERVICE_ERROR_AMAZON_ERROR userInfo:userInfo];
+}
+@end
+
+@implementation NSError (S3Internal)
++ (NSXMLNode *)errorNodeWithinXMLData:(NSData *)theXMLData {
+    NSError *parseError = nil;
+    NSXMLDocument *xmlDoc = [[[NSXMLDocument alloc] initWithData:theXMLData options:0 error:&parseError] autorelease];
+    if (xmlDoc == nil) {
+        HSLogError(@"error parsing S3 response: %@", [parseError localizedDescription]);
+        return nil;
+    }
+    NSArray *errorNodes = [[xmlDoc rootElement] nodesForXPath:@"//Error" error:&parseError];
+    
+    if (errorNodes == nil) {
+        HSLogError(@"error finding Error node in Amazon error XML: %@", [parseError localizedDescription]);
+        return nil;
+    }
+    
+    if ([errorNodes count] == 0) {
+        HSLogWarn(@"missing Error node in S3 XML response");
+        return nil;
+    }
+    if ([errorNodes count] > 1) {
+        HSLogWarn(@"ignoring additional Error nodes in S3 XML response");
+    }
+    return [errorNodes objectAtIndex:0];
 }
 @end

@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -33,6 +33,7 @@
 #import <Cocoa/Cocoa.h>
 #include <openssl/evp.h>
 #import "InputStream.h"
+@class CryptoKey;
 
 typedef int (*CryptInitFunc)(EVP_CIPHER_CTX *ctx, const EVP_CIPHER *type, unsigned char *key, unsigned char *iv);
 typedef int (*CryptUpdateFunc)(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl, unsigned char *in, int inl);
@@ -43,20 +44,23 @@ typedef int (*CryptFinalFunc)(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl
     CryptUpdateFunc cryptUpdate;
     CryptFinalFunc cryptFinal;
     id <InputStream> is;
+    NSString *label;
     unsigned char *inBuf;
     NSUInteger inBufSize;
     unsigned char *outBuf;
     NSInteger outBufLen;
     NSUInteger outBufSize;
     NSUInteger outBufPos;
-    const EVP_CIPHER *cipher;
     EVP_CIPHER_CTX cipherContext;
-    unsigned char evp_key[EVP_MAX_KEY_LENGTH];
-    unsigned char iv[EVP_MAX_IV_LENGTH];
     size_t blockSize;
     BOOL initialized;
     BOOL finalized;
 }
-+ (NSString *)errorDomain;
-- (id)initWithCryptInitFunc:(void *)theCryptInit cryptUpdateFunc:(void *)theCryptUpdate cryptFinalFunc:(void *)theCryptFinal inputStream:(id <InputStream>)theIS cipherName:(NSString *)theCipherName key:(NSString *)theKey error:(NSError **)error;
+- (id)initWithCryptInitFunc:(void *)theCryptInit 
+            cryptUpdateFunc:(void *)theCryptUpdate 
+             cryptFinalFunc:(void *)theCryptFinal 
+                inputStream:(id <InputStream>)theIS 
+                  cryptoKey:(CryptoKey *)theCryptoKey
+                      label:(NSString *)theLabel
+                      error:(NSError **)error;
 @end

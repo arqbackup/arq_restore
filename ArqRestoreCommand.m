@@ -36,12 +36,13 @@
 #import "S3Service.h"
 #import "RegexKitLite.h"
 #import "DictNode.h"
-#import "ArqFolder.h"
 #import "HTTP.h"
 #import "Restorer.h"
 #import "NSErrorCodes.h"
 #import "NSError_extra.h"
 #import "UserAndComputer.h"
+#import "ArqSalt.h"
+#import "ArqRepo.h"
 
 @interface ArqRestoreCommand (internal)
 - (BOOL)printArqFolders:(NSError **)error;
@@ -66,7 +67,7 @@
         }
         if (accessKey != nil && secretKey != nil) {
             S3AuthorizationProvider *sap = [[S3AuthorizationProvider alloc] initWithAccessKey:accessKey secretKey:secretKey];
-            s3 = [[S3Service alloc] initWithS3AuthorizationProvider:sap useSSL:NO retryOnNetworkError:YES];
+            s3 = [[S3Service alloc] initWithS3AuthorizationProvider:sap useSSL:NO retryOnTransientError:YES];
             [sap release];
         }
     }
@@ -213,7 +214,23 @@
     }
     printf(" to %s/%s\n", [[[NSFileManager defaultManager] currentDirectoryPath] UTF8String], [bucketName UTF8String]);
     
-    Restorer *restorer = [[[Restorer alloc] initWithS3Service:s3 s3BucketName:s3BucketName computerUUID:computerUUID bucketUUID:bucketUUID bucketName:bucketName encryptionKey:encryptionPassword] autorelease];
+    NSError *saltError = nil;
+    ArqSalt *arqSalt = [[[ArqSalt alloc] initWithAccessKeyID:accessKey secretAccessKey:secretKey s3BucketName:s3BucketName computerUUID:computerUUID] autorelease];
+    NSData *salt = [arqSalt salt:&saltError];
+    if (salt == nil) {
+        if ([saltError code] != ERROR_NOT_FOUND) {
+            if (error != NULL) {
+                *error = saltError;
+            }
+            return NO;
+        }
+    }
+    ArqRepo *repo = [[[ArqRepo alloc] initWithS3Service:s3 s3BucketName:s3BucketName computerUUID:computerUUID bucketUUID:bucketUUID encryptionPassword:encryptionPassword salt:salt error:error] autorelease];
+    if (repo == nil) {
+        return NO;
+    }
+    
+    Restorer *restorer = [[[Restorer alloc] initWithRepo:repo bucketName:bucketName] autorelease];
     if (![restorer restore:error]) {
         return NO;
     }

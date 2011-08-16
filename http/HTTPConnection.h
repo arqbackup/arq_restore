@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -32,32 +32,23 @@
 
 #import <Cocoa/Cocoa.h>
 #import "InputStream.h"
-@protocol StreamPair;
-@class BufferedInputStream;
-@class HTTPRequest;
-@class HTTPResponse;
 
-@interface HTTPConnection : NSObject {
-    id <StreamPair> streamPair;
-    BufferedInputStream *bufferedInputStream;
-    HTTPRequest *request;
-    HTTPResponse *response;
-}
-- (id)initWithHost:(NSString *)theHost useSSL:(BOOL)isUseSSL error:(NSError **)error;
-- (id)initWithHost:(NSString *)theHost port:(int)thePort useSSL:(BOOL)isUseSSL error:(NSError **)error;
-- (void)setRequestMethod:(NSString *)theRequestMethod pathInfo:(NSString *)thePathInfo queryString:(NSString *)theQueryString protocol:(NSString *)theProtocol;
+@protocol HTTPConnection <InputStream>
 - (void)setRequestHeader:(NSString *)value forKey:(NSString *)key;
 - (void)setRequestHostHeader;
-- (void)setRequestKeepAliveHeader;
 - (void)setRequestContentDispositionHeader:(NSString *)downloadName;
 - (void)setRFC822DateRequestHeader;
+- (NSString *)requestMethod;
+- (NSString *)requestPathInfo;
+- (NSString *)requestQueryString;
+- (NSArray *)requestHeaderKeys;
+- (NSString *)requestHeaderForKey:(NSString *)theKey;
 - (BOOL)executeRequest:(NSError **)error;
-- (BOOL)executeRequestWithBody:(id <InputStream>)bodyStream error:(NSError **)error;
+- (BOOL)executeRequestWithBody:(NSData *)theBody error:(NSError **)error;
 - (int)responseCode;
 - (NSString *)responseHeaderForKey:(NSString *)key;
-- (NSString *)responseMimeType;
+- (NSString *)responseContentType;
 - (NSString *)responseDownloadName;
 - (id <InputStream>)newResponseBodyStream:(NSError **)error;
-- (NSData *)slurpResponseBody:(NSError **)error;
-- (void)setCloseRequested;
 @end
+

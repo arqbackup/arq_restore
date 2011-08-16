@@ -14,8 +14,11 @@
     NSString *secretKey;
     NSString *encryptionPassword;
     S3Service *s3;
+    NSSet *objectSHA1s;
+    BOOL verbose;
 }
 - (id)initWithAccessKey:(NSString *)theAccessKey secretKey:(NSString *)theSecretKey encryptionPassword:(NSString *)theEncryptionPassword;
+- (void)setVerbose:(BOOL)isVerbose;
 - (BOOL)verifyAll:(NSError **)error;
 - (BOOL)verifyS3BucketName:(NSString *)s3BucketName error:(NSError **)error;
 - (BOOL)verifyS3BucketName:(NSString *)s3BucketName computerUUID:(NSString *)computerUUID error:(NSError **)error;

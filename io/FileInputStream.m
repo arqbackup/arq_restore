@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -30,12 +30,14 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
+#import <Cocoa/Cocoa.h>
+
 #import "FileInputStream.h"
 #import "SetNSError.h"
 #import "InputStreams.h"
 #import "NSErrorCodes.h"
 
-#define MY_BUF_SIZE (8192)
+#define MY_BUF_SIZE (4096)
 
 @interface FileInputStream (internal)
 - (void)close;
@@ -62,13 +64,17 @@
     if (fd == -1) {
         fd = open([path fileSystemRepresentation], O_RDONLY|O_NOFOLLOW);
         if (fd == -1) {
-            SETNSERROR(@"UnixErrorDomain", errno, @"%s", strerror(errno));
+            int errnum = errno;
+            HSLogError(@"open(%@) error %d: %s", path, errnum, strerror(errnum));
+            SETNSERROR(@"UnixErrorDomain", errnum, @"failed to open %@: %s", path, strerror(errnum));
             return -1;
         }
         HSLogTrace(@"opened fd %d (%@)", fd, path);
         if (offset > 0) {
             if (lseek(fd, (off_t)offset, SEEK_SET) == -1) {
-                SETNSERROR(@"UnixErrorDomain", errno, @"lseek(%@, %qu): %s", path, offset, strerror(errno));
+                int errnum = errno;
+                HSLogError(@"lseek(%@, %qu) error %d: %s", path, offset, errnum, strerror(errnum));
+                SETNSERROR(@"UnixErrorDomain", errnum, @"failed to seek to %qu in %@: %s", offset, path, strerror(errnum));
                 return -1;
             }
         }
@@ -86,7 +92,9 @@ read_again:
         goto read_again;
     }
     if (ret < 0) {
-        SETNSERROR(@"UnixErrorDomain", errno, @"read: %s", strerror(errno));
+        int errnum = errno;
+        HSLogError(@"read(%@) error %d: %s", path, errnum, strerror(errnum));
+        SETNSERROR(@"UnixErrorDomain", errnum, @"failed to read from %@: %s", path, strerror(errnum));
     } else {
         offset += ret;
     }
@@ -98,7 +106,7 @@ read_again:
 
 #pragma mark NSObject protocol
 - (NSString *)description {
-    return [NSString stringWithFormat:@"<FileInputStream: fd=%d path=%@>", fd, path];
+    return [NSString stringWithFormat:@"<FileInputStream: offset=%qu,length=%qu,path=%@>", offset, fileLength, path];
 }
 @end
 

@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -32,13 +32,13 @@
 
 #import <Cocoa/Cocoa.h>
 @class BufferedInputStream;
-#import "OutputStream.h"
+@class BufferedOutputStream;
 
 @interface StringIO : NSObject {
 
 }
 + (void)write:(NSString *)value to:(NSMutableData *)data;
-+ (BOOL)write:(NSString *)str to:(id <OutputStream>)os error:(NSError **)error;
++ (BOOL)write:(NSString *)str to:(BufferedOutputStream *)os error:(NSError **)error;
 + (BOOL)read:(NSString **)value from:(BufferedInputStream *)is error:(NSError **)error;
 + (BOOL)newString:(NSString **)value from:(BufferedInputStream *)is error:(NSError **)error;
 @end

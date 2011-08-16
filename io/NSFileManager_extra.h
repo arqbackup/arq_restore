@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -32,9 +32,25 @@
 
 #import <Cocoa/Cocoa.h>
 
+#import <Cocoa/Cocoa.h>
+
 
 @interface NSFileManager (extra)
 - (BOOL)ensureParentPathExistsForPath:(NSString *)path error:(NSError **)error;
+- (BOOL)ensureParentPathExistsForPath:(NSString *)path 
+                            targetUID:(uid_t)theTargetUID 
+                            targetGID:(gid_t)theTargetGID
+                                error:(NSError **)error;
+- (BOOL)createDirectoryAtPath:(NSString *)path 
+  withIntermediateDirectories:(BOOL)withIntermediate
+                   attributes:(NSDictionary *)attributes 
+                    targetUID:(uid_t)theTargetUID 
+                    targetGID:(gid_t)theTargetGID
+                        error:(NSError **)error;
 - (BOOL)touchFileAtPath:(NSString *)path error:(NSError **)error;
+- (BOOL)touchFileAtPath:(NSString *)path 
+              targetUID:(uid_t)theTargetUID 
+              targetGID:(gid_t)theTargetGID
+                  error:(NSError **)error;
 - (BOOL)createUniqueTempDirectoryWithTemplate:(NSString *)pathTemplate createdDirectory:(NSString **)createdPath error:(NSError **)error;
 @end

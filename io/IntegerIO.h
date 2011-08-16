@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -31,8 +31,8 @@
  */ 
 
 #import <Cocoa/Cocoa.h>
-#import "OutputStream.h"
 @class BufferedInputStream;
+@class BufferedOutputStream;
 
 @interface IntegerIO : NSObject {
 
@@ -43,11 +43,11 @@
 + (void)writeInt64:(int64_t)i to:(NSMutableData *)data;
 + (void)writeUInt64:(uint64_t)i to:(NSMutableData *)data;
 
-+ (BOOL)writeInt32:(int32_t)i to:(id <OutputStream>)os error:(NSError **)error;
-+ (BOOL)writeUInt32:(uint32_t)i to:(id <OutputStream>)os error:(NSError **)error;
++ (BOOL)writeInt32:(int32_t)i to:(BufferedOutputStream *)os error:(NSError **)error;
++ (BOOL)writeUInt32:(uint32_t)i to:(BufferedOutputStream *)os error:(NSError **)error;
 
-+ (BOOL)writeInt64:(int64_t)i to:(id <OutputStream>)os error:(NSError **)error;
-+ (BOOL)writeUInt64:(uint64_t)i to:(id <OutputStream>)os error:(NSError **)error;
++ (BOOL)writeInt64:(int64_t)i to:(BufferedOutputStream *)os error:(NSError **)error;
++ (BOOL)writeUInt64:(uint64_t)i to:(BufferedOutputStream *)os error:(NSError **)error;
 
 + (BOOL)readInt32:(int32_t *)value from:(BufferedInputStream *)is error:(NSError **)error;
 + (BOOL)readUInt32:(uint32_t *)value from:(BufferedInputStream *)is error:(NSError **)error;

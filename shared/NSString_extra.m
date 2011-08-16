@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -32,6 +32,67 @@
 
 #import "NSString_extra.h"
 #import "RegexKitLite.h"
+#include <openssl/bio.h>
+#include <openssl/evp.h>
+
+static const char  table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+static const int   BASE64_INPUT_SIZE = 57;
+
+static BOOL isbase64(char c)
+{
+    return c && strchr(table, c) != NULL;
+}
+
+static inline char value(char c)
+{
+    const char *p = strchr(table, c);
+    if(p) {
+        return p-table;
+    } else {
+        return 0;
+    }
+}
+
+static int UnBase64(unsigned char *dest, const unsigned char *src, int srclen)
+{
+    *dest = 0;
+    if(*src == 0) 
+    {
+        return 0;
+    }
+    unsigned char *p = dest;
+    do
+    {
+        
+        char a = value(src[0]);
+        char b = value(src[1]);
+        char c = value(src[2]);
+        char d = value(src[3]);
+        *p++ = (a << 2) | (b >> 4);
+        *p++ = (b << 4) | (c >> 2);
+        *p++ = (c << 6) | d;
+        if(!isbase64(src[1])) 
+        {
+            p -= 2;
+            break;
+        } 
+        else if(!isbase64(src[2])) 
+        {
+            p -= 2;
+            break;
+        } 
+        else if(!isbase64(src[3])) 
+        {
+            p--;
+            break;
+        }
+        src += 4;
+        while(*src && (*src == 13 || *src == 10)) src++;
+    }
+    while(srclen-= 4);
+    *p = 0;
+    return p-dest;
+}
 
 static NSString *PATH_PATTERN = @"^(.+)(\\.\\w+)$";
 
@@ -49,7 +110,7 @@ static unsigned char hexCharToInt(char c1) {
 }
 
 @implementation NSString (extra)
-+ (NSString *)hexStringWithBytes:(unsigned char *)bytes length:(unsigned int)length {
++ (NSString *)hexStringWithBytes:(const unsigned char *)bytes length:(unsigned int)length {
     char *buf = (char *)malloc(length * 2 + 1);
     for (unsigned int i = 0; i < length; i++) {
         unsigned char c = bytes[i];
@@ -86,5 +147,23 @@ static unsigned char hexCharToInt(char c1) {
         bytes[i] = tmp;
     }
     return data;
+}
+- (NSData *)decodeBase64 {
+    NSData *encodedData = [self dataUsingEncoding:NSASCIIStringEncoding];
+    const unsigned char *encoded = (const unsigned char *)[encodedData bytes];
+    unsigned char *decoded = (unsigned char *)malloc([encodedData length]);
+    int ret = UnBase64(decoded, encoded, [encodedData length]);
+    return [[[NSData alloc] initWithBytes:decoded length:ret] autorelease];
+}
+- (NSComparisonResult)compareByLength:(NSString *)value {
+    NSUInteger myLength = [self length];
+    NSUInteger otherLength = [value length];
+    if (myLength == otherLength) {
+        return [self compare:value];
+    }
+    if (myLength < otherLength) {
+        return NSOrderedAscending;
+    }
+    return NSOrderedDescending;
 }
 @end

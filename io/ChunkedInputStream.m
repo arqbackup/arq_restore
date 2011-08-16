@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -54,19 +54,22 @@
 - (NSInteger)read:(unsigned char *)buf bufferLength:(NSUInteger)bufferLength error:(NSError **)error {
     if (received >= chunkLength) {
         received = 0;
-        NSString *line = [InputStreams readLineWithCRLF:underlyingStream maxLength:MAX_CHUNK_LENGTH_LINE_LENGTH error:error];
+        NSString *line = [underlyingStream readLineWithCRLFWithMaxLength:MAX_CHUNK_LENGTH_LINE_LENGTH error:error];
         if (line == nil) {
             return -1;
         }
         NSScanner *scanner = [NSScanner scannerWithString:line];
-        if (![scanner scanHexInt:&chunkLength]) {
+        unsigned int scanned = 0;
+        if (![scanner scanHexInt:&scanned]) {
             SETNSERROR(@"StreamErrorDomain", -1, @"invalid chunk length: %@", line);
             return -1;
         }
+        chunkLength = (NSUInteger)scanned;
         HSLogTrace(@"chunk length = %u", chunkLength);
     }
     if (chunkLength == 0) {
-        return 0;
+        SETNSERROR(@"StreamsErrorDomain", ERROR_EOF, @"EOF (zero chunk length)");
+        return -1;
     }
     NSUInteger remaining = chunkLength - received;
     NSUInteger toRead = remaining > bufferLength ? bufferLength : remaining;
@@ -76,7 +79,7 @@
     }
     received += ret;
     if (received >= chunkLength) {
-        NSString *line = [InputStreams readLineWithCRLF:underlyingStream maxLength:MAX_CHUNK_LENGTH_LINE_LENGTH error:error];
+        NSString *line = [underlyingStream readLineWithCRLFWithMaxLength:MAX_CHUNK_LENGTH_LINE_LENGTH error:error];
         if (line == nil) {
             return -1;
         }

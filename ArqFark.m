@@ -41,14 +41,14 @@
     [creatorThread release];
     [super dealloc];
 }
-- (NSData *)bucketDataForPath:(NSString *)bucketDataPath error:(NSError **)error {
+- (NSData *)bucketDataForRelativePath:(NSString *)bucketDataRelativePath error:(NSError **)error {
     NSAssert([NSThread currentThread] == creatorThread, @"must be on same thread!");
     
     NSError *myError = nil;
-    NSData *data = [s3 dataAtPath:[FarkPath s3PathForBucketDataPath:bucketDataPath s3BucketName:s3BucketName computerUUID:computerUUID] error:&myError];
+    NSData *data = [s3 dataAtPath:[FarkPath s3PathForBucketDataRelativePath:bucketDataRelativePath s3BucketName:s3BucketName computerUUID:computerUUID] error:&myError];
     if (data == nil) {
         if ([myError isErrorWithDomain:[S3Service errorDomain] code:ERROR_NOT_FOUND]) {
-            SETNSERROR([ArqFark errorDomain], ERROR_NOT_FOUND, @"bucket data not found for path %@", bucketDataPath);
+            SETNSERROR([ArqFark errorDomain], ERROR_NOT_FOUND, @"bucket data not found for path %@", bucketDataRelativePath);
         } else {
             if (error != NULL) {
                 *error = myError;
@@ -67,7 +67,7 @@
     return data;
 }
 - (ServerBlob *)newServerBlobForSHA1:(NSString *)sha1 error:(NSError **)error {
-    NSAssert([NSThread currentThread] == creatorThread, @"must be on same thread!");
+//    NSAssert([NSThread currentThread] == creatorThread, @"must be on same thread!");
     NSString *s3Path = [NSString stringWithFormat:@"/%@/%@/objects/%@", s3BucketName, computerUUID, sha1];
     return [s3 newServerBlobAtPath:s3Path error:error];
 }

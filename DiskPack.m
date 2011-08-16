@@ -1,40 +1,15 @@
-/*
- Copyright (c) 2009, Stefan Reitshamer http://www.haystacksoftware.com
- 
- All rights reserved.
- 
- Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions are met:
- 
- * Redistributions of source code must retain the above copyright
- notice, this list of conditions and the following disclaimer.
- 
- * Redistributions in binary form must reproduce the above copyright
- notice, this list of conditions and the following disclaimer in the
- documentation and/or other materials provided with the distribution.
- 
- * Neither the names of PhotoMinds LLC or Haystack Software, nor the names of 
- their contributors may be used to endorse or promote products derived from
- this software without specific prior written permission.
- 
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
- TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */ 
+//
+//  DiskPack.m
+//  Arq
+//
+//  Created by Stefan Reitshamer on 12/30/09.
+//  Copyright 2009 __MyCompanyName__. All rights reserved.
+//
 
 #include <sys/stat.h>
 #import "DiskPack.h"
 #import "SetNSError.h"
 #import "FDInputStream.h"
-#import "BufferedInputStream.h"
 #import "StringIO.h"
 #import "IntegerIO.h"
 #import "ServerBlob.h"
@@ -48,10 +23,13 @@
 #import "S3ObjectMetadata.h"
 #import "PackIndexEntry.h"
 #import "SHA1Hash.h"
-#import "ArqUserLibrary.h"
+#import "UserLibrary_Arq.h"
+#import "BufferedInputStream.h"
+#import "NSError_extra.h"
+
 
 @interface DiskPack (internal)
-- (BOOL)savePack:(ServerBlob *)sb bytesWritten:(unsigned long long *)written error:(NSError **)error;
+- (BOOL)savePack:(ServerBlob *)sb error:(NSError **)error;
 - (NSArray *)sortedPackIndexEntriesFromStream:(BufferedInputStream *)fis error:(NSError **)error;
 @end
 
@@ -59,10 +37,16 @@
 + (NSString *)s3PathWithS3BucketName:(NSString *)theS3BucketName computerUUID:(NSString *)theComputerUUID packSetName:(NSString *)thePackSetName packSHA1:(NSString *)thePackSHA1 {
     return [NSString stringWithFormat:@"/%@/%@/packsets/%@/%@.pack", theS3BucketName, theComputerUUID, thePackSetName, thePackSHA1];
 }
-+ (NSString *)localPathWithComputerUUID:(NSString *)theComputerUUID packSetName:(NSString *)thePackSetName packSHA1:(NSString *)thePackSHA1 {
-    return [NSString stringWithFormat:@"%@/%@/packsets/%@/%@/%@.pack", [ArqUserLibrary arqCachesPath], theComputerUUID, thePackSetName, [thePackSHA1 substringToIndex:2], [thePackSHA1 substringFromIndex:2]];
++ (NSString *)localPathWithS3BucketName:(NSString *)theS3BucketName computerUUID:(NSString *)theComputerUUID packSetName:(NSString *)thePackSetName packSHA1:(NSString *)thePackSHA1 {
+    return [NSString stringWithFormat:@"%@/%@/%@/packsets/%@/%@/%@.pack", [UserLibrary arqCachePath], theS3BucketName, theComputerUUID, thePackSetName, [thePackSHA1 substringToIndex:2], [thePackSHA1 substringFromIndex:2]];
 }
-- (id)initWithS3Service:(S3Service *)theS3 s3BucketName:(NSString *)theS3BucketName computerUUID:(NSString *)theComputerUUID packSetName:(NSString *)thePackSetName packSHA1:(NSString *)thePackSHA1 {
+- (id)initWithS3Service:(S3Service *)theS3 
+           s3BucketName:(NSString *)theS3BucketName 
+           computerUUID:(NSString *)theComputerUUID 
+            packSetName:(NSString *)thePackSetName 
+               packSHA1:(NSString *)thePackSHA1
+              targetUID:(uid_t)theTargetUID 
+              targetGID:(gid_t)theTargetGID {
     if (self = [super init]) {
         s3 = [theS3 retain];
         s3BucketName = [theS3BucketName retain];
@@ -70,7 +54,9 @@
         packSetName = [thePackSetName retain];
         packSHA1 = [thePackSHA1 retain];
         s3Path = [[DiskPack s3PathWithS3BucketName:s3BucketName computerUUID:computerUUID packSetName:packSetName packSHA1:packSHA1] retain];
-        localPath = [[DiskPack localPathWithComputerUUID:computerUUID packSetName:packSetName packSHA1:packSHA1] retain];
+        localPath = [[DiskPack localPathWithS3BucketName:s3BucketName computerUUID:computerUUID packSetName:packSetName packSHA1:packSHA1] retain];
+        targetUID = theTargetUID;
+        targetGID = theTargetGID;
     }
     return self;
 }
@@ -86,38 +72,59 @@
 }
 - (BOOL)makeLocal:(NSError **)error {
     NSFileManager *fm = [NSFileManager defaultManager];
-    BOOL ret = NO;
+    BOOL ret = YES;
     if (![fm fileExistsAtPath:localPath]) {
-        HSLogDebug(@"packset %@: making pack %@ local", packSetName, packSHA1);
-        NSError *myError = nil;
-        ServerBlob *sb = [s3 newServerBlobAtPath:s3Path error:&myError];
-        if (sb == nil) {
-            HSLogError(@"error getting S3 pack %@: %@", s3Path, [myError localizedDescription]);
-            if (error != NULL) {
-                *error = myError;
+        for (;;) {
+            HSLogDebug(@"packset %@: making pack %@ local", packSetName, packSHA1);
+            NSError *myError = nil;
+            ServerBlob *sb = [s3 newServerBlobAtPath:s3Path error:&myError];
+            if (sb != nil) {
+                ret = [self savePack:sb error:error];
+                [sb release];
+                break;
             }
-        } else {
-            unsigned long long bytesWritten;
-            ret = [self savePack:sb bytesWritten:&bytesWritten error:error];
-            [sb release];
+            if (![myError isTransientError]) {
+                HSLogError(@"error getting S3 pack %@: %@", s3Path, myError);
+                if (error != NULL) {
+                    *error = myError;
+                }
+                ret = NO;
+                break;
+            }
+            HSLogWarn(@"network error making pack %@ local (retrying): %@", s3Path, myError);
+            NSError *rmError = nil;
+            if (![[NSFileManager defaultManager] removeItemAtPath:localPath error:&rmError]) {
+                HSLogError(@"error deleting incomplete downloaded pack file %@: %@", localPath, rmError);
+            }
         }
-    } else {
-        ret = YES;
+    }
+    return ret;
+}
+- (BOOL)makeNotLocal:(NSError **)error {
+    NSFileManager *fm = [NSFileManager defaultManager];
+    HSLogDebug(@"removing disk pack %@", localPath);
+    BOOL ret = YES;
+    if ([fm fileExistsAtPath:localPath] && ![fm removeItemAtPath:localPath error:error]) {
+        ret = NO;
     }
     return ret;
 }
 - (ServerBlob *)newServerBlobForObjectAtOffset:(unsigned long long)offset error:(NSError **)error {
     int fd = open([localPath fileSystemRepresentation], O_RDONLY);
     if (fd == -1) {
-        SETNSERROR(@"UnixErrorDomain", errno, @"%s: %@", strerror(errno), localPath);
+        int errnum = errno;
+        HSLogError(@"open(%@) error %d: %s", localPath, errnum, strerror(errnum));
+        SETNSERROR(@"UnixErrorDomain", errnum, @"failed to open %@: %s", localPath, strerror(errnum));
         return nil;
     }
     ServerBlob *ret = nil;
-    FDInputStream *fdis = [[FDInputStream alloc] initWithFD:fd];
+    FDInputStream *fdis = [[FDInputStream alloc] initWithFD:fd label:localPath];
     BufferedInputStream *bis = [[BufferedInputStream alloc] initWithUnderlyingStream:fdis];
     do {
         if (lseek(fd, offset, SEEK_SET) == -1) {
-            SETNSERROR(@"UnixErrorDomain", errno, @"lseek(%@, %qu): %s", localPath, offset, strerror(errno));
+            int errnum = errno;
+            HSLogError(@"lseek(%@, %qu) error %d: %s", localPath, offset, errnum, strerror(errnum));
+            SETNSERROR(@"UnixErrorDomain", errnum, @"failed to seek to %qu in %@: %s", offset, localPath, strerror(errnum));
             break;
         }
         NSString *mimeType;
@@ -131,10 +138,12 @@
         }
         NSData *data = nil;
         if (dataLen > 0) {
-            data = [bis readExactly:dataLen error:error];
-            if (data == nil) {
+            unsigned char *buf = (unsigned char *)malloc(dataLen);
+            if (![bis readExactly:dataLen into:buf error:error]) {
+                free(buf);
                 break;
             }
+            data = [NSData dataWithBytesNoCopy:buf length:dataLen];
         } else {
             data = [NSData data];
         }
@@ -148,10 +157,30 @@
 - (BOOL)fileLength:(unsigned long long *)length error:(NSError **)error {
     struct stat st;
     if (lstat([localPath fileSystemRepresentation], &st) == -1) {
-        SETNSERROR(@"UnixErrorDomain", errno, @"lstat(%@): %s", localPath, strerror(errno));
+        int errnum = errno;
+        HSLogError(@"lstat(%@) error %d: %s", localPath, errnum, strerror(errnum));
+        SETNSERROR(@"UnixErrorDomain", errnum, @"%@: %s", localPath, strerror(errnum));
         return NO;
     }
     *length = st.st_size;
+    return YES;
+}
+- (BOOL)copyToPath:(NSString *)dest error:(NSError **)error {
+    NSFileManager *fm = [NSFileManager defaultManager];
+    if ([fm fileExistsAtPath:dest] && ![fm removeItemAtPath:dest error:error]) {
+        HSLogError(@"error removing old mutable pack at %@", dest);
+        return NO;
+    }
+    if (![fm ensureParentPathExistsForPath:dest targetUID:targetUID targetGID:targetGID error:error] || ![fm copyItemAtPath:localPath toPath:dest error:error]) {
+        HSLogError(@"error copying pack %@ to %@", localPath, dest);
+        return NO;
+    }
+    if (chown([localPath fileSystemRepresentation], targetUID, targetGID) == -1) {
+        int errnum = errno;
+        SETNSERROR(@"UnixErrorDomain", errnum, @"chown(%@): %s", localPath, strerror(errnum));
+        return NO;
+    }
+    HSLogDebug(@"copied %@ to %@", localPath, dest);
     return YES;
 }
 - (NSArray *)sortedPackIndexEntries:(NSError **)error {
@@ -169,15 +198,16 @@
 @end
 
 @implementation  DiskPack (internal)
-- (BOOL)savePack:(ServerBlob *)sb bytesWritten:(unsigned long long *)written error:(NSError **)error {
-    if (![[NSFileManager defaultManager] ensureParentPathExistsForPath:localPath error:error]) {
+- (BOOL)savePack:(ServerBlob *)sb error:(NSError **)error {
+    if (![[NSFileManager defaultManager] ensureParentPathExistsForPath:localPath targetUID:targetUID targetGID:targetGID error:error]) {
         return NO;
     }
     id <InputStream> is = [sb newInputStream];
     NSError *myError;
-    BOOL ret = [Streams transferFrom:is atomicallyToFile:localPath bytesWritten:written error:&myError];
+    unsigned long long written;
+    BOOL ret = [Streams transferFrom:is atomicallyToFile:localPath targetUID:targetUID targetGID:targetGID bytesWritten:&written error:&myError];
     if (ret) {
-        HSLogDebug(@"wrote %qu bytes to %@", *written, localPath);
+        HSLogDebug(@"wrote %qu bytes to %@", written, localPath);
     } else {
         if (error != NULL) {
             *error = myError;
@@ -223,5 +253,10 @@
         [pie release];
     }
     return ret;    
+}
+
+#pragma mark NSObject
+- (NSString *)description {
+    return [NSString stringWithFormat:@"<DiskPack s3Bucket=%@ computerUUID=%@ packset=%@ sha1=%@ localPath=%@>", s3BucketName, computerUUID, packSetName, packSHA1, localPath];
 }
 @end

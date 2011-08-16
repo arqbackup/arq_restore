@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2010, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -31,10 +31,13 @@
  */ 
 
 #import <Cocoa/Cocoa.h>
+
+#import <Cocoa/Cocoa.h>
 #import "InputStreamFactory.h"
 
 @interface DataInputStreamFactory : NSObject <InputStreamFactory> {
     NSData *data;
+    NSString *dataDescription;
 }
-- (id)initWithData:(NSData *)theData;
+- (id)initWithData:(NSData *)theData dataDescription:(NSString *)theDataDescription;
 @end

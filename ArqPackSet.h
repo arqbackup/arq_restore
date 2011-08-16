@@ -18,12 +18,11 @@
     NSDictionary *packIndexEntries;
 }
 + (NSString *)errorDomain;
-+ (BOOL)cachePackSetIndexesForS3BucketName:(NSString *)theS3BucketName computerUUID:(NSString *)theComputerUUID error:(NSError **)error;
 - (id)initWithS3Service:(S3Service *)theS3
            s3BucketName:(NSString *)theS3BucketName
            computerUUID:(NSString *)theComputerUUID
             packSetName:(NSString *)thePackSetName;
 - (NSString *)packSetName;
 - (ServerBlob *)newServerBlobForSHA1:(NSString *)sha1 error:(NSError **)error;
-- (BOOL)packSHA1:(NSString **)packSHA1 forPackedSHA1:(NSString *)packedSHA1 error:(NSError **)error;
+- (BOOL)containsBlob:(BOOL *)contains forSHA1:(NSString *)sha1 packSHA1:(NSString **)packSHA1 error:(NSError **)error;
 @end
