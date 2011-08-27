@@ -18,6 +18,7 @@
 #import "CommitFailedFile.h"
 #import "BufferedInputStream.h"
 #import "BooleanIO.h"
+#import "DataIO.h"
 #import "BlobKey.h"
 
 #define HEADER_LENGTH (10)
@@ -40,7 +41,8 @@ location = _location,
 computer = _computer,
 mergeCommonAncestorCommitBlobKey = _mergeCommonAncestorCommitBlobKey, 
 creationDate = _creationDate,
-commitFailedFiles = _commitFailedFiles;
+commitFailedFiles = _commitFailedFiles,
+bucketXMLData = _bucketXMLData;
 
 
 - (id)initWithCommit:(Commit *)theCommit parentCommitBlobKey:(BlobKey *)theParentBlobKey {
@@ -58,6 +60,7 @@ commitFailedFiles = _commitFailedFiles;
         _mergeCommonAncestorCommitBlobKey = nil;
         _creationDate = [[theCommit creationDate] copy];
         _commitFailedFiles = [[theCommit commitFailedFiles] copy];
+        _bucketXMLData = [[theCommit bucketXMLData] copy];
     }
     return self;
 }
@@ -68,7 +71,8 @@ commitFailedFiles = _commitFailedFiles;
                       treeBlobKey:(BlobKey *)theTreeBlobKey
                          location:(NSString *)theLocation
  mergeCommonAncestorCommitBlobKey:(BlobKey *)theMergeCommonAncestorCommitBlobKey 
-                commitFailedFiles:(NSArray *)theCommitFailedFiles {
+                commitFailedFiles:(NSArray *)theCommitFailedFiles 
+                    bucketXMLData:(NSData *)theBucketXMLData {
     if (self = [super init]) {
         _author = [theAuthor copy];
         _comment = [theComment copy];
@@ -85,6 +89,7 @@ commitFailedFiles = _commitFailedFiles;
         _mergeCommonAncestorCommitBlobKey = [theMergeCommonAncestorCommitBlobKey retain];
         _creationDate = [[NSDate alloc] init];
         _commitFailedFiles = [theCommitFailedFiles copy];
+        _bucketXMLData = [theBucketXMLData copy];
     }
     return self;
 }
@@ -183,6 +188,13 @@ commitFailedFiles = _commitFailedFiles;
             }
             _commitFailedFiles = [commitFailedFiles retain];
         }
+        
+        if (commitVersion >= 5) {
+            if (![DataIO read:&_bucketXMLData from:is error:error]) {
+                goto init_error;
+            }
+            [_bucketXMLData retain];
+        }
     }
     goto init_done;
     
@@ -206,6 +218,7 @@ init_done:
     [_mergeCommonAncestorCommitBlobKey release];
     [_creationDate release];
     [_commitFailedFiles release];
+    [_bucketXMLData release];
     [super dealloc];
 }
 - (NSNumber *)isMergeCommit {
@@ -236,6 +249,7 @@ init_done:
     for (CommitFailedFile *cff in _commitFailedFiles) {
         [cff writeTo:data];
     }
+    [DataIO write:_bucketXMLData to:data];
     ret = [[[Blob alloc] initWithData:data mimeType:@"binary/octet-stream" downloadName:@"commit" dataDescription:@"commit"] autorelease];
     [data release];
     return ret;

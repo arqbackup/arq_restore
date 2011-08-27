@@ -11,7 +11,7 @@
 #import "BufferedInputStream.h"
 @class BlobKey;
 
-#define CURRENT_COMMIT_VERSION 4
+#define CURRENT_COMMIT_VERSION 5
 
 @interface Commit : NSObject {
     int commitVersion;
@@ -24,6 +24,7 @@
 	BlobKey *_mergeCommonAncestorCommitBlobKey;
 	NSDate *_creationDate;
     NSArray *_commitFailedFiles;
+    NSData *_bucketXMLData;
 }
 + (NSString *)errorDomain;
 - (id)initWithCommit:(Commit *)commit parentCommitBlobKey:(BlobKey *)parentCommitBlobKey;
@@ -34,7 +35,8 @@
                       treeBlobKey:(BlobKey *)theTreeBlobKey
                          location:(NSString *)theLocation
  mergeCommonAncestorCommitBlobKey:(BlobKey *)theMergeCommonAncestorCommitBlobKey
-                commitFailedFiles:(NSArray *)theCommitFailedFiles;
+                commitFailedFiles:(NSArray *)theCommitFailedFiles
+                    bucketXMLData:(NSData *)theBucketXMLData;
 
 - (id)initWithBufferedInputStream:(BufferedInputStream *)is error:(NSError **)error;
 
@@ -47,6 +49,7 @@
 @property(readonly,copy) BlobKey *mergeCommonAncestorCommitBlobKey;
 @property(readonly,retain) NSDate *creationDate;
 @property(readonly,retain) NSArray *commitFailedFiles;
+@property(readonly, retain) NSData *bucketXMLData;
 
 - (NSNumber *)isMergeCommit;
 - (Blob *)toBlob;
