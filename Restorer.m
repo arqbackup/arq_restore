@@ -75,6 +75,7 @@
 - (BOOL)createSymLink:(Node *)node path:(NSString *)symLinkFile target:(NSString *)target error:(NSError **)error;
 - (BOOL)applyACLBlobKey:(BlobKey *)aclBlobKey uncompress:(BOOL)uncompress toPath:(NSString *)path error:(NSError **)error;
 - (BOOL)applyXAttrsBlobKey:(BlobKey *)xattrsBlobKey uncompress:(BOOL)uncompress toFile:(NSString *)path error:(NSError **)error;
+- (void)addError:(NSError *)theError forPath:(NSString *)thePath;
 @end
 
 @implementation Restorer
@@ -154,6 +155,9 @@
     }
     return YES;
 }
+- (NSDictionary *)errorsByPath {
+    return errorsByPath;
+}
 @end
 
 @implementation Restorer (internal)
@@ -203,7 +207,7 @@
                         }
                         break;
                     }
-                    [self performSelectorOnMainThread:@selector(addError:) withObject:[NSArray arrayWithObjects:restoreError, childPath, nil] waitUntilDone:YES];
+                    [self addError:restoreError forPath:childPath];
                 }
             } else {
                 NSError *restoreError = nil;
@@ -216,7 +220,7 @@
                         break;
                     }
                     HSLogDebug(@"error restoring %@: %@", childPath, restoreError);
-                    [self performSelectorOnMainThread:@selector(addError:) withObject:[NSArray arrayWithObjects:restoreError, childPath, nil] waitUntilDone:YES];
+                    [self addError:restoreError forPath:childPath];
                 }
             }
         }
@@ -689,5 +693,8 @@
         }
     }
     return YES;
+}
+- (void)addError:(NSError *)theError forPath:(NSString *)thePath {
+    [errorsByPath setObject:theError forKey:thePath];
 }
 @end

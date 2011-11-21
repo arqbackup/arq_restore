@@ -56,4 +56,5 @@
 }
 - (id)initWithRepo:(ArqRepo *)theRepo bucketName:(NSString *)theBucketName commitSHA1:(NSString *)theCommitSHA1;
 - (BOOL)restore:(NSError **)error;
+- (NSDictionary *)errorsByPath;
 @end

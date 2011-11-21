@@ -238,6 +238,14 @@
             return NO;
         }
         printf("restored files are in %s\n", [bucketName fileSystemRepresentation]);
+        NSDictionary *errorsByPath = [restorer errorsByPath];
+        if ([errorsByPath count] > 0) {
+            printf("Errors occurred:\n");
+            NSArray *sortedKeys = [[errorsByPath allKeys] sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)];
+            for (NSString *key in sortedKeys) {
+                printf("%s\t\t%s\n", [key UTF8String], [[[errorsByPath objectForKey:key] localizedDescription] UTF8String]);
+            }
+        }
     }
     return YES;
 }
