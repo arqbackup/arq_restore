@@ -12,7 +12,7 @@
 @class Node;
 @class BlobKey;
 
-#define CURRENT_TREE_VERSION 14
+#define CURRENT_TREE_VERSION 15
 #define TREE_HEADER_LENGTH (8)
 
 @interface Tree : NSObject {

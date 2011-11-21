@@ -94,6 +94,12 @@
                 goto initError;
             }
         }
+        if (treeVersion >= 15) {
+            if (![IntegerIO readInt64:&createTime_sec from:is error:error]
+                || ![IntegerIO readInt64:&createTime_nsec from:is error:error]) {
+                goto initError;
+            }
+        }        
         
         unsigned int nodeCount;
         if (![IntegerIO readUInt32:&nodeCount from:is error:error]) {
