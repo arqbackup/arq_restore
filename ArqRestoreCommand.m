@@ -80,6 +80,7 @@
     [encryptionPassword release];
     [s3 release];
     [path release];
+    [commitSHA1 release];
     [super dealloc];
 }
 - (BOOL)readArgc:(int)argc argv:(const char **)argv {
@@ -98,6 +99,8 @@
             setHSLogLevel(hsLogLevelForName(level));
         } else if (path == nil) {
             path = [[NSString alloc] initWithUTF8String:argv[i]];
+        } else if (commitSHA1 == nil) {
+            commitSHA1 = [[NSString alloc] initWithUTF8String:argv[i]];
         } else {
             fprintf(stderr, "warning: ignoring argument '%s'\n", argv[i]);
         }
@@ -110,7 +113,7 @@
         ret = [self printArqFolders:error];
     } else {
         ret = [self restorePath:error];
-    }
+    }        
     return ret;
 }
 @end
@@ -219,7 +222,7 @@
         return NO;
     }
     
-    Restorer *restorer = [[[Restorer alloc] initWithRepo:repo bucketName:bucketName] autorelease];
+    Restorer *restorer = [[[Restorer alloc] initWithRepo:repo bucketName:bucketName commitSHA1:commitSHA1] autorelease];
     if (![restorer restore:error]) {
         return NO;
     }

@@ -50,6 +50,8 @@
 #import "NSData-Gzip.h"
 #import "GunzipInputStream.h"
 #import "FileACL.h"
+#import "BlobKey.h"
+
 
 #define MAX_RETRIES (10)
 #define MY_BUF_SIZE (8192)
@@ -61,7 +63,6 @@
 - (BOOL)restoreNode:(Node *)theNode ofTree:(Tree *)theTree toPath:(NSString *)thePath error:(NSError **)error;
 - (BOOL)needSuperUserForTree:(Tree *)theTree;
 - (BOOL)needSuperUserForTree:(Tree *)theTree node:(Node *)theNode;
-- (BOOL)performSuperUserOps:(NSError **)error;
 - (BOOL)chownNode:(Node *)theNode ofTree:(Tree *)theTree atPath:(NSString *)thePath error:(NSError **)error;
 - (BOOL)chownTree:(Tree *)theTree atPath:(NSString *)thePath error:(NSError **)error;
 - (BOOL)applyUID:(int)theUID gid:(int)theGID mode:(int)theMode rdev:(int)theRdev toPath:(NSString *)thePath error:(NSError **)error;
@@ -77,10 +78,11 @@
 @end
 
 @implementation Restorer
-- (id)initWithRepo:(ArqRepo *)theArqRepo bucketName:(NSString *)theBucketName {
+- (id)initWithRepo:(ArqRepo *)theArqRepo bucketName:(NSString *)theBucketName commitSHA1:(NSString *)theCommitSHA1 {
     if (self = [super init]) {
         repo = [theArqRepo retain];
         bucketName = [theBucketName copy];
+        commitSHA1 = [theCommitSHA1 copy];
         rootPath = [[[[NSFileManager defaultManager] currentDirectoryPath] stringByAppendingPathComponent:theBucketName] copy];
         restoreNodes = [[NSMutableArray alloc] init];
         hardlinks = [[NSMutableDictionary alloc] init];
@@ -93,13 +95,12 @@
 - (void)dealloc {
     [repo release];
     [bucketName release];
+    [commitSHA1 release];
     [rootPath release];
     [restoreNodes release];
     [hardlinks release];
     [errorsByPath release];
-    [headBlobKey release];
-    [head release];
-    [headTree release];
+    [rootTree release];
     [super dealloc];
 }
 - (BOOL)restore:(NSError **)error {
@@ -111,20 +112,44 @@
         HSLogError(@"failed to create directory %@", rootPath);
         return NO;
     }
-    headBlobKey = [[repo headBlobKey:error] retain];
-    if (headBlobKey == nil) {
-        SETNSERROR([Restorer errorDomain], -1, @"no backup found");
+    BlobKey *commitBlobKey = nil;
+    Commit *commit = nil;
+    NSError *myError = nil;
+    if (commitSHA1 != nil) {
+        commitBlobKey = [[[BlobKey alloc] initWithSHA1:commitSHA1 stretchEncryptionKey:YES] autorelease];
+        commit = [repo commitForBlobKey:commitBlobKey error:&myError];
+        if (commit == nil) {
+            HSLogError(@"error attempting to read commit for %@", commitBlobKey);
+            
+            // Try without stretched encryption key.
+            commitBlobKey = [[[BlobKey alloc] initWithSHA1:commitSHA1 stretchEncryptionKey:NO] autorelease];
+            commit = [repo commitForBlobKey:commitBlobKey error:&myError];
+            if (commit == nil) {
+                HSLogError(@"error attempting to read commit for %@", commitBlobKey);
+                if (error != NULL) {
+                    *error = myError;
+                }
+                return NO;
+            }
+        }
+    } else {
+        commitBlobKey = [[repo headBlobKey:error] retain];
+        if (commitBlobKey == nil) {
+            SETNSERROR([Restorer errorDomain], -1, @"no backup found");
+            return NO;
+        }
+        commit = [repo commitForBlobKey:commitBlobKey error:error];
+        if (commit == nil) {
+            return NO;
+        }
+    }
+    printf("restoring %scommit %s\n", (commitSHA1 == nil ? "head " : ""), [[commitBlobKey description] UTF8String]);
+    
+    rootTree = [[repo treeForBlobKey:[commit treeBlobKey] error:error] retain];
+    if (rootTree == nil) {
         return NO;
     }
-    head = [[repo commitForBlobKey:headBlobKey error:error] retain];
-    if (head == nil) {
-        return NO;
-    }
-    headTree = [[repo treeForBlobKey:[head treeBlobKey] error:error] retain];
-    if (headTree == nil) {
-        return NO;
-    }
-    if (![self restoreTree:headTree toPath:rootPath error:error]) {
+    if (![self restoreTree:rootTree toPath:rootPath error:error]) {
         return NO;
     }
     return YES;
@@ -295,9 +320,6 @@
         return YES;
     }
     return NO;
-}
-- (BOOL)performSuperUserOps:(NSError **)error {
-    return [self chownTree:headTree atPath:rootPath error:error];
 }
 - (BOOL)chownNode:(Node *)theNode ofTree:(Tree *)theTree atPath:(NSString *)thePath error:(NSError **)error {
     if ([[errorsByPath allKeys] containsObject:thePath]) {

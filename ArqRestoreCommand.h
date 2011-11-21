@@ -39,6 +39,7 @@
     NSString *encryptionPassword;
     S3Service *s3;
     NSString *path;
+    NSString *commitSHA1;
 }
 - (BOOL)readArgc:(int)argc argv:(const char **)argv;
 - (BOOL)execute:(NSError **)error;

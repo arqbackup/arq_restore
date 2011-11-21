@@ -40,6 +40,7 @@
 @interface Restorer : NSObject {
     ArqRepo *repo;
     NSString *bucketName;
+    NSString *commitSHA1;
     NSString *rootPath;
     NSUInteger superUserNodeCount;
     NSMutableArray *restoreNodes;
@@ -51,10 +52,8 @@
     unsigned long long transferred;
     unsigned long long total;
 
-    BlobKey *headBlobKey;
-    Commit *head;
-    Tree *headTree;
+    Tree *rootTree;
 }
-- (id)initWithRepo:(ArqRepo *)theRepo bucketName:(NSString *)theBucketName;
+- (id)initWithRepo:(ArqRepo *)theRepo bucketName:(NSString *)theBucketName commitSHA1:(NSString *)theCommitSHA1;
 - (BOOL)restore:(NSError **)error;
 @end
