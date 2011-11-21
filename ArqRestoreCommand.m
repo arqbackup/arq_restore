@@ -44,10 +44,12 @@
 #import "ArqSalt.h"
 #import "ArqRepo.h"
 #import "BackupSet.h"
+#import "ReflogPrinter.h"
+
 
 @interface ArqRestoreCommand (internal)
 - (BOOL)printArqFolders:(NSError **)error;
-- (BOOL)restorePath:(NSError **)error;
+- (BOOL)processPath:(NSError **)error;
 - (BOOL)validateS3Keys:(NSError **)error;
 @end
 
@@ -112,7 +114,7 @@
     if (path == nil) {
         ret = [self printArqFolders:error];
     } else {
-        ret = [self restorePath:error];
+        ret = [self processPath:error];
     }        
     return ret;
 }
@@ -164,7 +166,7 @@
     }
     return YES;
 }
-- (BOOL)restorePath:(NSError **)error {
+- (BOOL)processPath:(NSError **)error {
     if (![self validateS3Keys:error]) {
         return NO;
     }
@@ -192,19 +194,13 @@
     NSString *computerUUID = [path substringWithRange:computerUUIDRange];
     NSString *bucketUUID = [path substringWithRange:bucketUUIDRange];
     NSString *bucketName = [[plist stringNodeForKey:@"BucketName"] stringValue];
-
-    printf("restoring %s from ", [bucketName UTF8String]);
     
     NSError *uacError = nil;
     NSData *uacData = [s3 dataAtPath:[NSString stringWithFormat:@"/%@/%@/computerinfo", s3BucketName, computerUUID] error:&uacError];
     UserAndComputer *uac = nil;
     if (uacData != nil) {
         uac = [[[UserAndComputer alloc] initWithXMLData:uacData error:&uacError] autorelease];
-        printf("%s (%s)", [[uac computerName] UTF8String], [[uac userName] UTF8String]);
-    } else {
-        printf("(unknown computer)");
     }
-    printf(" to %s/%s\n", [[[NSFileManager defaultManager] currentDirectoryPath] UTF8String], [bucketName UTF8String]);
     
     NSError *saltError = nil;
     ArqSalt *arqSalt = [[[ArqSalt alloc] initWithAccessKeyID:accessKey secretAccessKey:secretKey s3BucketName:s3BucketName computerUUID:computerUUID] autorelease];
@@ -222,11 +218,27 @@
         return NO;
     }
     
-    Restorer *restorer = [[[Restorer alloc] initWithRepo:repo bucketName:bucketName commitSHA1:commitSHA1] autorelease];
-    if (![restorer restore:error]) {
-        return NO;
+    if ([commitSHA1 isEqualToString:@"reflog"]) {
+        printf("printing reflog for %s\n", [bucketName UTF8String]);
+        ReflogPrinter *printer = [[[ReflogPrinter alloc] initWithS3BucketName:s3BucketName computerUUID:computerUUID bucketUUID:bucketUUID s3:s3 repo:repo] autorelease];
+        if (![printer printReflog:error]) {
+            return NO;
+        }
+    } else {
+        printf("restoring %s from ", [bucketName UTF8String]);    
+        if (uac != nil) {
+            printf("%s (%s)", [[uac computerName] UTF8String], [[uac userName] UTF8String]);
+        } else {
+            printf("(unknown computer)");
+        }
+        printf(" to %s/%s\n", [[[NSFileManager defaultManager] currentDirectoryPath] UTF8String], [bucketName UTF8String]);
+        
+        Restorer *restorer = [[[Restorer alloc] initWithRepo:repo bucketName:bucketName commitSHA1:commitSHA1] autorelease];
+        if (![restorer restore:error]) {
+            return NO;
+        }
+        printf("restored files are in %s\n", [bucketName fileSystemRepresentation]);
     }
-    printf("restored files are in %s\n", [bucketName fileSystemRepresentation]);
     return YES;
 }
 - (BOOL)validateS3Keys:(NSError **)error {

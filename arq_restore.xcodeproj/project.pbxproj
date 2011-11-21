@@ -52,6 +52,7 @@
 		F805B8CE1160ECD7007EC01E /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F805B8CD1160ECD7007EC01E /* CoreServices.framework */; };
 		F81426D714541A6C00D7E50A /* BackupSet.m in Sources */ = {isa = PBXBuildFile; fileRef = F81426D614541A6C00D7E50A /* BackupSet.m */; };
 		F8373E0F14794D01005AFBE6 /* ReflogEntry.m in Sources */ = {isa = PBXBuildFile; fileRef = F8373E0E14794D01005AFBE6 /* ReflogEntry.m */; };
+		F8373E5A147A8DEC005AFBE6 /* ReflogPrinter.m in Sources */ = {isa = PBXBuildFile; fileRef = F8373E59147A8DEC005AFBE6 /* ReflogPrinter.m */; };
 		F83C1A7411CA7C170001958F /* ArqRestoreCommand.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B54C1160D3E6007EC01E /* ArqRestoreCommand.m */; };
 		F83C1A7711CA7C170001958F /* ArrayNode.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7421160DCFE007EC01E /* ArrayNode.m */; };
 		F83C1A7811CA7C170001958F /* BooleanNode.m in Sources */ = {isa = PBXBuildFile; fileRef = F805B7441160DCFE007EC01E /* BooleanNode.m */; };
@@ -342,6 +343,8 @@
 		F81426D614541A6C00D7E50A /* BackupSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BackupSet.m; sourceTree = "<group>"; };
 		F8373E0D14794D01005AFBE6 /* ReflogEntry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ReflogEntry.h; sourceTree = "<group>"; };
 		F8373E0E14794D01005AFBE6 /* ReflogEntry.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ReflogEntry.m; sourceTree = "<group>"; };
+		F8373E58147A8DEC005AFBE6 /* ReflogPrinter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ReflogPrinter.h; sourceTree = "<group>"; };
+		F8373E59147A8DEC005AFBE6 /* ReflogPrinter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ReflogPrinter.m; sourceTree = "<group>"; };
 		F83C1A5F11CA7A6B0001958F /* arq_verify.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = arq_verify.m; sourceTree = "<group>"; };
 		F83C1A6111CA7BD20001958F /* ArqVerifyCommand.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ArqVerifyCommand.h; sourceTree = "<group>"; };
 		F83C1A6211CA7BD20001958F /* ArqVerifyCommand.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ArqVerifyCommand.m; sourceTree = "<group>"; };
@@ -552,6 +555,8 @@
 				F89A1F3D13FAC6820071D321 /* UserLibrary_Arq.m */,
 				F81426D514541A6C00D7E50A /* BackupSet.h */,
 				F81426D614541A6C00D7E50A /* BackupSet.m */,
+				F8373E58147A8DEC005AFBE6 /* ReflogPrinter.h */,
+				F8373E59147A8DEC005AFBE6 /* ReflogPrinter.m */,
 				F8373E0D14794D01005AFBE6 /* ReflogEntry.h */,
 				F8373E0E14794D01005AFBE6 /* ReflogEntry.m */,
 			);
@@ -986,6 +991,7 @@
 				F89A205A13FAE3010071D321 /* DataOutputStream.m in Sources */,
 				F81426D714541A6C00D7E50A /* BackupSet.m in Sources */,
 				F8373E0F14794D01005AFBE6 /* ReflogEntry.m in Sources */,
+				F8373E5A147A8DEC005AFBE6 /* ReflogPrinter.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -39,6 +39,7 @@ static void printUsage(const char *exeName) {
 	fprintf(stderr, "Usage:\n");
     fprintf(stderr, "\t%s [-l log_level]\n", exeName);
     fprintf(stderr, "\t%s [-l log_level] /s3bucket/computerUUID/folderUUID\n", exeName);
+    fprintf(stderr, "\t%s [-l log_level] /s3bucket/computerUUID/folderUUID reflog\n", exeName);
     fprintf(stderr, "\t%s [-l log_level] /s3bucket/computerUUID/folderUUID <commitSHA1>\n", exeName);
 }
 int main (int argc, const char **argv) {
