@@ -19,7 +19,7 @@
 
 - (id)initWithPassword:(NSString *)thePassword salt:(NSData *)theSalt error:(NSError **)error;
 - (id)initLegacyWithPassword:(NSString *)thePassword error:(NSError **)error;
-- (EVP_CIPHER *)cipher;
+- (const EVP_CIPHER *)cipher;
 - (unsigned char *)evpKey;
 - (unsigned char *)iv;
 @end
