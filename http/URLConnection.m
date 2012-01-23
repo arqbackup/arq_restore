@@ -244,7 +244,7 @@ static NSString *RUN_LOOP_MODE = @"HTTPConnectionRunLoopMode";
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
     if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
         [httpURLResponse release];
-        httpURLResponse = [response retain];
+        httpURLResponse = (NSHTTPURLResponse *)[response retain];
     }
 }
 - (void)connection:(NSURLConnection *)connection didSendBodyData:(NSInteger)bytesWritten totalBytesWritten:(NSInteger)totalBytesWritten totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite {
