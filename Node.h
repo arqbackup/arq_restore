@@ -6,6 +6,7 @@
 //  Copyright 2009 PhotoMinds LLC. All rights reserved.
 //
 
+#include <sys/stat.h>
 #import <Cocoa/Cocoa.h>
 @protocol InputStream;
 @class BlobKey;
