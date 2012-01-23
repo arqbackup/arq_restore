@@ -50,9 +50,9 @@ bucketXMLData = _bucketXMLData;
         _author = [[theCommit author] copy];
         _comment = [[theCommit comment] copy];
         if (theParentBlobKey != nil) {
-            _parentCommitBlobKeys = [[NSSet alloc] initWithObjects:theParentBlobKey, nil];
+            _parentCommitBlobKeys = [[NSMutableSet alloc] initWithObjects:theParentBlobKey, nil];
         } else {
-            _parentCommitBlobKeys = [[NSSet alloc] init];
+            _parentCommitBlobKeys = [[NSMutableSet alloc] init];
         }
         _treeBlobKey = [[theCommit treeBlobKey] copy];
         _location = [[theCommit location] copy];
@@ -76,7 +76,7 @@ bucketXMLData = _bucketXMLData;
     if (self = [super init]) {
         _author = [theAuthor copy];
         _comment = [theComment copy];
-        _parentCommitBlobKeys = [[NSSet alloc] initWithSet:theParentCommitBlobKeys];
+        _parentCommitBlobKeys = [[NSMutableSet alloc] initWithSet:theParentCommitBlobKeys];
         _treeBlobKey = [theTreeBlobKey retain];
         _location = [theLocation copy];
         NSRange computerRange = [_location rangeOfRegex:@"^file://([^/]+)/" capture:1];
@@ -204,9 +204,6 @@ init_error:
     
 init_done:
     return self;
-}
-- (void)release {
-    [super release];
 }
 - (void)dealloc {
     [_author release];
