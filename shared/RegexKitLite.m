@@ -426,7 +426,7 @@ static RKLCacheSlot *getCachedRegexSetToString(NSString *regexString, RKLRegexOp
   else { // If the first pointer equality check failed, check the hash and length.
     if(((isSetTo == NO) || (cacheSlot->setToIsImmutable == NO)) && (cacheSlot->setToString != NULL)) { isSetTo = ((cacheSlot->setToLength == matchLength) && (cacheSlot->setToHash == CFHash((CFStringRef)(matchString)))); }
 
-    if((isSetTo == YES)) { // Make sure that the UTF16 conversion cache is set to this string, if conversion is required.
+    if(isSetTo == YES) { // Make sure that the UTF16 conversion cache is set to this string, if conversion is required.
       if((cacheSlot->setToNeedsConversion == YES) && (setCacheSlotToString(cacheSlot, matchRange, status, exception) == NO)) { *exception = RKLCAssert(@"Failed to set up UTF16 buffer."); goto exitNow; }
       if(NSEqualRanges(cacheSlot->setToRange, *matchRange) == YES) { goto exitNow; } // Verify that the range to search is what the cached regex was prepped for last time.
     }
