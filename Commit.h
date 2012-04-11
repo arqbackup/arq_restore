@@ -11,7 +11,7 @@
 #import "BufferedInputStream.h"
 @class BlobKey;
 
-#define CURRENT_COMMIT_VERSION 5
+#define CURRENT_COMMIT_VERSION 7
 
 @interface Commit : NSObject {
     int commitVersion;
