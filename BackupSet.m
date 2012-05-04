@@ -56,7 +56,8 @@
     NSMutableArray *ret = [NSMutableArray array];
     for (NSString *theS3BucketName in s3BucketNames) {
         if ([theS3BucketName rangeOfString:@"-com-haystacksoftware-arq"].location == NSNotFound
-            && [theS3BucketName rangeOfString:@".com.haystacksoftware.arq"].location == NSNotFound) {
+            && [theS3BucketName rangeOfString:@".com.haystacksoftware.arq"].location == NSNotFound
+            && [theS3BucketName rangeOfString:@"comhaystacksoftwarearq"].location == NSNotFound) {
             HSLogDebug(@"skipping bucket %@", theS3BucketName);
         } else {
             NSString *queryPrefix = [NSString stringWithFormat:@"/%@/", [theS3BucketName lowercaseString]];
