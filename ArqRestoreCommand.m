@@ -88,17 +88,21 @@
 - (BOOL)readArgc:(int)argc argv:(const char **)argv {
     for (int i = 1; i < argc; i++) {
         if (*argv[i] == '-') {
-            if (strcmp(argv[i], "-l")) {
-                fprintf(stderr, "invalid argument\n");
+            if (!strcmp(argv[i], "-l")) {
+                if (argc <= i+1) {
+                    fprintf(stderr, "missing log_level argument (error,warn,info,debug or trace)\n");
+                    return NO;
+                }
+                i++;
+                NSString *level = [NSString stringWithUTF8String:argv[i]];
+                setHSLogLevel(hsLogLevelForName(level));
+            } else if (!strcmp(argv[i], "-v")) {
+                printf("%s version 20-Aug-2012\n", argv[0]);
+                exit(0);
+            } else {
+                fprintf(stderr, "unknown option %s\n", argv[i]);
                 return NO;
             }
-            if (argc <= i+1) {
-                fprintf(stderr, "missing log_level argument (error,warn,info,debug or trace)\n");
-                return NO;
-            }
-            i++;
-            NSString *level = [NSString stringWithUTF8String:argv[i]];
-            setHSLogLevel(hsLogLevelForName(level));
         } else if (path == nil) {
             path = [[NSString alloc] initWithUTF8String:argv[i]];
         } else if (commitSHA1 == nil) {
@@ -125,7 +129,7 @@
     if (![self validateS3Keys:error]) {
         return NO;
     }
-
+    
     NSArray *backupSets = [BackupSet allBackupSetsForAccessKeyID:accessKey secretAccessKey:secretKey error:error];
     if (backupSets == nil) {
         return NO;

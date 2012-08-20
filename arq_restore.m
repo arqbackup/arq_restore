@@ -37,6 +37,7 @@
 
 static void printUsage(const char *exeName) {
 	fprintf(stderr, "Usage:\n");
+    fprintf(stderr, "\t%s -v\n", exeName);
     fprintf(stderr, "\t%s [-l log_level]\n", exeName);
     fprintf(stderr, "\t%s [-l log_level] /s3bucket/computerUUID/folderUUID\n", exeName);
     fprintf(stderr, "\t%s [-l log_level] /s3bucket/computerUUID/folderUUID reflog\n", exeName);
