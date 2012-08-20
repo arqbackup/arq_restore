@@ -80,17 +80,17 @@
     NSError *myError = nil;
     ReflogEntry *entry = [[[ReflogEntry alloc] initWithData:data error:&myError] autorelease];
     if (entry == nil) {
-        printf("\terror reading reflog entry: %s\n", [[myError description] UTF8String]);
+        printf("\terror reading reflog entry: %s\n\n", [[myError description] UTF8String]);
     } else {
         Commit *commit = [repo commitForBlobKey:[entry newHeadBlobKey] error:&myError];
         if (commit == nil) {
-            printf("\tcommit %s: %s\n", [[[entry newHeadBlobKey] description] UTF8String], [[myError localizedDescription] UTF8String]);
+            printf("\t%s\n\n", [[myError localizedDescription] UTF8String]);
         } else {
             printf("\tblobkey: %s\n", [[[entry newHeadBlobKey] description] UTF8String]);
             printf("\tauthor: %s\n", [[commit author] UTF8String]);
             printf("\tdate: %s\n", [[[commit creationDate] description] UTF8String]);
             printf("\tlocation: %s\n", [[commit location] UTF8String]);
-            printf("\trestore command: arq_restore /%s/%s/buckets/%s %s\n", [s3BucketName UTF8String], [computerUUID UTF8String], [bucketUUID UTF8String], 
+            printf("\trestore command: arq_restore /%s/%s/buckets/%s %s\n\n", [s3BucketName UTF8String], [computerUUID UTF8String], [bucketUUID UTF8String], 
                    [[[entry newHeadBlobKey] sha1] UTF8String]);
         }
     }

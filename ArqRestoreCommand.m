@@ -161,7 +161,9 @@
             }
             printf("        %s\n", [[[plist stringNodeForKey:@"LocalPath"] stringValue] UTF8String]);
             printf("            UUID:            %s\n", [[uuidPath lastPathComponent] UTF8String]);
+            printf("            reflog command:  arq_restore %s reflog\n", [uuidPath UTF8String]);
             printf("            restore command: arq_restore %s\n", [uuidPath UTF8String]);
+            printf("\n");
         }
     }
     return YES;
