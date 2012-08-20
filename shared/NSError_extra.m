@@ -30,26 +30,55 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
+#import <Security/Security.h>
+#import <Security/SecCertificate.h>
 #import "NSError_extra.h"
+#import "NSErrorCodes.h"
+
 
 @implementation NSError (extra)
 + (NSError *)errorWithDomain:(NSString *)domain code:(NSInteger)code description:(NSString *)theDescription {
+    if (theDescription == nil) {
+        theDescription = @"(missing description)";
+    }
     return [NSError errorWithDomain:domain code:code userInfo:[NSDictionary dictionaryWithObject:theDescription forKey:NSLocalizedDescriptionKey]];
 }
 - (id)initWithDomain:(NSString *)domain code:(NSInteger)code description:(NSString *)theDescription {
+    if (theDescription == nil) {
+        theDescription = @"(missing description)";
+    }
     return [self initWithDomain:domain code:code userInfo:[NSDictionary dictionaryWithObject:theDescription forKey:NSLocalizedDescriptionKey]];
 }
 - (BOOL)isErrorWithDomain:(NSString *)theDomain code:(int)theCode {
     return [self code] == theCode && [[self domain] isEqualToString:theDomain];
 }
+- (BOOL)isConnectionResetError {
+    if ([[self domain] isEqualToString:@"UnixErrorDomain"] || [[self domain] isEqualToString:@"NSPOSIXErrorDomain"]) {
+        if ([self code] == ENETRESET
+            || [self code] == ECONNRESET) {
+            return YES;
+        }
+    }
+    return NO;
+}
 - (BOOL)isTransientError {
-    if ([[self domain] isEqualToString:@"UnixErrorDomain"] && [self code] == ETIMEDOUT) {
-        return YES;
+    if ([[self domain] isEqualToString:@"UnixErrorDomain"] || [[self domain] isEqualToString:@"NSPOSIXErrorDomain"]) {
+        if ([self code] == ENETDOWN
+            || [self code] == EADDRNOTAVAIL
+            || [self code] == ENETUNREACH
+            || [self code] == ENETRESET
+            || [self code] == ECONNABORTED
+            || [self code] == ECONNRESET
+            || [self code] == EISCONN
+            || [self code] == ENOTCONN
+            || [self code] == ETIMEDOUT
+            || [self code] == EHOSTUNREACH
+            || [self code] == EHOSTDOWN
+            || [self code] == EPIPE) {
+            return YES;
+        }
     }
-    if ([[self domain] isEqualToString:@"NSPOSIXErrorDomain"] && [self code] == ETIMEDOUT) {
-        return YES;
-    }
-    if ([[self domain] isEqualToString:@"NSPOSIXErrorDomain"] && [self code] == ENOTCONN) {
+    if ([[self domain] isEqualToString:(NSString *)kCFErrorDomainCFNetwork]) {
         return YES;
     }
     if ([[self domain] isEqualToString:NSURLErrorDomain]) {
@@ -63,7 +92,55 @@
             return YES;
         }
     }
+    if ([[self domain] isEqualToString:@"NSOSStatusErrorDomain"] && [self code] <= errSSLProtocol && [self code] >= errSSLLast) {
+        return YES;
+    }
+    if ([self isSSLError]) {
+        return YES;
+    }
+    if ([self code] == ERROR_TIMEOUT) {
+        return YES;
+    }
     HSLogDebug(@"%@ not a transient error", self);
     return NO;
+}
+- (BOOL)isSSLError {
+    return [[self domain] isEqualToString:NSURLErrorDomain] 
+    && [self code] <= NSURLErrorSecureConnectionFailed 
+    && [self code] >= NSURLErrorClientCertificateRejected;
+}
+- (void)logSSLCerts {
+    NSArray *certs = [[self userInfo] objectForKey:@"NSErrorPeerCertificateChainKey"];
+    for (NSUInteger index = 0; index < [certs count]; index++) {
+        SecCertificateRef secCert = (SecCertificateRef)[certs objectAtIndex:index];
+        CFStringRef commonName = NULL;
+        if (SecCertificateCopyCommonName(secCert, &commonName) == 0 && commonName != NULL) {
+            HSLog(@"SSL cert common name: %@", (NSString *)commonName);
+            CFRelease(commonName);
+        } else {
+            HSLog(@"error getting SSL cert's common name");
+        }
+        SecKeyRef key = NULL;
+        if (SecCertificateCopyPublicKey(secCert, &key) == 0 && key != NULL) {
+            CSSM_CSP_HANDLE cspHandle;
+            if (SecKeyGetCSPHandle(key, &cspHandle) == 0) {
+                HSLog(@"SSL cert CSP handle: %d", (long)cspHandle);
+            } else {
+                HSLog(@"error getting SSL cert's key's CSP handle");
+            }
+            const CSSM_KEY *cssmKey;
+            if (SecKeyGetCSSMKey(key, &cssmKey) == 0) {
+                NSData *keyHeaderData = [NSData dataWithBytes:(const unsigned char *)&(cssmKey->KeyHeader) length:sizeof(CSSM_KEYHEADER)];
+                HSLog(@"SSL cert CSSM key header: %@", keyHeaderData);
+                NSData *keyData = [NSData dataWithBytes:(const unsigned char *)cssmKey->KeyData.Data length:cssmKey->KeyData.Length];
+                HSLog(@"SSL cert CSSM key data: %@", keyData);
+            } else {
+                HSLog(@"error getting SSL cert's key's CSM key");
+            }
+            CFRelease(key);
+        } else {
+            HSLog(@"error getting SSL cert's public key");
+        }
+    }
 }
 @end

@@ -131,6 +131,28 @@
 		F83C1AD211CA7C170001958F /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F805B8CD1160ECD7007EC01E /* CoreServices.framework */; };
 		F83C1AE311CA7C7C0001958F /* arq_restore.m in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* arq_restore.m */; };
 		F83C1D1D11CA95AF0001958F /* BucketVerifier.m in Sources */ = {isa = PBXBuildFile; fileRef = F83C1D0911CA929D0001958F /* BucketVerifier.m */; };
+		F84166D815E2782600B6ECED /* HTTPConnectionFactory.m in Sources */ = {isa = PBXBuildFile; fileRef = F84166D515E2782600B6ECED /* HTTPConnectionFactory.m */; };
+		F84166D915E2782600B6ECED /* HTTPTimeoutSetting.m in Sources */ = {isa = PBXBuildFile; fileRef = F84166D715E2782600B6ECED /* HTTPTimeoutSetting.m */; };
+		F84166DA15E2782600B6ECED /* HTTPConnectionFactory.m in Sources */ = {isa = PBXBuildFile; fileRef = F84166D515E2782600B6ECED /* HTTPConnectionFactory.m */; };
+		F84166DB15E2782600B6ECED /* HTTPTimeoutSetting.m in Sources */ = {isa = PBXBuildFile; fileRef = F84166D715E2782600B6ECED /* HTTPTimeoutSetting.m */; };
+		F84166E215E2785100B6ECED /* CFHTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = F84166DF15E2785100B6ECED /* CFHTTPConnection.m */; };
+		F84166E315E2785100B6ECED /* CFHTTPInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F84166E115E2785100B6ECED /* CFHTTPInputStream.m */; };
+		F84166E415E2785100B6ECED /* CFHTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = F84166DF15E2785100B6ECED /* CFHTTPConnection.m */; };
+		F84166E515E2785100B6ECED /* CFHTTPInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F84166E115E2785100B6ECED /* CFHTTPInputStream.m */; };
+		F84166ED15E278BC00B6ECED /* CFNetwork.m in Sources */ = {isa = PBXBuildFile; fileRef = F84166EC15E278BC00B6ECED /* CFNetwork.m */; };
+		F84166EE15E278BC00B6ECED /* CFNetwork.m in Sources */ = {isa = PBXBuildFile; fileRef = F84166EC15E278BC00B6ECED /* CFNetwork.m */; };
+		F84166F515E278F500B6ECED /* S3Owner.m in Sources */ = {isa = PBXBuildFile; fileRef = F84166F215E278F500B6ECED /* S3Owner.m */; };
+		F84166F615E278F500B6ECED /* S3Region.m in Sources */ = {isa = PBXBuildFile; fileRef = F84166F415E278F500B6ECED /* S3Region.m */; };
+		F84166F715E278F500B6ECED /* S3Owner.m in Sources */ = {isa = PBXBuildFile; fileRef = F84166F215E278F500B6ECED /* S3Owner.m */; };
+		F84166F815E278F500B6ECED /* S3Region.m in Sources */ = {isa = PBXBuildFile; fileRef = F84166F415E278F500B6ECED /* S3Region.m */; };
+		F84166FD15E2792500B6ECED /* NetMonitor.m in Sources */ = {isa = PBXBuildFile; fileRef = F84166FC15E2792500B6ECED /* NetMonitor.m */; };
+		F84166FE15E2792500B6ECED /* NetMonitor.m in Sources */ = {isa = PBXBuildFile; fileRef = F84166FC15E2792500B6ECED /* NetMonitor.m */; };
+		F841670515E279BB00B6ECED /* Sysctl.m in Sources */ = {isa = PBXBuildFile; fileRef = F841670415E279BB00B6ECED /* Sysctl.m */; };
+		F841670615E279BB00B6ECED /* Sysctl.m in Sources */ = {isa = PBXBuildFile; fileRef = F841670415E279BB00B6ECED /* Sysctl.m */; };
+		F841670B15E279DE00B6ECED /* DNS_SDErrors.m in Sources */ = {isa = PBXBuildFile; fileRef = F841670A15E279DE00B6ECED /* DNS_SDErrors.m */; };
+		F841670C15E279DE00B6ECED /* DNS_SDErrors.m in Sources */ = {isa = PBXBuildFile; fileRef = F841670A15E279DE00B6ECED /* DNS_SDErrors.m */; };
+		F841672615E27A5200B6ECED /* RemoteS3Signer.m in Sources */ = {isa = PBXBuildFile; fileRef = F841672515E27A5200B6ECED /* RemoteS3Signer.m */; };
+		F841672715E27A5200B6ECED /* RemoteS3Signer.m in Sources */ = {isa = PBXBuildFile; fileRef = F841672515E27A5200B6ECED /* RemoteS3Signer.m */; };
 		F8987235121EB68900F07D76 /* BinaryPListReader.m in Sources */ = {isa = PBXBuildFile; fileRef = F8987232121EB68900F07D76 /* BinaryPListReader.m */; };
 		F8987236121EB68900F07D76 /* BinaryPListWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = F8987234121EB68900F07D76 /* BinaryPListWriter.m */; };
 		F8987560121EBD9600F07D76 /* BufferedInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F898755F121EBD9600F07D76 /* BufferedInputStream.m */; };
@@ -351,6 +373,29 @@
 		F83C1AD711CA7C170001958F /* arq_verify */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = arq_verify; sourceTree = BUILT_PRODUCTS_DIR; };
 		F83C1D0811CA929D0001958F /* BucketVerifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BucketVerifier.h; path = s3/BucketVerifier.h; sourceTree = "<group>"; };
 		F83C1D0911CA929D0001958F /* BucketVerifier.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BucketVerifier.m; path = s3/BucketVerifier.m; sourceTree = "<group>"; };
+		F84166D415E2782600B6ECED /* HTTPConnectionFactory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HTTPConnectionFactory.h; sourceTree = "<group>"; };
+		F84166D515E2782600B6ECED /* HTTPConnectionFactory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HTTPConnectionFactory.m; sourceTree = "<group>"; };
+		F84166D615E2782600B6ECED /* HTTPTimeoutSetting.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HTTPTimeoutSetting.h; sourceTree = "<group>"; };
+		F84166D715E2782600B6ECED /* HTTPTimeoutSetting.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HTTPTimeoutSetting.m; sourceTree = "<group>"; };
+		F84166DE15E2785100B6ECED /* CFHTTPConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CFHTTPConnection.h; sourceTree = "<group>"; };
+		F84166DF15E2785100B6ECED /* CFHTTPConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CFHTTPConnection.m; sourceTree = "<group>"; };
+		F84166E015E2785100B6ECED /* CFHTTPInputStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CFHTTPInputStream.h; sourceTree = "<group>"; };
+		F84166E115E2785100B6ECED /* CFHTTPInputStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CFHTTPInputStream.m; sourceTree = "<group>"; };
+		F84166E815E2787B00B6ECED /* HTTPConnectionDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HTTPConnectionDelegate.h; sourceTree = "<group>"; };
+		F84166EB15E278BC00B6ECED /* CFNetwork.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CFNetwork.h; sourceTree = "<group>"; };
+		F84166EC15E278BC00B6ECED /* CFNetwork.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CFNetwork.m; sourceTree = "<group>"; };
+		F84166F115E278F500B6ECED /* S3Owner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = S3Owner.h; sourceTree = "<group>"; };
+		F84166F215E278F500B6ECED /* S3Owner.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = S3Owner.m; sourceTree = "<group>"; };
+		F84166F315E278F500B6ECED /* S3Region.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = S3Region.h; sourceTree = "<group>"; };
+		F84166F415E278F500B6ECED /* S3Region.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = S3Region.m; sourceTree = "<group>"; };
+		F84166FB15E2792500B6ECED /* NetMonitor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NetMonitor.h; sourceTree = "<group>"; };
+		F84166FC15E2792500B6ECED /* NetMonitor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NetMonitor.m; sourceTree = "<group>"; };
+		F841670315E279BB00B6ECED /* Sysctl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Sysctl.h; sourceTree = "<group>"; };
+		F841670415E279BB00B6ECED /* Sysctl.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Sysctl.m; sourceTree = "<group>"; };
+		F841670915E279DE00B6ECED /* DNS_SDErrors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DNS_SDErrors.h; sourceTree = "<group>"; };
+		F841670A15E279DE00B6ECED /* DNS_SDErrors.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DNS_SDErrors.m; sourceTree = "<group>"; };
+		F841672415E27A5200B6ECED /* RemoteS3Signer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RemoteS3Signer.h; sourceTree = "<group>"; };
+		F841672515E27A5200B6ECED /* RemoteS3Signer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RemoteS3Signer.m; sourceTree = "<group>"; };
 		F8987231121EB68900F07D76 /* BinaryPListReader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BinaryPListReader.h; sourceTree = "<group>"; };
 		F8987232121EB68900F07D76 /* BinaryPListReader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BinaryPListReader.m; sourceTree = "<group>"; };
 		F8987233121EB68900F07D76 /* BinaryPListWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BinaryPListWriter.h; sourceTree = "<group>"; };
@@ -622,6 +667,12 @@
 		F805B7651160DD60007EC01E /* s3 */ = {
 			isa = PBXGroup;
 			children = (
+				F841672415E27A5200B6ECED /* RemoteS3Signer.h */,
+				F841672515E27A5200B6ECED /* RemoteS3Signer.m */,
+				F84166F115E278F500B6ECED /* S3Owner.h */,
+				F84166F215E278F500B6ECED /* S3Owner.m */,
+				F84166F315E278F500B6ECED /* S3Region.h */,
+				F84166F415E278F500B6ECED /* S3Region.m */,
 				F89A205113FAE2DA0071D321 /* LocalS3Signer.h */,
 				F89A205213FAE2DA0071D321 /* LocalS3Signer.m */,
 				F805B76A1160DD60007EC01E /* NSError_S3.h */,
@@ -649,6 +700,10 @@
 		F805B7A61160DEF2007EC01E /* shared */ = {
 			isa = PBXGroup;
 			children = (
+				F841670915E279DE00B6ECED /* DNS_SDErrors.h */,
+				F841670A15E279DE00B6ECED /* DNS_SDErrors.m */,
+				F841670315E279BB00B6ECED /* Sysctl.h */,
+				F841670415E279BB00B6ECED /* Sysctl.m */,
 				F89A1FD013FAD6BE0071D321 /* HSLog.h */,
 				F89A1FD113FAD6BE0071D321 /* HSLog.m */,
 				F89A1F4B13FAC73D0071D321 /* Computer.h */,
@@ -690,6 +745,17 @@
 		F805B7C91160E445007EC01E /* http */ = {
 			isa = PBXGroup;
 			children = (
+				F84166EB15E278BC00B6ECED /* CFNetwork.h */,
+				F84166EC15E278BC00B6ECED /* CFNetwork.m */,
+				F84166E815E2787B00B6ECED /* HTTPConnectionDelegate.h */,
+				F84166DE15E2785100B6ECED /* CFHTTPConnection.h */,
+				F84166DF15E2785100B6ECED /* CFHTTPConnection.m */,
+				F84166E015E2785100B6ECED /* CFHTTPInputStream.h */,
+				F84166E115E2785100B6ECED /* CFHTTPInputStream.m */,
+				F84166D415E2782600B6ECED /* HTTPConnectionFactory.h */,
+				F84166D515E2782600B6ECED /* HTTPConnectionFactory.m */,
+				F84166D615E2782600B6ECED /* HTTPTimeoutSetting.h */,
+				F84166D715E2782600B6ECED /* HTTPTimeoutSetting.m */,
 				F89A1EEA13FAC4E30071D321 /* URLConnection.h */,
 				F89A1EEB13FAC4E30071D321 /* URLConnection.m */,
 				F805B7CA1160E445007EC01E /* HTTP.h */,
@@ -703,6 +769,8 @@
 		F805B8081160E7A1007EC01E /* io */ = {
 			isa = PBXGroup;
 			children = (
+				F84166FB15E2792500B6ECED /* NetMonitor.h */,
+				F84166FC15E2792500B6ECED /* NetMonitor.m */,
 				F89A205713FAE3010071D321 /* DataOutputStream.h */,
 				F89A205813FAE3010071D321 /* DataOutputStream.m */,
 				F89A1F6113FAC8270071D321 /* CryptoKey.h */,
@@ -995,6 +1063,17 @@
 				F81426D714541A6C00D7E50A /* BackupSet.m in Sources */,
 				F8373E0F14794D01005AFBE6 /* ReflogEntry.m in Sources */,
 				F8373E5A147A8DEC005AFBE6 /* ReflogPrinter.m in Sources */,
+				F84166D815E2782600B6ECED /* HTTPConnectionFactory.m in Sources */,
+				F84166D915E2782600B6ECED /* HTTPTimeoutSetting.m in Sources */,
+				F84166E215E2785100B6ECED /* CFHTTPConnection.m in Sources */,
+				F84166E315E2785100B6ECED /* CFHTTPInputStream.m in Sources */,
+				F84166ED15E278BC00B6ECED /* CFNetwork.m in Sources */,
+				F84166F515E278F500B6ECED /* S3Owner.m in Sources */,
+				F84166F615E278F500B6ECED /* S3Region.m in Sources */,
+				F84166FD15E2792500B6ECED /* NetMonitor.m in Sources */,
+				F841670515E279BB00B6ECED /* Sysctl.m in Sources */,
+				F841670B15E279DE00B6ECED /* DNS_SDErrors.m in Sources */,
+				F841672615E27A5200B6ECED /* RemoteS3Signer.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1099,6 +1178,17 @@
 				F89A205313FAE2DA0071D321 /* LocalS3Signer.m in Sources */,
 				F89A205913FAE3010071D321 /* DataOutputStream.m in Sources */,
 				F89A20CF13FAE7170071D321 /* NSError_extra.m in Sources */,
+				F84166DA15E2782600B6ECED /* HTTPConnectionFactory.m in Sources */,
+				F84166DB15E2782600B6ECED /* HTTPTimeoutSetting.m in Sources */,
+				F84166E415E2785100B6ECED /* CFHTTPConnection.m in Sources */,
+				F84166E515E2785100B6ECED /* CFHTTPInputStream.m in Sources */,
+				F84166EE15E278BC00B6ECED /* CFNetwork.m in Sources */,
+				F84166F715E278F500B6ECED /* S3Owner.m in Sources */,
+				F84166F815E278F500B6ECED /* S3Region.m in Sources */,
+				F84166FE15E2792500B6ECED /* NetMonitor.m in Sources */,
+				F841670615E279BB00B6ECED /* Sysctl.m in Sources */,
+				F841670C15E279DE00B6ECED /* DNS_SDErrors.m in Sources */,
+				F841672715E27A5200B6ECED /* RemoteS3Signer.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

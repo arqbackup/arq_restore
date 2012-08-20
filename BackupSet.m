@@ -44,6 +44,7 @@
 #import "Commit.h"
 #import "S3ObjectMetadata.h"
 #import "ArqSalt.h"
+#import "S3Region.h"
 
 @implementation BackupSet
 + (NSArray *)allBackupSetsForAccessKeyID:(NSString *)theAccessKeyID secretAccessKey:(NSString *)theSecretAccessKey error:(NSError **)error {
@@ -125,7 +126,7 @@
 
 #pragma mark NSObject
 - (NSString *)description {
-    NSString *bucketRegion = [S3Service displayNameForBucketRegion:[S3Service s3BucketRegionForS3BucketName:s3BucketName]];
+    NSString *bucketRegion = [[S3Region s3RegionForBucketName:s3BucketName] displayName];
     if (uac != nil) {
         return [NSString stringWithFormat:@"%@ (%@) : %@ (%@)", [uac computerName], [uac userName], bucketRegion, computerUUID];
     }

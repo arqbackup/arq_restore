@@ -43,30 +43,19 @@
 #define S3_MAX_RETRY (5)
 
 enum {
-    BUCKET_REGION_US_STANDARD = 0,
-    BUCKET_REGION_US_WEST = 1,
-    BUCKET_REGION_EU = 2,
-    BUCKET_REGION_AP_SOUTHEAST_1 = 3,
-    BUCKET_REGION_AP_NORTHEAST_1 = 4
-};
-
-enum {
     S3SERVICE_ERROR_UNEXPECTED_RESPONSE = -51001,
     S3SERVICE_ERROR_AMAZON_ERROR = -51002,
     S3SERVICE_INVALID_PARAMETERS = -51003
 };
 
-@interface S3Service : NSObject {
+@interface S3Service : NSObject <NSCopying> {
 	S3AuthorizationProvider *sap;
     BOOL useSSL;
     BOOL retryOnTransientError;
 }
 + (NSString *)errorDomain;
-+ (NSString *)displayNameForBucketRegion:(int)region;
-+ (NSString *)s3BucketNameForAccessKeyID:(NSString *)theAccessKeyId region:(int)s3BucketRegion;
-+ (NSArray *)s3BucketNamesForAccessKeyID:(NSString *)theAccessKeyId;
-+ (int)s3BucketRegionForS3BucketName:(NSString *)s3BucketName;
 - (id)initWithS3AuthorizationProvider:(S3AuthorizationProvider *)theSAP useSSL:(BOOL)useSSL retryOnTransientError:(BOOL)retry;
+- (S3Owner *)s3Owner:(NSError **)error;
 - (NSArray *)s3BucketNames:(NSError **)error;
 - (BOOL)s3BucketExists:(NSString *)s3BucketName;
 
@@ -82,4 +71,6 @@ enum {
 
 - (BOOL)aclXMLData:(NSData **)aclXMLData atPath:(NSString *)path error:(NSError **)error;
 - (BOOL)acl:(int *)acl atPath:(NSString *)path error:(NSError **)error;
+
+- (S3AuthorizationProvider *)s3AuthorizationProvider;
 @end

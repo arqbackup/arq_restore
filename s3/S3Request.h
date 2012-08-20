@@ -34,26 +34,27 @@
 @class S3AuthorizationProvider;
 @class ServerBlob;
 @class Blob;
+@protocol HTTPConnectionDelegate;
+@class HTTPTimeoutSetting;
+
 
 @interface S3Request : NSObject {
     NSString *method;
-    NSString *path;
-    NSString *s3BucketName;
-    NSString *queryString;
+    NSURL *url;
     S3AuthorizationProvider *sap;
     BOOL withSSL;
     BOOL retryOnTransientError;
-    id urlConnectionDelegate;
+    HTTPTimeoutSetting *httpTimeoutSetting;
+    id <HTTPConnectionDelegate> httpConnectionDelegate;
     Blob *blob;
     NSData *blobData;
     uint64_t length;
-    NSString *virtualHost;
-    NSString *virtualPath;
     NSMutableDictionary *extraHeaders;
     unsigned long long bytesUploaded;
 }
-- (id)initWithMethod:(NSString *)theMethod path:(NSString *)thePath queryString:(NSString *)theQueryString authorizationProvider:(S3AuthorizationProvider *)theSAP useSSL:(BOOL)ssl retryOnTransientError:(BOOL)retry;
-- (id)initWithMethod:(NSString *)theMethod path:(NSString *)thePath queryString:(NSString *)theQueryString authorizationProvider:(S3AuthorizationProvider *)theSAP useSSL:(BOOL)ssl retryOnTransientError:(BOOL)retry urlConnectionDelegate:(id)theURLConnectionDelegate;
+- (id)initWithMethod:(NSString *)theMethod path:(NSString *)thePath queryString:(NSString *)theQueryString authorizationProvider:(S3AuthorizationProvider *)theSAP useSSL:(BOOL)ssl retryOnTransientError:(BOOL)retry error:(NSError **)error;
+- (id)initWithMethod:(NSString *)theMethod path:(NSString *)thePath queryString:(NSString *)theQueryString authorizationProvider:(S3AuthorizationProvider *)theSAP useSSL:(BOOL)ssl retryOnTransientError:(BOOL)retry httpConnectionDelegate:(id <HTTPConnectionDelegate>)theHTTPConnectionDelegate error:(NSError **)error;
+- (id)initWithMethod:(NSString *)theMethod path:(NSString *)thePath queryString:(NSString *)theQueryString authorizationProvider:(S3AuthorizationProvider *)theSAP useSSL:(BOOL)ssl retryOnTransientError:(BOOL)retry httpConnectionDelegate:(id <HTTPConnectionDelegate>)theHTTPConnectionDelegate httpTimeoutSetting:(HTTPTimeoutSetting *)theTimeoutSetting error:(NSError **)error;
 - (void)setBlob:(Blob *)theBlob length:(uint64_t)theLength;
 - (void)setHeader:(NSString *)value forKey:(NSString *)key;
 - (ServerBlob *)newServerBlob:(NSError **)error;

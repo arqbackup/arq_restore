@@ -41,6 +41,9 @@
 #import "NSError_extra.h"
 #import "S3AuthorizationProvider.h"
 #import "NSError_S3.h"
+#import "S3Region.h"
+#import "HTTPConnectionFactory.h"
+#import "HTTPTimeoutSetting.h"
 
 
 #define INITIAL_RETRY_SLEEP (0.5)
@@ -52,35 +55,51 @@
 @end
 
 @implementation S3Request
-- (id)initWithMethod:(NSString *)theMethod path:(NSString *)thePath queryString:(NSString *)theQueryString authorizationProvider:(S3AuthorizationProvider *)theSAP useSSL:(BOOL)ssl retryOnTransientError:(BOOL)retry {
-    return [self initWithMethod:theMethod path:thePath queryString:theQueryString authorizationProvider:theSAP useSSL:ssl retryOnTransientError:retry urlConnectionDelegate:nil];
+- (id)initWithMethod:(NSString *)theMethod path:(NSString *)thePath queryString:(NSString *)theQueryString authorizationProvider:(S3AuthorizationProvider *)theSAP useSSL:(BOOL)ssl retryOnTransientError:(BOOL)retry error:(NSError **)error {
+    return [self initWithMethod:theMethod path:thePath queryString:theQueryString authorizationProvider:theSAP useSSL:ssl retryOnTransientError:retry httpConnectionDelegate:nil error:error];
 }
-- (id)initWithMethod:(NSString *)theMethod path:(NSString *)thePath queryString:(NSString *)theQueryString authorizationProvider:(S3AuthorizationProvider *)theSAP useSSL:(BOOL)ssl retryOnTransientError:(BOOL)retry urlConnectionDelegate:(id)theURLConnectionDelegate {
+- (id)initWithMethod:(NSString *)theMethod path:(NSString *)thePath queryString:(NSString *)theQueryString authorizationProvider:(S3AuthorizationProvider *)theSAP useSSL:(BOOL)ssl retryOnTransientError:(BOOL)retry httpConnectionDelegate:(id <HTTPConnectionDelegate>)theHTTPConnectionDelegate error:(NSError **)error {
+    HTTPTimeoutSetting *theTimeoutSetting = [[[HTTPTimeoutSetting alloc] init] autorelease];
+    return [self initWithMethod:theMethod path:thePath queryString:theQueryString authorizationProvider:theSAP useSSL:ssl retryOnTransientError:retry httpConnectionDelegate:theHTTPConnectionDelegate httpTimeoutSetting:theTimeoutSetting error:error];
+}
+- (id)initWithMethod:(NSString *)theMethod path:(NSString *)thePath queryString:(NSString *)theQueryString authorizationProvider:(S3AuthorizationProvider *)theSAP useSSL:(BOOL)ssl retryOnTransientError:(BOOL)retry httpConnectionDelegate:(id <HTTPConnectionDelegate>)theHTTPConnectionDelegate httpTimeoutSetting:(HTTPTimeoutSetting *)theTimeoutSetting error:(NSError **)error {
     if (self = [super init]) {
         method = [theMethod copy];
-        path = [thePath copy];
-        NSRange s3BucketNameRange = [path rangeOfRegex:@"^/([^/]+)" capture:1];
-        if (s3BucketNameRange.location != NSNotFound) {
-            s3BucketName = [path substringWithRange:s3BucketNameRange];
-        }
-        queryString = [theQueryString copy];
         sap = [theSAP retain];
-        withSSL = ssl;
         retryOnTransientError = retry;
-        urlConnectionDelegate = theURLConnectionDelegate; // Don't retain it.
+        httpTimeoutSetting = [theTimeoutSetting retain];
+        httpConnectionDelegate = theHTTPConnectionDelegate; // Don't retain it.
         extraHeaders = [[NSMutableDictionary alloc] init];
+
+        NSString *endpoint = nil;
+        if ([thePath isEqualToString:@"/"]) {
+            endpoint = [[S3Region usStandard] endpoint];
+        } else {
+            NSRange s3BucketRange = [thePath rangeOfRegex:@"^/([^/]+)" capture:1];
+            NSAssert(s3BucketRange.location != NSNotFound, @"invalid path -- missing s3 bucket name!");
+            NSString *s3BucketName = [thePath substringWithRange:s3BucketRange];
+            endpoint = [[S3Region s3RegionForBucketName:s3BucketName] endpoint];
+        }
+        if (theQueryString != nil) {
+            thePath = [thePath stringByAppendingString:theQueryString];
+        }
+        NSString *urlString = [NSString stringWithFormat:@"http%@://%@%@", (ssl ? @"s" : @""), endpoint, thePath];
+        url = [[NSURL alloc] initWithString:urlString];
+        if (url == nil) {
+            SETNSERROR([S3Service errorDomain], -1, @"invalid URL: %@", urlString);
+            [self release];
+            return nil;
+        }
     }
     return self;
 }
 - (void)dealloc {
     [method release];
-    [path release];
-    [queryString release];
+    [url release];
+    [httpTimeoutSetting release];
     [sap release];
     [blob release];
     [blobData release];
-    [virtualHost release];
-    [virtualPath release];
     [extraHeaders release];
     [super dealloc];
 }
@@ -95,30 +114,6 @@
     [extraHeaders setObject:value forKey:key];
 }
 - (ServerBlob *)newServerBlob:(NSError **)error {
-    [virtualHost release];
-    virtualHost = nil;
-    [virtualPath release];
-    virtualPath = nil;
-    if ([path isEqualToString:@"/"]) {
-        // List-bucket request.
-        virtualHost = [@"s3.amazonaws.com" retain];
-        virtualPath = [path retain];
-    } else {
-        NSString *pattern = @"^/([^/]+)(.+)$";
-        NSRange s3BucketRange = [path rangeOfRegex:pattern capture:1];
-        if (s3BucketRange.location == NSNotFound) {
-            SETNSERROR([S3Service errorDomain], S3SERVICE_INVALID_PARAMETERS, @"invalid path-style path -- missing s3 bucket name");
-            return nil;
-        }
-        NSRange pathRange = [path rangeOfRegex:pattern capture:2];
-        if (pathRange.location == NSNotFound) {
-            SETNSERROR([S3Service errorDomain], S3SERVICE_INVALID_PARAMETERS, @"invalid path-style path -- missing path");
-            return nil;
-        }
-        virtualHost = [[[path substringWithRange:s3BucketRange] stringByAppendingString:@".s3.amazonaws.com"] retain];
-        virtualPath = [[path substringWithRange:pathRange] retain];
-    }
-    
     [blobData release];
     blobData = nil;
     if (blob != nil) {
@@ -131,7 +126,6 @@
     NSTimeInterval sleepTime = INITIAL_RETRY_SLEEP;
     ServerBlob *sb = nil;
     NSError *myError = nil;
-    BOOL loggedRetry = NO;
     for (;;) {
         [pool drain];
         pool = [[NSAutoreleasePool alloc] init];
@@ -141,18 +135,28 @@
         sb = [self newServerBlobOnce:&myError];
         if (sb != nil) {
             break;
-        } else if ([myError isErrorWithDomain:[S3Service errorDomain] code:ERROR_NOT_FOUND]) {
+        }
+        if ([myError isSSLError]) {
+            HSLogError(@"SSL error: %@", myError);
+            [myError logSSLCerts];
+        }
+        if ([myError isErrorWithDomain:[S3Service errorDomain] code:ERROR_NOT_FOUND]) {
             break;
+        } else if ([myError isErrorWithDomain:[S3Service errorDomain] code:ERROR_TEMPORARY_REDIRECT]) {
+            NSString *location = [[myError userInfo] objectForKey:@"location"];
+            HSLogDebug(@"redirecting %@ to %@", url, location);
+            [url release];
+            url = [[NSURL alloc] initWithString:location];
+            if (url == nil) {
+                HSLogError(@"invalid redirect URL %@", location);
+                myError = [NSError errorWithDomain:[S3Service errorDomain] code:-1 description:[NSString stringWithFormat:@"invalid redirect URL %@", location]];
+                break;
+            }
         } else if ([myError isErrorWithDomain:[S3Service errorDomain] code:S3SERVICE_ERROR_AMAZON_ERROR]) {
             int httpStatusCode = [[[myError userInfo] objectForKey:@"HTTPStatusCode"] intValue];
             NSString *amazonCode = [[myError userInfo] objectForKey:@"AmazonCode"];
             
-            if (httpStatusCode == HTTP_MOVED_TEMPORARILY) {
-                [virtualHost release];
-                virtualHost = [[[myError userInfo] objectForKey:@"AmazonEndpoint"] copy];
-                HSLogInfo(@"S3 redirect to %@", virtualHost);
-                
-            } else if (retryOnTransientError && [amazonCode isEqualToString:@"RequestTimeout"]) {
+            if (retryOnTransientError && [amazonCode isEqualToString:@"RequestTimeout"]) {
                 transientError = YES;
                 
             } else if (httpStatusCode == HTTP_INTERNAL_SERVER_ERROR) {
@@ -164,27 +168,21 @@
                 needSleep = YES;
                 
             } else {
-                HSLogError(@"%@ %@ (blob %@): %@", method, virtualPath, blob, myError);
+                HSLogError(@"%@ %@ (blob %@): %@", method, url, blob, myError);
                 break;
             }
-            
+        } else if ([myError isConnectionResetError]) {
+            transientError = YES;
         } else if (retryOnTransientError && [myError isTransientError]) {
             transientError = YES;
             needSleep = YES;
-
         } else {
-            HSLogError(@"%@ %@ (blob %@): %@", method, virtualPath, blob, myError);
+            HSLogError(@"%@ %@ (blob %@): %@", method, url, blob, myError);
             break;
         }
         
         if (transientError) {
-            if (!loggedRetry) {
-                HSLogWarn(@"retrying %@ %@ (request body %@): %@", method, virtualPath, blob, myError);
-                loggedRetry = YES;
-
-            } else {
-                HSLogDebug(@"retrying %@ %@ (request body %@): %@", method, virtualPath, blob, myError);
-            }
+            HSLogWarn(@"retrying %@ %@ (request body %@): %@", method, url, blob, myError);
         }
         if (needSleep) {
             [NSThread sleepForTimeInterval:sleepTime];
@@ -204,11 +202,7 @@
 
 @implementation S3Request (internal)
 - (ServerBlob *)newServerBlobOnce:(NSError **)error {
-    NSString *urlString = [NSString stringWithFormat:@"http%@://%@%@", (withSSL ? @"s" : @""), virtualHost, [virtualPath stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
-    if (queryString) {
-        urlString = [urlString stringByAppendingString:queryString];
-    }
-    id <HTTPConnection> conn = [[[URLConnection alloc] initWithURL:[NSURL URLWithString:urlString] method:method delegate:urlConnectionDelegate] autorelease];
+    id <HTTPConnection> conn = [[[HTTPConnectionFactory theFactory] newHTTPConnectionToURL:url method:method httpTimeoutSetting:httpTimeoutSetting httpConnectionDelegate:httpConnectionDelegate] autorelease];
     if (conn == nil) {
         return nil;
     }
@@ -226,39 +220,59 @@
     for (NSString *headerKey in [extraHeaders allKeys]) {
         [conn setRequestHeader:[extraHeaders objectForKey:headerKey] forKey:headerKey];
     }
-    if (![sap setAuthorizationRequestHeaderOnHTTPConnection:conn usingS3BucketName:s3BucketName error:error]) {
+    if (![sap setAuthorizationRequestHeaderOnHTTPConnection:conn error:error]) {
         return nil;
     }
     bytesUploaded = 0;
+    
+    HSLogDebug(@"%@ %@", method, url);
+    
     BOOL execRet = [conn executeRequestWithBody:blobData error:error];
     if (!execRet) {
+        HSLogDebug(@"executeRequestWithBody failed");
         return nil;
     }
     ServerBlob *ret = nil;
     id <InputStream> bodyStream = [conn newResponseBodyStream:error];
     if (bodyStream == nil) {
+        HSLogDebug(@"newResponseBodyStream failed");
         return nil;
     }
-    int code = [conn responseCode];
-    
-    if (code >= 200 && code <= 299) {
-        ret = [[ServerBlob alloc] initWithInputStream:bodyStream mimeType:[conn responseContentType] downloadName:[conn responseDownloadName]];
-        [bodyStream release];
-        return ret;
-    }
-    
     NSData *response = [bodyStream slurp:error];
+    [bodyStream release];
     if (response == nil) {
         return nil;
     }
+    int code = [conn responseCode];
+    if (code >= 200 && code <= 299) {
+        ret = [[ServerBlob alloc] initWithData:response mimeType:[conn responseContentType] downloadName:[conn responseDownloadName]];
+        HSLogDebug(@"HTTP %d; returning response length=%d", code, [response length]);
+        return ret;
+    }
     
+    HSLogTrace(@"http response body: %@", [[[NSString alloc] initWithBytes:[response bytes] length:[response length] encoding:NSUTF8StringEncoding] autorelease]);
     if (code == HTTP_NOT_FOUND) {
-        SETNSERROR([S3Service errorDomain], ERROR_NOT_FOUND, @"%@ not found", path);
+        SETNSERROR([S3Service errorDomain], ERROR_NOT_FOUND, @"%@ not found", url);
+        HSLogDebug(@"returning not-found error");
+        return nil;
+    }
+    if (code == HTTP_METHOD_NOT_ALLOWED) {
+        HSLogError(@"%@ 405 error", url);
+        SETNSERROR([S3Service errorDomain], ERROR_RRS_NOT_FOUND, @"%@ 405 error", url);
+    }
+    if (code == HTTP_MOVED_TEMPORARILY) {
+        NSString *location = [conn responseHeaderForKey:@"Location"];
+        NSDictionary *userInfo = [NSDictionary dictionaryWithObject:location forKey:@"location"];
+        NSError *myError = [NSError errorWithDomain:[S3Service errorDomain] code:ERROR_TEMPORARY_REDIRECT userInfo:userInfo];
+        if (error != NULL) {
+            *error = myError;
+        }
+        HSLogDebug(@"returning moved-temporarily error");
         return nil;
     }
     
     NSError *myError = [NSError amazonErrorWithHTTPStatusCode:code responseBody:response];
-    HSLogDebug(@"%@ %@: %@", method, conn, myError);
+    HSLogDebug(@"%@ %@ error: %@", method, conn, myError);
     if (error != NULL) {
         *error = myError;
     }

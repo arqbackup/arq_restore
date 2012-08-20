@@ -30,17 +30,21 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
-#import <Cocoa/Cocoa.h>
-@protocol S3Signer;
-@protocol HTTPConnection;
+#import "S3Owner.h"
 
-@interface S3AuthorizationProvider : NSObject <NSCopying> {
-	NSString *accessKey;
-    id <S3Signer> signer;
+
+@implementation S3Owner
+- (id)initWithDisplayName:(NSString *)dn idString:(NSString *)ids {
+	if (self = [super init]) {
+		displayName = [dn copy];
+		idString = [ids copy];
+	}
+	return self;
 }
-- (id)initWithAccessKey:(NSString *)access secretKey:(NSString *)secret;
-- (id)initWithAccessKey:(NSString *)access url:(NSURL *)theURL account:(NSString *)theAccount password:(NSString *)thePassword;
-- (id)initWithAccessKey:(NSString *)access signer:(id <S3Signer>)theSigner;
-- (NSString *)accessKey;
-- (BOOL)setAuthorizationRequestHeaderOnHTTPConnection:(id <HTTPConnection>)conn error:(NSError **)error;
+- (NSString *)displayName {
+	return displayName;
+}
+- (NSString *)idString {
+	return idString;
+}
 @end

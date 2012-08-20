@@ -31,16 +31,10 @@
  */ 
 
 #import <Cocoa/Cocoa.h>
-@protocol S3Signer;
-@protocol HTTPConnection;
 
-@interface S3AuthorizationProvider : NSObject <NSCopying> {
-	NSString *accessKey;
-    id <S3Signer> signer;
+
+@interface DNS_SDErrors : NSObject {
+
 }
-- (id)initWithAccessKey:(NSString *)access secretKey:(NSString *)secret;
-- (id)initWithAccessKey:(NSString *)access url:(NSURL *)theURL account:(NSString *)theAccount password:(NSString *)thePassword;
-- (id)initWithAccessKey:(NSString *)access signer:(id <S3Signer>)theSigner;
-- (NSString *)accessKey;
-- (BOOL)setAuthorizationRequestHeaderOnHTTPConnection:(id <HTTPConnection>)conn error:(NSError **)error;
++ (NSString *)descriptionForDNS_SDError:(int)code;
 @end

@@ -125,7 +125,10 @@
 		[queryString appendString:[NSString stringWithFormat:@"&marker=%@", [suffix stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]]];
 	}
     
-    S3Request *s3r = [[S3Request alloc] initWithMethod:@"GET" path:[NSString stringWithFormat:@"/%@/", s3BucketName] queryString:queryString authorizationProvider:sap useSSL:useSSL retryOnTransientError:retryOnTransientError];
+    S3Request *s3r = [[S3Request alloc] initWithMethod:@"GET" path:[NSString stringWithFormat:@"/%@/", s3BucketName] queryString:queryString authorizationProvider:sap useSSL:useSSL retryOnTransientError:retryOnTransientError error:error];
+    if (s3r == nil) {
+        return NO;
+    }
     ServerBlob *sb = [s3r newServerBlob:error];
     [s3r release];
     if (sb == nil) {
@@ -136,8 +139,10 @@
     if (data == nil) {
         return NO;
     }
-    NSXMLDocument *xmlDoc = [[[NSXMLDocument alloc] initWithData:data options:0 error:error] autorelease];
+    NSError *myError = nil;
+    NSXMLDocument *xmlDoc = [[[NSXMLDocument alloc] initWithData:data options:0 error:&myError] autorelease];
     if (!xmlDoc) {
+        SETNSERROR([S3Service errorDomain], [myError code], @"error parsing List Objects XML response: %@", myError);
         return NO;
     }
     NSString *lastPath = nil;

@@ -30,17 +30,49 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
-#import <Cocoa/Cocoa.h>
-@protocol S3Signer;
-@protocol HTTPConnection;
+#include <sys/sysctl.h>
+#include <netinet/in.h>
+#include <net/if.h>
+#include <net/route.h>
+#import "Sysctl.h"
+#import "SetNSError.h"
 
-@interface S3AuthorizationProvider : NSObject <NSCopying> {
-	NSString *accessKey;
-    id <S3Signer> signer;
+@implementation Sysctl
++ (BOOL)networkBytesIn:(unsigned long long *)bytesIn bytesOut:(unsigned long long *)bytesOut error:(NSError **)error {
+    int mib[] = {
+        CTL_NET,
+        PF_ROUTE,
+        0,
+        0,
+        NET_RT_IFLIST2,
+        0
+    };
+    size_t len;
+    if (sysctl(mib, 6, NULL, &len, NULL, 0) < 0) {
+        int errnum = errno;
+        SETNSERROR(@"UnixErrorDomain", errnum, @"sysctl: %s", strerror(errnum));
+        return NO;
+    }
+    char *buf = (char *)malloc(len);
+    if (sysctl(mib, 6, buf, &len, NULL, 0) < 0) {
+        int errnum = errno;
+        SETNSERROR(@"UnixErrorDomain", errnum, @"sysctl: %s", strerror(errnum));
+        return NO;
+    }
+    char *lim = buf + len;
+    char *next = NULL;
+    *bytesIn = 0;
+    *bytesOut = 0;
+    for (next = buf; next < lim; ) {
+        struct if_msghdr *ifm = (struct if_msghdr *)next;
+        next += ifm->ifm_msglen;
+        if (ifm->ifm_type == RTM_IFINFO2) {
+            struct if_msghdr2 *if2m = (struct if_msghdr2 *)ifm;
+            *bytesIn += if2m->ifm_data.ifi_ibytes;
+            *bytesOut += if2m->ifm_data.ifi_obytes;
+        }
+    }
+    free(buf);
+    return YES;
 }
-- (id)initWithAccessKey:(NSString *)access secretKey:(NSString *)secret;
-- (id)initWithAccessKey:(NSString *)access url:(NSURL *)theURL account:(NSString *)theAccount password:(NSString *)thePassword;
-- (id)initWithAccessKey:(NSString *)access signer:(id <S3Signer>)theSigner;
-- (NSString *)accessKey;
-- (BOOL)setAuthorizationRequestHeaderOnHTTPConnection:(id <HTTPConnection>)conn error:(NSError **)error;
 @end

@@ -35,6 +35,7 @@
 #import "Blob.h"
 #import "RegexKitLite.h"
 #import "NSError_S3.h"
+#import "S3Owner.h"
 #import "S3Lister.h"
 #import "S3AuthorizationProvider.h"
 #import "S3Service.h"
@@ -65,58 +66,7 @@
 + (NSString *)errorDomain {
     return @"S3ServiceErrorDomain";
 }
-+ (NSString *)displayNameForBucketRegion:(int)region {
-    switch (region) {
-        case BUCKET_REGION_US_STANDARD:
-            return @"US Standard";
-        case BUCKET_REGION_US_WEST:
-            return @"US-West (Northern California)";
-        case BUCKET_REGION_AP_SOUTHEAST_1:
-            return @"Asia Pacific (Singapore)";
-        case BUCKET_REGION_AP_NORTHEAST_1:
-            return @"Asia Pacific (Japan)";
-        case BUCKET_REGION_EU:
-            return @"EU (Ireland)";
-    }
-    NSAssert(NO, @"invalid S3 bucket region");
-    return nil;
-}
-+ (NSString *)s3BucketNameForAccessKeyID:(NSString *)theAccessKeyID region:(int)s3BucketRegion {
-    NSString *regionSuffix = @"";
-    if (s3BucketRegion == BUCKET_REGION_US_WEST) {
-        regionSuffix = @".us-west-1";
-    } else if (s3BucketRegion == BUCKET_REGION_AP_SOUTHEAST_1) {
-        regionSuffix = @".ap-southeast-1";
-    } else if (s3BucketRegion == BUCKET_REGION_AP_NORTHEAST_1) {
-        regionSuffix = @".ap-northeast-1";
-    } else if (s3BucketRegion == BUCKET_REGION_AP_NORTHEAST_1) {
-        regionSuffix = @".ap-northeast-1";
-    } else if (s3BucketRegion == BUCKET_REGION_EU) {
-        regionSuffix = @".eu";
-    }
-    return [NSString stringWithFormat:@"%@.com.haystacksoftware.arq%@", [theAccessKeyID lowercaseString], regionSuffix];
-}
-+ (int)s3BucketRegionForS3BucketName:(NSString *)s3BucketName {
-	if ([s3BucketName hasSuffix:@"com.haystacksoftware.arq.eu"]) {
-		return BUCKET_REGION_EU;
-	} else if ([s3BucketName hasSuffix:@"com.haystacksoftware.arq.ap-southeast-1"]) {
-		return BUCKET_REGION_AP_SOUTHEAST_1;
-	} else if ([s3BucketName hasSuffix:@"com.haystacksoftware.arq.ap-northeast-1"]) {
-		return BUCKET_REGION_AP_NORTHEAST_1;
-	} else if ([s3BucketName hasSuffix:@"com.haystacksoftware.arq.us-west-1"]) {
-		return BUCKET_REGION_US_WEST;
-	}
-	return BUCKET_REGION_US_STANDARD;
-}
-+ (NSArray *)s3BucketNamesForAccessKeyID:(NSString *)theAccessKeyId {
-	return [NSArray arrayWithObjects:
-			[S3Service s3BucketNameForAccessKeyID:theAccessKeyId region:BUCKET_REGION_US_STANDARD],
-			[S3Service s3BucketNameForAccessKeyID:theAccessKeyId region:BUCKET_REGION_US_WEST],
-			[S3Service s3BucketNameForAccessKeyID:theAccessKeyId region:BUCKET_REGION_EU],
-			[S3Service s3BucketNameForAccessKeyID:theAccessKeyId region:BUCKET_REGION_AP_SOUTHEAST_1],
-			[S3Service s3BucketNameForAccessKeyID:theAccessKeyId region:BUCKET_REGION_AP_NORTHEAST_1],
-			nil];
-}
+
 - (id)initWithS3AuthorizationProvider:(S3AuthorizationProvider *)theSAP useSSL:(BOOL)isUseSSL retryOnTransientError:(BOOL)retry {
 	if (self = [super init]) {
 		sap = [theSAP retain];
@@ -128,6 +78,36 @@
 - (void)dealloc {
 	[sap release];
 	[super dealloc];
+}
+- (S3Owner *)s3Owner:(NSError **)error {
+    if (error) {
+        *error = 0;
+    }
+	NSXMLDocument *doc = [self listBuckets:error];
+    if (!doc) {
+        return nil;
+    }
+	NSXMLElement *rootElem = [doc rootElement];
+	NSArray *idNodes = [rootElem nodesForXPath:@"//ListAllMyBucketsResult/Owner/ID" error:error];
+	if (!idNodes) {
+        return nil;
+	}
+    if ([idNodes count] == 0) {
+        HSLogError(@"ListAllMyBucketsResult/Owner/ID node not found");
+        return nil;
+    }
+	NSXMLNode *ownerIDNode = [idNodes objectAtIndex:0];
+	NSArray *displayNameNodes = [rootElem nodesForXPath:@"//ListAllMyBucketsResult/Owner/DisplayName" error:error];
+	if (!displayNameNodes) {
+        return nil;
+	}
+    if ([displayNameNodes count] == 0) {
+        HSLogError(@"ListAllMyBucketsResult/Owner/DisplayName not found");
+        return nil;
+    }
+	NSXMLNode *displayNameNode = [displayNameNodes objectAtIndex:0];
+    HSLogDebug(@"s3 owner ID: %@", [displayNameNode stringValue]);
+	return [[[S3Owner alloc] initWithDisplayName:[displayNameNode stringValue] idString:[ownerIDNode stringValue]] autorelease];
 }
 - (NSArray *)s3BucketNames:(NSError **)error {
 	NSXMLDocument *doc = [self listBuckets:error];
@@ -192,7 +172,10 @@
 }
 - (BOOL)containsBlob:(BOOL *)contains atPath:(NSString *)path dataSize:(unsigned long long *)dataSize error:(NSError **)error {
     BOOL ret = YES;
-    S3Request *s3r = [[S3Request alloc] initWithMethod:@"HEAD" path:path queryString:nil authorizationProvider:sap useSSL:useSSL retryOnTransientError:retryOnTransientError];
+    S3Request *s3r = [[S3Request alloc] initWithMethod:@"HEAD" path:path queryString:nil authorizationProvider:sap useSSL:useSSL retryOnTransientError:retryOnTransientError error:error];
+    if (s3r == nil) {
+        return NO;
+    }
     NSError *myError = nil;
     ServerBlob *sb = [s3r newServerBlob:&myError];
     if (sb != nil) {
@@ -201,6 +184,9 @@
     } else if ([myError isErrorWithDomain:[S3Service errorDomain] code:ERROR_NOT_FOUND]) {
         *contains = NO;
         HSLogDebug(@"S3 path %@ does NOT exist", path);
+    } else if ([myError isErrorWithDomain:[S3Service errorDomain] code:ERROR_RRS_NOT_FOUND]) {
+        *contains = NO;
+        HSLogDebug(@"S3 path %@ returns 405 error", path);
     } else {
         *contains = NO;
         ret = NO;
@@ -222,7 +208,10 @@
 }
 - (ServerBlob *)newServerBlobAtPath:(NSString *)path error:(NSError **)error {
     HSLogDebug(@"getting %@", path);
-    S3Request *s3r = [[S3Request alloc] initWithMethod:@"GET" path:path queryString:nil authorizationProvider:sap useSSL:useSSL retryOnTransientError:retryOnTransientError];
+    S3Request *s3r = [[S3Request alloc] initWithMethod:@"GET" path:path queryString:nil authorizationProvider:sap useSSL:useSSL retryOnTransientError:retryOnTransientError error:error];
+    if (s3r == nil) {
+        return nil;
+    }
     ServerBlob *sb = [s3r newServerBlob:error];
     [s3r release];
     return sb;
@@ -230,7 +219,10 @@
 - (BOOL)aclXMLData:(NSData **)aclXMLData atPath:(NSString *)path error:(NSError **)error {
     *aclXMLData = nil;
     HSLogDebug(@"getting %@", path);
-    S3Request *s3r = [[S3Request alloc] initWithMethod:@"GET" path:path queryString:@"?acl" authorizationProvider:sap useSSL:useSSL retryOnTransientError:retryOnTransientError];
+    S3Request *s3r = [[S3Request alloc] initWithMethod:@"GET" path:path queryString:@"?acl" authorizationProvider:sap useSSL:useSSL retryOnTransientError:retryOnTransientError error:error];
+    if (s3r == nil) {
+        return NO;
+    }
     ServerBlob *sb = [s3r newServerBlob:error];
     [s3r release];
     if (sb == nil) {
@@ -260,11 +252,24 @@
 	}
     return ret;
 }
+
+- (S3AuthorizationProvider *)s3AuthorizationProvider {
+    return sap;
+}
+
+
+#pragma mark NSCopying
+- (id)copyWithZone:(NSZone *)zone {
+    return [[S3Service alloc] initWithS3AuthorizationProvider:sap useSSL:useSSL retryOnTransientError:retryOnTransientError];
+}
 @end
 
 @implementation S3Service (internal)
 - (NSXMLDocument *)listBuckets:(NSError **)error {
-    S3Request *s3r = [[S3Request alloc] initWithMethod:@"GET" path:@"/" queryString:nil authorizationProvider:sap useSSL:useSSL retryOnTransientError:retryOnTransientError];
+    S3Request *s3r = [[S3Request alloc] initWithMethod:@"GET" path:@"/" queryString:nil authorizationProvider:sap useSSL:useSSL retryOnTransientError:retryOnTransientError error:error];
+    if (s3r == nil) {
+        return nil;
+    }
     ServerBlob *sb = [s3r newServerBlob:error];
     [s3r release];
     if (sb == nil) {
@@ -275,17 +280,26 @@
     if (data == nil) {
         return nil;
     }
-    return [[[NSXMLDocument alloc] initWithData:data options:0 error:error] autorelease];
+    NSError *myError = nil;
+    NSXMLDocument *ret = [[[NSXMLDocument alloc] initWithData:data options:0 error:&myError] autorelease];
+    if (ret == nil) {
+        HSLogDebug(@"error parsing List Buckets result XML %@", [[[NSString alloc] initWithBytes:[data bytes] length:[data length] encoding:NSUTF8StringEncoding] autorelease]);
+        SETNSERROR([S3Service errorDomain], [myError code], @"error parsing S3 List Buckets result XML: %@", [myError description]);
+    }
+    return ret;
 }
 - (BOOL)internalACL:(int *)acl atPath:(NSString *)path error:(NSError **)error {
     NSData *aclData;
     if (![self aclXMLData:&aclData atPath:path error:error]) {
         return NO;
     }
-	NSXMLDocument *xmlDoc = [[[NSXMLDocument alloc] initWithData:aclData options:0 error:error] autorelease];
+    NSError *myError = nil;
+	NSXMLDocument *xmlDoc = [[[NSXMLDocument alloc] initWithData:aclData options:0 error:&myError] autorelease];
     if (!xmlDoc) {
+        SETNSERROR([S3Service errorDomain], [myError code], @"error parsing S3 Get ACL response: %@", myError);
         return NO;
     }
+    HSLogTrace(@"ACL XML: %@", xmlDoc);
     NSArray *grants = [xmlDoc nodesForXPath:@"AccessControlPolicy/AccessControlList/Grant" error:error];
     if (!grants) {
         return NO;

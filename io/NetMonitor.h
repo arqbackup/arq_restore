@@ -31,16 +31,18 @@
  */ 
 
 #import <Cocoa/Cocoa.h>
-@protocol S3Signer;
-@protocol HTTPConnection;
 
-@interface S3AuthorizationProvider : NSObject <NSCopying> {
-	NSString *accessKey;
-    id <S3Signer> signer;
+#import <Cocoa/Cocoa.h>
+@class NetMonSample;
+
+@interface NetMonitor : NSObject {
+    NetMonSample *currentSample;
+    NetMonSample *previousSample;
+    NSTimeInterval overThresholdTime;
+    NSUInteger numBPSSamples;
+    double bpsSamples[4];
 }
-- (id)initWithAccessKey:(NSString *)access secretKey:(NSString *)secret;
-- (id)initWithAccessKey:(NSString *)access url:(NSURL *)theURL account:(NSString *)theAccount password:(NSString *)thePassword;
-- (id)initWithAccessKey:(NSString *)access signer:(id <S3Signer>)theSigner;
-- (NSString *)accessKey;
-- (BOOL)setAuthorizationRequestHeaderOnHTTPConnection:(id <HTTPConnection>)conn error:(NSError **)error;
+- (id)init;
+- (double)sample:(double)myBPS;
+- (double)averageBPS;
 @end

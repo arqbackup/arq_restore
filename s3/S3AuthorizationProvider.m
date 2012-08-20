@@ -32,6 +32,7 @@
 
 #import "S3AuthorizationProvider.h"
 #import "LocalS3Signer.h"
+#import "RemoteS3Signer.h"
 #import "HTTPConnection.h"
 
 /*
@@ -41,7 +42,7 @@
 
 @interface S3AuthorizationProvider (internal)
 - (NSString *)authorizationForString:(NSString *)stringToSign error:(NSError **)error;
-- (NSString *)stringToSignForS3BucketName:(NSString *)theS3BucketName connection:(id <HTTPConnection>)theConnection;
+- (NSString *)stringToSignForConnection:(id <HTTPConnection>)theConnection;
 @end
 
 @implementation S3AuthorizationProvider
@@ -54,6 +55,20 @@
 	}
 	return self;
 }
+- (id)initWithAccessKey:(NSString *)access url:(NSURL *)theURL account:(NSString *)theAccount password:(NSString *)thePassword {
+    if (self = [super init]) {
+		accessKey = [access copy];
+        signer = [[RemoteS3Signer alloc] initWithAccessKey:accessKey url:theURL account:theAccount password:thePassword];
+    }
+    return self;
+}
+- (id)initWithAccessKey:(NSString *)access signer:(id <S3Signer>)theSigner {
+    if (self = [super init]) {
+        accessKey = [access retain];
+        signer = [theSigner retain];
+    }
+    return self;
+}
 - (void)dealloc {
 	[accessKey release];
 	[signer release];
@@ -62,14 +77,20 @@
 - (NSString *)accessKey {
 	return accessKey;
 }
-- (BOOL)setAuthorizationRequestHeaderOnHTTPConnection:(id <HTTPConnection>)conn usingS3BucketName:(NSString *)s3BucketName error:(NSError **)error {
-    NSString *stringToSign = [self stringToSignForS3BucketName:s3BucketName connection:conn];
+- (BOOL)setAuthorizationRequestHeaderOnHTTPConnection:(id <HTTPConnection>)conn error:(NSError **)error {
+    NSString *stringToSign = [self stringToSignForConnection:conn];
     NSString *authorization = [self authorizationForString:stringToSign error:error];
     if (authorization == nil) {
         return NO;
     }
     [conn setRequestHeader:authorization forKey:@"Authorization"];
     return YES;
+}
+
+
+#pragma mark NSCopying
+- (id)copyWithZone:(NSZone *)zone {
+    return [[S3AuthorizationProvider alloc] initWithAccessKey:accessKey signer:signer];
 }
 @end
 
@@ -91,7 +112,7 @@
 	}
 	return ret;
 }
-- (NSString *)stringToSignForS3BucketName:(NSString *)theS3BucketName connection:(id <HTTPConnection>)theConnection {
+- (NSString *)stringToSignForConnection:(id <HTTPConnection>)theConnection {
     NSMutableString *buf = [[[NSMutableString alloc] init] autorelease];
 	[buf appendString:[theConnection requestMethod]];
 	[buf appendString:@"\n"];
@@ -118,10 +139,6 @@
     for (NSString *xamz in xamzHeaders) {
         [buf appendString:xamz];
     }
-	if ([theS3BucketName length] > 0) {
-		[buf appendString:@"/"];
-		[buf appendString:theS3BucketName];
-	}
 	[buf appendString:[theConnection requestPathInfo]];
     NSString *queryString = [theConnection requestQueryString];
     if ([queryString isEqualToString:@"?acl"]

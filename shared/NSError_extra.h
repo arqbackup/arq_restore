@@ -36,5 +36,8 @@
 + (NSError *)errorWithDomain:(NSString *)domain code:(NSInteger)code description:(NSString *)theDescription;
 - (id)initWithDomain:(NSString *)domain code:(NSInteger)code description:(NSString *)theDescription;
 - (BOOL)isErrorWithDomain:(NSString *)theDomain code:(int)theCode;
+- (BOOL)isConnectionResetError;
 - (BOOL)isTransientError;
+- (BOOL)isSSLError;
+- (void)logSSLCerts;
 @end
