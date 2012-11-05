@@ -45,6 +45,8 @@
 #import "ArqRepo.h"
 #import "BackupSet.h"
 #import "ReflogPrinter.h"
+#import "NSData-Encrypt.h"
+#import "CryptoKey.h"
 
 
 @interface ArqRestoreCommand (internal)
@@ -188,26 +190,10 @@
         SETNSERROR(@"ArqErrorDomain", -1, @"invalid S3 path");
         return NO;
     }
-    NSData *data = [s3 dataAtPath:path error:error];
-    if (data == nil) {
-        return NO;
-    }
-    DictNode *plist = [DictNode dictNodeWithXMLData:data error:error];
-    if (plist == nil) {
-        return NO;
-    }
     NSString *s3BucketName = [path substringWithRange:s3BucketNameRange];
     NSString *computerUUID = [path substringWithRange:computerUUIDRange];
     NSString *bucketUUID = [path substringWithRange:bucketUUIDRange];
-    NSString *bucketName = [[plist stringNodeForKey:@"BucketName"] stringValue];
-    
-    NSError *uacError = nil;
-    NSData *uacData = [s3 dataAtPath:[NSString stringWithFormat:@"/%@/%@/computerinfo", s3BucketName, computerUUID] error:&uacError];
-    UserAndComputer *uac = nil;
-    if (uacData != nil) {
-        uac = [[[UserAndComputer alloc] initWithXMLData:uacData error:&uacError] autorelease];
-    }
-    
+
     NSError *saltError = nil;
     ArqSalt *arqSalt = [[[ArqSalt alloc] initWithAccessKeyID:accessKey secretAccessKey:secretKey s3BucketName:s3BucketName computerUUID:computerUUID] autorelease];
     NSData *salt = [arqSalt salt:&saltError];
@@ -219,6 +205,38 @@
             return NO;
         }
     }
+
+    NSData *data = [s3 dataAtPath:path error:error];
+    if (data == nil) {
+        return NO;
+    }
+    
+    if (!strncmp([data bytes], "encrypted", 9)) {
+        data = [data subdataWithRange:NSMakeRange(9, [data length] - 9)];
+        CryptoKey *cryptoKey = [[[CryptoKey alloc] initWithPassword:encryptionPassword salt:salt error:error] autorelease];
+        if (cryptoKey == nil) {
+            return NO;
+        }
+        data = [data decryptWithCryptoKey:cryptoKey error:error];
+        if (data == nil) {
+            HSLogError(@"failed to decrypt %@", path);
+            return NO;
+        }
+    }
+
+    DictNode *plist = [DictNode dictNodeWithXMLData:data error:error];
+    if (plist == nil) {
+        return NO;
+    }
+    NSString *bucketName = [[plist stringNodeForKey:@"BucketName"] stringValue];
+    
+    NSError *uacError = nil;
+    NSData *uacData = [s3 dataAtPath:[NSString stringWithFormat:@"/%@/%@/computerinfo", s3BucketName, computerUUID] error:&uacError];
+    UserAndComputer *uac = nil;
+    if (uacData != nil) {
+        uac = [[[UserAndComputer alloc] initWithXMLData:uacData error:&uacError] autorelease];
+    }
+    
     ArqRepo *repo = [[[ArqRepo alloc] initWithS3Service:s3 s3BucketName:s3BucketName computerUUID:computerUUID bucketUUID:bucketUUID encryptionPassword:encryptionPassword salt:salt error:error] autorelease];
     if (repo == nil) {
         return NO;
