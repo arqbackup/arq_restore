@@ -501,7 +501,7 @@ static id performRegexOp(id self, SEL _cmd, RKLRegexOp doRegexOp, NSString *rege
   if((status > 0) && (exception == NULL)) { exception = RKLNSExceptionForRegex(regexString, options, NULL, status); } // If we had a problem, throw an exception.
   if(exception != NULL) {
     if([exception isKindOfClass:[NSException class]]) { [[NSException exceptionWithName:[exception name] reason:RKLStringFromClassAndMethod(self, _cmd, [exception reason]) userInfo:[exception userInfo]] raise]; }
-    else { [[NSAssertionHandler currentHandler] handleFailureInFunction:[exception objectForKey:@"function"] file:[exception objectForKey:@"file"] lineNumber:[[exception objectForKey:@"line"] longValue] description:[exception objectForKey:@"description"]]; }
+    else { [[NSAssertionHandler currentHandler] handleFailureInFunction:[exception objectForKey:@"function"] file:[exception objectForKey:@"file"] lineNumber:[[exception objectForKey:@"line"] longValue] description:@"%@", [exception objectForKey:@"description"]]; }
   }
   if(replaceMutable == YES) { // We're working on a mutable string and if there were successfull matches with replaced text we still have work to do.  Done outside the cache lock.
     if(*((NSUInteger *)result) > 0) { NSCParameterAssert(resultObject != NULL); [matchString replaceCharactersInRange:searchRange withString:resultObject]; }

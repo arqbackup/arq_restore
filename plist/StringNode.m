@@ -83,6 +83,6 @@
     return result;
 }
 - (NSString *)description {
-    return [NSString stringWithFormat:@"<StringNode 0x%x \"%@\">", self, value];
+    return [NSString stringWithFormat:@"<StringNode \"%@\">", value];
 }
 @end

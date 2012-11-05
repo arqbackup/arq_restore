@@ -79,7 +79,7 @@
             return NO;
         }
         if (len > 2147483648) {
-            SETNSERROR(@"InputStreamErrorDomain", -1, @"absurd string length %u in [StringIO newString:]", len);
+            SETNSERROR(@"InputStreamErrorDomain", -1, @"absurd string length %llu in [StringIO newString:]", len);
             return NO;
         }
         unsigned char *buf = (unsigned char *)malloc(len);

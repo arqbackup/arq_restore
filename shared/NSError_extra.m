@@ -124,7 +124,7 @@
         if (SecCertificateCopyPublicKey(secCert, &key) == 0 && key != NULL) {
             CSSM_CSP_HANDLE cspHandle;
             if (SecKeyGetCSPHandle(key, &cspHandle) == 0) {
-                HSLog(@"SSL cert CSP handle: %d", (long)cspHandle);
+                HSLog(@"SSL cert CSP handle: %ld", (long)cspHandle);
             } else {
                 HSLog(@"error getting SSL cert's key's CSP handle");
             }

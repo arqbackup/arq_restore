@@ -145,7 +145,7 @@
             SETNSERROR([Encryption errorDomain], -1, @"%@ error: %@", label, [OpenSSL errorMessage]);
             return NO;
         }
-        HSLogTrace(@"%@ final: outBufLen = %d", label, (NSInteger)outBufLen);
+        HSLogTrace(@"%@ final: outBufLen = %ld", label, (NSInteger)outBufLen);
         outBufLen = (NSInteger)theBufLen;
     } else {
         int theBufLen = 0;
@@ -153,7 +153,7 @@
             SETNSERROR([Encryption errorDomain], -1, @"%@ error: %@", label, [OpenSSL errorMessage]);
             return NO;
         }
-        HSLogTrace(@"%@ update: inBufLen = %d, outBufLen = %d", label, recvd, (NSInteger)outBufLen);
+        HSLogTrace(@"%@ update: inBufLen = %ld, outBufLen = %ld", label, recvd, (NSInteger)outBufLen);
         outBufLen = (NSInteger)theBufLen;
     }
     return YES;

@@ -464,7 +464,8 @@ static void ReadStreamClientCallback(CFReadStreamRef readStream, CFStreamEventTy
         if (transferEncoding != nil && ![transferEncoding isEqualToString:@"Identity"]) {
             if ([[transferEncoding lowercaseString] isEqualToString:@"chunked"]) {
                 HSLogTrace(@"%@: chunked response body", self);
-                ret = [[ChunkedInputStream alloc] initWithUnderlyingStream:self];
+                BufferedInputStream *bis = [[BufferedInputStream alloc] initWithUnderlyingStream:self];
+                ret = [[ChunkedInputStream alloc] initWithUnderlyingStream:bis];
             } else {
                 SETNSERROR(@"StreamErrorDomain", -1, @"unknown Transfer-Encoding '%@'", transferEncoding);
                 return nil;
@@ -516,7 +517,7 @@ static void ReadStreamClientCallback(CFReadStreamRef readStream, CFStreamEventTy
             return 0;
         }
         recvd = [readStream read:buf maxLength:length];
-        HSLogTrace(@"received %d bytes", recvd);
+        HSLogTrace(@"received %ld bytes", recvd);
         if (recvd < 0) {
             [self handleStreamError];
             if (error != NULL) {

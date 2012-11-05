@@ -101,7 +101,7 @@
     return result;
 }
 - (NSString *)description {
-    return [NSString stringWithFormat:@"<IntegerNode 0x%x %qi>", self, value];
+    return [NSString stringWithFormat:@"<IntegerNode %qi>", value];
 }
 
 @end

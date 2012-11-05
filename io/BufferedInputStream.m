@@ -66,7 +66,7 @@
 }
 - (BOOL)readExactly:(NSUInteger)exactLength into:(unsigned char *)outBuf error:(NSError **)error {
     if (exactLength > 2147483648) {
-        SETNSERROR(@"InputStreamErrorDomain", -1, @"absurd length %u requested", exactLength);
+        SETNSERROR(@"InputStreamErrorDomain", -1, @"absurd length %lu requested", exactLength);
         return NO;
     }
     NSUInteger received = 0;
@@ -76,7 +76,7 @@
             return NO;
         }
         if (ret == 0) {
-            SETNSERROR([BufferedInputStream errorDomain], ERROR_EOF, @"%@ EOF after %u of %u bytes received", self, received, exactLength);
+            SETNSERROR([BufferedInputStream errorDomain], ERROR_EOF, @"%@ EOF after %lu of %lu bytes received", self, received, exactLength);
             return NO;
         }
         received += ret;
@@ -88,7 +88,7 @@
     NSUInteger received = 0;
     for (;;) {
         if (received > maxLength) {
-            SETNSERROR(@"InputStreamErrorDomain", -1, @"exceeded maxLength %u before finding CRLF", maxLength);
+            SETNSERROR(@"InputStreamErrorDomain", -1, @"exceeded maxLength %lu before finding CRLF", maxLength);
             free(lineBuf);
             return nil;
         }

@@ -136,7 +136,7 @@
     return result;
 }
 - (NSString *)description {
-    return [NSString stringWithFormat:@"<ArrayNode 0x%x %@>", self, [list description]];
+    return [NSString stringWithFormat:@"<ArrayNode %@>", [list description]];
 }
 @end
 

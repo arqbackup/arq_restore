@@ -128,7 +128,7 @@ static OSStatus SymlinkPathMakeRef(const UInt8 *path, FSRef *ref, Boolean *isDir
                 
                 CFTimeInterval theCreateTime; // double: seconds since reference date
                 if (UCConvertUTCDateTimeToCFAbsoluteTime(&catalogInfo.createDate, &theCreateTime) != noErr) {
-                    HSLogError(@"error converting create time %f to CFAbsoluteTime", catalogInfo.createDate);
+                    HSLogError(@"error converting create time to CFAbsoluteTime");
                 } else {
                     createTime.tv_sec = (int64_t)(theCreateTime + NSTimeIntervalSince1970);
                     CFTimeInterval subsecond = theCreateTime - (double)((int64_t)theCreateTime);

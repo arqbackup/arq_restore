@@ -81,7 +81,7 @@
     [myError autorelease];
     if (sb == nil) {
         if ([myError isErrorWithDomain:[ArqPackSet errorDomain] code:ERROR_PACK_INDEX_ENTRY_NOT_RESOLVABLE]) {
-            SETNSERROR([ArqPackSet errorDomain], ERROR_NOT_FOUND, @"failed %u times to load blob for sha1 %@ from pack set %@", i, sha1, packSetName);
+            SETNSERROR([ArqPackSet errorDomain], ERROR_NOT_FOUND, @"failed %lu times to load blob for sha1 %@ from pack set %@", i, sha1, packSetName);
         } else if (error != NULL) {
             *error = myError;
         }
@@ -195,7 +195,7 @@
                 if (pies == nil) {
                     break;
                 }
-                HSLogTrace(@"found %u entries in s3 pack sha1 %@ packset %@ computer %@ s3bucket %@", [pies count], packSHA1, packSetName, computerUUID, s3BucketName);
+                HSLogTrace(@"found %lu entries in s3 pack sha1 %@ packset %@ computer %@ s3bucket %@", [pies count], packSHA1, packSetName, computerUUID, s3BucketName);
                 for (PackIndexEntry *pie in pies) {
                     [entries setObject:pie forKey:[pie objectSHA1]];
                 }

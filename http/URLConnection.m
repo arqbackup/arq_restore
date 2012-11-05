@@ -194,7 +194,7 @@ static NSString *RUN_LOOP_MODE = @"HTTPConnectionRunLoopMode";
         receivedData = nil;
         offset = 0;
     }
-    HSLogTrace(@"received %d bytes", recvd);
+    HSLogTrace(@"received %ld bytes", recvd);
 
     return recvd;    
 }
@@ -236,7 +236,7 @@ static NSString *RUN_LOOP_MODE = @"HTTPConnectionRunLoopMode";
 }
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
     NSAssert(receivedData == nil, @"must not discard unread bytes");
-    HSLogTrace(@"received %u bytes", [data length]);
+    HSLogTrace(@"received %lu bytes", [data length]);
     [receivedData release];
     receivedData = [data retain];
     offset = 0;
@@ -248,7 +248,7 @@ static NSString *RUN_LOOP_MODE = @"HTTPConnectionRunLoopMode";
     }
 }
 - (void)connection:(NSURLConnection *)connection didSendBodyData:(NSInteger)bytesWritten totalBytesWritten:(NSInteger)totalBytesWritten totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite {
-    HSLogTrace(@"%@: sent so far %u of %u", self, totalBytesWritten, totalBytesExpectedToWrite);
+    HSLogTrace(@"%@: sent so far %lu of %lu", self, totalBytesWritten, totalBytesExpectedToWrite);
 }
 - (NSCachedURLResponse *)connection:(NSURLConnection *)connection willCacheResponse:(NSCachedURLResponse *)cachedResponse {
     return cachedResponse;

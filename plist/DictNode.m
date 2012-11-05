@@ -284,7 +284,7 @@
     return result;
 }
 - (NSString *)description {
-    return [NSString stringWithFormat:@"<DictNode 0x%x %@>", self, [dict description]];
+    return [NSString stringWithFormat:@"<DictNode %@>", [dict description]];
 }
 @end
 

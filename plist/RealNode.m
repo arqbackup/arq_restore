@@ -90,6 +90,6 @@
     return result;
 }
 - (NSString *)description {
-    return [NSString stringWithFormat:@"<RealNode 0x%x %f>", self, value];
+    return [NSString stringWithFormat:@"<RealNode %f>", value];
 }
 @end

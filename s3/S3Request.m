@@ -246,7 +246,7 @@
     int code = [conn responseCode];
     if (code >= 200 && code <= 299) {
         ret = [[ServerBlob alloc] initWithData:response mimeType:[conn responseContentType] downloadName:[conn responseDownloadName]];
-        HSLogDebug(@"HTTP %d; returning response length=%d", code, [response length]);
+        HSLogDebug(@"HTTP %d; returning response length=%ld", code, [response length]);
         return ret;
     }
     

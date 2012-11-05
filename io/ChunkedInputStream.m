@@ -65,7 +65,7 @@
             return -1;
         }
         chunkLength = (NSUInteger)scanned;
-        HSLogTrace(@"chunk length = %u", chunkLength);
+        HSLogTrace(@"chunk length = %lu", chunkLength);
     }
     if (chunkLength == 0) {
         SETNSERROR(@"StreamsErrorDomain", ERROR_EOF, @"EOF (zero chunk length)");

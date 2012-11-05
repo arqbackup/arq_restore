@@ -79,6 +79,6 @@
     return result;
 }
 - (NSString *)description {
-    return [NSString stringWithFormat:@"<BooleanNode 0x%x %@>", self, (value ? @"YES" : @"NO")];
+    return [NSString stringWithFormat:@"<BooleanNode %@>", (value ? @"YES" : @"NO")];
 }
 @end

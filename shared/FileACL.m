@@ -54,7 +54,7 @@
             acl_free(acl);
             int errnum = errno;
             HSLogError(@"acl_to_text from %@ error %d: %s", path, errnum, strerror(errnum));
-            SETNSERROR(@"UnixErrorDomain", errnum, @"failed to convert ACL of @% to text: %s", path, strerror(errnum));
+            SETNSERROR(@"UnixErrorDomain", errnum, @"failed to convert ACL of %@ to text: %s", path, strerror(errnum));
             return NO;
         }
         *aclText = [NSString stringWithUTF8String:aclTextChars];

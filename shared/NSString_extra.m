@@ -131,7 +131,7 @@ static unsigned char hexCharToInt(char c1) {
     NSUInteger index = 2;
     NSString *path = [NSString stringWithString:self];
     while ([fm fileExistsAtPath:path]) {
-        path = [NSString stringWithFormat:@"%@_%u%@", left, index++, right];
+        path = [NSString stringWithFormat:@"%@_%lu%@", left, index++, right];
     }
     return path;
 }

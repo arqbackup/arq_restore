@@ -57,6 +57,6 @@
 
 #pragma mark NSObject
 - (NSString *)description {
-    return [NSString stringWithFormat:@"<DataISF: %u bytes: %@>", [data length], dataDescription];
+    return [NSString stringWithFormat:@"<DataISF: %lu bytes: %@>", [data length], dataDescription];
 }
 @end
