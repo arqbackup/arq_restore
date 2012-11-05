@@ -30,7 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
-#import <Cocoa/Cocoa.h>
+
 
 #define S3_ERROR_DOMAIN @"S3"
 

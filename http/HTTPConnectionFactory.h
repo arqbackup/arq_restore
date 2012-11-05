@@ -6,7 +6,7 @@
 //  Copyright 2012 __MyCompanyName__. All rights reserved.
 //
 
-#import <Cocoa/Cocoa.h>
+
 @protocol HTTPConnection;
 @protocol HTTPConnectionDelegate;
 @class HTTPTimeoutSetting;

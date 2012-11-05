@@ -7,7 +7,7 @@
 //
 
 #include <sys/stat.h>
-#import <Cocoa/Cocoa.h>
+
 @protocol InputStream;
 @class BlobKey;
 

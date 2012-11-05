@@ -6,7 +6,7 @@
 //  Copyright 2012 __MyCompanyName__. All rights reserved.
 //
 
-#import <Cocoa/Cocoa.h>
+
 @class CFHTTPConnection;
 @protocol HTTPConnectionDelegate;
 @class NetMonitor;

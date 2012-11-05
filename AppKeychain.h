@@ -6,7 +6,6 @@
 //  Copyright 2009 PhotoMinds LLC. All rights reserved.
 //
 
-#import <Cocoa/Cocoa.h>
 
 
 @interface AppKeychain : NSObject {

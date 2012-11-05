@@ -30,9 +30,9 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
-#import <Cocoa/Cocoa.h>
 
-#import <Cocoa/Cocoa.h>
+
+
 #import "OutputStream.h"
 
 @interface DataOutputStream : NSObject <OutputStream> {

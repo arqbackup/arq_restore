@@ -30,7 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
-#import <Cocoa/Cocoa.h>
+
 
 #include <sys/time.h>
 #include <sys/stat.h>

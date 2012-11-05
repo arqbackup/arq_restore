@@ -37,7 +37,7 @@ enum {
 	AUTHENTICATED_READ = 8
 };
 
-#import <Cocoa/Cocoa.h>
+
 
 @interface BlobACL : NSObject {
     

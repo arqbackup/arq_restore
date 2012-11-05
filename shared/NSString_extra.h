@@ -30,7 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
-#import <Cocoa/Cocoa.h>
+
 
 @interface NSString (extra)
 + (NSString *)hexStringWithBytes:(const unsigned char *)bytes length:(unsigned int)length;

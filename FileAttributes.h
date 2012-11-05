@@ -7,7 +7,7 @@
 //
 
 #include <sys/stat.h>
-#import <Cocoa/Cocoa.h>
+
 
 @interface FileAttributes : NSObject {
     BOOL targetExists;

@@ -6,7 +6,7 @@
 //  Copyright 2010 __MyCompanyName__. All rights reserved.
 //
 
-#import <Cocoa/Cocoa.h>
+
 @class S3Service;
 @class ArqFark;
 @class ArqPackSet;

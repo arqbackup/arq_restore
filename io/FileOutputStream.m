@@ -31,7 +31,7 @@
  */ 
 
 #include <sys/stat.h>
-#import <Cocoa/Cocoa.h>
+
 
 #import "FileOutputStream.h"
 #import "SetNSError.h"

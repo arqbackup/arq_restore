@@ -30,7 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
-#import <Cocoa/Cocoa.h>
+
 #import "S3Receiver.h"
 
 @interface S3ObjectReceiver : NSObject <S3Receiver> {

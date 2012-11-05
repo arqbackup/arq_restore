@@ -30,7 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
-#import <Cocoa/Cocoa.h>
+
 
 @interface NSError (extra)
 + (NSError *)errorWithDomain:(NSString *)domain code:(NSInteger)code description:(NSString *)theDescription;
