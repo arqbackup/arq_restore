@@ -161,6 +161,29 @@
             if (data == nil) {
                 return NO;
             }
+            
+            // Decrypt the plist if necessary:
+            unsigned long length = 9;
+            if ([data length] < length) {
+                length = [data length];
+            }
+            if (length >= 9 && !strncmp([data bytes], "encrypted", length)) {
+                NSData *encryptedData = [data subdataWithRange:NSMakeRange(9, [data length] - 9)];
+                ArqSalt *arqSalt = [[[ArqSalt alloc] initWithAccessKeyID:accessKey secretAccessKey:secretKey s3BucketName:s3BucketName computerUUID:computerUUID] autorelease];
+                NSData *salt = [arqSalt salt:error];
+                if (salt == nil) {
+                    return NO;
+                }
+                CryptoKey *cryptoKey = [[[CryptoKey alloc] initWithPassword:encryptionPassword salt:salt error:error] autorelease];
+                if (cryptoKey == nil) {
+                    return NO;
+                }
+                data = [encryptedData decryptWithCryptoKey:cryptoKey error:error];
+                if (data == nil) {
+                    return NO;
+                }
+            }
+
             DictNode *plist = [DictNode dictNodeWithXMLData:data error:error];
             if (plist == nil) {
                 return NO;
