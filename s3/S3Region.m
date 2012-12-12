@@ -27,6 +27,7 @@
     [ret addObject:[S3Region usWestOregon]];
     [ret addObject:[S3Region euIreland]];
     [ret addObject:[S3Region asiaPacificSingapore]];
+    [ret addObject:[S3Region asiaPacificSydney]];
     [ret addObject:[S3Region asiaPacificTokyo]];
     [ret addObject:[S3Region southAmericaSaoPaulo]];
     return ret;
@@ -83,6 +84,15 @@
                                            displayName:@"Asia Pacific (Singapore)" 
                              dollarsPerGBMonthStandard:.125 
                                   dollarsPerGBMonthRRS:.093] autorelease];
+}
++ (S3Region *)asiaPacificSydney {
+    return [[[S3Region alloc] initWithBucketNameSuffix:@"-ap-southeast-2"
+                                legacyBucketNameSuffix:@"ap-southeast-2"
+                                    locationConstraint:@"ap-southeast-2"
+                                              endpoint:@"s3-ap-southeast-2.amazonaws.com"
+                                           displayName:@"Asia Pacific (Sydney)"
+                             dollarsPerGBMonthStandard:.105
+                                  dollarsPerGBMonthRRS:.084] autorelease];
 }
 + (S3Region *)asiaPacificTokyo {
     return [[[S3Region alloc] initWithBucketNameSuffix:@"-ap-northeast-1" 

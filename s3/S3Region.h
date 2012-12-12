@@ -25,6 +25,7 @@
 + (S3Region *)usWestOregon;
 + (S3Region *)euIreland;
 + (S3Region *)asiaPacificSingapore;
++ (S3Region *)asiaPacificSydney;
 + (S3Region *)asiaPacificTokyo;
 + (S3Region *)southAmericaSaoPaulo;
 
