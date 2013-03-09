@@ -229,29 +229,26 @@
         }
     }
 
-    NSData *data = [s3 dataAtPath:path error:error];
-    if (data == nil) {
-        return NO;
-    }
-    
-    if (!strncmp([data bytes], "encrypted", 9)) {
-        data = [data subdataWithRange:NSMakeRange(9, [data length] - 9)];
-        CryptoKey *cryptoKey = [[[CryptoKey alloc] initWithPassword:encryptionPassword salt:salt error:error] autorelease];
-        if (cryptoKey == nil) {
-            return NO;
+    NSString *bucketName = @"(unknown)";
+    NSData *data = [s3 dataAtPath:path error:NULL];
+    if (data != nil) {
+        if (!strncmp([data bytes], "encrypted", 9)) {
+            data = [data subdataWithRange:NSMakeRange(9, [data length] - 9)];
+            CryptoKey *cryptoKey = [[[CryptoKey alloc] initWithPassword:encryptionPassword salt:salt error:error] autorelease];
+            if (cryptoKey == nil) {
+                return NO;
+            }
+            data = [data decryptWithCryptoKey:cryptoKey error:error];
+            if (data == nil) {
+                HSLogError(@"failed to decrypt %@", path);
+                return NO;
+            }
         }
-        data = [data decryptWithCryptoKey:cryptoKey error:error];
-        if (data == nil) {
-            HSLogError(@"failed to decrypt %@", path);
-            return NO;
+        DictNode *plist = [DictNode dictNodeWithXMLData:data error:NULL];
+        if (plist != nil) {
+            bucketName = [[plist stringNodeForKey:@"BucketName"] stringValue];
         }
     }
-
-    DictNode *plist = [DictNode dictNodeWithXMLData:data error:error];
-    if (plist == nil) {
-        return NO;
-    }
-    NSString *bucketName = [[plist stringNodeForKey:@"BucketName"] stringValue];
     
     NSError *uacError = nil;
     NSData *uacData = [s3 dataAtPath:[NSString stringWithFormat:@"/%@/%@/computerinfo", s3BucketName, computerUUID] error:&uacError];
