@@ -28,6 +28,11 @@
             [self release];
             return nil;
         }
+        if ([thePassword length] == 0) {
+            SETNSERROR([Encryption errorDomain], -1, @"missing encryption password");
+            [self release];
+            return nil;
+        }
         if (theSalt != nil && [theSalt length] != 8) {
             SETNSERROR([Encryption errorDomain], -1, @"salt must be 8 bytes or nil");
             [self release];

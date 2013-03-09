@@ -29,10 +29,14 @@
             return nil;
         }
         oldHeadBlobKey = [[BlobKey alloc] initWithSHA1:[[dictNode stringNodeForKey:@"oldHeadSHA1"] stringValue]
-                                  stretchEncryptionKey:[[dictNode booleanNodeForKey:@"oldHeadStretchKey"] booleanValue]];
+                                           storageType:StorageTypeS3
+                                  stretchEncryptionKey:[[dictNode booleanNodeForKey:@"oldHeadStretchKey"] booleanValue]
+                                            compressed:NO];
         
         newHeadBlobKey = [[BlobKey alloc] initWithSHA1:[[dictNode stringNodeForKey:@"newHeadSHA1"] stringValue]
-                                  stretchEncryptionKey:[[dictNode booleanNodeForKey:@"newHeadStretchKey"] booleanValue]];
+                                           storageType:StorageTypeS3
+                                  stretchEncryptionKey:[[dictNode booleanNodeForKey:@"newHeadStretchKey"] booleanValue]
+                                            compressed:NO];
     }
     return self;
 }

@@ -22,6 +22,8 @@
 #import "CryptoKey.h"
 #import "BlobKey.h"
 #import "Encryption.h"
+#import "NSData-GZip.h"
+
 
 @implementation ArqRepo
 + (NSString *)errorDomain {
@@ -92,7 +94,7 @@
         stretch = [sha1 characterAtIndex:40] == 'Y';
         sha1 = [sha1 substringToIndex:40];
     }
-    return [[[BlobKey alloc] initWithSHA1:sha1 stretchEncryptionKey:stretch] autorelease];
+    return [[[BlobKey alloc] initWithSHA1:sha1 storageType:StorageTypeS3 stretchEncryptionKey:stretch compressed:NO] autorelease];
 }
 - (Commit *)commitForBlobKey:(BlobKey *)commitBlobKey error:(NSError **)error {
     NSError *myError = nil;
@@ -152,7 +154,9 @@
     if (data == nil) {
         return nil;
     }
-
+    if ([blobKey compressed]) {
+        data = [data gzipInflate];
+    }
     DataInputStream *dis = [[DataInputStream alloc] initWithData:data];
     BufferedInputStream *bis = [[BufferedInputStream alloc] initWithUnderlyingStream:dis];
     Tree *tree = [[[Tree alloc] initWithBufferedInputStream:bis error:error] autorelease];

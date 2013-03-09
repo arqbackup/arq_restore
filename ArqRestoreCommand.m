@@ -49,6 +49,9 @@
 #import "CryptoKey.h"
 
 
+#define BUCKET_PLIST_SALT "BucketPL"
+
+
 @interface ArqRestoreCommand (internal)
 - (BOOL)printArqFolders:(NSError **)error;
 - (BOOL)processPath:(NSError **)error;
@@ -169,12 +172,7 @@
             }
             if (length >= 9 && !strncmp([data bytes], "encrypted", length)) {
                 NSData *encryptedData = [data subdataWithRange:NSMakeRange(9, [data length] - 9)];
-                ArqSalt *arqSalt = [[[ArqSalt alloc] initWithAccessKeyID:accessKey secretAccessKey:secretKey s3BucketName:s3BucketName computerUUID:computerUUID] autorelease];
-                NSData *salt = [arqSalt salt:error];
-                if (salt == nil) {
-                    return NO;
-                }
-                CryptoKey *cryptoKey = [[[CryptoKey alloc] initWithPassword:encryptionPassword salt:salt error:error] autorelease];
+                CryptoKey *cryptoKey = [[[CryptoKey alloc] initWithPassword:encryptionPassword salt:[NSData dataWithBytes:BUCKET_PLIST_SALT length:8] error:error] autorelease];
                 if (cryptoKey == nil) {
                     return NO;
                 }
@@ -217,24 +215,12 @@
     NSString *computerUUID = [path substringWithRange:computerUUIDRange];
     NSString *bucketUUID = [path substringWithRange:bucketUUIDRange];
 
-    NSError *saltError = nil;
-    ArqSalt *arqSalt = [[[ArqSalt alloc] initWithAccessKeyID:accessKey secretAccessKey:secretKey s3BucketName:s3BucketName computerUUID:computerUUID] autorelease];
-    NSData *salt = [arqSalt salt:&saltError];
-    if (salt == nil) {
-        if ([saltError code] != ERROR_NOT_FOUND) {
-            if (error != NULL) {
-                *error = saltError;
-            }
-            return NO;
-        }
-    }
-
     NSString *bucketName = @"(unknown)";
     NSData *data = [s3 dataAtPath:path error:NULL];
     if (data != nil) {
         if (!strncmp([data bytes], "encrypted", 9)) {
             data = [data subdataWithRange:NSMakeRange(9, [data length] - 9)];
-            CryptoKey *cryptoKey = [[[CryptoKey alloc] initWithPassword:encryptionPassword salt:salt error:error] autorelease];
+            CryptoKey *cryptoKey = [[[CryptoKey alloc] initWithPassword:encryptionPassword salt:[NSData dataWithBytes:BUCKET_PLIST_SALT length:8] error:error] autorelease];
             if (cryptoKey == nil) {
                 return NO;
             }
@@ -255,6 +241,18 @@
     UserAndComputer *uac = nil;
     if (uacData != nil) {
         uac = [[[UserAndComputer alloc] initWithXMLData:uacData error:&uacError] autorelease];
+    }
+    
+    NSError *saltError = nil;
+    ArqSalt *arqSalt = [[[ArqSalt alloc] initWithAccessKeyID:accessKey secretAccessKey:secretKey s3BucketName:s3BucketName computerUUID:computerUUID] autorelease];
+    NSData *salt = [arqSalt salt:&saltError];
+    if (salt == nil) {
+        if ([saltError code] != ERROR_NOT_FOUND) {
+            if (error != NULL) {
+                *error = saltError;
+            }
+            return NO;
+        }
     }
     
     ArqRepo *repo = [[[ArqRepo alloc] initWithS3Service:s3 s3BucketName:s3BucketName computerUUID:computerUUID bucketUUID:bucketUUID encryptionPassword:encryptionPassword salt:salt error:error] autorelease];

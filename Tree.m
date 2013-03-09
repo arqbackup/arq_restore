@@ -6,6 +6,7 @@
 //  Copyright 2009 PhotoMinds LLC. All rights reserved.
 //
 
+#include <sys/stat.h>
 #import "StringIO.h"
 #import "IntegerIO.h"
 #import "BooleanIO.h"
@@ -13,14 +14,14 @@
 #import "Tree.h"
 #import "Blob.h"
 #import "DataInputStream.h"
-#import "SetNSError.h"
 #import "RegexKitLite.h"
-#import "NSErrorCodes.h"
 #import "BufferedInputStream.h"
 #import "NSData-Gzip.h"
 #import "GunzipInputStream.h"
 #import "BlobKey.h"
 #import "NSObject_extra.h"
+#import "BlobKeyIO.h"
+
 
 @interface Tree (internal)
 - (BOOL)readHeader:(BufferedInputStream *)is error:(NSError **)error;
@@ -29,7 +30,8 @@
 @implementation Tree
 @synthesize xattrsAreCompressed, xattrsBlobKey, xattrsSize, aclIsCompressed, aclBlobKey, uid, gid, mode, mtime_sec, mtime_nsec, flags, finderFlags, extendedFinderFlags, st_dev, treeVersion, st_rdev;
 @synthesize ctime_sec, ctime_nsec, createTime_sec, createTime_nsec, st_nlink, st_ino, st_blocks, st_blksize;
-@synthesize aggregateSizeOnDisk;
+@dynamic aggregateUncompressedDataSize;
+
 
 + (NSString *)errorDomain {
     return @"TreeErrorDomain";
@@ -37,11 +39,15 @@
 - (id)init {
     if (self = [super init]) {
         nodes = [[NSMutableDictionary alloc] init];
+        missingNodes = [[NSMutableDictionary alloc] init];
     }
     return self;
 }
 - (id)initWithBufferedInputStream:(BufferedInputStream *)is error:(NSError **)error {
 	if (self = [super init]) {
+        nodes = [[NSMutableDictionary alloc] init];
+        missingNodes = [[NSMutableDictionary alloc] init];
+        
         if (![self readHeader:is error:error]) {
             [self release];
             return nil;
@@ -54,15 +60,9 @@
             }
         }
         
-        NSString *xattrsSHA1 = nil;
-        BOOL xattrsStretchedKey = NO;
-        NSString *aclSHA1 = nil;
-        BOOL aclStretchedKey = NO;
-        BOOL ret = [StringIO read:&xattrsSHA1 from:is error:error]
-        && (treeVersion < 14 || [BooleanIO read:&xattrsStretchedKey from:is error:error])
+        BOOL ret = [BlobKeyIO read:&xattrsBlobKey from:is treeVersion:treeVersion compressed:xattrsAreCompressed error:error]
         && [IntegerIO readUInt64:&xattrsSize from:is error:error]
-        &&[StringIO read:&aclSHA1 from:is error:error]
-        && (treeVersion < 14 || [BooleanIO read:&aclStretchedKey from:is error:error])
+        && [BlobKeyIO read:&aclBlobKey from:is treeVersion:treeVersion compressed:aclIsCompressed error:error]
         && [IntegerIO readInt32:&uid from:is error:error]
         && [IntegerIO readInt32:&gid from:is error:error]
         && [IntegerIO readInt32:&mode from:is error:error]
@@ -79,18 +79,23 @@
         && [IntegerIO readInt64:&ctime_nsec from:is error:error]
         && [IntegerIO readInt64:&st_blocks from:is error:error]
         && [IntegerIO readUInt32:&st_blksize from:is error:error];
+        [xattrsBlobKey retain];
+        [aclBlobKey retain];
         if (!ret) {
             goto initError;
         }
-        if (xattrsSHA1 != nil) {
-            xattrsBlobKey = [[BlobKey alloc] initWithSHA1:xattrsSHA1 stretchEncryptionKey:xattrsStretchedKey];
+        if ([xattrsBlobKey sha1] == nil) {
+            [xattrsBlobKey release];
+            xattrsBlobKey = nil;
         }
-        if (aclSHA1 != nil) {
-            aclBlobKey = [[BlobKey alloc] initWithSHA1:aclSHA1 stretchEncryptionKey:aclStretchedKey];
+        if ([aclBlobKey sha1] == nil) {
+            [aclBlobKey release];
+            aclBlobKey = nil;
         }
         
-        if (treeVersion >= 11) {
-            if (![IntegerIO readUInt64:&aggregateSizeOnDisk from:is error:error]) {
+        if (treeVersion >= 11 && treeVersion <= 16) {
+            uint64_t unusedAggregateSizeOnDisk;
+            if (![IntegerIO readUInt64:&unusedAggregateSizeOnDisk from:is error:error]) {
                 goto initError;
             }
         }
@@ -99,14 +104,31 @@
                 || ![IntegerIO readInt64:&createTime_nsec from:is error:error]) {
                 goto initError;
             }
-        }        
+        }
         
-        unsigned int nodeCount;
+        if (treeVersion >= 18) {
+            uint32_t missingNodeCount;
+            if (![IntegerIO readUInt32:&missingNodeCount from:is error:error]) {
+                goto initError;
+            }
+            for (uint32_t i = 0; i < missingNodeCount; i++) {
+                NSString *missingNodeName = nil;
+                if (![StringIO read:&missingNodeName from:is error:error]) {
+                    goto initError;
+                }
+                Node *node = [[[Node alloc] initWithInputStream:is treeVersion:treeVersion error:error] autorelease];
+                if (node == nil) {
+                    goto initError;
+                }
+                [missingNodes setObject:node forKey:missingNodeName];
+            }
+        }
+        
+        uint32_t nodeCount;
         if (![IntegerIO readUInt32:&nodeCount from:is error:error]) {
             goto initError;
         }
-        nodes = [[NSMutableDictionary alloc] init];
-        for (unsigned int i = 0; i < nodeCount; i++) {
+        for (uint32_t i = 0; i < nodeCount; i++) {
             NSString *nodeName;
             if (![StringIO read:&nodeName from:is error:error]) {
                 goto initError;
@@ -130,6 +152,7 @@ initDone:
     [xattrsBlobKey release];
     [aclBlobKey release];
 	[nodes release];
+    [missingNodes release];
 	[super dealloc];
 }
 - (NSArray *)childNodeNames {
@@ -141,18 +164,36 @@ initDone:
 - (BOOL)containsNodeNamed:(NSString *)name {
 	return [nodes objectForKey:name] != nil;
 }
+- (BOOL)containsMissingItems {
+    if ([missingNodes count] > 0) {
+        return YES;
+    }
+    for (Node *node in [nodes allValues]) {
+        if ([node isTree] && [node treeContainsMissingItems]) {
+            return YES;
+        }
+    }
+    return NO;
+}
+- (NSArray *)missingChildNodeNames {
+    return [missingNodes allKeys];
+}
+- (Node *)missingChildNodeWithName:(NSString *)name {
+    return [missingNodes objectForKey:name];
+}
 - (NSDictionary *)nodes {
     return nodes;
 }
-- (Blob *)toBlob {
-    NSMutableData *data = [[NSMutableData alloc] init];
+- (NSDictionary *)missingNodes {
+    return missingNodes;
+}
+- (NSData *)toData {
+    NSMutableData *data = [[[NSMutableData alloc] init] autorelease];
     [BooleanIO write:xattrsAreCompressed to:data];
     [BooleanIO write:aclIsCompressed to:data];
-    [StringIO write:[xattrsBlobKey sha1] to:data];
-    [BooleanIO write:[xattrsBlobKey stretchEncryptionKey] to:data];
+    [BlobKeyIO write:xattrsBlobKey to:data];
     [IntegerIO writeUInt64:xattrsSize to:data];
-    [StringIO write:[aclBlobKey sha1] to:data];
-    [BooleanIO write:[aclBlobKey stretchEncryptionKey] to:data];
+    [BlobKeyIO write:aclBlobKey to:data];
     [IntegerIO writeInt32:uid to:data];
     [IntegerIO writeInt32:gid to:data];
     [IntegerIO writeInt32:mode to:data];
@@ -169,7 +210,14 @@ initDone:
     [IntegerIO writeInt64:ctime_nsec to:data];
     [IntegerIO writeInt64:st_blocks to:data];
     [IntegerIO writeUInt32:st_blksize to:data];
-    [IntegerIO writeUInt64:aggregateSizeOnDisk to:data];
+    [IntegerIO writeInt64:createTime_sec to:data];
+    [IntegerIO writeInt64:createTime_nsec to:data];
+    
+    [IntegerIO writeUInt32:(uint32_t)[missingNodes count] to:data];
+    for (NSString *missingNodeName in [missingNodes allKeys]) {
+        [StringIO write:missingNodeName to:data];
+        [[missingNodes objectForKey:missingNodeName] writeToData:data];
+    }
     
     [IntegerIO writeUInt32:(uint32_t)[nodes count] to:data];
     NSMutableArray *nodeNames = [NSMutableArray arrayWithArray:[nodes allKeys]];
@@ -182,14 +230,21 @@ initDone:
     
     char header[TREE_HEADER_LENGTH + 1];
     sprintf(header, "TreeV%03d", CURRENT_TREE_VERSION);
-    NSMutableData *completeData = [[NSMutableData alloc] init];
+    NSMutableData *completeData = [[[NSMutableData alloc] init] autorelease];
     [completeData appendBytes:header length:TREE_HEADER_LENGTH];
-
-    [completeData appendBytes:[data bytes] length:[data length]];
     
-    Blob *ret =[[[Blob alloc] initWithData:completeData mimeType:@"binary/octet-stream" downloadName:@"Tree" dataDescription:@"tree"] autorelease];
-    [completeData release];
-    [data release];
+    [completeData appendBytes:[data bytes] length:[data length]];
+    return completeData;
+}
+- (BOOL)ctimeMatchesStat:(struct stat *)st {
+    return st->st_ctimespec.tv_sec == ctime_sec && st->st_ctimespec.tv_nsec == ctime_nsec;
+}
+- (uint64_t)aggregateUncompressedDataSize {
+    //FIXME: This doesn't include the size of the ACL.
+    uint64_t ret = xattrsSize;
+    for (Node *node in [nodes allValues]) {
+        ret += [node uncompressedDataSize];
+    }
     return ret;
 }
 
@@ -199,32 +254,33 @@ initDone:
         return NO;
     }
     Tree *other = (Tree *)object;
-    return treeVersion == [other treeVersion] 
-    && xattrsAreCompressed == [other xattrsAreCompressed]
-    && [NSObject equalObjects:xattrsBlobKey and:[other xattrsBlobKey]]
-    && xattrsSize == [other xattrsSize]
-    && aclIsCompressed == [other aclIsCompressed]
-    && [NSObject equalObjects:aclBlobKey and:[other aclBlobKey]]
-    && uid == [other uid]
-    && gid == [other gid]
-    && mode == [other mode]
-    && mtime_sec == [other mtime_sec]
-    && mtime_nsec == [other mtime_nsec]
-    && flags == [other flags]
-    && finderFlags == [other finderFlags]
-    && extendedFinderFlags == [other extendedFinderFlags]
-    && st_dev == [other st_dev]
-    && st_ino == [other st_ino]
-    && st_nlink == [other st_nlink]
-    && st_rdev == [other st_rdev]
-    && ctime_sec == [other ctime_sec]
-    && ctime_nsec == [other ctime_nsec]
-    && createTime_sec == [other createTime_sec]
-    && createTime_nsec == [other createTime_nsec]
-    && st_blocks == [other st_blocks]
-    && st_blksize == [other st_blksize]
-    && aggregateSizeOnDisk == [other aggregateSizeOnDisk]
-    && [nodes isEqual:[other nodes]];
+    BOOL ret = (treeVersion == [other treeVersion]
+                && xattrsAreCompressed == [other xattrsAreCompressed]
+                && [NSObject equalObjects:xattrsBlobKey and:[other xattrsBlobKey]]
+                && xattrsSize == [other xattrsSize]
+                && aclIsCompressed == [other aclIsCompressed]
+                && [NSObject equalObjects:aclBlobKey and:[other aclBlobKey]]
+                && uid == [other uid]
+                && gid == [other gid]
+                && mode == [other mode]
+                && mtime_sec == [other mtime_sec]
+                && mtime_nsec == [other mtime_nsec]
+                && flags == [other flags]
+                && finderFlags == [other finderFlags]
+                && extendedFinderFlags == [other extendedFinderFlags]
+                && st_dev == [other st_dev]
+                && st_ino == [other st_ino]
+                && st_nlink == [other st_nlink]
+                && st_rdev == [other st_rdev]
+                && ctime_sec == [other ctime_sec]
+                && ctime_nsec == [other ctime_nsec]
+                && createTime_sec == [other createTime_sec]
+                && createTime_nsec == [other createTime_nsec]
+                && [missingNodes isEqual:[other missingNodes]]
+                && st_blocks == [other st_blocks]
+                && st_blksize == [other st_blksize]
+                && [nodes isEqual:[other nodes]]);
+    return ret;
 }
 - (NSUInteger)hash {
     return (NSUInteger)treeVersion + [nodes hash];
@@ -239,14 +295,11 @@ initDone:
         goto readHeader_error;
     }
     NSString *header = [[[NSString alloc] initWithBytes:buf length:TREE_HEADER_LENGTH encoding:NSASCIIStringEncoding] autorelease];
-    NSRange versionRange = [header rangeOfRegex:@"^TreeV(\\d{3})$" capture:1];
-    treeVersion = 0;
-    if (versionRange.location != NSNotFound) {
-        NSNumberFormatter *nf = [[NSNumberFormatter alloc] init];
-        NSNumber *number = [nf numberFromString:[header substringWithRange:versionRange]];
-        treeVersion = [number intValue];
-        [nf release];
+    if (![header hasPrefix:@"TreeV"] || [header length] < 6) {
+        SETNSERROR([Tree errorDomain], ERROR_INVALID_OBJECT_VERSION, @"invalid Tree header: %@", header);
+        goto readHeader_error;
     }
+    treeVersion = [[header substringFromIndex:5] intValue];
     if (treeVersion < 10) {
         SETNSERROR([Tree errorDomain], ERROR_INVALID_OBJECT_VERSION, @"invalid Tree header: %@", header);
         goto readHeader_error;

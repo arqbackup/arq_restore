@@ -69,9 +69,9 @@
 - (BOOL)applyTree:(Tree *)tree toPath:(NSString *)restorePath error:(NSError **)error;
 - (BOOL)applyNode:(Node *)node toPath:(NSString *)restorePath error:(NSError **)error;
 - (BOOL)createFile:(Node *)node atPath:(NSString *)path error:(NSError **)error;
-- (BOOL)createFileAtPath:(NSString *)path fromBlobKeys:(NSArray *)dataBlobKeys uncompress:(BOOL)uncompress error:(NSError **)error;
-- (BOOL)appendBlobForBlobKey:(BlobKey *)theBlobKey uncompress:(BOOL)uncompress to:(FileOutputStream *)fos error:(NSError **)error;
-- (BOOL)doAppendBlobForBlobKey:(BlobKey *)theBlobKey uncompress:(BOOL)uncompress to:(BufferedOutputStream *)bos error:(NSError **)error;
+- (BOOL)createFileAtPath:(NSString *)path fromBlobKeys:(NSArray *)dataBlobKeys error:(NSError **)error;
+- (BOOL)appendBlobForBlobKey:(BlobKey *)theBlobKey to:(FileOutputStream *)fos error:(NSError **)error;
+- (BOOL)doAppendBlobForBlobKey:(BlobKey *)theBlobKey to:(BufferedOutputStream *)bos error:(NSError **)error;
 - (BOOL)createSymLink:(Node *)node path:(NSString *)symLinkFile target:(NSString *)target error:(NSError **)error;
 - (BOOL)applyACLBlobKey:(BlobKey *)aclBlobKey uncompress:(BOOL)uncompress toPath:(NSString *)path error:(NSError **)error;
 - (BOOL)applyXAttrsBlobKey:(BlobKey *)xattrsBlobKey uncompress:(BOOL)uncompress toFile:(NSString *)path error:(NSError **)error;
@@ -117,13 +117,13 @@
     Commit *commit = nil;
     NSError *myError = nil;
     if (commitSHA1 != nil) {
-        commitBlobKey = [[[BlobKey alloc] initWithSHA1:commitSHA1 stretchEncryptionKey:YES] autorelease];
+        commitBlobKey = [[[BlobKey alloc] initWithSHA1:commitSHA1 storageType:StorageTypeS3 stretchEncryptionKey:YES compressed:NO] autorelease];
         commit = [repo commitForBlobKey:commitBlobKey error:&myError];
         if (commit == nil) {
             HSLogError(@"error attempting to read commit for %@", commitBlobKey);
             
             // Try without stretched encryption key.
-            commitBlobKey = [[[BlobKey alloc] initWithSHA1:commitSHA1 stretchEncryptionKey:NO] autorelease];
+            commitBlobKey = [[[BlobKey alloc] initWithSHA1:commitSHA1 storageType:StorageTypeS3 stretchEncryptionKey:NO compressed:NO] autorelease];
             commit = [repo commitForBlobKey:commitBlobKey error:&myError];
             if (commit == nil) {
                 HSLogError(@"error attempting to read commit for %@", commitBlobKey);
@@ -452,10 +452,10 @@
     if (!fa) {
         return NO;
     }
-    if (![self applyXAttrsBlobKey:[node xattrsBlobKey] uncompress:[node xattrsAreCompressed] toFile:path error:error]) {
+    if (![self applyXAttrsBlobKey:[node xattrsBlobKey] uncompress:[[node xattrsBlobKey] compressed] toFile:path error:error]) {
         return NO;
     }
-    if (![self applyACLBlobKey:[node aclBlobKey] uncompress:[node aclIsCompressed] toPath:path error:error]) {
+    if (![self applyACLBlobKey:[node aclBlobKey] uncompress:[[node aclBlobKey] compressed] toPath:path error:error]) {
         return NO;
     }
     if (!S_ISFIFO([node mode])) {
@@ -503,7 +503,7 @@
                 HSLogError(@"error getting data for %@", dataBlobKey);
                 return NO;
             }
-            if ([node dataAreCompressed]) {
+            if ([dataBlobKey compressed]) {
                 blobData = [blobData gzipInflate];
             }
             [data appendData:blobData];
@@ -514,7 +514,7 @@
             return NO;
         }
     } else if ([node uncompressedDataSize] > 0) {
-        if (![self createFileAtPath:path fromBlobKeys:[node dataBlobKeys] uncompress:[node dataAreCompressed] error:error]) {
+        if (![self createFileAtPath:path fromBlobKeys:[node dataBlobKeys] error:error]) {
             NSError *myError = nil;
             if ([[NSFileManager defaultManager] fileExistsAtPath:path] && ![[NSFileManager defaultManager] removeItemAtPath:path error:&myError]) {
                 HSLogError(@"error deleting incorrectly-restored file %@: %@", path, myError);
@@ -535,12 +535,12 @@
     HSLogDetail(@"restored %@", path);
     return YES;
 }
-- (BOOL)createFileAtPath:(NSString *)path fromBlobKeys:(NSArray *)dataBlobKeys uncompress:(BOOL)uncompress error:(NSError **)error {
+- (BOOL)createFileAtPath:(NSString *)path fromBlobKeys:(NSArray *)dataBlobKeys error:(NSError **)error {
     FileOutputStream *fos = [[FileOutputStream alloc] initWithPath:path append:NO];
     BOOL ret = YES;
     writtenToCurrentFile = 0;
     for (BlobKey *dataBlobKey in dataBlobKeys) {
-        if (![self appendBlobForBlobKey:dataBlobKey uncompress:uncompress to:fos error:error]) {
+        if (![self appendBlobForBlobKey:dataBlobKey to:fos error:error]) {
             ret = NO;
             break;
         }
@@ -548,7 +548,7 @@
     [fos release];
     return ret;
 }
-- (BOOL)appendBlobForBlobKey:(BlobKey *)theBlobKey uncompress:(BOOL)uncompress to:(FileOutputStream *)fos error:(NSError **)error {
+- (BOOL)appendBlobForBlobKey:(BlobKey *)theBlobKey to:(FileOutputStream *)fos error:(NSError **)error {
     BOOL ret = NO;
     NSError *myError = nil;
     NSAutoreleasePool *pool = nil;
@@ -558,7 +558,7 @@
         [pool drain];
         pool = [[NSAutoreleasePool alloc] init];
         BufferedOutputStream *bos = [[[BufferedOutputStream alloc] initWithUnderlyingOutputStream:fos] autorelease];
-        if ([self doAppendBlobForBlobKey:theBlobKey uncompress:uncompress to:bos error:&myError] && [bos flush:&myError]) {
+        if ([self doAppendBlobForBlobKey:theBlobKey to:bos error:&myError] && [bos flush:&myError]) {
             ret = YES;
             break;
         }
@@ -589,13 +589,13 @@
     }
     return ret;
 }
-- (BOOL)doAppendBlobForBlobKey:(BlobKey *)theBlobKey uncompress:(BOOL)uncompress to:(BufferedOutputStream *)bos error:(NSError **)error {
+- (BOOL)doAppendBlobForBlobKey:(BlobKey *)theBlobKey to:(BufferedOutputStream *)bos error:(NSError **)error {
     ServerBlob *sb = [[repo newServerBlobForBlobKey:theBlobKey error:error] autorelease];
     if (sb == nil) {
         return NO;
     }
     id <InputStream> is = [[sb newInputStream] autorelease];
-    if (uncompress) {
+    if ([theBlobKey compressed]) {
         is = [[[GunzipInputStream alloc] initWithUnderlyingStream:is] autorelease];
     }
     HSLogDebug(@"writing %@ to %@", is, bos);

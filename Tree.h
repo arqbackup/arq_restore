@@ -6,13 +6,14 @@
 //  Copyright 2009 PhotoMinds LLC. All rights reserved.
 //
 
+#include <sys/stat.h>
 
 #import "Blob.h"
 @class BufferedInputStream;
 @class Node;
 @class BlobKey;
 
-#define CURRENT_TREE_VERSION 15
+#define CURRENT_TREE_VERSION 18
 #define TREE_HEADER_LENGTH (8)
 
 @interface Tree : NSObject {
@@ -40,7 +41,7 @@
     int64_t createTime_nsec;
     int64_t st_blocks;
     uint32_t st_blksize;
-    uint64_t aggregateSizeOnDisk;
+    NSMutableDictionary *missingNodes;
 	NSMutableDictionary *nodes;
 }
 + (NSString *)errorDomain;
@@ -49,7 +50,12 @@
 - (Node *)childNodeWithName:(NSString *)name;
 - (BOOL)containsNodeNamed:(NSString *)name;
 - (NSDictionary *)nodes;
-- (Blob *)toBlob;
+- (BOOL)containsMissingItems;
+- (NSArray *)missingChildNodeNames;
+- (Node *)missingChildNodeWithName:(NSString *)name;
+- (NSDictionary *)missingNodes;
+- (NSData *)toData;
+- (BOOL)ctimeMatchesStat:(struct stat *)st;
 
 @property(readonly) BOOL xattrsAreCompressed;
 @property(readonly,copy) BlobKey *xattrsBlobKey;
@@ -75,5 +81,5 @@
 @property(readonly) int st_ino;
 @property(readonly) int64_t st_blocks;
 @property(readonly) uint32_t st_blksize;
-@property(readonly) uint64_t aggregateSizeOnDisk;
+@property(readonly) uint64_t aggregateUncompressedDataSize;
 @end

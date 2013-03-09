@@ -1,4 +1,6 @@
 #ifdef __OBJC__
     #import <Foundation/Foundation.h>
     #import "HSLog.h"
+#import "SetNSError.h"
+#import "NSErrorCodes.h"
 #endif

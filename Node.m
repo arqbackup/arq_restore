@@ -14,23 +14,37 @@
 #import "BufferedInputStream.h"
 #import "BlobKey.h"
 #import "NSObject_extra.h"
+#import "Tree.h"
+#import "BlobKeyIO.h"
+
 
 @implementation Node
-@synthesize isTree, uncompressedDataSize, thumbnailBlobKey, previewBlobKey, xattrsBlobKey, xattrsSize, aclBlobKey, uid, gid, mode, mtime_sec, mtime_nsec, flags, finderFlags, extendedFinderFlags, finderFileType, finderFileCreator, isFileExtensionHidden, st_dev, treeVersion, st_rdev;
+@synthesize isTree, treeContainsMissingItems, uncompressedDataSize, xattrsBlobKey, xattrsSize, aclBlobKey, uid, gid, mode, mtime_sec, mtime_nsec, flags, finderFlags, extendedFinderFlags, finderFileType, finderFileCreator, isFileExtensionHidden, st_dev, treeVersion, st_rdev;
 @synthesize ctime_sec, ctime_nsec, createTime_sec, createTime_nsec, st_nlink, st_ino, st_blocks, st_blksize;
 @dynamic treeBlobKey, dataBlobKeys;
-@synthesize dataAreCompressed, xattrsAreCompressed, aclIsCompressed;
+@dynamic aggregateGlacierArchiveSize;
+
 
 - (id)initWithInputStream:(BufferedInputStream *)is treeVersion:(int)theTreeVersion error:(NSError **)error {
     if (self = [super init]) {
         treeVersion = theTreeVersion;
         dataBlobKeys = [[NSMutableArray alloc] init];
-
+        
         if (![BooleanIO read:&isTree from:is error:error]) {
             [self release];
             return nil;
         }
         
+        if (theTreeVersion >= 18) {
+            if (![BooleanIO read:&treeContainsMissingItems from:is error:error]) {
+                [self release];
+                return nil;
+            }
+        }
+        
+        BOOL dataAreCompressed = NO;
+        BOOL xattrsAreCompressed = NO;
+        BOOL aclIsCompressed = NO;
         if (treeVersion >= 12) {
             if (![BooleanIO read:&dataAreCompressed from:is error:error]
                 || ![BooleanIO read:&xattrsAreCompressed from:is error:error]
@@ -46,38 +60,32 @@
             return nil;
         }
         for (int i = 0; i < dataBlobKeysCount; i++) {
-            NSString *dataSHA1;
-            BOOL stretchEncryptionKey = NO;
-            if (![StringIO read:&dataSHA1 from:is error:error]) {
-                [self release];
-                return nil;
-            }            
-            if (treeVersion >= 14 && ![BooleanIO read:&stretchEncryptionKey from:is error:error]) {
+            BlobKey *dataBlobKey = nil;
+            if (![BlobKeyIO read:&dataBlobKey from:is treeVersion:treeVersion compressed:dataAreCompressed error:error]) {
                 [self release];
                 return nil;
             }
-            BlobKey *bk = [[BlobKey alloc] initWithSHA1:dataSHA1 stretchEncryptionKey:stretchEncryptionKey];
-            [dataBlobKeys addObject:bk];
-            [bk release];
+            [dataBlobKeys addObject:dataBlobKey];
         }
-        NSString *thumbnailSHA1 = nil;
-        BOOL thumbnailStretchedKey = NO;
-        NSString *previewSHA1 = nil;
-        BOOL previewStretchedKey = NO;
-        NSString *xattrsSHA1 = nil;
-        BOOL xattrsStretchedKey = NO;
-        NSString *aclSHA1 = nil;
-        BOOL aclStretchedKey = NO;
-        BOOL ret = [IntegerIO readUInt64:&uncompressedDataSize from:is error:error]
-        && [StringIO read:&thumbnailSHA1 from:is error:error]
-        && (treeVersion < 14 || [BooleanIO read:&thumbnailStretchedKey from:is error:error])
-        && [StringIO read:&previewSHA1 from:is error:error]
-        && (treeVersion < 14 || [BooleanIO read:&previewStretchedKey from:is error:error])
-        && [StringIO read:&xattrsSHA1 from:is error:error]
-        && (treeVersion < 14 || [BooleanIO read:&xattrsStretchedKey from:is error:error])
+        if (![IntegerIO readUInt64:&uncompressedDataSize from:is error:error]) {
+            [self release];
+            return nil;
+        }
+        
+        // As of Tree version 18 thumbnailBlobKey and previewBlobKey have been removed. They were never used.
+        if (theTreeVersion < 18) {
+            BlobKey *theThumbnailBlobKey = nil;
+            BlobKey *thePreviewBlobKey = nil;
+            if (![BlobKeyIO read:&theThumbnailBlobKey from:is treeVersion:treeVersion compressed:NO error:error]
+                || ![BlobKeyIO read:&thePreviewBlobKey from:is treeVersion:treeVersion compressed:NO error:error]) {
+                [self release];
+                return nil;
+            }
+        }
+        
+        BOOL ret = [BlobKeyIO read:&xattrsBlobKey from:is treeVersion:treeVersion compressed:xattrsAreCompressed error:error]
         && [IntegerIO readUInt64:&xattrsSize from:is error:error]
-        && [StringIO read:&aclSHA1 from:is error:error]
-        && (treeVersion < 14 || [BooleanIO read:&aclStretchedKey from:is error:error])
+        && [BlobKeyIO read:&aclBlobKey from:is treeVersion:treeVersion compressed:aclIsCompressed error:error]
         && [IntegerIO readInt32:&uid from:is error:error]
         && [IntegerIO readInt32:&gid from:is error:error]
         && [IntegerIO readInt32:&mode from:is error:error]
@@ -99,31 +107,30 @@
         && [IntegerIO readInt64:&createTime_nsec from:is error:error]
         && [IntegerIO readInt64:&st_blocks from:is error:error]
         && [IntegerIO readUInt32:&st_blksize from:is error:error];
+        [xattrsBlobKey retain];
+        [aclBlobKey retain];
         [finderFileType retain];
         [finderFileCreator retain];
         if (!ret) {
             [self release];
             return nil;
         }
-        if (thumbnailSHA1 != nil) {
-            thumbnailBlobKey = [[BlobKey alloc] initWithSHA1:thumbnailSHA1 stretchEncryptionKey:thumbnailStretchedKey];
+        
+        // If any BlobKey has a nil sha1, drop it.
+        
+        if ([xattrsBlobKey sha1] == nil) {
+            [xattrsBlobKey release];
+            xattrsBlobKey = nil;
         }
-        if (previewSHA1 != nil) {
-            previewBlobKey = [[BlobKey alloc] initWithSHA1:previewSHA1 stretchEncryptionKey:previewStretchedKey];
-        }
-        if (xattrsSHA1 != nil) {
-            xattrsBlobKey = [[BlobKey alloc] initWithSHA1:xattrsSHA1 stretchEncryptionKey:xattrsStretchedKey];
-        }
-        if (aclSHA1 != nil) {
-            aclBlobKey = [[BlobKey alloc] initWithSHA1:aclSHA1 stretchEncryptionKey:aclStretchedKey];
+        if ([aclBlobKey sha1] == nil) {
+            [aclBlobKey release];
+            aclBlobKey = nil;
         }
     }
     return self;
 }
 - (void)dealloc {
 	[dataBlobKeys release];
-    [thumbnailBlobKey release];
-    [previewBlobKey release];
 	[xattrsBlobKey release];
 	[aclBlobKey release];
 	[finderFileType release];
@@ -137,29 +144,38 @@
 - (NSArray *)dataBlobKeys {
     return dataBlobKeys;
 }
-- (BOOL)dataMatchesStatData:(struct stat *)st {
-    return (st->st_mtimespec.tv_sec == mtime_sec && st->st_mtimespec.tv_nsec == mtime_nsec && st->st_size == uncompressedDataSize);
+- (uint64_t)aggregateGlacierArchiveSize {
+    uint64_t ret = 0;
+    ret += [aclBlobKey archiveSize];
+    ret += [xattrsBlobKey archiveSize];
+    for (BlobKey *dataBlobKey in dataBlobKeys) {
+        ret += [dataBlobKey archiveSize];
+    }
+    return ret;
+}
+
+- (BOOL)dataMatchesStat:(struct stat *)st {
+    return st->st_mtimespec.tv_sec == mtime_sec && st->st_mtimespec.tv_nsec == mtime_nsec && st->st_size == uncompressedDataSize;
+}
+- (BOOL)ctimeMatchesStat:(struct stat *)st {
+    return st->st_ctimespec.tv_sec == ctime_sec && st->st_ctimespec.tv_nsec == ctime_nsec;
 }
 - (void)writeToData:(NSMutableData *)data {
     [BooleanIO write:isTree to:data];
+    [BooleanIO write:treeContainsMissingItems to:data];
+    BOOL dataAreCompressed = [dataBlobKeys count] == 0 ? NO : [[dataBlobKeys objectAtIndex:0] compressed];
     [BooleanIO write:dataAreCompressed to:data];
-    [BooleanIO write:xattrsAreCompressed to:data];
-    [BooleanIO write:aclIsCompressed to:data];
+    [BooleanIO write:[xattrsBlobKey compressed] to:data];
+    [BooleanIO write:[aclBlobKey compressed] to:data];
     [IntegerIO writeInt32:(int32_t)[dataBlobKeys count] to:data];
     for (BlobKey *dataBlobKey in dataBlobKeys) {
-        [StringIO write:[dataBlobKey sha1] to:data];
-        [BooleanIO write:[dataBlobKey stretchEncryptionKey] to:data];
+        NSAssert([dataBlobKey compressed] == dataAreCompressed, @"all dataBlobKeys must have same compressed flag value");
+        [BlobKeyIO write:dataBlobKey to:data];
     }
     [IntegerIO writeUInt64:uncompressedDataSize to:data];
-    [StringIO write:[thumbnailBlobKey sha1] to:data];
-    [BooleanIO write:[thumbnailBlobKey stretchEncryptionKey] to:data];
-    [StringIO write:[previewBlobKey sha1] to:data];
-    [BooleanIO write:[previewBlobKey stretchEncryptionKey] to:data];
-    [StringIO write:[xattrsBlobKey sha1] to:data];
-    [BooleanIO write:[xattrsBlobKey stretchEncryptionKey] to:data];
+    [BlobKeyIO write:xattrsBlobKey to:data];
     [IntegerIO writeUInt64:xattrsSize to:data];
-    [StringIO write:[aclBlobKey sha1] to:data];
-    [BooleanIO write:[aclBlobKey stretchEncryptionKey] to:data];
+    [BlobKeyIO write:aclBlobKey to:data];
     [IntegerIO writeInt32:uid to:data];
     [IntegerIO writeInt32:gid to:data];
     [IntegerIO writeInt32:mode to:data];
@@ -182,9 +198,7 @@
     [IntegerIO writeInt64:st_blocks to:data];
     [IntegerIO writeUInt32:st_blksize to:data];
 }
-- (uint64_t)sizeOnDisk {
-    return (uint64_t)st_blocks * (uint64_t)512;
-}
+
 
 #pragma mark NSObject
 - (BOOL)isEqual:(id)object {
@@ -192,17 +206,12 @@
         return NO;
     }
     Node *other = (Node *)object;
-    return treeVersion == [other treeVersion] 
+    return treeVersion == [other treeVersion]
     && isTree == [other isTree]
     && uncompressedDataSize == [other uncompressedDataSize]
-    && dataAreCompressed == [other dataAreCompressed]
     && [dataBlobKeys isEqualToArray:[other dataBlobKeys]]
-    && [NSObject equalObjects:thumbnailBlobKey and:[other thumbnailBlobKey]]
-    && [NSObject equalObjects:previewBlobKey and:[other previewBlobKey]]
-    && xattrsAreCompressed == [other xattrsAreCompressed]
     && [NSObject equalObjects:xattrsBlobKey and:[other xattrsBlobKey]]
     && xattrsSize == [other xattrsSize]
-    && aclIsCompressed == [other aclIsCompressed]
     && [NSObject equalObjects:aclBlobKey and:[other aclBlobKey]]
     && uid == [other uid]
     && gid == [other gid]
@@ -226,6 +235,6 @@
     && st_blksize == [other st_blksize];
 }
 - (NSUInteger)hash {
-    return (NSUInteger)treeVersion + (dataAreCompressed ? 1 : 0) + [dataBlobKeys hash];
+    return (NSUInteger)treeVersion + [dataBlobKeys hash];
 }
 @end

@@ -13,8 +13,7 @@
 #import "Blob.h"
 #import "DataInputStream.h"
 #import "RegexKitLite.h"
-#import "SetNSError.h"
-#import "NSErrorCodes.h"
+#import "StorageType.h"
 #import "CommitFailedFile.h"
 #import "BufferedInputStream.h"
 #import "BooleanIO.h"
@@ -33,15 +32,17 @@
 }
 
 
-@synthesize author = _author, 
-comment = _comment, 
-treeBlobKey = _treeBlobKey, 
-parentCommitBlobKeys = _parentCommitBlobKeys, 
-location = _location, 
+@synthesize commitVersion,
+author = _author,
+comment = _comment,
+treeBlobKey = _treeBlobKey,
+parentCommitBlobKey = _parentCommitBlobKey,
+location = _location,
 computer = _computer,
-mergeCommonAncestorCommitBlobKey = _mergeCommonAncestorCommitBlobKey, 
 creationDate = _creationDate,
 commitFailedFiles = _commitFailedFiles,
+hasMissingNodes = _hasMissingNodes,
+isComplete = _isComplete,
 bucketXMLData = _bucketXMLData;
 
 
@@ -49,34 +50,34 @@ bucketXMLData = _bucketXMLData;
     if (self = [super init]) {
         _author = [[theCommit author] copy];
         _comment = [[theCommit comment] copy];
-        if (theParentBlobKey != nil) {
-            _parentCommitBlobKeys = [[NSMutableSet alloc] initWithObjects:theParentBlobKey, nil];
-        } else {
-            _parentCommitBlobKeys = [[NSMutableSet alloc] init];
-        }
+        _parentCommitBlobKey = [theParentBlobKey retain];
         _treeBlobKey = [[theCommit treeBlobKey] copy];
         _location = [[theCommit location] copy];
         _computer = [[theCommit computer] copy];
-        _mergeCommonAncestorCommitBlobKey = nil;
         _creationDate = [[theCommit creationDate] copy];
         _commitFailedFiles = [[theCommit commitFailedFiles] copy];
+        _hasMissingNodes = [theCommit hasMissingNodes];
+        _isComplete = [theCommit isComplete];
         _bucketXMLData = [[theCommit bucketXMLData] copy];
     }
     return self;
 }
 
-- (id)             initWithAuthor:(NSString *)theAuthor 
-                          comment:(NSString *)theComment 
-             parentCommitBlobKeys:(NSSet *)theParentCommitBlobKeys 
+- (id)             initWithAuthor:(NSString *)theAuthor
+                          comment:(NSString *)theComment
+              parentCommitBlobKey:(BlobKey *)theParentCommitBlobKey
                       treeBlobKey:(BlobKey *)theTreeBlobKey
                          location:(NSString *)theLocation
- mergeCommonAncestorCommitBlobKey:(BlobKey *)theMergeCommonAncestorCommitBlobKey 
-                commitFailedFiles:(NSArray *)theCommitFailedFiles 
+                     creationDate:(NSDate *)theCreationDate
+                commitFailedFiles:(NSArray *)theCommitFailedFiles
+                  hasMissingNodes:(BOOL)theHasMissingNodes
+                       isComplete:(BOOL)theIsComplete
                     bucketXMLData:(NSData *)theBucketXMLData {
     if (self = [super init]) {
+        commitVersion = CURRENT_COMMIT_VERSION;
         _author = [theAuthor copy];
         _comment = [theComment copy];
-        _parentCommitBlobKeys = [[NSMutableSet alloc] initWithSet:theParentCommitBlobKeys];
+        _parentCommitBlobKey = [theParentCommitBlobKey retain];
         _treeBlobKey = [theTreeBlobKey retain];
         _location = [theLocation copy];
         NSRange computerRange = [_location rangeOfRegex:@"^file://([^/]+)/" capture:1];
@@ -86,16 +87,16 @@ bucketXMLData = _bucketXMLData;
             _computer = @"";
         }
         [_computer retain];
-        _mergeCommonAncestorCommitBlobKey = [theMergeCommonAncestorCommitBlobKey retain];
-        _creationDate = [[NSDate alloc] init];
+        _creationDate = [theCreationDate retain];
         _commitFailedFiles = [theCommitFailedFiles copy];
+        _hasMissingNodes = theHasMissingNodes;
+        _isComplete = theIsComplete;
         _bucketXMLData = [theBucketXMLData copy];
     }
     return self;
 }
 - (id)initWithBufferedInputStream:(BufferedInputStream *)is error:(NSError **)error {
 	if (self = [super init]) {
-        _parentCommitBlobKeys = [[NSMutableSet alloc] init];
         if (![self readHeader:is error:error]) {
             goto init_error;
         }
@@ -124,9 +125,11 @@ bucketXMLData = _bucketXMLData;
                     goto init_error;
                 }
             }
-            BlobKey *parentBlobKey = [[BlobKey alloc] initWithSHA1:key stretchEncryptionKey:cryptoKeyStretched];
-            [_parentCommitBlobKeys addObject:parentBlobKey];
-            [parentBlobKey release];
+            if (_parentCommitBlobKey != nil) {
+                HSLogError(@"IGNORING EXTRA PARENT COMMIT BLOB KEY!");
+            } else {
+                _parentCommitBlobKey = [[BlobKey alloc] initWithSHA1:key storageType:StorageTypeS3 stretchEncryptionKey:cryptoKeyStretched compressed:NO];
+            }
         }
         
         NSString *treeSHA1 = nil;
@@ -139,7 +142,13 @@ bucketXMLData = _bucketXMLData;
                 goto init_error;
             }
         }
-        _treeBlobKey = [[BlobKey alloc] initWithSHA1:treeSHA1 stretchEncryptionKey:treeStretchedKey];
+        BOOL treeIsCompressed = NO;
+        if (commitVersion >= 8) {
+            if (![BooleanIO read:&treeIsCompressed from:is error:error]) {
+                goto init_error;
+            }
+        }
+        _treeBlobKey = [[BlobKey alloc] initWithSHA1:treeSHA1 storageType:StorageTypeS3 stretchEncryptionKey:treeStretchedKey compressed:treeIsCompressed];
         
         if (![StringIO read:&_location from:is error:error]) {
             goto init_error;
@@ -154,18 +163,21 @@ bucketXMLData = _bucketXMLData;
         }
         [_computer retain];
         
-        NSString *mergeCommonAncestorCommitSHA1 = nil;
-        BOOL mergeCommonAncestorCommitStretchedKey = NO;
-        if (![StringIO read:&mergeCommonAncestorCommitSHA1 from:is error:error]) {
-            goto init_error;
-        }
-        if (commitVersion >= 4) {
-            if (![BooleanIO read:&mergeCommonAncestorCommitStretchedKey from:is error:error]) {
+        // Removed mergeCommonAncestorCommitBlobKey in Commit version 8. It was never used.
+        if (commitVersion < 8) {
+            NSString *mergeCommonAncestorCommitSHA1 = nil;
+            BOOL mergeCommonAncestorCommitStretchedKey = NO;
+            if (![StringIO read:&mergeCommonAncestorCommitSHA1 from:is error:error]) {
                 goto init_error;
             }
-        }
-        if (mergeCommonAncestorCommitSHA1 != nil) {
-            _mergeCommonAncestorCommitBlobKey = [[BlobKey alloc] initWithSHA1:mergeCommonAncestorCommitSHA1 stretchEncryptionKey:mergeCommonAncestorCommitStretchedKey];
+            if (commitVersion >= 4) {
+                if (![BooleanIO read:&mergeCommonAncestorCommitStretchedKey from:is error:error]) {
+                    goto init_error;
+                }
+            }
+            //            if (mergeCommonAncestorCommitSHA1 != nil) {
+            //                _mergeCommonAncestorCommitBlobKey = [[BlobKey alloc] initWithSHA1:mergeCommonAncestorCommitSHA1 stretchEncryptionKey:mergeCommonAncestorCommitStretchedKey];
+            //            }
         }
         
         if (![DateIO read:&_creationDate from:is error:error]) {
@@ -189,6 +201,18 @@ bucketXMLData = _bucketXMLData;
             _commitFailedFiles = [commitFailedFiles retain];
         }
         
+        if (commitVersion >= 8) {
+            if (![BooleanIO read:&_hasMissingNodes from:is error:error]) {
+                goto init_error;
+            }
+        }
+        if (commitVersion >= 9) {
+            if (![BooleanIO read:&_isComplete from:is error:error]) {
+                goto init_error;
+            }
+        } else {
+            _isComplete = YES;
+        }
         if (commitVersion >= 5) {
             if (![DataIO read:&_bucketXMLData from:is error:error]) {
                 goto init_error;
@@ -208,53 +232,48 @@ init_done:
 - (void)dealloc {
     [_author release];
     [_comment release];
-    [_parentCommitBlobKeys release];
+    [_parentCommitBlobKey release];
     [_treeBlobKey release];
     [_location release];
     [_computer release];
-    [_mergeCommonAncestorCommitBlobKey release];
     [_creationDate release];
     [_commitFailedFiles release];
     [_bucketXMLData release];
     [super dealloc];
 }
-- (NSNumber *)isMergeCommit {
-    return [NSNumber numberWithBool:([_parentCommitBlobKeys count] > 1)];
-}
-- (Blob *)toBlob {
-    Blob *ret = nil;
-    NSMutableData *data = [[NSMutableData alloc] init];
+- (NSData *)toData {
+    NSMutableData *data = [[[NSMutableData alloc] init] autorelease];
     char header[HEADER_LENGTH + 1];
     sprintf(header, "CommitV%03d", CURRENT_COMMIT_VERSION);
     [data appendBytes:header length:HEADER_LENGTH];
     [StringIO write:_author to:data];
     [StringIO write:_comment to:data];
-    uint64_t parentCommitBlobKeysCount = (uint64_t)[_parentCommitBlobKeys count];
-    [IntegerIO writeUInt64:parentCommitBlobKeysCount to:data];
-    for (BlobKey *parentCommitBlobKey in _parentCommitBlobKeys) {
-        [StringIO write:[parentCommitBlobKey sha1] to:data];
-        [BooleanIO write:[parentCommitBlobKey stretchEncryptionKey] to:data];
+    if (_parentCommitBlobKey == nil) {
+        [IntegerIO writeUInt64:0 to:data];
+    } else {
+        [IntegerIO writeUInt64:1 to:data];
+        [StringIO write:[_parentCommitBlobKey sha1] to:data];
+        [BooleanIO write:[_parentCommitBlobKey stretchEncryptionKey] to:data];
     }
     [StringIO write:[_treeBlobKey sha1] to:data];
     [BooleanIO write:[_treeBlobKey stretchEncryptionKey] to:data];
+    [BooleanIO write:[_treeBlobKey compressed] to:data];
     [StringIO write:_location to:data];
-    [StringIO write:[_mergeCommonAncestorCommitBlobKey sha1] to:data];
-    [BooleanIO write:[_mergeCommonAncestorCommitBlobKey stretchEncryptionKey] to:data];
     [DateIO write:_creationDate to:data];
     uint64_t commitFailedFilesCount = (uint64_t)[_commitFailedFiles count];
     [IntegerIO writeUInt64:commitFailedFilesCount to:data];
     for (CommitFailedFile *cff in _commitFailedFiles) {
         [cff writeTo:data];
     }
+    [BooleanIO write:_hasMissingNodes to:data];
+    [BooleanIO write:_isComplete to:data];
     [DataIO write:_bucketXMLData to:data];
-    ret = [[[Blob alloc] initWithData:data mimeType:@"binary/octet-stream" downloadName:@"commit" dataDescription:@"commit"] autorelease];
-    [data release];
-    return ret;
+    return data;
 }
 
 #pragma mark NSObject
 - (NSString *)description {
-    return [NSString stringWithFormat:@"<Commit: created=%@ tree=%@ parents=%@>", _creationDate, _treeBlobKey, _parentCommitBlobKeys];
+    return [NSString stringWithFormat:@"<Commit: created=%@ tree=%@ parent=%@ complete=%@ missingnodes=%@>", _creationDate, _treeBlobKey, _parentCommitBlobKey, (_isComplete ? @"YES" : @"NO"), (_hasMissingNodes ? @"YES" : @"NO")];
 }
 @end
 
@@ -266,16 +285,14 @@ init_done:
         goto readHeader_error;
     }
     NSString *header = [[[NSString alloc] initWithBytes:buf length:HEADER_LENGTH encoding:NSASCIIStringEncoding] autorelease];
-    NSRange versionRange = [header rangeOfRegex:@"^CommitV(\\d{3})$" capture:1];
-    commitVersion = 0;
-    if (versionRange.location != NSNotFound) {
-        NSNumberFormatter *nf = [[NSNumberFormatter alloc] init];
-        NSNumber *number = [nf numberFromString:[header substringWithRange:versionRange]];
-        commitVersion = [number intValue];
-        [nf release];
+    if (![header hasPrefix:@"CommitV"] || [header length] < 8) {
+        HSLogDebug(@"current Commit version: %d", CURRENT_COMMIT_VERSION);
+        SETNSERROR([Commit errorDomain], ERROR_INVALID_COMMIT_HEADER, @"invalid header %@", header);
+        goto readHeader_error;
     }
+    commitVersion = [[header substringFromIndex:7] intValue];
     if (commitVersion > CURRENT_COMMIT_VERSION || commitVersion < 2) {
-        SETNSERROR([Commit errorDomain], ERROR_INVALID_OBJECT_VERSION, @"invalid Commit header");
+        SETNSERROR([Commit errorDomain], ERROR_INVALID_OBJECT_VERSION, @"invalid Commit version %d", commitVersion);
         goto readHeader_error;
     }
     ret = YES;

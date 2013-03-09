@@ -10,19 +10,17 @@
 
 @protocol InputStream;
 @class BlobKey;
+@class BufferedInputStream;
+
 
 @interface Node : NSObject {
     int treeVersion;
 	BOOL isTree;
+    BOOL treeContainsMissingItems;
     unsigned long long uncompressedDataSize;
-    BOOL dataAreCompressed;
     NSMutableArray *dataBlobKeys;
-    BlobKey *thumbnailBlobKey;
-    BlobKey *previewBlobKey;
-    BOOL xattrsAreCompressed;
     BlobKey *xattrsBlobKey;
     unsigned long long xattrsSize;
-    BOOL aclIsCompressed;
     BlobKey *aclBlobKey;
     int uid;
     int gid;
@@ -46,22 +44,20 @@
     int64_t st_blocks;
     uint32_t st_blksize;
 }
-- (id)initWithInputStream:(id <InputStream>)is treeVersion:(int)theTreeVersion error:(NSError **)error;
+- (id)initWithInputStream:(BufferedInputStream *)is treeVersion:(int)theTreeVersion error:(NSError **)error;
 - (void)writeToData:(NSMutableData *)data;
-- (BOOL)dataMatchesStatData:(struct stat *)st;
+- (BOOL)dataMatchesStat:(struct stat *)st;
+- (BOOL)ctimeMatchesStat:(struct stat *)st;
 
 @property(readonly) BOOL isTree;
+@property(readonly) BOOL treeContainsMissingItems;
 @property(readonly,copy) BlobKey *treeBlobKey;
-@property(readonly) BOOL dataAreCompressed;
 @property(readonly,copy) NSArray *dataBlobKeys;
 
 @property(readonly) unsigned long long uncompressedDataSize;
-@property(readonly,copy) BlobKey *thumbnailBlobKey;
-@property(readonly,copy) BlobKey *previewBlobKey;
-@property(readonly) BOOL xattrsAreCompressed;
+@property(readonly) unsigned long long aggregateGlacierArchiveSize;
 @property(readonly,copy) BlobKey *xattrsBlobKey;
 @property(readonly) unsigned long long xattrsSize;
-@property(readonly) BOOL aclIsCompressed;
 @property(readonly,copy) BlobKey *aclBlobKey;
 @property(readonly) int uid;
 @property(readonly) int gid;
@@ -85,5 +81,4 @@
 @property(readonly) int st_ino;
 @property(readonly) int64_t st_blocks;
 @property(readonly) uint32_t st_blksize;
-- (uint64_t)sizeOnDisk;
 @end
