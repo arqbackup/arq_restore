@@ -19,6 +19,7 @@ First set 3 environment variables:
 Type `arq_restore` with no arguments to list all backed-up folders.
 
 Example output:
+
     S3 bucket: akiaiyuk3n3tme6l4hfa.com.haystacksoftware.arq
         Stefan's MacBook Pro (stefan)
             /Users/stefan/src
