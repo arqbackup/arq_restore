@@ -2,7 +2,7 @@
 
 An open-source command-line utility for restoring from backups created by [Arq](http://www.haystacksoftware.com/arq/).
 
-Download arq_restore in binary form [here](http://sreitshamer.github.com/arq_restore/).
+Download `arq_restore` in binary form [here](http://sreitshamer.github.com/arq_restore/).
 
 
 ## Usage
@@ -19,6 +19,7 @@ First set 3 environment variables:
 Type `arq_restore` with no arguments to list all backed-up folders.
 
 Example output:
+
     S3 bucket: akiaiyuk3n3tme6l4hfa.com.haystacksoftware.arq
         Stefan's MacBook Pro (stefan)
             /Users/stefan/src
@@ -74,7 +75,7 @@ Example output:
 ### Restore from a Backup
 
 To restore the latest version of one of the folders, type the `restore command` listed.
-For example, to restore the "src" folder from "Stefan's MacBook Pro" above, type:
+For example, to restore the `src` folder from `Stefan's MacBook Pro` above, type:
 
     arq_restore /akiaiyuk3n3tme6l4hfa.com.haystacksoftware.arq/32D9D7A2-3B3E-4BE7-B85B-0605AF24F570/buckets/1D142EAB-3218-48BD-BF5B-4EAEF504783E
 
