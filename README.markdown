@@ -2,7 +2,7 @@
 
 An open-source command-line utility for restoring from backups created by [Arq](http://www.haystacksoftware.com/arq/).
 
-Download arq_restore in binary form [here](http://sreitshamer.github.com/arq_restore/).
+Download `arq_restore` in binary form [here](http://sreitshamer.github.com/arq_restore/).
 
 
 ## Usage
