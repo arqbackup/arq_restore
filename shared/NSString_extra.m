@@ -36,7 +36,7 @@
 #include <openssl/evp.h>
 
 static const char  table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-static const int   BASE64_INPUT_SIZE = 57;
+// static const int   BASE64_INPUT_SIZE = 57;
 
 static BOOL isbase64(char c)
 {

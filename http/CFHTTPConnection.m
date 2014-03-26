@@ -287,7 +287,7 @@ static void ReadStreamClientCallback(CFReadStreamRef readStream, CFStreamEventTy
     }
     
     if ([[[url scheme] lowercaseString] isEqualToString:@"https"]) {
-        NSMutableDictionary *sslProperties = [NSDictionary dictionaryWithObjectsAndKeys:
+        NSDictionary *sslProperties = [NSDictionary dictionaryWithObjectsAndKeys:
                                               (NSString *)kCFStreamSocketSecurityLevelNegotiatedSSL, kCFStreamSSLLevel,
                                               kCFBooleanTrue, kCFStreamSSLAllowsExpiredCertificates,
                                               kCFBooleanTrue, kCFStreamSSLAllowsExpiredRoots,
