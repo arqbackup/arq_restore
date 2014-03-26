@@ -41,6 +41,7 @@
     NSString *path;
     NSString *commitSHA1;
     BOOL vFlag;
+    NSString *rawOutputPath;
 }
 - (BOOL)readArgc:(int)argc argv:(const char **)argv;
 - (BOOL)execute:(NSError **)error;

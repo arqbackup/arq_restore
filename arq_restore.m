@@ -42,6 +42,7 @@ static void printUsage(const char *exeName) {
     fprintf(stderr, "\t%s [-l log_level] /s3bucket/computerUUID/folderUUID\n", exeName);
     fprintf(stderr, "\t%s [-l log_level] /s3bucket/computerUUID/folderUUID reflog\n", exeName);
     fprintf(stderr, "\t%s [-l log_level] /s3bucket/computerUUID/folderUUID <commitSHA1>\n", exeName);
+    fprintf(stderr, "\t%s [--raw path/to/decrypted/output] /s3/path\n", exeName);
 }
 int main (int argc, const char **argv) {
     setHSLogLevel(HSLOG_LEVEL_WARN);

@@ -55,6 +55,7 @@
 @interface ArqRestoreCommand (internal)
 - (BOOL)printArqFolders:(NSError **)error;
 - (BOOL)processPath:(NSError **)error;
+- (BOOL)processRawPath:(NSError **)error;
 - (BOOL)validateS3Keys:(NSError **)error;
 @end
 
@@ -104,6 +105,13 @@
             } else if (!strcmp(argv[i], "-v")) {
                 printf("%s version 20-Aug-2012\n", argv[0]);
                 exit(0);
+            } else if (!strcmp(argv[i], "--raw")) {
+                if (argc <= i+1) {
+                  fprintf(stderr, "missing raw path argument\n");
+                  return NO;
+                }
+                i++;
+                rawOutputPath = [[NSString stringWithUTF8String:argv[i]] stringByExpandingTildeInPath];
             } else {
                 fprintf(stderr, "unknown option %s\n", argv[i]);
                 return NO;
@@ -123,8 +131,15 @@
     if (path == nil) {
         ret = [self printArqFolders:error];
     } else {
-        ret = [self processPath:error];
-    }        
+        if( nil == rawOutputPath )
+        {
+          ret = [self processPath:error];
+        }
+        else
+        {
+          ret = [self processRawPath:error];
+        }
+    }
     return ret;
 }
 @end
@@ -190,10 +205,44 @@
             printf("            UUID:            %s\n", [[uuidPath lastPathComponent] UTF8String]);
             printf("            reflog command:  arq_restore %s reflog\n", [uuidPath UTF8String]);
             printf("            restore command: arq_restore %s\n", [uuidPath UTF8String]);
+            printf("            get property list (including exclusions) command: arq_restore --raw exclusions.plist %s\n", [uuidPath UTF8String]);
             printf("\n");
         }
     }
     return YES;
+}
+- (BOOL)processRawPath:(NSError **)error {
+  if (![self validateS3Keys:error]) {
+    return NO;
+  }
+  if (encryptionPassword == nil) {
+    SETNSERROR(@"ArqErrorDomain", -1, @"missing ARQ_ENCRYPTION_PASSWORD environment variable");
+    return NO;
+  }
+  
+  printf("Trying to grab raw data at \"%s\"...\n", [path UTF8String]);
+  NSData *data = [s3 dataAtPath:path error:NULL];
+  if (data != nil) {
+    if (!strncmp([data bytes], "encrypted", 9)) {
+      printf("Encrypted, attempting to decrypt...\n");
+      data = [data subdataWithRange:NSMakeRange(9, [data length] - 9)];
+      CryptoKey *cryptoKey = [[[CryptoKey alloc] initWithPassword:encryptionPassword salt:[NSData dataWithBytes:BUCKET_PLIST_SALT length:8] error:error] autorelease];
+      if (cryptoKey == nil) {
+        printf("Failed to decrypt.\n");
+        return NO;
+      }
+      data = [data decryptWithCryptoKey:cryptoKey error:error];
+      if (data == nil) {
+        printf("Failed to decrypt.\n");
+        return NO;
+      }
+    }
+    [data writeToFile:rawOutputPath atomically:YES];
+    printf("Success. Wrote \"%s\" to \"%s\".\n", [path UTF8String], [rawOutputPath UTF8String]);
+    return YES;
+  }
+  
+  return NO;
 }
 - (BOOL)processPath:(NSError **)error {
     if (![self validateS3Keys:error]) {
