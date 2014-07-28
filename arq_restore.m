@@ -37,26 +37,34 @@
 
 static void printUsage(const char *exeName) {
 	fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "\t%s -v\n", exeName);
-    fprintf(stderr, "\t%s [-l log_level]\n", exeName);
-    fprintf(stderr, "\t%s [-l log_level] /s3bucket/computerUUID/folderUUID\n", exeName);
-    fprintf(stderr, "\t%s [-l log_level] /s3bucket/computerUUID/folderUUID reflog\n", exeName);
-    fprintf(stderr, "\t%s [-l log_level] /s3bucket/computerUUID/folderUUID <commitSHA1>\n", exeName);
+    fprintf(stderr, "\t%s [-l log_level] listcomputers                                                             <target_type> <target_params>\n", exeName);
+    fprintf(stderr, "\t%s [-l log_level] listfolders    <computer_uuid> <encryption_password>                 <target_type> <target_params>\n", exeName);
+    fprintf(stderr, "\t%s [-l log_level] restore        <computer_uuid> <encryption_password> <folder_uuid>   <target_type> <target_params>\n", exeName);
+    fprintf(stderr, "\t\ntarget_params by target type:\n");
+    fprintf(stderr, "\taws:                 access_key secret_key bucket_name\n");
+    fprintf(stderr, "\tsftp:                hostname port path username password_or_keyfile [keyfile_passphrase]\n");
+    fprintf(stderr, "\tgreenqloud:          access_key secret_key bucket_name\n");
+    fprintf(stderr, "\tdreamobjects:        public_key secret_key bucket_name\n");
+    fprintf(stderr, "\tgooglecloudstorage:  public_key secret_key bucket_name\n");
+    fprintf(stderr, "\ts3compatible:        service_url access_key secret_key bucket_name\n");
+    fprintf(stderr, "\tgoogledrive:         refresh_token path\n");
 }
 int main (int argc, const char **argv) {
-    setHSLogLevel(HSLOG_LEVEL_WARN);
     char *exePath = strdup(argv[0]);
     char *exeName = basename(exePath);
     NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
     ArqRestoreCommand *cmd = [[[ArqRestoreCommand alloc] init] autorelease];
     int ret = 0;
-    if (![cmd readArgc:argc argv:argv]) {
+    if (argc == 2 && !strcmp(argv[1], "-h")) {
         printUsage(exeName);
-        ret = 1;
     } else {
         NSError *myError = nil;
-        if (![cmd execute:&myError]) {
-            fprintf(stderr, "restore error: %s\n", [[myError localizedDescription] UTF8String]);
+        if (![cmd executeWithArgc:argc argv:argv error:&myError]) {
+            fprintf(stderr, "%s: %s\n", exeName, [[myError localizedDescription] UTF8String]);
+
+            if ([myError isErrorWithDomain:[cmd errorDomain] code:ERROR_USAGE]) {
+                printUsage(exeName);
+            }
             ret = 1;
         }
     }

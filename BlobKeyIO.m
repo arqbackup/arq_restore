@@ -23,6 +23,14 @@
     [IntegerIO writeUInt64:[theBlobKey archiveSize] to:data];
     [DateIO write:[theBlobKey archiveUploadedDate] to:data];
 }
++ (BOOL)write:(BlobKey *)theBlobKey to:(BufferedOutputStream *)os error:(NSError **)error {
+    return [StringIO write:[theBlobKey sha1] to:os error:error]
+    && [BooleanIO write:[theBlobKey stretchEncryptionKey] to:os error:error]
+    && [IntegerIO writeUInt32:(uint32_t)[theBlobKey storageType] to:os error:error]
+    && [StringIO write:[theBlobKey archiveId] to:os error:error]
+    && [IntegerIO writeUInt64:[theBlobKey archiveSize] to:os error:error]
+    && [DateIO write:[theBlobKey archiveUploadedDate] to:os error:error];
+}
 + (BOOL)read:(BlobKey **)theBlobKey from:(BufferedInputStream *)is treeVersion:(int)theTreeVersion compressed:(BOOL)isCompressed error:(NSError **)error {
     NSString *dataSHA1;
     BOOL stretchEncryptionKey = NO;
@@ -32,11 +40,9 @@
     NSDate *archiveUploadedDate = nil;
     
     if (![StringIO read:&dataSHA1 from:is error:error]) {
-        [self release];
         return NO;
     }
     if (theTreeVersion >= 14 && ![BooleanIO read:&stretchEncryptionKey from:is error:error]) {
-        [self release];
         return NO;
     }
     if (theTreeVersion >= 17) {
@@ -48,7 +54,17 @@
             return NO;
         }
     }
-    *theBlobKey = [[[BlobKey alloc] initWithStorageType:storageType archiveId:archiveId archiveSize:archiveSize archiveUploadedDate:archiveUploadedDate sha1:dataSHA1 stretchEncryptionKey:stretchEncryptionKey compressed:isCompressed] autorelease];
+    if (dataSHA1 == nil) {
+        // This BlobKeyIO class has been writing nil BlobKeys as if they weren't nil,
+        // and then reading the values in and creating bogus BlobKeys.
+        // If the sha1 is nil, it must have been a nil BlobKey, so we return nil here.
+        *theBlobKey = nil;
+    } else {
+        *theBlobKey = [[[BlobKey alloc] initWithStorageType:storageType archiveId:archiveId archiveSize:archiveSize archiveUploadedDate:archiveUploadedDate sha1:dataSHA1 stretchEncryptionKey:stretchEncryptionKey compressed:isCompressed error:error] autorelease];
+        if (*theBlobKey == nil) {
+            return NO;
+        }
+    }
     return YES;
 }
 @end

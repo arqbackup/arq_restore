@@ -11,7 +11,7 @@
 
 @implementation UserLibrary (Arq)
 + (NSString *)arqUserLibraryPath {
-	return [NSHomeDirectory() stringByAppendingString:@"/Library/Arq"];
+    return [[NSHomeDirectory() stringByAppendingPathComponent:@"Library"] stringByAppendingPathComponent:@"Arq"];
 }
 + (NSString *)arqCachePath {
     return [NSString stringWithFormat:@"%@/Cache.noindex", [UserLibrary arqUserLibraryPath]];
