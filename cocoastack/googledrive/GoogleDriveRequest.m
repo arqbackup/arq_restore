@@ -45,8 +45,8 @@
 #define RETRY_SLEEP_GROWTH_FACTOR (1.5)
 #define MAX_RETRY_SLEEP (5.0)
 
-static NSString *const kGoogleClientIDKey = @"1081461930698-ci22n9pcfkmebda0iofbt5qke01r1000.apps.googleusercontent.com";
-static NSString *const kGoogleClientSecretKey = @"UGO8R1b64tw1FS1MT-3K8qJD";
+static NSString *const kGoogleClientIDKey = @"INSERTHERE";
+static NSString *const kGoogleClientSecretKey = @"INSERTHERE";
 
 
 @implementation GoogleDriveRequest
