@@ -98,7 +98,7 @@
             return NO;
         }
     } else if ([cmd isEqualToString:@"restore"]) {
-        if (![self restoreComputerUUID:[args objectAtIndex:index+1] bucketUUID:[args objectAtIndex:index+3] encryptionPassword:[args objectAtIndex:index+2] restoreBytesPerSecond:[args objectAtIndex:index+3] error:error]) {
+        if (![self restoreComputerUUID:[args objectAtIndex:index+1] bucketUUID:[args objectAtIndex:index+3] encryptionPassword:[args objectAtIndex:index+2] restoreBytesPerSecond:[args objectAtIndex:index+4] error:error]) {
             return NO;
         }
     } else {
@@ -371,7 +371,7 @@
     
     printf("target   %s\n", [[[myBucket target] endpointDisplayName] UTF8String]);
     printf("computer %s\n", [[myBucket computerUUID] UTF8String]);
-    printf("\nrestoring folder   %s\n\n", [[myBucket localPath] UTF8String]);
+    printf("\nrestoring folder %s to %s\n\n", [[myBucket localPath] UTF8String], [destinationPath UTF8String]);
     
     AWSRegion *region = [AWSRegion regionWithS3Endpoint:[target endpoint]];
     BOOL isGlacierDestination = [region supportsGlacier];
@@ -418,8 +418,8 @@
                                                                               useTargetUIDAndGID:YES
                                                                                  destinationPath:destinationPath
                                                                                         logLevel:global_hslog_level] autorelease];
-        [[[S3GlacierRestorer alloc] initWithS3GlacierRestorerParamSet:paramSet delegate:self] autorelease];
-        
+        S3GlacierRestorer *restorer = [[[S3GlacierRestorer alloc] initWithS3GlacierRestorerParamSet:paramSet delegate:self] autorelease];
+        [restorer run];
     } else {
         S3RestorerParamSet *paramSet = [[[S3RestorerParamSet alloc] initWithBucket:myBucket
                                                                 encryptionPassword:theEncryptionPassword
