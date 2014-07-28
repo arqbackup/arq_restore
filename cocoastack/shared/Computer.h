@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  

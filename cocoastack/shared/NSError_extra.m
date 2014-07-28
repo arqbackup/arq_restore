@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2011, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
  
  All rights reserved.
  
@@ -29,6 +29,7 @@
  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 
 #include "libssh2.h"
 #include "libssh2_sftp.h"
