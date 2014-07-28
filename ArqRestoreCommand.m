@@ -473,18 +473,22 @@
     return NO;
 }
 - (BOOL)s3GlacierRestorerBytesRequestedDidChange:(NSNumber *)theRequested {
+    printf("requested %qu of %qu\n", [theRequested unsignedLongLongValue], maxRequested);
     return NO;
 }
 - (BOOL)s3GlacierRestorerTotalBytesToRequestDidChange:(NSNumber *)theMaxRequested {
+    maxRequested = [theMaxRequested unsignedLongLongValue];
     return NO;
 }
 - (BOOL)s3GlacierRestorerDidFinishRequesting {
     return NO;
 }
 - (BOOL)s3GlacierRestorerBytesTransferredDidChange:(NSNumber *)theTransferred {
+    printf("restored %qu of %qu\n", [theTransferred unsignedLongLongValue], maxTransfer);
     return NO;
 }
 - (BOOL)s3GlacierRestorerTotalBytesToTransferDidChange:(NSNumber *)theTotal {
+    maxTransfer = [theTotal unsignedLongLongValue];
     return NO;
 }
 - (BOOL)s3GlacierRestorerErrorMessage:(NSString *)theErrorMessage didOccurForPath:(NSString *)thePath {
@@ -492,6 +496,7 @@
     return NO;
 }
 - (void)s3GlacierRestorerDidSucceed {
+    printf("restore finished.\n");
 }
 - (void)s3GlacierRestorerDidFail:(NSError *)error {
     printf("failed: %s\n", [[error localizedDescription] UTF8String]);

@@ -14,6 +14,8 @@
 
 @interface ArqRestoreCommand : NSObject <S3RestorerDelegate, S3GlacierRestorerDelegate, GlacierRestorerDelegate> {
     Target *target;
+    unsigned long long maxRequested;
+    unsigned long long maxTransfer;
 }
 
 - (NSString *)errorDomain;
