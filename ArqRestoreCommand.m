@@ -14,6 +14,11 @@
 #import "UserAndComputer.h"
 #import "Bucket.h"
 #import "Repo.h"
+#import "S3RestorerParamSet.h"
+#import "Tree.h"
+#import "Commit.h"
+#import "BlobKey.h"
+#import "S3Restorer.h"
 
 
 @implementation ArqRestoreCommand
@@ -54,17 +59,17 @@
         // Valid command, but no additional args.
         
     } else if ([cmd isEqualToString:@"listfolders"]) {
-        if ([args count] < 4) {
+        if ((argc - targetParamsIndex) < 2) {
             SETNSERROR([self errorDomain], ERROR_USAGE, @"missing arguments for listfolders command");
             return NO;
         }
-        targetParamsIndex = 4;
+        targetParamsIndex += 2;
     } else if ([cmd isEqualToString:@"restore"]) {
-        if ([args count] < 5) {
+        if ((argc - targetParamsIndex) < 3) {
             SETNSERROR([self errorDomain], ERROR_USAGE, @"missing arguments");
             return NO;
         }
-        targetParamsIndex = 5;
+        targetParamsIndex += 3;
     } else {
         SETNSERROR([self errorDomain], ERROR_USAGE, @"unknown command: %@", cmd);
         return NO;
@@ -84,11 +89,11 @@
             return NO;
         }
     } else if ([cmd isEqualToString:@"listfolders"]) {
-        if (![self listBucketsForComputerUUID:[args objectAtIndex:2] encryptionPassword:[args objectAtIndex:3] error:error]) {
+        if (![self listBucketsForComputerUUID:[args objectAtIndex:index+1] encryptionPassword:[args objectAtIndex:index+2] error:error]) {
             return NO;
         }
     } else if ([cmd isEqualToString:@"restore"]) {
-        if (![self restoreComputerUUID:[args objectAtIndex:2] bucketUUID:[args objectAtIndex:4] encryptionPassword:[args objectAtIndex:3] error:error]) {
+        if (![self restoreComputerUUID:[args objectAtIndex:index+1] bucketUUID:[args objectAtIndex:index+3] encryptionPassword:[args objectAtIndex:index+2] error:error]) {
             return NO;
         }
     } else {
@@ -339,12 +344,89 @@
     if (commitBlobKey == nil) {
         return NO;
     }
+    Commit *commit = [repo commitForBlobKey:commitBlobKey dataSize:NULL error:error];
+    if (commit == nil) {
+        return NO;
+    }
+    
+    NSString *destinationPath = [[[NSFileManager defaultManager] currentDirectoryPath] stringByAppendingPathComponent:[[myBucket localPath] lastPathComponent]];
+    if ([[NSFileManager defaultManager] fileExistsAtPath:destinationPath]) {
+        SETNSERROR([self errorDomain], -1, @"%@ already exists", destinationPath);
+        return NO;
+    }
+    
     
     printf("target   %s\n", [[[myBucket target] endpointDisplayName] UTF8String]);
     printf("computer %s\n", [[myBucket computerUUID] UTF8String]);
     printf("\nrestoring folder   %s\n\n", [[myBucket localPath] UTF8String]);
     
+    AWSRegion *region = [AWSRegion regionWithS3Endpoint:[target endpoint]];
+    BOOL isGlacierDestination = [region supportsGlacier];
+    if ([myBucket storageType] == StorageTypeGlacier && isGlacierDestination) {
+//        [[[GlacierRestoreController alloc] initWithAppConfig:appConfig
+//                                            doChownsAbove499:NO
+//                                             destinationPath:destination
+//                                               displayBucket:sourceOutlineController.selectedDisplayBucket
+//                                               displayCommit:sourceOutlineController.selectedDisplayCommit
+//                                                 displayNode:selectedNode
+//                                                  mainWindow:mainWindow] autorelease];
+    } else if ([myBucket storageType] == StorageTypeS3Glacier && isGlacierDestination) {
+//        [[[S3GlacierRestoreSetupController alloc] initWithLocalComputerUUID:[appConfig computerUUIDForTargetUUID:[target targetUUID]]
+//                                                           doChownsAbove499:NO
+//                                                            destinationPath:destination
+//                                                              displayBucket:sourceOutlineController.selectedDisplayBucket
+//                                                              displayCommit:sourceOutlineController.selectedDisplayCommit
+//                                                                displayNode:selectedNode
+//                                                                 mainWindow:mainWindow] autorelease];
+    } else {
+//        [[[S3RestoreController alloc] initWithAppConfig:appConfig
+//                                       doChownsAbove499:doChowns
+//                                        destinationPath:destination
+//                                          displayBucket:sourceOutlineController.selectedDisplayBucket
+//                                          displayCommit:sourceOutlineController.selectedDisplayCommit
+        //                                            displayNode:selectedNode] autorelease];
+        S3RestorerParamSet *paramSet = [[[S3RestorerParamSet alloc] initWithBucket:myBucket
+                                                                encryptionPassword:theEncryptionPassword
+                                                                     commitBlobKey:commitBlobKey
+                                                                      rootItemName:[[myBucket localPath] lastPathComponent]
+                                                                       treeVersion:CURRENT_TREE_VERSION
+                                                                  treeIsCompressed:[[commit treeBlobKey] compressed]
+                                                                       treeBlobKey:[commit treeBlobKey]
+                                                                          nodeName:nil
+                                                                         targetUID:getuid()
+                                                                         targetGID:getgid()
+                                                                useTargetUIDAndGID:YES
+                                                                   destinationPath:destinationPath
+                                                                          logLevel:global_hslog_level] autorelease];
+        [[[S3Restorer alloc] initWithParamSet:paramSet delegate:self] autorelease];
+    }
+    
     return YES;
 }
 
+
+#pragma mark S3RestorerDelegate
+// Methods return YES if cancel is requested.
+
+- (BOOL)s3RestorerMessageDidChange:(NSString *)message {
+    printf("status: %s\n", [message UTF8String]);
+    return NO;
+}
+- (BOOL)s3RestorerBytesTransferredDidChange:(NSNumber *)theTransferred {
+    return NO;
+}
+- (BOOL)s3RestorerTotalBytesToTransferDidChange:(NSNumber *)theTotal {
+    return NO;
+}
+- (BOOL)s3RestorerErrorMessage:(NSString *)theErrorMessage didOccurForPath:(NSString *)thePath {
+    printf("%s error: %s\n", [thePath UTF8String], [theErrorMessage UTF8String]);
+    return NO;
+}
+- (BOOL)s3RestorerDidSucceed {
+    return NO;
+}
+- (BOOL)s3RestorerDidFail:(NSError *)error {
+    printf("failed: %s\n", [[error localizedDescription] UTF8String]);
+    return NO;
+}
 @end

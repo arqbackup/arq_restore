@@ -173,6 +173,8 @@ loadExistingMutablePackFiles:(BOOL)theLoadExistingMutablePackFiles {
     PackIndexEntry *pie = [packIndexEntriesByObjectSHA1 objectForKey:sha1];
     if (pie != nil) {
         ret = [fark dataForPackIndexEntry:pie storageType:storageType error:error];
+    } else {
+        SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"%@ not found in pack set", sha1);
     }
     return ret;
 }

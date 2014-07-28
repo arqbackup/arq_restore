@@ -376,6 +376,7 @@ targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD
         SETERRORFROMMYERROR;
         if (![myError isErrorWithDomain:[blobsPackSet errorDomain] code:ERROR_NOT_FOUND]) {
             // Return nil if not a not-found error.
+            SETERRORFROMMYERROR;
             return nil;
         }
         data = [fark dataForSHA1:[theBlobKey sha1] storageType:[theBlobKey storageType] error:&myError];

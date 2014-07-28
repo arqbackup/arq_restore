@@ -6,10 +6,11 @@
 //
 //
 
+#import "S3RestorerDelegate.h"
 @class Target;
 
 
-@interface ArqRestoreCommand : NSObject {
+@interface ArqRestoreCommand : NSObject <S3RestorerDelegate> {
     Target *target;
 }
 
