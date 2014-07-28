@@ -1,8 +1,0 @@
-usage:
-- set ARQ_ACCESS_KEY and ARQ_SECRET_KEY
-- arq_restore
-    - /akiaiyuk3n3tme6l4hfa.com.haystacksoftware.arq.eu/1C493DC6-FB2C-4EEC-8356-838DABE3AE2C/3AA39F05-4C47-4CE5-839A-3A28255DD91E path=/Users/stefan
-- set ARQ_ENCRYPTION_PASSWORD
-- arq_restore 3AA39F05-4C47-4CE5-839A-3A28255DD91E
-    - restores 'stefan' folder to local directory, unless 'stefan' folder already exists
-
