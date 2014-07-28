@@ -19,6 +19,11 @@
 #import "Commit.h"
 #import "BlobKey.h"
 #import "S3Restorer.h"
+#import "S3GlacierRestorerParamSet.h"
+#import "S3GlacierRestorer.h"
+#import "GlacierRestorerParamSet.h"
+#import "GlacierRestorer.h"
+#import "S3AuthorizationProvider.h"
 
 
 @implementation ArqRestoreCommand
@@ -65,11 +70,11 @@
         }
         targetParamsIndex += 2;
     } else if ([cmd isEqualToString:@"restore"]) {
-        if ((argc - targetParamsIndex) < 3) {
+        if ((argc - targetParamsIndex) < 4) {
             SETNSERROR([self errorDomain], ERROR_USAGE, @"missing arguments");
             return NO;
         }
-        targetParamsIndex += 3;
+        targetParamsIndex += 4;
     } else {
         SETNSERROR([self errorDomain], ERROR_USAGE, @"unknown command: %@", cmd);
         return NO;
@@ -93,7 +98,7 @@
             return NO;
         }
     } else if ([cmd isEqualToString:@"restore"]) {
-        if (![self restoreComputerUUID:[args objectAtIndex:index+1] bucketUUID:[args objectAtIndex:index+3] encryptionPassword:[args objectAtIndex:index+2] error:error]) {
+        if (![self restoreComputerUUID:[args objectAtIndex:index+1] bucketUUID:[args objectAtIndex:index+3] encryptionPassword:[args objectAtIndex:index+2] restoreBytesPerSecond:[args objectAtIndex:index+3] error:error]) {
             return NO;
         }
     } else {
@@ -201,7 +206,15 @@
 }
 
 - (AWSRegion *)awsRegionForAccessKey:(NSString *)theAccessKey secretKey:(NSString *)theSecretKey bucketName:(NSString *)theBucketName error:(NSError **)error {
-    return nil;
+    S3AuthorizationProvider *sap = [[[S3AuthorizationProvider alloc] initWithAccessKey:theAccessKey secretKey:theSecretKey] autorelease];
+    NSURL *endpoint = [[AWSRegion usEast1] s3EndpointWithSSL:YES];
+    S3Service *s3 = [[[S3Service alloc] initWithS3AuthorizationProvider:sap endpoint:endpoint useAmazonRRS:NO] autorelease];
+    
+    NSString *location = [s3 locationOfS3Bucket:theBucketName targetConnectionDelegate:nil error:error];
+    if (location == nil) {
+        return nil;
+    }
+    return [AWSRegion regionWithLocation:location];
 }
 
 - (BOOL)listComputers:(NSError **)error {
@@ -236,20 +249,20 @@
 }
 - (NSArray *)expandedTargetList:(NSError **)error {
     NSMutableArray *expandedTargetList = [NSMutableArray arrayWithObject:target];
-    if ([target targetType] == kTargetAWS
-        || [target targetType] == kTargetDreamObjects
-        || [target targetType] == kTargetGoogleCloudStorage
-        || [target targetType] == kTargetGreenQloud
-        || [target targetType] == kTargetS3Compatible) {
-        NSError *myError = nil;
-        NSArray *targets = [self expandedTargetsForS3Target:target error:&myError];
-        if (targets == nil) {
-            HSLogError(@"failed to expand target list for %@: %@", target, myError);
-        } else {
-            [expandedTargetList setArray:targets];
-            HSLogDebug(@"expandedTargetList is now: %@", expandedTargetList);
-        }
-    }
+//    if ([target targetType] == kTargetAWS
+//        || [target targetType] == kTargetDreamObjects
+//        || [target targetType] == kTargetGoogleCloudStorage
+//        || [target targetType] == kTargetGreenQloud
+//        || [target targetType] == kTargetS3Compatible) {
+//        NSError *myError = nil;
+//        NSArray *targets = [self expandedTargetsForS3Target:target error:&myError];
+//        if (targets == nil) {
+//            HSLogError(@"failed to expand target list for %@: %@", target, myError);
+//        } else {
+//            [expandedTargetList setArray:targets];
+//            HSLogDebug(@"expandedTargetList is now: %@", expandedTargetList);
+//        }
+//    }
     return expandedTargetList;
 }
 - (NSArray *)expandedTargetsForS3Target:(Target *)theTarget error:(NSError **)error {
@@ -307,7 +320,7 @@
     
     return YES;
 }
-- (BOOL)restoreComputerUUID:(NSString *)theComputerUUID bucketUUID:(NSString *)theBucketUUID encryptionPassword:(NSString *)theEncryptionPassword error:(NSError **)error {
+- (BOOL)restoreComputerUUID:(NSString *)theComputerUUID bucketUUID:(NSString *)theBucketUUID encryptionPassword:(NSString *)theEncryptionPassword restoreBytesPerSecond:(NSString *)theRestoreBytesPerSecond error:(NSError **)error {
     Bucket *myBucket = nil;
     NSArray *expandedTargetList = [self expandedTargetList:error];
     if (expandedTargetList == nil) {
@@ -363,28 +376,51 @@
     AWSRegion *region = [AWSRegion regionWithS3Endpoint:[target endpoint]];
     BOOL isGlacierDestination = [region supportsGlacier];
     if ([myBucket storageType] == StorageTypeGlacier && isGlacierDestination) {
-//        [[[GlacierRestoreController alloc] initWithAppConfig:appConfig
-//                                            doChownsAbove499:NO
-//                                             destinationPath:destination
-//                                               displayBucket:sourceOutlineController.selectedDisplayBucket
-//                                               displayCommit:sourceOutlineController.selectedDisplayCommit
-//                                                 displayNode:selectedNode
-//                                                  mainWindow:mainWindow] autorelease];
+        int bytesPerSecond = [theRestoreBytesPerSecond intValue];
+        if (bytesPerSecond == 0) {
+            SETNSERROR([self errorDomain], -1, @"invalid bytes_per_second %@", theRestoreBytesPerSecond);
+            return NO;
+        }
+        
+        GlacierRestorerParamSet *paramSet = [[[GlacierRestorerParamSet alloc] initWithBucket:myBucket
+                                                                          encryptionPassword:theEncryptionPassword
+                                                                      downloadBytesPerSecond:bytesPerSecond
+                                                                               commitBlobKey:commitBlobKey
+                                                                                rootItemName:[[myBucket localPath] lastPathComponent]
+                                                                                 treeVersion:CURRENT_TREE_VERSION
+                                                                            treeIsCompressed:[[commit treeBlobKey] compressed]
+                                                                                 treeBlobKey:[commit treeBlobKey]
+                                                                                    nodeName:nil targetUID:getuid()
+                                                                                   targetGID:getgid()
+                                                                          useTargetUIDAndGID:YES
+                                                                             destinationPath:destinationPath
+                                                                                    logLevel:global_hslog_level] autorelease];
+        [[[GlacierRestorer alloc] initWithGlacierRestorerParamSet:paramSet delegate:self] autorelease];
+        
     } else if ([myBucket storageType] == StorageTypeS3Glacier && isGlacierDestination) {
-//        [[[S3GlacierRestoreSetupController alloc] initWithLocalComputerUUID:[appConfig computerUUIDForTargetUUID:[target targetUUID]]
-//                                                           doChownsAbove499:NO
-//                                                            destinationPath:destination
-//                                                              displayBucket:sourceOutlineController.selectedDisplayBucket
-//                                                              displayCommit:sourceOutlineController.selectedDisplayCommit
-//                                                                displayNode:selectedNode
-//                                                                 mainWindow:mainWindow] autorelease];
+        int bytesPerSecond = [theRestoreBytesPerSecond intValue];
+        if (bytesPerSecond == 0) {
+            SETNSERROR([self errorDomain], -1, @"invalid bytes_per_second %@", theRestoreBytesPerSecond);
+            return NO;
+        }
+        
+        S3GlacierRestorerParamSet *paramSet = [[[S3GlacierRestorerParamSet alloc] initWithBucket:myBucket
+                                                                              encryptionPassword:theEncryptionPassword
+                                                                          downloadBytesPerSecond:bytesPerSecond
+                                                                                   commitBlobKey:commitBlobKey
+                                                                                    rootItemName:[[myBucket localPath] lastPathComponent]
+                                                                                     treeVersion:CURRENT_TREE_VERSION
+                                                                                treeIsCompressed:[[commit treeBlobKey] compressed]
+                                                                                     treeBlobKey:[commit treeBlobKey]
+                                                                                        nodeName:nil
+                                                                                       targetUID:getuid()
+                                                                                       targetGID:getgid()
+                                                                              useTargetUIDAndGID:YES
+                                                                                 destinationPath:destinationPath
+                                                                                        logLevel:global_hslog_level] autorelease];
+        [[[S3GlacierRestorer alloc] initWithS3GlacierRestorerParamSet:paramSet delegate:self] autorelease];
+        
     } else {
-//        [[[S3RestoreController alloc] initWithAppConfig:appConfig
-//                                       doChownsAbove499:doChowns
-//                                        destinationPath:destination
-//                                          displayBucket:sourceOutlineController.selectedDisplayBucket
-//                                          displayCommit:sourceOutlineController.selectedDisplayCommit
-        //                                            displayNode:selectedNode] autorelease];
         S3RestorerParamSet *paramSet = [[[S3RestorerParamSet alloc] initWithBucket:myBucket
                                                                 encryptionPassword:theEncryptionPassword
                                                                      commitBlobKey:commitBlobKey
@@ -429,4 +465,69 @@
     printf("failed: %s\n", [[error localizedDescription] UTF8String]);
     return NO;
 }
+
+
+#pragma mark S3GlacierRestorerDelegate
+- (BOOL)s3GlacierRestorerMessageDidChange:(NSString *)message {
+    printf("status: %s\n", [message UTF8String]);
+    return NO;
+}
+- (BOOL)s3GlacierRestorerBytesRequestedDidChange:(NSNumber *)theRequested {
+    return NO;
+}
+- (BOOL)s3GlacierRestorerTotalBytesToRequestDidChange:(NSNumber *)theMaxRequested {
+    return NO;
+}
+- (BOOL)s3GlacierRestorerDidFinishRequesting {
+    return NO;
+}
+- (BOOL)s3GlacierRestorerBytesTransferredDidChange:(NSNumber *)theTransferred {
+    return NO;
+}
+- (BOOL)s3GlacierRestorerTotalBytesToTransferDidChange:(NSNumber *)theTotal {
+    return NO;
+}
+- (BOOL)s3GlacierRestorerErrorMessage:(NSString *)theErrorMessage didOccurForPath:(NSString *)thePath {
+    printf("%s error: %s\n", [thePath UTF8String], [theErrorMessage UTF8String]);
+    return NO;
+}
+- (void)s3GlacierRestorerDidSucceed {
+}
+- (void)s3GlacierRestorerDidFail:(NSError *)error {
+    printf("failed: %s\n", [[error localizedDescription] UTF8String]);
+}
+
+
+#pragma mark GlacierRestorerDelegate
+- (BOOL)glacierRestorerMessageDidChange:(NSString *)message {
+    printf("status: %s\n", [message UTF8String]);
+    return NO;
+}
+- (BOOL)glacierRestorerBytesRequestedDidChange:(NSNumber *)theRequested {
+    return NO;
+}
+- (BOOL)glacierRestorerTotalBytesToRequestDidChange:(NSNumber *)theMaxRequested {
+    return NO;
+}
+- (BOOL)glacierRestorerDidFinishRequesting {
+    return NO;
+}
+- (BOOL)glacierRestorerBytesTransferredDidChange:(NSNumber *)theTransferred {
+    return NO;
+}
+- (BOOL)glacierRestorerTotalBytesToTransferDidChange:(NSNumber *)theTotal {
+    return NO;
+}
+- (BOOL)glacierRestorerErrorMessage:(NSString *)theErrorMessage didOccurForPath:(NSString *)thePath {
+    printf("%s error: %s\n", [thePath UTF8String], [theErrorMessage UTF8String]);
+    return NO;
+}
+- (BOOL)glacierRestorerDidSucceed {
+    return NO;
+}
+- (BOOL)glacierRestorerDidFail:(NSError *)error {
+    printf("failed: %s\n", [[error localizedDescription] UTF8String]);
+    return NO;
+}
+
 @end

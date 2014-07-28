@@ -37,9 +37,9 @@
 
 static void printUsage(const char *exeName) {
 	fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "\t%s [-l log_level] listcomputers                                                             <target_type> <target_params>\n", exeName);
-    fprintf(stderr, "\t%s [-l log_level] listfolders    <computer_uuid> <encryption_password>                 <target_type> <target_params>\n", exeName);
-    fprintf(stderr, "\t%s [-l log_level] restore        <computer_uuid> <encryption_password> <folder_uuid>   <target_type> <target_params>\n", exeName);
+    fprintf(stderr, "\t%s [-l log_level] listcomputers <target_type> <target_params>\n", exeName);
+    fprintf(stderr, "\t%s [-l log_level] listfolders <computer_uuid> <encryption_password> <target_type> <target_params>\n", exeName);
+    fprintf(stderr, "\t%s [-l log_level] restore <computer_uuid> <encryption_password> <folder_uuid> <bytes_per_second> <target_type> <target_params>\n", exeName);
     fprintf(stderr, "\t\ntarget_params by target type:\n");
     fprintf(stderr, "\taws:                 access_key secret_key bucket_name\n");
     fprintf(stderr, "\tsftp:                hostname port path username password_or_keyfile [keyfile_passphrase]\n");

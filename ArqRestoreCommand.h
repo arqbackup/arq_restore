@@ -7,10 +7,12 @@
 //
 
 #import "S3RestorerDelegate.h"
+#import "S3GlacierRestorerDelegate.h"
+#import "GlacierRestorerDelegate.h"
 @class Target;
 
 
-@interface ArqRestoreCommand : NSObject <S3RestorerDelegate> {
+@interface ArqRestoreCommand : NSObject <S3RestorerDelegate, S3GlacierRestorerDelegate, GlacierRestorerDelegate> {
     Target *target;
 }
 

@@ -189,6 +189,15 @@
 		F8F2D9851986D3C400997A15 /* XAttrSet.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D9841986D3C400997A15 /* XAttrSet.m */; };
 		F8F2D9921986D4C700997A15 /* CalculateItem.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D98E1986D4C700997A15 /* CalculateItem.m */; };
 		F8F2D9931986D4C700997A15 /* RestoreItem.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D9901986D4C700997A15 /* RestoreItem.m */; };
+		F8F2D9981986DCCC00997A15 /* S3GlacierRestorerParamSet.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D9971986DCCC00997A15 /* S3GlacierRestorerParamSet.m */; };
+		F8F2D99C1986DDAD00997A15 /* S3GlacierRestorer.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D99A1986DDAD00997A15 /* S3GlacierRestorer.m */; };
+		F8F2D99F1986DE1800997A15 /* GlacierRequestItem.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D99E1986DE1800997A15 /* GlacierRequestItem.m */; };
+		F8F2D9A61986DE3B00997A15 /* GlacierPack.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D9A11986DE3B00997A15 /* GlacierPack.m */; };
+		F8F2D9A71986DE3B00997A15 /* GlacierPackIndex.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D9A31986DE3B00997A15 /* GlacierPackIndex.m */; };
+		F8F2D9A81986DE3B00997A15 /* GlacierPackSet.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D9A51986DE3B00997A15 /* GlacierPackSet.m */; };
+		F8F2D9AB1986DE4400997A15 /* GlacierRestorer.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D9AA1986DE4400997A15 /* GlacierRestorer.m */; };
+		F8F2D9AE1986DE8300997A15 /* BinarySHA1.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D9AD1986DE8300997A15 /* BinarySHA1.m */; };
+		F8F2D9B11986DF6B00997A15 /* GlacierRestorerParamSet.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D9B01986DF6B00997A15 /* GlacierRestorerParamSet.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -579,6 +588,26 @@
 		F8F2D98F1986D4C700997A15 /* RestoreItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RestoreItem.h; sourceTree = "<group>"; };
 		F8F2D9901986D4C700997A15 /* RestoreItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RestoreItem.m; sourceTree = "<group>"; };
 		F8F2D9911986D4C700997A15 /* Restorer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Restorer.h; sourceTree = "<group>"; };
+		F8F2D9961986DCCC00997A15 /* S3GlacierRestorerParamSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = S3GlacierRestorerParamSet.h; sourceTree = "<group>"; };
+		F8F2D9971986DCCC00997A15 /* S3GlacierRestorerParamSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = S3GlacierRestorerParamSet.m; sourceTree = "<group>"; };
+		F8F2D9991986DDAC00997A15 /* S3GlacierRestorer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = S3GlacierRestorer.h; sourceTree = "<group>"; };
+		F8F2D99A1986DDAD00997A15 /* S3GlacierRestorer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = S3GlacierRestorer.m; sourceTree = "<group>"; };
+		F8F2D99B1986DDAD00997A15 /* S3GlacierRestorerDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = S3GlacierRestorerDelegate.h; sourceTree = "<group>"; };
+		F8F2D99D1986DE1800997A15 /* GlacierRequestItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GlacierRequestItem.h; sourceTree = "<group>"; };
+		F8F2D99E1986DE1800997A15 /* GlacierRequestItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GlacierRequestItem.m; sourceTree = "<group>"; };
+		F8F2D9A01986DE3B00997A15 /* GlacierPack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GlacierPack.h; sourceTree = "<group>"; };
+		F8F2D9A11986DE3B00997A15 /* GlacierPack.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GlacierPack.m; sourceTree = "<group>"; };
+		F8F2D9A21986DE3B00997A15 /* GlacierPackIndex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GlacierPackIndex.h; sourceTree = "<group>"; };
+		F8F2D9A31986DE3B00997A15 /* GlacierPackIndex.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GlacierPackIndex.m; sourceTree = "<group>"; };
+		F8F2D9A41986DE3B00997A15 /* GlacierPackSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GlacierPackSet.h; sourceTree = "<group>"; };
+		F8F2D9A51986DE3B00997A15 /* GlacierPackSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GlacierPackSet.m; sourceTree = "<group>"; };
+		F8F2D9A91986DE4400997A15 /* GlacierRestorer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GlacierRestorer.h; sourceTree = "<group>"; };
+		F8F2D9AA1986DE4400997A15 /* GlacierRestorer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GlacierRestorer.m; sourceTree = "<group>"; };
+		F8F2D9AC1986DE8300997A15 /* BinarySHA1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BinarySHA1.h; sourceTree = "<group>"; };
+		F8F2D9AD1986DE8300997A15 /* BinarySHA1.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BinarySHA1.m; sourceTree = "<group>"; };
+		F8F2D9AF1986DF6B00997A15 /* GlacierRestorerParamSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GlacierRestorerParamSet.h; sourceTree = "<group>"; };
+		F8F2D9B01986DF6B00997A15 /* GlacierRestorerParamSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GlacierRestorerParamSet.m; sourceTree = "<group>"; };
+		F8F2D9B21986DFF700997A15 /* GlacierRestorerDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GlacierRestorerDelegate.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -612,6 +641,8 @@
 				08FB7795FE84155DC02AAC07 /* arq_restore */,
 				F8F2D98C1986D49600997A15 /* commonrestore */,
 				F8F2D9711986D00C00997A15 /* s3restore */,
+				F8F2D9951986DCBD00997A15 /* s3glacierrestore */,
+				F8F2D9941986DCB100997A15 /* glacierrestore */,
 				08FB779DFE84155DC02AAC07 /* External Frameworks and Libraries */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 				F89A204513FAE29E0071D321 /* libz.dylib */,
@@ -1139,6 +1170,8 @@
 		F8F2D92B1986BA0700997A15 /* repo */ = {
 			isa = PBXGroup;
 			children = (
+				F8F2D9AC1986DE8300997A15 /* BinarySHA1.h */,
+				F8F2D9AD1986DE8300997A15 /* BinarySHA1.m */,
 				F8F2D92C1986BA1400997A15 /* Commit.h */,
 				F8F2D92D1986BA1400997A15 /* Commit.m */,
 				F8F2D92F1986BA2200997A15 /* CommitFailedFile.h */,
@@ -1185,11 +1218,43 @@
 			children = (
 				F8F2D98D1986D4C700997A15 /* CalculateItem.h */,
 				F8F2D98E1986D4C700997A15 /* CalculateItem.m */,
+				F8F2D99D1986DE1800997A15 /* GlacierRequestItem.h */,
+				F8F2D99E1986DE1800997A15 /* GlacierRequestItem.m */,
 				F8F2D98F1986D4C700997A15 /* RestoreItem.h */,
 				F8F2D9901986D4C700997A15 /* RestoreItem.m */,
 				F8F2D9911986D4C700997A15 /* Restorer.h */,
 			);
 			path = commonrestore;
+			sourceTree = "<group>";
+		};
+		F8F2D9941986DCB100997A15 /* glacierrestore */ = {
+			isa = PBXGroup;
+			children = (
+				F8F2D9A01986DE3B00997A15 /* GlacierPack.h */,
+				F8F2D9A11986DE3B00997A15 /* GlacierPack.m */,
+				F8F2D9A21986DE3B00997A15 /* GlacierPackIndex.h */,
+				F8F2D9A31986DE3B00997A15 /* GlacierPackIndex.m */,
+				F8F2D9A41986DE3B00997A15 /* GlacierPackSet.h */,
+				F8F2D9A51986DE3B00997A15 /* GlacierPackSet.m */,
+				F8F2D9A91986DE4400997A15 /* GlacierRestorer.h */,
+				F8F2D9AA1986DE4400997A15 /* GlacierRestorer.m */,
+				F8F2D9B21986DFF700997A15 /* GlacierRestorerDelegate.h */,
+				F8F2D9AF1986DF6B00997A15 /* GlacierRestorerParamSet.h */,
+				F8F2D9B01986DF6B00997A15 /* GlacierRestorerParamSet.m */,
+			);
+			path = glacierrestore;
+			sourceTree = "<group>";
+		};
+		F8F2D9951986DCBD00997A15 /* s3glacierrestore */ = {
+			isa = PBXGroup;
+			children = (
+				F8F2D9991986DDAC00997A15 /* S3GlacierRestorer.h */,
+				F8F2D99A1986DDAD00997A15 /* S3GlacierRestorer.m */,
+				F8F2D99B1986DDAD00997A15 /* S3GlacierRestorerDelegate.h */,
+				F8F2D9961986DCCC00997A15 /* S3GlacierRestorerParamSet.h */,
+				F8F2D9971986DCCC00997A15 /* S3GlacierRestorerParamSet.m */,
+			);
+			path = s3glacierrestore;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1250,6 +1315,7 @@
 				F8F2D8821986B63400997A15 /* BaseTargetConnection.m in Sources */,
 				F8F2D9931986D4C700997A15 /* RestoreItem.m in Sources */,
 				F8F2D93D1986BA7900997A15 /* UserLibrary.m in Sources */,
+				F8F2D99F1986DE1800997A15 /* GlacierRequestItem.m in Sources */,
 				F8F2D86E1986B5CC00997A15 /* SFTPTargetConnection.m in Sources */,
 				F829522019868E26001DC91B /* GoogleDrive.m in Sources */,
 				F8F2D9001986B78600997A15 /* BooleanNode.m in Sources */,
@@ -1292,6 +1358,8 @@
 				F829DC10198691CB00D637E0 /* BooleanIO.m in Sources */,
 				F8F2D9491986BAD200997A15 /* Repo.m in Sources */,
 				F829522119868E26001DC91B /* GoogleDriveErrorResult.m in Sources */,
+				F8F2D99C1986DDAD00997A15 /* S3GlacierRestorer.m in Sources */,
+				F8F2D9B11986DF6B00997A15 /* GlacierRestorerParamSet.m in Sources */,
 				F8295167198683D5001DC91B /* scp.c in Sources */,
 				F8F2D9531986BE2A00997A15 /* FarkImpl.m in Sources */,
 				F829DC241986924100D637E0 /* FDInputStream.m in Sources */,
@@ -1312,7 +1380,9 @@
 				F8F2D9771986D32B00997A15 /* S3Restorer.m in Sources */,
 				F8F2D8931986B66000997A15 /* GlacierJobLister.m in Sources */,
 				F8F2D9031986B78600997A15 /* RealNode.m in Sources */,
+				F8F2D9A71986DE3B00997A15 /* GlacierPackIndex.m in Sources */,
 				F8F2D87C1986B61800997A15 /* GoogleDriveRemoteFS.m in Sources */,
+				F8F2D9981986DCCC00997A15 /* S3GlacierRestorerParamSet.m in Sources */,
 				F829521319868DE6001DC91B /* RegexKitLite.m in Sources */,
 				F8F2D8FD1986B78600997A15 /* ArrayNode.m in Sources */,
 				F8F2D9741986D02D00997A15 /* S3RestorerParamSet.m in Sources */,
@@ -1320,6 +1390,7 @@
 				F8F2D9251986B98600997A15 /* BlobKey.m in Sources */,
 				F829523319868E59001DC91B /* SBJsonParser.m in Sources */,
 				F8F2D8A51986B67500997A15 /* Vault.m in Sources */,
+				F8F2D9A61986DE3B00997A15 /* GlacierPack.m in Sources */,
 				F8F2D97F1986D3A100997A15 /* FileAttributes.m in Sources */,
 				F829DC15198691CB00D637E0 /* NSErrorIO.m in Sources */,
 				F82951EE19868D90001DC91B /* HTTPInputStream.m in Sources */,
@@ -1381,6 +1452,7 @@
 				F8F2D8941986B66000997A15 /* GlacierRequest.m in Sources */,
 				F829DBFF1986901300D637E0 /* Streams.m in Sources */,
 				F8F2D8A41986B67500997A15 /* SHA256TreeHash.m in Sources */,
+				F8F2D9A81986DE3B00997A15 /* GlacierPackSet.m in Sources */,
 				F8F2D9071986B78600997A15 /* XMLPListWriter.m in Sources */,
 				F829DC1C1986921E00D637E0 /* MD5Hash.m in Sources */,
 				F8F2D8681986B58000997A15 /* BackupSet.m in Sources */,
@@ -1408,9 +1480,11 @@
 				F8F2D8AD1986B6A300997A15 /* SHA256Hash.m in Sources */,
 				F8295168198683D5001DC91B /* session.c in Sources */,
 				F8F2D86D1986B5CC00997A15 /* S3TargetConnection.m in Sources */,
+				F8F2D9AB1986DE4400997A15 /* GlacierRestorer.m in Sources */,
 				F83F9B2D1983303F007CBFB4 /* ArqRestoreCommand.m in Sources */,
 				F8F2D9341986BA2B00997A15 /* ArqSalt.m in Sources */,
 				F829DC14198691CB00D637E0 /* IntegerIO.m in Sources */,
+				F8F2D9AE1986DE8300997A15 /* BinarySHA1.m in Sources */,
 				F8F2D8FF1986B78600997A15 /* BinaryPListWriter.m in Sources */,
 				F8F2D95B1986BE4E00997A15 /* PackIndex.m in Sources */,
 				F829522319868E26001DC91B /* GoogleDriveRequest.m in Sources */,
