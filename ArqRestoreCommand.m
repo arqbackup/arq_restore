@@ -48,6 +48,8 @@
 #import "GlacierRestorerParamSet.h"
 #import "GlacierRestorer.h"
 #import "S3AuthorizationProvider.h"
+#import "BucketExclude.h"
+#import "BucketExcludeSet.h"
 
 
 @implementation ArqRestoreCommand
@@ -339,7 +341,15 @@
     for (Bucket *bucket in buckets) {
         printf("\tfolder %s\n", [[bucket localPath] UTF8String]);
         printf("\t\tuuid %s\n", [[bucket bucketUUID] UTF8String]);
-        
+        printf("\t\texclusions\n");
+        for (BucketExclude *exclude in [bucket.bucketExcludeSet bucketExcludes]) {
+            printf("\t\t\t%s\n", [[exclude description] UTF8String]);
+        }
+        printf("\t\tignored paths\n");
+        NSArray *ignored = [bucket.ignoredRelativePaths.allObjects sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)];
+        for (NSString *path in ignored) {
+            printf("\t\t\t%s\n", [path UTF8String]);
+        }
     }
     
     return YES;
