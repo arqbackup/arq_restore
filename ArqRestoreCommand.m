@@ -183,9 +183,7 @@
         ret = [[[Target alloc] initWithEndpoint:endpoint secret:secret passphrase:keyfilePassphrase] autorelease];
     } else if ([theTargetType isEqualToString:@"greenqloud"]
                || [theTargetType isEqualToString:@"dreamobjects"]
-               || [theTargetType isEqualToString:@"googlecloudstorage"]
-               
-               || [theTargetType isEqualToString:@"s3compatible"]) {
+               || [theTargetType isEqualToString:@"googlecloudstorage"]) {
         if ([theParams count] != 4) {
             SETNSERROR([self errorDomain], ERROR_USAGE, @"invalid %@ parameters", theTargetType);
             return nil;
@@ -208,6 +206,33 @@
         
         NSURL *endpoint = [NSURL URLWithString:[NSString stringWithFormat:@"https://%@@%@/%@", theAccessKey, theHostname, theBucketName]];
         ret = [[[Target alloc] initWithEndpoint:endpoint secret:theSecretKey passphrase:nil] autorelease];
+    } else if ([theTargetType isEqualToString:@"s3compatible"]) {
+        if ([theParams count] != 5) {
+            SETNSERROR([self errorDomain], ERROR_USAGE, @"invalid %@ parameters", theTargetType);
+            return nil;
+        }
+        
+        NSURL *theURL = [NSURL URLWithString:[theParams objectAtIndex:1]];
+        if (theURL == nil) {
+            SETNSERROR([self errorDomain], ERROR_USAGE, @"invalid url %@", [theParams objectAtIndex:1]);
+            return nil;
+        }
+        
+        NSString *theAccessKey = [theParams objectAtIndex:2];
+        NSString *theSecretKey = [theParams objectAtIndex:3];
+        NSString *theBucketName = [theParams objectAtIndex:4];
+        
+        NSMutableString *urlString = [NSMutableString stringWithString:[theURL scheme]];
+        [urlString appendFormat:@"://%@@%@", theAccessKey, [theURL host]];
+        NSNumber *port = [theURL port];
+        if (port != nil) {
+            [urlString appendFormat:@":%d", [port intValue]];
+        }
+        [urlString appendString:@"/"];
+        [urlString appendString:theBucketName];
+        NSURL *endpoint = [NSURL URLWithString:urlString];
+        ret = [[[Target alloc] initWithEndpoint:endpoint secret:theSecretKey passphrase:nil] autorelease];
+        
     } else if ([theTargetType isEqualToString:@"googledrive"]) {
         if ([theParams count] != 3) {
             SETNSERROR([self errorDomain], ERROR_USAGE, @"invalid googledrive parameters");
