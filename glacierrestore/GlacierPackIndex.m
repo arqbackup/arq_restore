@@ -274,7 +274,7 @@ typedef struct pack_index {
     }
     
     uint32_t offset = sizeof(pack_index) + (count - 1) * sizeof(index_object);
-    if (!lseek(fd, offset, SEEK_SET) == -1) {
+    if (! (lseek(fd, offset, SEEK_SET)==-1)) {
         int errnum = errno;
         HSLogError(@"lstat(%@, %ld) error %d: %s", localPath, (unsigned long)offset, errnum, strerror(errnum));
         SETNSERROR(@"UnixErrorDomain", errnum, @"error seeking to archiveId in pack index file");
