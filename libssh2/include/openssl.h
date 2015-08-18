@@ -73,11 +73,15 @@
 #endif
 
 #if OPENSSL_VERSION_NUMBER >= 0x00907000L && !defined(OPENSSL_NO_AES)
-# define LIBSSH2_AES_CTR 1
 # define LIBSSH2_AES 1
 #else
-# define LIBSSH2_AES_CTR 0
 # define LIBSSH2_AES 0
+#endif
+
+#if OPENSSL_VERSION_NUMBER >= 0x10001000L && !defined(OPENSSL_NO_AES)
+# define LIBSSH2_AES_CTR 1
+#else
+# define LIBSSH2_AES_CTR 0
 #endif
 
 #ifdef OPENSSL_NO_BLOWFISH
