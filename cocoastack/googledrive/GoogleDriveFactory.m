@@ -90,7 +90,7 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(GoogleDriveFactory)
     [lock lock];
     NSMutableDictionary *folderIdsByPath = [folderIdDictionariesByRefreshToken objectForKey:theRefreshToken];
     if (folderIdsByPath == nil) {
-        folderIdsByPath = [NSMutableDictionary dictionaryWithObject:@"root" forKey:@"/"];
+        folderIdsByPath = [NSMutableDictionary dictionaryWithObjectsAndKeys:@"root", @"/", @"appdata", @"/appdata", nil];
         [folderIdDictionariesByRefreshToken setObject:folderIdsByPath forKey:theRefreshToken];
     }
     NSString *ret = [[[folderIdsByPath objectForKey:thePath] copy] autorelease];
