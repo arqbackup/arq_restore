@@ -12,6 +12,11 @@ Use arq_restore to list the computers backed up to your destination, list folder
 Type `arq_restore` with no arguments to get help.
 
 
+## Usage
+
+To compile, install OpenSSL 1.0.2.
+
+
 ## License
 
     Copyright (c) 2009-2017, Haystack Software LLC http://www.haystacksoftware.com
