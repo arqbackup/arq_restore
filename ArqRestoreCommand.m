@@ -93,6 +93,8 @@
         return [self listComputers:args error:error];
     } else if ([cmd isEqualToString:@"listfolders"]) {
         return [self listFolders:args error:error];
+    } else if ([cmd isEqualToString:@"printplist"]) {
+        return [self printPlist:args error:error];
     } else if ([cmd isEqualToString:@"listtree"]) {
         return [self listTree:args error:error];
     } else if ([cmd isEqualToString:@"restore"]) {
@@ -277,6 +279,54 @@
         printf("\t\tuuid %s\n", [[bucket bucketUUID] UTF8String]);
         
     }
+    return YES;
+}
+- (BOOL)printPlist:(NSArray *)args error:(NSError **)error {
+    if ([args count] != 6) {
+        SETNSERROR([self errorDomain], ERROR_USAGE, @"invalid arguments");
+        return NO;
+    }
+    Target *target = [[TargetFactory sharedTargetFactory] targetWithNickname:[args objectAtIndex:2]];
+    if (target == nil) {
+        SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"target not found");
+        return NO;
+    }
+    
+    NSString *theComputerUUID = [args objectAtIndex:3];
+    NSString *theEncryptionPassword = [args objectAtIndex:4];
+    NSString *theBucketUUID = [args objectAtIndex:5];
+    
+    BackupSet *backupSet = [self backupSetForTarget:target computerUUID:theComputerUUID error:error];
+    if (backupSet == nil) {
+        return NO;
+    }
+    
+    // Reset Target:
+    target = [backupSet target];
+    
+    NSArray *buckets = [Bucket bucketsWithTarget:target computerUUID:theComputerUUID encryptionPassword:theEncryptionPassword targetConnectionDelegate:nil error:error];
+    if (buckets == nil) {
+        return NO;
+    }
+    Bucket *matchingBucket = nil;
+    for (Bucket *bucket in buckets) {
+        if ([[bucket bucketUUID] isEqualToString:theBucketUUID]) {
+            matchingBucket = bucket;
+            break;
+        }
+    }
+    if (matchingBucket == nil) {
+        SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"folder %@ not found", theBucketUUID);
+        return NO;
+    }
+    
+    printf("target   %s\n", [[target endpointDisplayName] UTF8String]);
+    printf("computer %s\n", [theComputerUUID UTF8String]);
+    printf("folder   %s\n", [theBucketUUID UTF8String]);
+    
+    NSData *xmlData = [matchingBucket toXMLData];
+    NSString *xmlString = [[[NSString alloc] initWithData:xmlData encoding:NSUTF8StringEncoding] autorelease];
+    printf("%s\n", [xmlString UTF8String]);
     return YES;
 }
 - (BOOL)listTree:(NSArray *)args error:(NSError **)error {
