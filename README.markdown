@@ -14,7 +14,7 @@ Type `arq_restore` with no arguments to get help.
 
 ## License
 
-    Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+    Copyright (c) 2009-2017, Haystack Software LLC http://www.haystacksoftware.com
 
     All rights reserved.
 
