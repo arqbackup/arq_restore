@@ -31,7 +31,7 @@
  */
 
 
-
+#include <termios.h>
 #import "ArqRestoreCommand.h"
 #import "Target.h"
 #import "AWSRegion.h"
@@ -58,6 +58,9 @@
 #import "BackupSet.h"
 #import "ExePath.h"
 #import "AWSRegion.h"
+
+
+#define BUFSIZE (65536)
 
 
 @implementation ArqRestoreCommand
@@ -245,7 +248,7 @@
 
 
 - (BOOL)listFolders:(NSArray *)args error:(NSError **)error {
-    if ([args count] != 5) {
+    if ([args count] != 4) {
         SETNSERROR([self errorDomain], ERROR_USAGE, @"invalid arguments");
         return NO;
     }
@@ -256,7 +259,10 @@
     }
     
     NSString *theComputerUUID = [args objectAtIndex:3];
-    NSString *theEncryptionPassword = [args objectAtIndex:4];
+    NSString *theEncryptionPassword = [self readEncryptionPassword:error];
+    if (theEncryptionPassword == nil) {
+        return NO;
+    }
     
     BackupSet *backupSet = [self backupSetForTarget:target computerUUID:theComputerUUID error:error];
     if (backupSet == nil) {
@@ -282,7 +288,7 @@
     return YES;
 }
 - (BOOL)printPlist:(NSArray *)args error:(NSError **)error {
-    if ([args count] != 6) {
+    if ([args count] != 5) {
         SETNSERROR([self errorDomain], ERROR_USAGE, @"invalid arguments");
         return NO;
     }
@@ -293,8 +299,12 @@
     }
     
     NSString *theComputerUUID = [args objectAtIndex:3];
-    NSString *theEncryptionPassword = [args objectAtIndex:4];
-    NSString *theBucketUUID = [args objectAtIndex:5];
+    NSString *theBucketUUID = [args objectAtIndex:4];
+    
+    NSString *theEncryptionPassword = [self readEncryptionPassword:error];
+    if (theEncryptionPassword == nil) {
+        return NO;
+    }
     
     BackupSet *backupSet = [self backupSetForTarget:target computerUUID:theComputerUUID error:error];
     if (backupSet == nil) {
@@ -330,7 +340,7 @@
     return YES;
 }
 - (BOOL)listTree:(NSArray *)args error:(NSError **)error {
-    if ([args count] != 6) {
+    if ([args count] != 5) {
         SETNSERROR([self errorDomain], ERROR_USAGE, @"invalid arguments");
         return NO;
     }
@@ -341,8 +351,12 @@
     }
     
     NSString *theComputerUUID = [args objectAtIndex:3];
-    NSString *theEncryptionPassword = [args objectAtIndex:4];
-    NSString *theBucketUUID = [args objectAtIndex:5];
+    NSString *theBucketUUID = [args objectAtIndex:4];
+
+    NSString *theEncryptionPassword = [self readEncryptionPassword:error];
+    if (theEncryptionPassword == nil) {
+        return NO;
+    }
     
     BackupSet *backupSet = [self backupSetForTarget:target computerUUID:theComputerUUID error:error];
     if (backupSet == nil) {
@@ -414,7 +428,7 @@
 }
 
 - (BOOL)restore:(NSArray *)args error:(NSError **)error {
-    if ([args count] != 6) {
+    if ([args count] != 5) {
         SETNSERROR([self errorDomain], ERROR_USAGE, @"invalid arguments");
         return NO;
     }
@@ -425,8 +439,12 @@
     }
     
     NSString *theComputerUUID = [args objectAtIndex:3];
-    NSString *theEncryptionPassword = [args objectAtIndex:4];
-    NSString *theBucketUUID = [args objectAtIndex:5];
+    NSString *theBucketUUID = [args objectAtIndex:4];
+    
+    NSString *theEncryptionPassword = [self readEncryptionPassword:error];
+    if (theEncryptionPassword == nil) {
+        return NO;
+    }
     
     BackupSet *backupSet = [self backupSetForTarget:target computerUUID:theComputerUUID error:error];
     if (backupSet == nil) {
@@ -753,4 +771,35 @@
     return NO;
 }
 
+
+#pragma mark internal
+- (NSString *)readEncryptionPassword:(NSError **)error {
+    printf("enter encryption password: ");
+    fflush(stdout);
+    
+    struct termios oldTermios;
+    struct termios newTermios;
+    
+    if (tcgetattr(STDIN_FILENO, &oldTermios) != 0) {
+        int errnum = errno;
+        HSLogError(@"tcgetattr error %d: %s", errnum, strerror(errnum));
+        SETNSERROR(@"UnixErrorDomain", errnum, @"%s", strerror(errnum));
+        return nil;
+    }
+    newTermios = oldTermios;
+    newTermios.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newTermios);
+    size_t bufsize = BUFSIZE;
+    char *buf = malloc(bufsize);
+    ssize_t len = getline(&buf, &bufsize, stdin);
+    free(buf);
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldTermios);
+    
+    if (len > 0 && buf[len - 1] == '\n') {
+        --len;
+    }
+    printf("\n");
+    
+    return [[[NSString alloc] initWithBytes:buf length:len encoding:NSUTF8StringEncoding] autorelease];
+}
 @end

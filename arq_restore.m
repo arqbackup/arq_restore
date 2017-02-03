@@ -45,10 +45,10 @@ static void printUsage(const char *exeName) {
     fprintf(stderr, "\t%s [-l loglevel] deletetarget <nickname>\n", exeName);
     fprintf(stderr, "\n");
     fprintf(stderr, "\t%s [-l loglevel] listcomputers <target_nickname>\n", exeName);
-    fprintf(stderr, "\t%s [-l loglevel] listfolders <target_nickname> <computer_uuid> <encryption_password>\n", exeName);
-    fprintf(stderr, "\t%s [-l loglevel] printplist <target_nickname> <computer_uuid> <encryption_password> <folder_uuid>\n", exeName);
-    fprintf(stderr, "\t%s [-l loglevel] listtree <target_nickname> <computer_uuid> <encryption_password> <folder_uuid>\n", exeName);
-    fprintf(stderr, "\t%s [-l loglevel] restore <target_nickname> <computer_uuid> <encryption_password> <folder_uuid>\n", exeName);
+    fprintf(stderr, "\t%s [-l loglevel] listfolders <target_nickname> <computer_uuid>\n", exeName);
+    fprintf(stderr, "\t%s [-l loglevel] printplist <target_nickname> <computer_uuid> <folder_uuid>\n", exeName);
+    fprintf(stderr, "\t%s [-l loglevel] listtree <target_nickname> <computer_uuid> <folder_uuid>\n", exeName);
+    fprintf(stderr, "\t%s [-l loglevel] restore <target_nickname> <computer_uuid> <folder_uuid>\n", exeName);
     fprintf(stderr, "\t%s [-l loglevel] clearcache <target_nickname>\n", exeName);
     fprintf(stderr, "\n");
     fprintf(stderr, "log levels: none, error, warn, info, and debug\n");
