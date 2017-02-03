@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,8 +31,6 @@
  */
 
 
-
-
 #import "InputStream.h"
 #import "OutputStream.h"
 
@@ -42,7 +40,8 @@
 }
 + (BOOL)transferFrom:(id <InputStream>)is to:(id <OutputStream>)os error:(NSError **)error;
 + (BOOL)transferFrom:(id <InputStream>)is to:(id <OutputStream>)os bytesWritten:(unsigned long long *)written error:(NSError **)error;
-+ (BOOL)transferFrom:(id <InputStream>)is atomicallyToFile:(NSString *)path bytesWritten:(unsigned long long *)written error:(NSError **)error;
 + (BOOL)transferFrom:(id <InputStream>)is atomicallyToFile:(NSString *)path targetUID:(uid_t)theTargetUID targetGID:(gid_t)theTargetGID bytesWritten:(unsigned long long *)written error:(NSError **)error;
++ (BOOL)transferFrom:(id <InputStream>)is atomicallyToFile:(NSString *)path setUIDs:(BOOL)theSetUIDs targetUID:(uid_t)theTargetUID targetGID:(gid_t)theTargetGID bytesWritten:(unsigned long long *)written error:(NSError **)error;
 + (BOOL)writeData:(NSData *)theData atomicallyToFile:(NSString *)path targetUID:(uid_t)theTargetUID targetGID:(gid_t)theTargetGID bytesWritten:(unsigned long long *)written error:(NSError **)error;
++ (BOOL)writeData:(NSData *)theData atomicallyToFile:(NSString *)path setUIDs:(BOOL)theSetUIDs targetUID:(uid_t)theTargetUID targetGID:(gid_t)theTargetGID bytesWritten:(unsigned long long *)written error:(NSError **)error;
 @end

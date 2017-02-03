@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -32,10 +32,12 @@
 
 
 
+
+
 #import "BufferedInputStream.h"
 @class BlobKey;
 
-#define CURRENT_COMMIT_VERSION 9
+#define CURRENT_COMMIT_VERSION 12
 
 @interface Commit : NSObject {
     int commitVersion;
@@ -50,20 +52,22 @@
     BOOL _hasMissingNodes;
     BOOL _isComplete;
     NSData *_bucketXMLData;
+    NSString *_arqVersion;
 }
 + (NSString *)errorDomain;
 - (id)initWithCommit:(Commit *)commit parentCommitBlobKey:(BlobKey *)parentCommitBlobKey;
 
-- (id)             initWithAuthor:(NSString *)theAuthor
-                          comment:(NSString *)theComment
-              parentCommitBlobKey:(BlobKey *)theParentCommitBlobKey
-                      treeBlobKey:(BlobKey *)theTreeBlobKey
-                         location:(NSString *)theLocation
-                     creationDate:(NSDate *)theCreationDate
-                commitFailedFiles:(NSArray *)theCommitFailedFiles
-                  hasMissingNodes:(BOOL)theHasMissingNodes
-                       isComplete:(BOOL)theIsComplete
-                    bucketXMLData:(NSData *)theBucketXMLData;
+- (id)initWithAuthor:(NSString *)theAuthor
+             comment:(NSString *)theComment
+ parentCommitBlobKey:(BlobKey *)theParentCommitBlobKey
+         treeBlobKey:(BlobKey *)theTreeBlobKey
+            location:(NSString *)theLocation
+        creationDate:(NSDate *)theCreationDate
+   commitFailedFiles:(NSArray *)theCommitFailedFiles
+     hasMissingNodes:(BOOL)theHasMissingNodes
+          isComplete:(BOOL)theIsComplete
+       bucketXMLData:(NSData *)theBucketXMLData
+          arqVersion:(NSString *)theArqVersion;
 
 - (id)initWithBufferedInputStream:(BufferedInputStream *)is error:(NSError **)error;
 
@@ -79,6 +83,8 @@
 @property(readonly) BOOL hasMissingNodes;
 @property(readonly) BOOL isComplete;
 @property(readonly, retain) NSData *bucketXMLData;
+@property(readonly, retain) NSString *arqVersion;
 
+- (NSString *)displayDescription;
 - (NSData *)toData;
 @end

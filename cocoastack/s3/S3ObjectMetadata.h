@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -32,6 +32,7 @@
 
 
 
+
 @class BufferedInputStream;
 @class BufferedOutputStream;
 
@@ -40,13 +41,16 @@
 	NSDate *lastModified;
 	long size;
     NSString *storageClass;
+    NSString *itemId;
 }
 - (id)initWithS3BucketName:(NSString *)s3BucketName node:(NSXMLNode *)node error:(NSError **)error;
 - (id)initWithPath:(NSString *)thePath lastModified:(NSDate *)theLastModified size:(long)theSize storageClass:(NSString *)theStorageClass;
+- (id)initWithPath:(NSString *)thePath lastModified:(NSDate *)theLastModified size:(long)theSize storageClass:(NSString *)theStorageClass itemId:(NSString  *)theItemId;
 - (id)initFromBufferedInputStream:(BufferedInputStream *)theBIS error:(NSError **)error;
 - (BOOL)writeToBufferedOutputStream:(BufferedOutputStream *)theBOS error:(NSError **)error;
 - (NSString *)path;
 - (NSDate *)lastModified;
 - (long)size;
 - (NSString *)storageClass;
+- (NSString *)itemId;
 @end

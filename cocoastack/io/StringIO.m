@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -29,7 +29,6 @@
  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 
 
 #import "IntegerIO.h"
@@ -79,7 +78,7 @@
             return NO;
         }
         if (len > 2147483648) {
-            SETNSERROR(@"InputStreamErrorDomain", -1, @"absurd string length %llu in [StringIO newString:] from %@", len, is);
+            SETNSERROR(@"InputStreamErrorDomain", ERROR_ABSURD_STRING_LENGTH, @"absurd string length %llu in [StringIO newString:] from %@", len, is);
             return NO;
         }
         unsigned char *buf = (unsigned char *)malloc((size_t)len);

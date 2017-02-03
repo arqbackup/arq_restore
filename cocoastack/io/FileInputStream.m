@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -29,6 +29,9 @@
  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+
+
 
 
 #import "FileInputStream.h"
@@ -68,7 +71,6 @@
             SETNSERROR(@"UnixErrorDomain", errnum, @"failed to open %@: %s", path, strerror(errnum));
             return -1;
         }
-        HSLogTrace(@"opened fd %d (%@)", fd, path);
         if (offset > 0) {
             if (lseek(fd, (off_t)offset, SEEK_SET) == -1) {
                 int errnum = errno;
@@ -102,6 +104,10 @@ read_again:
 - (NSData *)slurp:(NSError **)error {
     return [InputStreams slurp:self error:error];
 }
+- (BOOL)slurpIntoBuffer:(NSMutableData *)theBuffer error:(NSError **)error {
+    return [InputStreams slurp:self intoBuffer:theBuffer error:error];
+}
+
 
 #pragma mark NSObject protocol
 - (NSString *)description {
@@ -113,7 +119,6 @@ read_again:
 - (void)close {
     if (fd != -1) {
         close(fd);
-        HSLogTrace(@"closed fd %d (%@)", fd, path);
         fd = -1;
     }
 }

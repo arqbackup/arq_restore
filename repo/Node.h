@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -29,6 +29,7 @@
  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 
 
 #include <sys/stat.h>
@@ -71,8 +72,6 @@
 }
 - (id)initWithInputStream:(BufferedInputStream *)is treeVersion:(int)theTreeVersion error:(NSError **)error;
 - (void)writeToData:(NSMutableData *)data;
-- (BOOL)dataMatchesStat:(struct stat *)st;
-- (BOOL)ctimeMatchesStat:(struct stat *)st;
 
 @property(readonly) BOOL isTree;
 @property(readonly) BOOL treeContainsMissingItems;

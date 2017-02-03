@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -29,6 +29,9 @@
  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+
+
 
 #import "NSData-GZip.h"
 #include <zlib.h>
@@ -108,8 +111,15 @@
     }
 }
 - (NSData *)gzipDeflate {
+    NSMutableData *ret = [NSMutableData data];
+    [self gzipDeflateIntoBuffer:ret];
+    return ret;
+}
+- (void)gzipDeflateIntoBuffer:(NSMutableData *)theOutBuffer {
+    [theOutBuffer setLength:0];
+    
     if ([self length] == 0) {
-        return self;
+        return;
     }
     
     z_stream strm;
@@ -128,18 +138,17 @@
     //   Z_DEFAULT_COMPRESSION
     
     if (deflateInit2(&strm, Z_DEFAULT_COMPRESSION, Z_DEFLATED, (15+16), 8, Z_DEFAULT_STRATEGY) != Z_OK) {
-        return nil;
+        HSLogError(@"deflateInit2 failed");
+        return;
     }
     
-    NSMutableData *compressed = [NSMutableData dataWithLength:16384];  // 16K chunks for expansion
-    
     do {
-        if (strm.total_out >= [compressed length]) {
-            [compressed increaseLengthBy: 16384];
+        if (strm.total_out >= [theOutBuffer length]) {
+            [theOutBuffer increaseLengthBy: 16384];
 		}
         
-        strm.next_out = [compressed mutableBytes] + strm.total_out;
-        strm.avail_out = (unsigned int)([compressed length] - strm.total_out);
+        strm.next_out = [theOutBuffer mutableBytes] + strm.total_out;
+        strm.avail_out = (unsigned int)([theOutBuffer length] - strm.total_out);
         
         deflate(&strm, Z_FINISH);  
         
@@ -147,8 +156,7 @@
     
     deflateEnd(&strm);
     
-    [compressed setLength: strm.total_out];
-    return compressed;
+    [theOutBuffer setLength:strm.total_out];
 }
 
 @end

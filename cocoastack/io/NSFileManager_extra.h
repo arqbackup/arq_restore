@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -33,11 +33,8 @@
 
 
 
-
-
 @interface NSFileManager (extra)
-- (BOOL)ensureParentPathExistsForPath:(NSString *)path error:(NSError **)error;
-- (BOOL)ensureParentPathExistsForPath:(NSString *)path 
+- (BOOL)ensureParentPathExistsForPath:(NSString *)path
                             targetUID:(uid_t)theTargetUID 
                             targetGID:(gid_t)theTargetGID
                                 error:(NSError **)error;
@@ -47,7 +44,6 @@
                     targetUID:(uid_t)theTargetUID 
                     targetGID:(gid_t)theTargetGID
                         error:(NSError **)error;
-- (BOOL)touchFileAtPath:(NSString *)path error:(NSError **)error;
 - (BOOL)touchFileAtPath:(NSString *)path 
               targetUID:(uid_t)theTargetUID 
               targetGID:(gid_t)theTargetGID

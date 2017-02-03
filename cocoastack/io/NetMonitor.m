@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -101,7 +101,6 @@
                     double inBPS = (double)bytesIn / interval;
                     double ratio = myBPS == 0 ? 0 : (inBPS / myBPS);
                     BOOL overThreshold = myBPS != 0 && ratio > THRESHOLD_RATIO;
-                    HSLogTrace(@"sent: %0.2fBPS bytesIn: %qu (%0.2fBPS) ratio: %0.2f threshold: %0.2f interval: %0.2f %@", myBPS, bytesIn, inBPS, ratio, THRESHOLD_RATIO, interval, (overThreshold ? @": over threshold" : @""));
                     if (overThreshold) {
                         overThresholdTime = [NSDate timeIntervalSinceReferenceDate];
                     }
@@ -114,7 +113,7 @@
                 if (throttle < 0.0001) {
                     throttle = 0.0001;
                 }
-                HSLogTrace(@"secsSinceOverage=%f throttle=%0.2f", secsSinceOverage, throttle);
+//                HSLogDebug(@"secsSinceOverage=%f throttle=%0.2f", secsSinceOverage, throttle);
             }
         }
     }

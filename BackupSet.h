@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -32,10 +32,16 @@
 
 
 
+
 @class UserAndComputer;
 @class AppConfig;
 @class Target;
 @protocol TargetConnectionDelegate;
+
+
+@protocol BackupSetActivityListener <NSObject>
+- (void)backupSetActivity:(NSString *)theActivity;
+@end
 
 
 @interface BackupSet : NSObject {
@@ -43,7 +49,7 @@
     NSString *computerUUID;
     UserAndComputer *uac;
 }
-+ (NSArray *)allBackupSetsForTarget:(Target *)theTarget targetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
++ (NSArray *)allBackupSetsForTarget:(Target *)theTarget targetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate activityListener:(id <BackupSetActivityListener>)theActivityListener error:(NSError **)error;
 
 - (id)initWithTarget:(Target *)theTarget
         computerUUID:(NSString *)theComputerUUID

@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,6 +31,7 @@
  */
 
 
+
 #import "BlobKeyIO.h"
 #import "BooleanIO.h"
 #import "StringIO.h"
@@ -57,7 +58,7 @@
     && [IntegerIO writeUInt64:[theBlobKey archiveSize] to:os error:error]
     && [DateIO write:[theBlobKey archiveUploadedDate] to:os error:error];
 }
-+ (BOOL)read:(BlobKey **)theBlobKey from:(BufferedInputStream *)is treeVersion:(int)theTreeVersion compressed:(BOOL)isCompressed error:(NSError **)error {
++ (BOOL)read:(BlobKey **)theBlobKey from:(BufferedInputStream *)is treeVersion:(int)theTreeVersion compressionType:(BlobKeyCompressionType)theCompressionType error:(NSError **)error {
     NSString *dataSHA1;
     BOOL stretchEncryptionKey = NO;
     StorageType storageType = StorageTypeS3;
@@ -86,7 +87,7 @@
         // If the sha1 is nil, it must have been a nil BlobKey, so we return nil here.
         *theBlobKey = nil;
     } else {
-        *theBlobKey = [[[BlobKey alloc] initWithStorageType:storageType archiveId:archiveId archiveSize:archiveSize archiveUploadedDate:archiveUploadedDate sha1:dataSHA1 stretchEncryptionKey:stretchEncryptionKey compressed:isCompressed error:error] autorelease];
+        *theBlobKey = [[[BlobKey alloc] initWithStorageType:storageType archiveId:archiveId archiveSize:archiveSize archiveUploadedDate:archiveUploadedDate sha1:dataSHA1 stretchEncryptionKey:stretchEncryptionKey compressionType:theCompressionType error:error] autorelease];
         if (*theBlobKey == nil) {
             return NO;
         }

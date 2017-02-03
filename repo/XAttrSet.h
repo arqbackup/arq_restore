@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -32,6 +32,7 @@
 
 
 
+
 #import "BufferedInputStream.h"
 
 @interface XAttrSet : NSObject {
@@ -41,6 +42,7 @@
 - (id)initWithPath:(NSString *)thePath error:(NSError **)error;
 - (id)initWithBufferedInputStream:(BufferedInputStream *)is error:(NSError **)error;
 - (NSData *)toData;
+- (void)toBuffer:(NSMutableData *)theOutBuffer;
 - (NSUInteger)count;
 - (unsigned long long)dataLength;
 - (NSArray *)names;

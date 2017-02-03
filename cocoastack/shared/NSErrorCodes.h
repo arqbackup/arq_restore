@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,6 +31,7 @@
  */
 
 
+
 #define ERROR_NOT_FOUND (-2)
 #define ERROR_INVALID_OBJECT_VERSION (-3)
 #define ERROR_EOF (-4)
@@ -56,4 +57,11 @@
 #define ERROR_MISSING_SECRET (-25)
 #define ERROR_ACCESS_REVOKED (-26)
 #define ERROR_MULTIPLE_ERRORS (-27)
+#define ERROR_ABSURD_STRING_LENGTH (-28)
+#define ERROR_INVALID_PACK_INDEX_ENTRY (-29)
+#define ERROR_WRONG_HOST_FINGERPRINT (-30)
+#define ERROR_CACHE_NOT_LOADED (-31)
+#define ERROR_ITEM_EXISTS (-32)
+#define ERROR_MISSING_PACK_INDEX (-33)
+#define ERROR_FILE_IS_DIRECTORY (-34)
 #define ERROR_USAGE (-1001)

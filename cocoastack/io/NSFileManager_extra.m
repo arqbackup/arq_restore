@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -40,23 +40,14 @@
 #import "Streams.h"
 
 @implementation NSFileManager (extra)
-- (BOOL)ensureParentPathExistsForPath:(NSString *)path error:(NSError **)error {
-    NSString *parentPath = [path stringByDeletingLastPathComponent];
-    BOOL isDirectory = NO;
-    if ([self fileExistsAtPath:parentPath isDirectory:&isDirectory]) {
-        if (!isDirectory) {
-            SETNSERROR(@"FileErrorDomain", -1, @"parent path %@ exists and is not a directory", parentPath);
-            return NO;
-        }
-    } else if (![self createDirectoryAtPath:parentPath withIntermediateDirectories:YES attributes:nil error:error]) {
-        return NO;
-    }
-    return YES;
-}
 - (BOOL)ensureParentPathExistsForPath:(NSString *)path 
                             targetUID:(uid_t)theTargetUID 
                             targetGID:(gid_t)theTargetGID
                                 error:(NSError **)error {
+    if (path == nil) {
+        SETNSERROR(@"NSFileManagerExtraErrorDomain", -1, @"ensureParentPathExistsForPath: path is nil");
+        return NO;
+    }
     NSString *parentPath = [path stringByDeletingLastPathComponent];
     if (![self fileExistsAtPath:parentPath] && ![self createDirectoryAtPath:parentPath 
                                                 withIntermediateDirectories:YES attributes:nil 
@@ -89,14 +80,14 @@
         if (chmod([path fileSystemRepresentation], 0777) == -1) {
             int errnum = errno;
             HSLogError(@"chmod(%@) error %d: %s", path, errnum, strerror(errnum));
-            SETNSERROR(@"UnixErrorDomain", errnum, @"failed to change permissions of %@: %s", path, strerror(errnum));
-            return NO;
+//            SETNSERROR(@"UnixErrorDomain", errnum, @"failed to change permissions of %@: %s", path, strerror(errnum));
+//            return NO;
         }
         if (chown([path fileSystemRepresentation], theTargetUID, theTargetGID) == -1) {
             int errnum = errno;
             HSLogError(@"chown(%@) error %d: %s", path, errnum, strerror(errnum));
-            SETNSERROR(@"UnixErrorDomain", errnum, @"failed to change ownership of %@: %s", path, strerror(errnum));
-            return NO;
+//            SETNSERROR(@"UnixErrorDomain", errnum, @"failed to change ownership of %@: %s", path, strerror(errnum));
+//            return NO;
         }
     }
     return YES;

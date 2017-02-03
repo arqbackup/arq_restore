@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -45,7 +45,6 @@
 + (NSString *)errorDomain;
 - (id)initWithMutableData:(NSMutableData *)theMutableData;
 - (id)initWithFD:(int)theFD;
-- (id)initWithPath:(NSString *)thePath append:(BOOL)isAppend;
 - (id)initWithPath:(NSString *)thePath targetUID:(uid_t)theTargetUID targetGID:(gid_t)theTargetGID append:(BOOL)isAppend;
 - (id)initWithUnderlyingOutputStream:(id <OutputStream>)theOS;
 - (BOOL)setBufferSize:(NSUInteger)size error:(NSError **)error;

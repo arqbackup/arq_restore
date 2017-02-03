@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -33,6 +33,7 @@
 
 
 
+
 #import "OutputStream.h"
 
 @interface FileOutputStream : NSObject <OutputStream> {
@@ -43,7 +44,6 @@
     NSString *path;
     unsigned long long bytesWritten;
 }
-- (id)initWithPath:(NSString *)thePath append:(BOOL)isAppend;
 - (id)initWithPath:(NSString *)thePath targetUID:(uid_t)theTargetUID targetGID:(gid_t)theTargetGID append:(BOOL)isAppend;
 - (NSString *)path;
 - (void)close;

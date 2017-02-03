@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,29 +31,33 @@
  */
 
 
+
 #import "Bucket.h"
 #import "DictNode.h"
 #import "ArrayNode.h"
 #import "StringNode.h"
+#import "BooleanNode.h"
 #import "NSString_slashed.h"
 #import "BucketExcludeSet.h"
 #import "S3AuthorizationProvider.h"
 #import "S3Service.h"
 #import "UserLibrary_Arq.h"
 #import "S3Service.h"
+#import "FSStat.h"
+#import "Volume.h"
 #import "StorageType.h"
 #import "GlacierService.h"
 #import "AWSRegion.h"
 #import "RegexKitLite.h"
 #import "AWSRegion.h"
-#import "CryptoKey.h"
+#import "ObjectEncryptor.h"
 #import "Target.h"
 #import "TargetConnection.h"
 #import "GlacierAuthorizationProvider.h"
 #import "GlacierService.h"
-#import "ArqSalt.h"
 #import "DataIO.h"
 #import "StringIO.h"
+#import "NSString_extra.h"
 
 
 #define BUCKET_PLIST_SALT "BucketPL"
@@ -98,9 +102,28 @@
             encryptionPassword:(NSString *)theEncryptionPassword
       targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD
                          error:(NSError **)error {
-    id <TargetConnection> targetConnection = [theTarget newConnection];
+    return [Bucket bucketsWithTarget:theTarget
+                        computerUUID:theComputerUUID
+                  encryptionPassword:(NSString *)theEncryptionPassword
+            targetConnectionDelegate:theTCD
+                    activityListener:nil
+                               error:error];
+}
++ (NSArray *)bucketsWithTarget:(Target *)theTarget
+                  computerUUID:(NSString *)theComputerUUID
+            encryptionPassword:(NSString *)theEncryptionPassword
+      targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD
+              activityListener:(id <BucketActivityListener>)theActivityListener
+                         error:(NSError **)error {
+    HSLogDebug(@"bucketsWithTarget: theTarget=%@ endpoint=%@ path=%@", theTarget, [theTarget endpoint], [[theTarget endpoint] path]);
+    
+    TargetConnection *targetConnection = [theTarget newConnection:error];
+    if (targetConnection == nil) {
+        return nil;
+    }
     NSMutableArray *ret = [NSMutableArray array];
     do {
+        [theActivityListener bucketActivity:@"Loading folder list..."];
         NSArray *bucketUUIDs = [targetConnection bucketUUIDsForComputerUUID:theComputerUUID deleted:NO delegate:theTCD error:error];
         if (bucketUUIDs == nil) {
             if (error != NULL) {
@@ -109,9 +132,18 @@
             ret = nil;
             break;
         }
-        for (NSString *bucketUUID in bucketUUIDs) {
+        for (NSUInteger i = 0; i < [bucketUUIDs count]; i++) {
+            [theActivityListener bucketActivity:[NSString stringWithFormat:@"Loading folder %ld of %ld", i+1, [bucketUUIDs count]]];
+            
+            NSString *bucketUUID = [bucketUUIDs objectAtIndex:i];
             NSError *myError = nil;
-            Bucket *bucket = [Bucket bucketWithTarget:theTarget targetConnection:targetConnection computerUUID:theComputerUUID bucketUUID:bucketUUID encryptionPassword:theEncryptionPassword error:&myError];
+            Bucket *bucket = [Bucket bucketWithTarget:theTarget
+                                     targetConnection:targetConnection
+                                         computerUUID:theComputerUUID
+                                   encryptionPassword:theEncryptionPassword
+                                           bucketUUID:bucketUUID
+                             targetConnectionDelegate:theTCD
+                                                error:&myError];
             if (bucket == nil) {
                 HSLogError(@"failed to load bucket plist for %@/%@: %@", theComputerUUID, bucketUUID, myError);
                 if ([myError code] != ERROR_INVALID_PLIST_XML) {
@@ -127,60 +159,22 @@
         [ret sortUsingDescriptors:[NSArray arrayWithObject:descriptor]];
     } while(0);
     [targetConnection release];
+    HSLogDebug(@"returning %ld buckets for computer %@", [ret count], theComputerUUID);
     return ret;
 }
 + (NSArray *)bucketUUIDsWithTarget:(Target *)theTarget
                       computerUUID:(NSString *)theComputerUUID
-                encryptionPassword:(NSString *)theEncryptionPassword
           targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD
                              error:(NSError **)error {
-    id <TargetConnection> targetConnection = [[theTarget newConnection] autorelease];
-    return [targetConnection bucketUUIDsForComputerUUID:theComputerUUID deleted:NO delegate:theTCD error:error];
-}
-+ (NSArray *)deletedBucketsWithTarget:(Target *)theTarget
-                         computerUUID:(NSString *)theComputerUUID
-                   encryptionPassword:(NSString *)theEncryptionPassword
-             targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD
-                                error:(NSError **)error {
-    HSLogDebug(@"deletedBucketsWithTarget: theTarget=%@ endpoint=%@ path=%@", theTarget, [theTarget endpoint], [[theTarget endpoint] path]);
-    
-    NSData *salt = [NSData dataWithBytes:BUCKET_PLIST_SALT length:8];
-    CryptoKey *cryptoKey = [[[CryptoKey alloc] initWithPassword:theEncryptionPassword salt:salt error:error] autorelease];
-    if (cryptoKey == nil) {
+    TargetConnection *targetConnection = [theTarget newConnection:error];
+    if (targetConnection == nil) {
         return nil;
     }
-    
-    NSMutableArray *ret = [NSMutableArray array];
-    id <TargetConnection> targetConnection = [[theTarget newConnection] autorelease];
-    NSArray *deletedBucketUUIDs = [targetConnection bucketUUIDsForComputerUUID:theComputerUUID deleted:YES delegate:theTCD error:error];
-    if (deletedBucketUUIDs == nil) {
-        return nil;
-    }
-    for (NSString *bucketUUID in deletedBucketUUIDs) {
-        NSData *data = [targetConnection bucketPlistDataForComputerUUID:theComputerUUID bucketUUID:bucketUUID deleted:YES delegate:theTCD error:error];
-        if (data == nil) {
-            return nil;
-        }
-        if (!strncmp([data bytes], "encrypted", 9)) {
-            NSData *encryptedData = [data subdataWithRange:NSMakeRange(9, [data length] - 9)];
-            data = [cryptoKey decrypt:encryptedData error:error];
-            if (data == nil) {
-                return nil;
-            }
-        }
-        NSError *myError = nil;
-        DictNode *plist = [DictNode dictNodeWithXMLData:data error:&myError];
-        if (plist == nil) {
-            SETNSERROR(@"BucketErrorDomain", -1, @"error parsing bucket plist %@ %@: %@", theComputerUUID, bucketUUID, [myError localizedDescription]);
-            return nil;
-        }
-        Bucket *bucket = [[[Bucket alloc] initWithTarget:theTarget plist:plist] autorelease];
-        [ret addObject:bucket];
-    }
-    NSSortDescriptor *descriptor = [[[NSSortDescriptor alloc] initWithKey:@"bucketName" ascending:YES selector:@selector(caseInsensitiveCompare:)] autorelease];
-    [ret sortUsingDescriptors:[NSArray arrayWithObject:descriptor]];
+    NSArray *ret = [targetConnection bucketUUIDsForComputerUUID:theComputerUUID deleted:NO delegate:theTCD error:error];
+    [targetConnection release];
     return ret;
 }
+
 
 + (NSString *)errorDomain {
     return @"BucketErrorDomain";
@@ -203,7 +197,7 @@
         storageType = theStorageType;
         ignoredRelativePaths = [[NSMutableArray alloc] init];
         excludeSet = [[BucketExcludeSet alloc] init];
-        stringArrayPairs = [[NSMutableArray alloc] init];
+        excludeItemsWithTimeMachineExcludeMetadataFlag = NO; // Default to false because things might get unexpectedly skipped, e.g. VMWare VMs
     }
     return self;
 }
@@ -239,7 +233,6 @@
     [localMountPoint release];
     [ignoredRelativePaths release];
     [excludeSet release];
-    [stringArrayPairs release];
     [vaultName release];
     [vaultCreatedDate release];
     [plistDeletedDate release];
@@ -279,24 +272,34 @@
 - (NSDate *)plistDeletedDate {
     return plistDeletedDate;
 }
+- (BOOL)skipDuringBackup {
+    return skipDuringBackup;
+}
+- (BOOL)excludeItemsWithTimeMachineExcludeMetadataFlag {
+    return excludeItemsWithTimeMachineExcludeMetadataFlag;
+}
 - (BucketPathState)stateForPath:(NSString *)thePath ignoreExcludes:(BOOL)ignoreExcludes {
     if ([ignoredRelativePaths containsObject:@""]) {
         return BucketPathOffState;
     }
     
     NSInteger ret = BucketPathOnState;
-    NSString *relativePath = [thePath substringFromIndex:[localPath length]];
-    for (NSString *ignoredRelativePath in ignoredRelativePaths) {
-        if ([relativePath isEqualToString:ignoredRelativePath]
-            || ([relativePath hasPrefix:ignoredRelativePath] && ([relativePath length] > [ignoredRelativePath length]) && ([relativePath characterAtIndex:[ignoredRelativePath length]] == '/'))
-            ) {
-            ret = BucketPathOffState;
-            break;
-        } else if (([ignoredRelativePath hasPrefix:relativePath] || [relativePath length] == 0)
-                   && ([ignoredRelativePath length] > [relativePath length])
-                   && ([relativePath isEqualToString:@""] || [relativePath isEqualToString:@"/"] || [ignoredRelativePath characterAtIndex:[relativePath length]] == '/')) {
-            ret = BucketPathMixedState;
-            break;
+    if ([thePath length] <= [localPath length]) {
+        HSLogDebug(@"path %@ isn't longer than localPath %@", thePath, localPath);
+    } else {
+        NSString *relativePath = [thePath substringFromIndex:[localPath length]];
+        for (NSString *ignoredRelativePath in ignoredRelativePaths) {
+            if ([relativePath isEqualToString:ignoredRelativePath]
+                || ([relativePath hasPrefix:ignoredRelativePath] && ([relativePath length] > [ignoredRelativePath length]) && ([relativePath characterAtIndex:[ignoredRelativePath length]] == '/'))
+                ) {
+                ret = BucketPathOffState;
+                break;
+            } else if (([ignoredRelativePath hasPrefix:relativePath] || [relativePath length] == 0)
+                       && ([ignoredRelativePath length] > [relativePath length])
+                       && ([relativePath isEqualToString:@""] || [relativePath isEqualToString:@"/"] || [ignoredRelativePath characterAtIndex:[relativePath length]] == '/')) {
+                ret = BucketPathMixedState;
+                break;
+            }
         }
     }
     if (!ignoreExcludes && [excludeSet matchesFullPath:thePath filename:[thePath lastPathComponent]]) {
@@ -304,38 +307,11 @@
     }
     return ret;
 }
-- (void)setIgnoredRelativePaths:(NSSet *)theSet {
-    [ignoredRelativePaths setArray:[theSet allObjects]];
-}
 - (NSSet *)ignoredRelativePaths {
     return [NSSet setWithArray:ignoredRelativePaths];
 }
-- (void)enteredPath:(NSString *)thePath {
-    NSMutableArray *relativePathsToSkip = [NSMutableArray array];
-    if (![thePath isEqualToString:localPath]) {
-        NSString *relativePath = [thePath substringFromIndex:[localPath length]];
-        for (NSString *ignored in ignoredRelativePaths) {
-            BOOL applicable = NO;
-            if ([ignored hasPrefix:relativePath]) {
-                if ([ignored isEqualToString:relativePath] || ([ignored characterAtIndex:[relativePath length]] == '/')) {
-                    applicable = YES;
-                }
-            }
-            if (!applicable) {
-                [relativePathsToSkip addObject:ignored];
-            }
-        }
-    }
-    StringArrayPair *sap = [[StringArrayPair alloc] initWithLeft:thePath right:relativePathsToSkip];
-    [stringArrayPairs addObject:sap];
-    [sap release];
-    [ignoredRelativePaths removeObjectsInArray:relativePathsToSkip];
-}
-- (void)leftPath:(NSString *)thePath {
-    StringArrayPair *sap = [stringArrayPairs lastObject];
-    NSAssert([[sap left] isEqualToString:thePath], @"must leave last path on the stack!");
-    [ignoredRelativePaths addObjectsFromArray:[sap right]];
-    [stringArrayPairs removeLastObject];
+- (BOOL)skipIfNotMounted {
+    return skipIfNotMounted;
 }
 - (NSData *)toXMLData {
     DictNode *plist = [[[DictNode alloc] init] autorelease];
@@ -346,13 +322,17 @@
     [plist putString:localPath forKey:@"LocalPath"];
     [plist putString:localMountPoint forKey:@"LocalMountPoint"];
     [plist putInt:storageType forKey:@"StorageType"];
-    [plist putString:vaultName forKey:@"VaultName"];
+    if (vaultName != nil) {
+        [plist putString:vaultName forKey:@"VaultName"];
+    }
     if (vaultCreatedDate != nil) {
         [plist putDouble:[vaultCreatedDate timeIntervalSinceReferenceDate] forKey:@"VaultCreatedTime"];
     }
     if (plistDeletedDate != nil) {
         [plist putDouble:[plistDeletedDate timeIntervalSinceReferenceDate] forKey:@"PlistDeletedTime"];
     }
+    [plist putBoolean:skipDuringBackup forKey:@"SkipDuringBackup"];
+    [plist putBoolean:excludeItemsWithTimeMachineExcludeMetadataFlag forKey:@"ExcludeItemsWithTimeMachineExcludeMetadataFlag"];
     ArrayNode *ignoredRelativePathsNode = [[[ArrayNode alloc] init] autorelease];
     [plist put:ignoredRelativePathsNode forKey:@"IgnoredRelativePaths"];
     NSArray *sortedRelativePaths = [ignoredRelativePaths sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)];
@@ -360,14 +340,21 @@
         [ignoredRelativePathsNode add:[[[StringNode alloc] initWithString:ignoredRelativePath] autorelease]];
     }
     [plist put:[excludeSet toPlist] forKey:@"Excludes"];
+    [plist putBoolean:skipIfNotMounted forKey:@"SkipIfNotMounted"];
     return [plist XMLData];
 }
-
+- (BOOL)writeTo:(BufferedOutputStream *)theBOS error:(NSError **)error {
+    NSData *data = [self toXMLData];
+    return [target writeTo:theBOS error:error] && [DataIO write:data to:theBOS error:error];
+}
+- (void)writeTo:(NSMutableData *)data {
+    [target writeTo:data];
+    [DataIO write:[self toXMLData] to:data];
+}
 
 #pragma mark NSCopying
 - (id)copyWithZone:(NSZone *)zone {
     BucketExcludeSet *excludeSetCopy = [excludeSet copyWithZone:zone];
-    NSMutableArray *stringArrayPairsCopy = [stringArrayPairs copyWithZone:zone];
     NSMutableArray *ignoredRelativePathsCopy = [[NSMutableArray alloc] initWithArray:ignoredRelativePaths copyItems:YES];
     Bucket *ret = [[Bucket alloc] initWithTarget:target
                                       bucketUUID:bucketUUID
@@ -378,37 +365,44 @@
                                      storageType:storageType
                             ignoredRelativePaths:ignoredRelativePathsCopy
                                       excludeSet:excludeSetCopy
-                                stringArrayPairs:stringArrayPairsCopy
                                        vaultName:vaultName
                                 vaultCreatedDate:vaultCreatedDate
-                                plistDeletedDate:plistDeletedDate];
+                                plistDeletedDate:plistDeletedDate
+                                skipDuringBackup:skipDuringBackup
+  excludeItemsWithTimeMachineExcludeMetadataFlag:excludeItemsWithTimeMachineExcludeMetadataFlag
+                                skipIfNotMounted:skipIfNotMounted];
     [excludeSetCopy release];
-    [stringArrayPairsCopy release];
     [ignoredRelativePathsCopy release];
     return ret;
 }
 
 #pragma mark NSObject
 - (NSString *)description {
-    return [NSString stringWithFormat:@"<Bucket %@: %@ (%lu ignored paths)>", bucketUUID, localPath, (unsigned long)[ignoredRelativePaths count]];
+    NSUInteger ignoredCount = [ignoredRelativePaths count];
+    return [NSString stringWithFormat:@"<Bucket %@: %@ (%lu ignored path%@)>", bucketUUID, localPath, (unsigned long)ignoredCount, (ignoredCount == 1 ? @"" : @"s")];
 }
 
 
 #pragma mark internal
 + (Bucket *)bucketWithTarget:(Target *)theTarget
-            targetConnection:(id <TargetConnection>)theTargetConnection
+            targetConnection:(TargetConnection *)theTargetConnection
                 computerUUID:(NSString *)theComputerUUID
-                  bucketUUID:(NSString *)theBucketUUID
           encryptionPassword:(NSString *)theEncryptionPassword
+                  bucketUUID:(NSString *)theBucketUUID
+    targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD
                        error:(NSError **)error {
-    NSData *salt = [NSData dataWithBytes:BUCKET_PLIST_SALT length:8];
-    CryptoKey *cryptoKey = [[[CryptoKey alloc] initWithPassword:theEncryptionPassword salt:salt error:error] autorelease];
-    if (cryptoKey == nil) {
+    ObjectEncryptor *encryptor = [[[ObjectEncryptor alloc] initWithTarget:theTarget
+                                                             computerUUID:theComputerUUID
+                                                       encryptionPassword:theEncryptionPassword
+                                                             customV1Salt:[NSData dataWithBytes:BUCKET_PLIST_SALT length:strlen(BUCKET_PLIST_SALT)]
+                                                 targetConnectionDelegate:nil
+                                                                    error:error] autorelease];
+    if (encryptor == nil) {
         return nil;
     }
-    
+
     BOOL encrypted = NO;
-    NSData *data = [theTargetConnection bucketPlistDataForComputerUUID:theComputerUUID bucketUUID:theBucketUUID deleted:NO delegate:nil error:error];
+    NSData *data = [theTargetConnection bucketPlistDataForComputerUUID:theComputerUUID bucketUUID:theBucketUUID deleted:NO delegate:theTCD error:error];
     if (data == nil) {
         return nil;
     }
@@ -419,7 +413,7 @@
     if (length >= 9 && !strncmp([data bytes], "encrypted", length)) {
         encrypted = YES;
         NSData *encryptedData = [data subdataWithRange:NSMakeRange(9, [data length] - 9)];
-        data = [cryptoKey decrypt:encryptedData error:error];
+        data = [encryptor decryptedDataForObject:encryptedData error:error];
         if (data == nil) {
             return nil;
         }
@@ -456,6 +450,12 @@
         if ([thePlist containsKey:@"PlistDeletedTime"]) {
             plistDeletedDate = [[NSDate alloc] initWithTimeIntervalSinceReferenceDate:[[thePlist realNodeForKey:@"PlistDeletedTime"] doubleValue]];
         }
+        if ([thePlist containsKey:@"SkipDuringBackup"]){
+            skipDuringBackup = [[thePlist booleanNodeForKey:@"SkipDuringBackup"] booleanValue];
+        }
+        if ([thePlist containsKey:@"ExcludeItemsWithTimeMachineExcludeMetadataFlag"]) {
+            excludeItemsWithTimeMachineExcludeMetadataFlag = [[thePlist booleanNodeForKey:@"ExcludeItemsWithTimeMachineExcludeMetadataFlag"] booleanValue];
+        }
         ignoredRelativePaths = [[NSMutableArray alloc] init];
         ArrayNode *ignoredPathsNode = [thePlist arrayNodeForKey:@"IgnoredRelativePaths"];
         for (NSUInteger index = 0; index < [ignoredPathsNode size]; index++) {
@@ -464,7 +464,10 @@
         [self sortIgnoredRelativePaths];
         excludeSet = [[BucketExcludeSet alloc] init];
         [excludeSet loadFromPlist:[thePlist dictNodeForKey:@"Excludes"] localPath:localPath];
-        stringArrayPairs = [[NSMutableArray alloc] init];
+        
+        if ([thePlist containsKey:@"SkipIfNotMounted"]) {
+            skipIfNotMounted = [[thePlist booleanNodeForKey:@"SkipIfNotMounted"] booleanValue];
+        }
     }
     return self;
 }
@@ -475,6 +478,9 @@
     [ignoredRelativePaths setArray:[set allObjects]];
     [ignoredRelativePaths sortUsingSelector:@selector(compareByLength:)];
 }
+
+
+
 - (id)initWithTarget:(Target *)theTarget
           bucketUUID:(NSString *)theBucketUUID
           bucketName:(NSString *)theBucketName
@@ -484,10 +490,12 @@
          storageType:(int)theStorageType
 ignoredRelativePaths:(NSMutableArray *)theIgnoredRelativePaths
           excludeSet:(BucketExcludeSet *)theExcludeSet
-    stringArrayPairs:(NSMutableArray *)theStringArrayPairs
            vaultName:(NSString *)theVaultName
     vaultCreatedDate:(NSDate *)theVaultCreatedDate
-    plistDeletedDate:(NSDate *)thePlistDeletedDate {
+    plistDeletedDate:(NSDate *)thePlistDeletedDate
+    skipDuringBackup:(BOOL)theSkipDuringBackup
+excludeItemsWithTimeMachineExcludeMetadataFlag:(BOOL)theExcludeItemsWithTimeMachineExcludeMetadataFlag
+    skipIfNotMounted:(BOOL)theSkipIfNotMounted {
     if (self = [super init]) {
         target = [theTarget retain];
         bucketUUID = [theBucketUUID retain];
@@ -498,10 +506,12 @@ ignoredRelativePaths:(NSMutableArray *)theIgnoredRelativePaths
         storageType = theStorageType;
         ignoredRelativePaths = [theIgnoredRelativePaths retain];
         excludeSet = [theExcludeSet retain];
-        stringArrayPairs = [theStringArrayPairs retain];
         vaultName = [theVaultName retain];
         vaultCreatedDate = [theVaultCreatedDate retain];
         plistDeletedDate = [thePlistDeletedDate retain];
+        skipDuringBackup = theSkipDuringBackup;
+        excludeItemsWithTimeMachineExcludeMetadataFlag = theExcludeItemsWithTimeMachineExcludeMetadataFlag;
+        skipIfNotMounted = theSkipIfNotMounted;
     }
     return self;
 }

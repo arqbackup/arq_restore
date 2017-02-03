@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,13 +31,31 @@
  */
 
 
+
+@class Target;
+#import "RemoteFS.h"
+@class Item;
 @protocol DataTransferDelegate;
+@protocol DeleteDelegate;
+
 
 @protocol TargetConnectionDelegate <NSObject>
 - (BOOL)targetConnectionShouldRetryOnTransientError:(NSError **)error;
 @end
 
-@protocol TargetConnection <NSObject>
+
+@interface TargetConnection : NSObject {
+    Target *target;
+    NSString *pathPrefix;
+    NSMutableDictionary *remoteFSByThreadId;
+    NSLock *lock;
+}
+- (id)initWithTarget:(Target *)theTarget;
+
+- (BOOL)updateFingerprintWithTargetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
+
+- (Item *)itemAtPath:(NSString *)thePath targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
+- (NSDictionary *)itemsByNameAtPath:(NSString *)thePath targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
 
 - (NSArray *)computerUUIDsWithDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
 - (NSArray *)bucketUUIDsForComputerUUID:(NSString *)theComputerUUID deleted:(BOOL)deleted delegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
@@ -49,20 +67,34 @@
 - (NSData *)computerInfoForComputerUUID:(NSString *)theComputerUUID delegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
 - (BOOL)saveComputerInfo:(NSData *)theData forComputerUUID:(NSString *)theComputerUUID delegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
 
-- (NSDictionary *)objectsBySHA1ForTargetEndpoint:(NSURL *)theEndpoint isGlacier:(BOOL)theIsGlacier computerUUID:(NSString *)theComputerUUID delegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
-- (NSArray *)pathsWithPrefix:(NSString *)thePrefix delegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
 - (BOOL)deleteObjectsForComputerUUID:(NSString *)theComputerUUID delegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
-- (BOOL)deletePaths:(NSArray *)thePaths delegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
 
 - (NSNumber *)fileExistsAtPath:(NSString *)thePath dataSize:(unsigned long long *)theDataSize delegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
 - (NSData *)contentsOfFileAtPath:(NSString *)thePath delegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
+- (NSData *)contentsOfRange:(NSRange)theRange ofFileAtPath:(NSString *)thePath delegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
 - (BOOL)writeData:(NSData *)theData toFileAtPath:(NSString *)thePath dataTransferDelegate:(id <DataTransferDelegate>)theDelegate targetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
 - (BOOL)removeItemAtPath:(NSString *)thePath delegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
-- (NSNumber *)sizeOfItemAtPath:(NSString *)thePath delegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
+
+- (NSString *)checksumOfFileAtPath:(NSString *)thePath delegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
+
+- (NSNumber *)aggregateSizeOfDirectoryAtPath:(NSString *)thePath delegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
 - (NSNumber *)isObjectRestoredAtPath:(NSString *)thePath delegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
-- (BOOL)restoreObjectAtPath:(NSString *)thePath forDays:(NSUInteger)theDays alreadyRestoredOrRestoring:(BOOL *)alreadyRestoredOrRestoring delegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
+- (BOOL)restoreObjectAtPath:(NSString *)thePath forDays:(NSUInteger)theDays tier:(int)theGlacierRetrievalTier alreadyRestoredOrRestoring:(BOOL *)alreadyRestoredOrRestoring delegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
 
 - (NSData *)saltDataForComputerUUID:(NSString *)theComputerUUID delegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
 - (BOOL)setSaltData:(NSData *)theData forComputerUUID:(NSString *)theComputerUUID delegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
+- (BOOL)deleteSaltDataForComputerUUID:(NSString *)theComputerUUID delegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
 
+- (NSData *)encryptionDataForComputerUUID:(NSString *)theComputerUUID encryptionVersion:(int)theEncryptionVersion delegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
+- (BOOL)setEncryptionData:(NSData *)theData forComputerUUID:(NSString *)theComputerUUID encryptionVersion:(int)theEncryptionVersion delegate:(id<TargetConnectionDelegate>)theDelegate error:(NSError **)error;
+
+- (NSDictionary *)pathsBySHA1WithIsGlacier:(BOOL)theIsGlacier computerUUID:(NSString *)theComputerUUID delegate:(id<TargetConnectionDelegate>)theDelegate error:(NSError **)error;
+
+- (NSNumber *)freeBytesAtPath:(NSString *)thePath targetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
+
+- (BOOL)clearCachedItemsForDirectory:(NSString *)theDirectory error:(NSError **)error;
+- (BOOL)clearAllCachedData:(NSError **)error;
+
+- (NSNumber *)chunkerVersionForComputerUUID:(NSString *)theComputerUUID delegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
+- (BOOL)setChunkerVersion:(NSInteger)theChunkerVersion forComputerUUID:(NSString *)theComputerUUID delegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
 @end

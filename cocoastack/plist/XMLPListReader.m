@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -29,6 +29,8 @@
  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+
 
 #import "ArrayNode.h"
 #import "BooleanNode.h"
@@ -101,6 +103,8 @@
 	for (NSXMLNode *childNode in children) {
 		if ([childNode kind] == NSXMLTextKind) {
 			// Skip.
+        } else if ([childNode kind] == NSXMLCommentKind) {
+            // SKip.
 		} else {
             id <PListNode> node = [self makeNode:childNode error:error];
             if (!node) {
@@ -125,7 +129,9 @@
 			NSString *childNodeName = [childNode name];
 			if ([childNodeName isEqualToString:@"key"]) {
 				key = [childNode stringValue];
-			} else {
+			} else if ([childNode kind] == NSXMLCommentKind) {
+                // Ignore comments.
+            } else {
                 id <PListNode> node = [self makeNode:childNode error:error];
                 if (!node) {
                     return NO;

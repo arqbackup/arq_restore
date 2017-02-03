@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -33,24 +33,29 @@
 
 
 #import "S3Receiver.h"
-@class RFC2616DateFormatter;
-@class S3AuthorizationProvider;
+@protocol S3AuthorizationProvider;
 @protocol TargetConnectionDelegate;
 
 
 @interface S3Lister : NSObject {
-    RFC2616DateFormatter *dateFormatter;
-    S3AuthorizationProvider *sap;
+    id <S3AuthorizationProvider>sap;
     NSURL *endpoint;
-	int received;
-	BOOL isTruncated;
-	NSString *prefix;
+	NSString *path;
     NSString *delimiter;
-	id receiver;
+    id <TargetConnectionDelegate> targetConnectionDelegate;
+
+    NSNumberFormatter *numberFormatter;
+    NSString *s3BucketName;
+    NSString *s3Path;
+    NSString *escapedS3ObjectPathPrefix;
+	BOOL isTruncated;
 	NSString *marker;
-    NSMutableArray *foundPrefixes;
 }
-- (id)initWithS3AuthorizationProvider:(S3AuthorizationProvider *)theSAP endpoint:(NSURL *)theEndpoint prefix:(NSString *)thePrefix delimiter:(NSString *)theDelimiter receiver:(id)theReceiver;
-- (BOOL)listObjectsWithTargetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
-- (NSArray *)foundPrefixes;
+- (id)initWithS3AuthorizationProvider:(id <S3AuthorizationProvider>)theSAP
+                             endpoint:(NSURL *)theEndpoint
+                                 path:(NSString *)thePath
+                            delimiter:(NSString *)theDelimiter
+             targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD;
+
+- (NSDictionary *)itemsByName:(NSError **)error;
 @end

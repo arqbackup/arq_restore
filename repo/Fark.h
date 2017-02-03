@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,40 +31,76 @@
  */
 
 
+
+
+#import "TargetConnection.h"
 #import "StorageType.h"
+@class Target;
 @class BlobKey;
 @class PackId;
 @class PackIndexEntry;
 @protocol DataTransferDelegate;
+@class ReflogEntry;
+#import "DeleteDelegate.h"
 
-@protocol Fark <NSObject>
+
+@interface Fark : NSObject {
+    Target *target;
+    TargetConnection *targetConnection;
+    NSString *computerUUID;
+    id <TargetConnectionDelegate> targetConnectionDelegate;
+    
+    NSMutableSet *packIdsAlreadyPostedForRestore;
+    NSMutableSet *downloadablePackIds;
+}
+- (id)initWithTarget:(Target *)theTarget
+        computerUUID:(NSString *)theComputerUUID
+targetConnectionDelegate:(id <TargetConnectionDelegate>)theTargetConnectionDelegate
+               error:(NSError **)error;
 
 - (NSString *)errorDomain;
+
+- (NSString *)targetUUID;
+- (NSString *)computerUUID;
 
 - (BlobKey *)headBlobKeyForBucketUUID:(NSString *)theBucketUUID error:(NSError **)error;
 - (BOOL)setHeadBlobKey:(BlobKey *)theHeadBlobKey forBucketUUID:(NSString *)theBucketUUID error:(NSError **)error;
 - (BOOL)deleteHeadBlobKeyForBucketUUID:(NSString *)theBucketUUID error:(NSError **)error;
 
-- (NSNumber *)containsObjectForSHA1:(NSString *)theSHA1 storageType:(StorageType)theStorageType dataSize:(unsigned long long *)dataSize forceTargetCheck:(BOOL)forceTargetCheck error:(NSError **)error;
+- (NSArray *)reflogEntryIdsForBucketUUID:(NSString *)theBucketUUID error:(NSError **)error;
+- (ReflogEntry *)reflogEntryWithId:(NSString *)theReflogEntryId bucketUUID:(NSString *)theBucketUUID error:(NSError **)error;
+
+- (BOOL)clearBucketDataItemsDBCacheForBucketUUID:(NSString *)theBucketUUID error:(NSError **)error;
+- (BOOL)clearItemsDBCache:(NSError **)error;
+
+- (NSNumber *)containsObjectInCacheForSHA1:(NSString *)theSHA1 storageType:(StorageType)theStorageType error:(NSError **)error;
+- (NSNumber *)sizeOfObjectInCacheForSHA1:(NSString *)theSHA1 storageType:(StorageType)theStorageType error:(NSError **)error;
 
 - (NSNumber *)isObjectDownloadableForSHA1:(NSString *)theSHA1 storageType:(StorageType)theStorageType error:(NSError **)error;
-- (BOOL)restoreObjectForSHA1:(NSString *)theSHA1 forDays:(NSUInteger)theDays storageType:(StorageType)theStorageType alreadyRestoredOrRestoring:(BOOL *)alreadyRestoredOrRestoring error:(NSError **)error;
+- (BOOL)restoreObjectForSHA1:(NSString *)theSHA1 forDays:(NSUInteger)theDays tier:(int)theGlacierRetrievalTier storageType:(StorageType)theStorageType alreadyRestoredOrRestoring:(BOOL *)alreadyRestoredOrRestoring error:(NSError **)error;
 - (NSData *)dataForSHA1:(NSString *)theSHA1 storageType:(StorageType)theStorageType error:(NSError **)error;
+- (NSData *)dataForSHA1:(NSString *)theSHA1 storageType:(StorageType)theStorageType refreshCache:(BOOL)refreshCache error:(NSError **)error;
+- (NSData *)dataWithRange:(NSRange)theRange forSHA1:(NSString *)theSHA1 storageType:(StorageType)theStorageType error:(NSError **)error;
+
+- (NSString *)checksumOfObjectWithSHA1:(NSString *)theSHA1 storageType:(StorageType)theStorageType error:(NSError **)error;
 
 - (BOOL)putData:(NSData *)theData forSHA1:(NSString *)theSHA1 storageType:(StorageType)theStorageType error:(NSError **)error;
 - (BOOL)putData:(NSData *)theData forSHA1:(NSString *)theSHA1 storageType:(StorageType)theStorageType dataTransferDelegate:(id <DataTransferDelegate>)theDelegate error:(NSError **)error;
 
 - (NSSet *)packIdsForPackSet:(NSString *)packSetName storageType:(StorageType)theStorageType error:(NSError **)error;
+- (BOOL)clearCachedPackIdsForPackSet:(NSString *)thePackSetName storageType:(StorageType)theStorageType error:(NSError **)error;
 
 // Indexes are always in S3; no StorageType needed.
-- (NSData *)indexDataForPackId:(PackId *)packId error:(NSError **)error;
+- (NSData *)indexDataForPackId:(PackId *)thePackId error:(NSError **)error;
+//- (BOOL)isIndexCachedForPackId:(PackId *)thePackId;
+//- (BOOL)cacheIndexDataForPackId:(PackId *)thePackId error:(NSError **)error;
 - (BOOL)putIndexData:(NSData *)theData forPackId:(PackId *)thePackId error:(NSError **)error;
 - (BOOL)deleteIndex:(PackId *)thePackId error:(NSError **)error;
 
+//- (void)cacheIndexesForPackIds:(NSSet *)thePackIds;
 
-- (NSNumber *)sizeOfPackWithId:(PackId *)packId storageType:(StorageType)theStorageType error:(NSError **)error;
 - (NSNumber *)isPackDownloadableWithId:(PackId *)packId storageType:(StorageType)theStorageType error:(NSError **)error;
-- (BOOL)restorePackWithId:(PackId *)packId forDays:(NSUInteger)theDays storageType:(StorageType)theStorageType alreadyRestoredOrRestoring:(BOOL *)alreadyRestoredOrRestoring error:(NSError **)error;
+- (BOOL)restorePackWithId:(PackId *)packId forDays:(NSUInteger)theDays tier:(int)theGlacierRetrievalTier storageType:(StorageType)theStorageType alreadyRestoredOrRestoring:(BOOL *)alreadyRestoredOrRestoring error:(NSError **)error;
 
 - (NSData *)packDataForPackId:(PackId *)packId storageType:(StorageType)theStorageType error:(NSError **)error;
 - (NSData *)dataForPackIndexEntry:(PackIndexEntry *)thePIE storageType:(StorageType)theStorageType error:(NSError **)error;
@@ -74,5 +110,7 @@
 - (BOOL)deletePack:(PackId *)thePackId storageType:(StorageType)theStorageType error:(NSError **)error;
 
 - (BOOL)putReflogItem:(NSData *)itemData forBucketUUID:(NSString *)theBucketUUID error:(NSError **)error;
+
+- (BOOL)deleteObjectForSHA1:(NSString *)theSHA1 storageType:(StorageType)theStorageType error:(NSError **)error;
 
 @end

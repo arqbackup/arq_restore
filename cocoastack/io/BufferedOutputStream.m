@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,6 +31,7 @@
  */
 
 
+
 #import "BufferedOutputStream.h"
 
 
@@ -54,12 +55,6 @@
     FDOutputStream *fdos = [[FDOutputStream alloc] initWithFD:theFD];
     id ret = [self initWithUnderlyingOutputStream:fdos];
     [fdos release];
-    return ret;
-}
-- (id)initWithPath:(NSString *)thePath append:(BOOL)isAppend {
-    FileOutputStream *fos = [[FileOutputStream alloc] initWithPath:thePath append:isAppend];
-    id ret = [self initWithUnderlyingOutputStream:fos];
-    [fos release];
     return ret;
 }
 - (id)initWithPath:(NSString *)thePath targetUID:(uid_t)theTargetUID targetGID:(gid_t)theTargetGID append:(BOOL)isAppend {

@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -30,6 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+
+
 #import "GlacierService.h"
 #import "AWSRegion.h"
 #import "GlacierRequest.h"
@@ -42,6 +44,8 @@
 #import "NSString_extra.h"
 #import "SHA256TreeHash.h"
 #import "GlacierJobLister.h"
+#import "S3Service.h"
+
 
 #define MAX_JOB_DOWNLOAD_RETRIES (10)
 
@@ -162,12 +166,25 @@
     }
     return YES;
 }
-- (NSString *)initiateRetrievalJobForVaultName:(NSString *)theVaultName archiveId:(NSString *)theArchiveId snsTopicArn:(NSString *)theSNSTopicArn error:(NSError **)error {
+- (NSString *)initiateRetrievalJobForVaultName:(NSString *)theVaultName archiveId:(NSString *)theArchiveId tier:(int)theGlacierRetrievalTier snsTopicArn:(NSString *)theSNSTopicArn error:(NSError **)error {
+    NSString *glacierRetrievalTierText = @"Standard";
+    switch (theGlacierRetrievalTier) {
+        case GLACIER_RETRIEVAL_TIER_BULK:
+            glacierRetrievalTierText = @"Bulk";
+        case GLACIER_RETRIEVAL_TIER_STANDARD:
+            glacierRetrievalTierText = @"Standard";
+            break;
+        case GLACIER_RETRIEVAL_TIER_EXPEDITED:
+            glacierRetrievalTierText = @"Expedited";
+            break;
+    }
+
     NSMutableDictionary *args = [NSMutableDictionary dictionary];
     [args setObject:@"archive-retrieval" forKey:@"Type"];
     [args setObject:theArchiveId forKey:@"ArchiveId"];
     [args setObject:[NSString stringWithFormat:@"Retrieve archive %@", theArchiveId] forKey:@"Description"];
     [args setObject:theSNSTopicArn forKey:@"SNSTopic"];
+    [args setObject:glacierRetrievalTierText forKey:@"Tier"];
     
     NSData *requestData = [[args JSONRepresentation:error] dataUsingEncoding:NSUTF8StringEncoding];
     if (requestData == nil) {

@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -29,6 +29,7 @@
  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 
 
 #import "SNS.h"
@@ -64,9 +65,7 @@
 }
 
 - (NSString *)createTopic:(NSString *)theName error:(NSError **)error {
-    NSDateFormatter *formatter = [[[NSDateFormatter alloc] init] autorelease];
-    [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss'Z'"];
-    [formatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
+    NSDateFormatter *formatter = [self dateFormatter];
     
     NSMutableString *str = [NSMutableString stringWithFormat:@"%@/?", [awsRegion snsEndpointWithSSL:NO]];
     [str appendFormat:@"AWSAccessKeyId=%@", [accessKey stringByEscapingURLCharacters]];
@@ -95,9 +94,7 @@
     return ret;
 }
 - (NSString *)subscribeQueueArn:(NSString *)theQueueArn toTopicArn:(NSString *)theTopicArn error:(NSError **)error {
-    NSDateFormatter *formatter = [[[NSDateFormatter alloc] init] autorelease];
-    [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss'Z'"];
-    [formatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
+    NSDateFormatter *formatter = [self dateFormatter];
     
     NSMutableString *str = [NSMutableString stringWithFormat:@"%@/?", [awsRegion snsEndpointWithSSL:NO]];
     [str appendFormat:@"AWSAccessKeyId=%@", [accessKey stringByEscapingURLCharacters]];
@@ -128,9 +125,7 @@
     return subscriptionArn;
 }
 - (NSArray *)topicArns:(NSError **)error {
-    NSDateFormatter *formatter = [[[NSDateFormatter alloc] init] autorelease];
-    [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss'Z'"];
-    [formatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
+    NSDateFormatter *formatter = [self dateFormatter];
     
     NSMutableString *str = [NSMutableString stringWithFormat:@"%@/?", [awsRegion snsEndpointWithSSL:NO]];
     [str appendFormat:@"AWSAccessKeyId=%@", [accessKey stringByEscapingURLCharacters]];
@@ -153,9 +148,7 @@
     return [ltr topicArns];
 }
 - (BOOL)deleteTopicWithArn:(NSString *)theTopicArn error:(NSError **)error {
-    NSDateFormatter *formatter = [[[NSDateFormatter alloc] init] autorelease];
-    [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss'Z'"];
-    [formatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
+    NSDateFormatter *formatter = [self dateFormatter];
     
     NSMutableString *str = [NSMutableString stringWithFormat:@"%@/?", [awsRegion snsEndpointWithSSL:NO]];
     [str appendFormat:@"AWSAccessKeyId=%@", [accessKey stringByEscapingURLCharacters]];
@@ -177,5 +170,19 @@
         return NO;
     }
     return YES;
+}
+
+
+- (NSDateFormatter*)dateFormatter {
+    NSDateFormatter *formatter = [[[NSDateFormatter alloc] init] autorelease];
+    [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss'Z'"];
+    [formatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
+    NSLocale *usLocale = [[[NSLocale alloc] initWithLocaleIdentifier:@"en_US"] autorelease];
+    if (usLocale != nil) {
+        [formatter setLocale:usLocale];
+    } else {
+        HSLogWarn(@"no en_US locale installed");
+    }
+    return formatter;
 }
 @end

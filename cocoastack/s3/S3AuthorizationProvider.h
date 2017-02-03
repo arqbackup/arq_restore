@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -32,16 +32,12 @@
 
 
 
-@protocol S3Signer;
-@protocol HTTPConnection;
 
-@interface S3AuthorizationProvider : NSObject <NSCopying> {
-	NSString *accessKey;
-    id <S3Signer> signer;
-}
-- (id)initWithAccessKey:(NSString *)access secretKey:(NSString *)secret;
-- (id)initWithAccessKey:(NSString *)access url:(NSURL *)theURL account:(NSString *)theAccount password:(NSString *)thePassword;
-- (id)initWithAccessKey:(NSString *)access signer:(id <S3Signer>)theSigner;
-- (NSString *)accessKey;
-- (BOOL)setAuthorizationRequestHeaderOnHTTPConnection:(id <HTTPConnection>)conn error:(NSError **)error;
+@protocol HTTPConnection;
+@protocol S3Signer;
+
+
+@protocol S3AuthorizationProvider <NSObject>
+- (int)signatureVersion;
+- (BOOL)setAuthorizationOnHTTPConnection:(id <HTTPConnection>)conn contentSHA256:(NSString *)theContentSHA256 now:(NSDate *)now stringToSign:(NSString **)outStringToSign canonicalRequest:(NSString **)outCanonicalRequest error:(NSError **)error;
 @end

@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,6 +31,7 @@
  */
 
 
+
 #import <Cocoa/Cocoa.h>
 
 
@@ -38,5 +39,6 @@
 
 - (NSData *)gzipInflate:(NSError **)error;
 - (NSData *)gzipDeflate;
+- (void)gzipDeflateIntoBuffer:(NSMutableData *)theOutBuffer;
 
 @end

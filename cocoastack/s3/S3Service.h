@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -32,12 +32,15 @@
 
 
 
+#import "ItemFS.h"
 #import "S3Receiver.h"
 #import "InputStream.h"
-@class S3AuthorizationProvider;
+@protocol S3AuthorizationProvider;
 @class S3Owner;
 @protocol DataTransferDelegate;
 @protocol TargetConnectionDelegate;
+@class Item;
+@class LifecycleConfiguration;
 
 
 #define S3_INITIAL_RETRY_SLEEP (0.5)
@@ -54,44 +57,22 @@ enum {
     S3SERVICE_INVALID_PARAMETERS = -51003
 };
 
-@interface S3Service : NSObject <NSCopying> {
-	S3AuthorizationProvider *sap;
+enum {
+    GLACIER_RETRIEVAL_TIER_BULK = 0,
+    GLACIER_RETRIEVAL_TIER_STANDARD = 1,
+    GLACIER_RETRIEVAL_TIER_EXPEDITED = 2
+};
+
+@interface S3Service : NSObject <ItemFS, NSCopying> {
+    id <S3AuthorizationProvider> sap;
     NSURL *endpoint;
-    BOOL useAmazonRRS;
 }
 + (NSString *)errorDomain;
 
-- (id)initWithS3AuthorizationProvider:(S3AuthorizationProvider *)theSAP endpoint:(NSURL *)theEndpoint useAmazonRRS:(BOOL)isUseAmazonRRS;
+- (id)initWithS3AuthorizationProvider:(id <S3AuthorizationProvider>)theSAP endpoint:(NSURL *)theEndpoint;
 
 - (S3Owner *)s3OwnerWithTargetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
 - (NSArray *)s3BucketNamesWithTargetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
 - (NSNumber *)s3BucketExists:(NSString *)s3BucketName targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
 - (NSString *)locationOfS3Bucket:(NSString *)theS3BucketName targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
-
-- (NSArray *)pathsWithPrefix:(NSString *)prefix targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
-- (NSArray *)pathsWithPrefix:(NSString *)prefix delimiter:(NSString *)delimiter targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
-- (NSArray *)commonPrefixesForPathPrefix:(NSString *)prefix delimiter:(NSString *)delimiter targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
-- (NSArray *)objectsWithPrefix:(NSString *)prefix targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
-- (BOOL)listObjectsWithPrefix:(NSString *)prefix receiver:(id <S3Receiver>)receiver targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
-- (NSNumber *)containsObjectAtPath:(NSString *)path dataSize:(unsigned long long *)dataSize targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
-- (NSNumber *)isObjectRestoredAtPath:(NSString *)thePath targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
-- (BOOL)restoreObjectAtPath:(NSString *)thePath forDays:(NSUInteger)theDays alreadyRestoredOrRestoring:(BOOL *)alreadyRestoredOrRestoring targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
-
-- (NSData *)dataAtPath:(NSString *)path targetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
-- (NSData *)dataAtPath:(NSString *)path dataTransferDelegate:(id <DataTransferDelegate>)theDelegate targetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
-
-- (S3AuthorizationProvider *)s3AuthorizationProvider;
-
-- (BOOL)createS3Bucket:(NSString *)s3BucketName withLocationConstraint:(NSString *)theLocationConstraint targetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
-- (BOOL)deleteS3Bucket:(NSString *)s3BucketName targetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
-- (BOOL)putData:(NSData *)theData atPath:(NSString *)path targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
-- (BOOL)putData:(NSData *)theData atPath:(NSString *)path dataTransferDelegate:(id <DataTransferDelegate>)theDTD targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
-- (BOOL)deletePaths:(NSArray *)thePaths targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
-- (BOOL)deletePath:(NSString *)path targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
-- (BOOL)setStorageClass:(NSString *)storageClass forPath:(NSString *)path targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
-- (NSString *)storageClass;
-- (BOOL)copy:(NSString *)sourcePath to:(NSString *)destPath targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
-
-- (NSNumber *)containsLifecyclePolicyWithId:(NSString *)theId forS3BucketName:(NSString *)theS3BucketName targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
-- (BOOL)putGlacierLifecyclePolicyWithId:(NSString *)theId forPrefixes:(NSArray *)thePrefixes s3BucketName:(NSString *)theS3BucketName transitionDays:(NSUInteger)theTransitionDays targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
 @end

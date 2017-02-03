@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,51 +31,63 @@
  */
 
 
+
 #import "BackupSet.h"
 #import "S3AuthorizationProvider.h"
 #import "S3Service.h"
 #import "GlacierAuthorizationProvider.h"
 #import "GlacierService.h"
 #import "UserAndComputer.h"
-#import "S3DeleteReceiver.h"
 #import "CryptoKey.h"
 #import "RegexKitLite.h"
 #import "BlobKey.h"
 #import "Commit.h"
 #import "S3ObjectMetadata.h"
-#import "ArqSalt.h"
 #import "AWSRegion.h"
 #import "Bucket.h"
 #import "Target.h"
 #import "TargetConnection.h"
 #import "Repo.h"
+#import "UserLibrary_Arq.h"
+#import "NSString+SBJSON.h"
 
 
 @implementation BackupSet
-+ (NSArray *)allBackupSetsForTarget:(Target *)theTarget targetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error {
-    id <TargetConnection> targetConnection = [[theTarget newConnection] autorelease];
++ (NSArray *)allBackupSetsForTarget:(Target *)theTarget targetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate activityListener:(id<BackupSetActivityListener>)theActivityListener error:(NSError **)error {
+    TargetConnection *targetConnection = [theTarget newConnection:error];
+    if (targetConnection == nil) {
+        return nil;
+    }
+    NSArray *ret = [BackupSet allBackupSetsForTarget:theTarget targetConnection:targetConnection targetConnectionDelegate:theDelegate activityListener:theActivityListener error:error];
+    [targetConnection release];
+    return ret;
+}
++ (NSArray *)allBackupSetsForTarget:(Target *)theTarget targetConnection:(TargetConnection *)targetConnection targetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate activityListener:(id<BackupSetActivityListener>)theActivityListener error:(NSError **)error {
     NSArray *theComputerUUIDs = [targetConnection computerUUIDsWithDelegate:theDelegate error:error];
     if (theComputerUUIDs == nil) {
         return nil;
     }
-    
+
     NSMutableArray *ret = [NSMutableArray array];
-    for (NSString *theComputerUUID in theComputerUUIDs) {
+    for (NSUInteger i = 0; i < [theComputerUUIDs count]; i++) {
+        [theActivityListener backupSetActivity:[NSString stringWithFormat:@"Loading backup set %ld of %ld at %@", i+1, [theComputerUUIDs count], [theTarget description]]];
+
+        NSString *theComputerUUID = [theComputerUUIDs objectAtIndex:i];
         NSError *uacError = nil;
+        UserAndComputer *uac = nil;
         NSData *uacData = [targetConnection computerInfoForComputerUUID:theComputerUUID delegate:theDelegate error:&uacError];
         if (uacData == nil) {
             HSLogWarn(@"unable to read %@ (skipping): %@", theComputerUUID, [uacError localizedDescription]);
         } else {
-            UserAndComputer *uac = [[[UserAndComputer alloc] initWithXMLData:uacData error:&uacError] autorelease];
+            uac = [[[UserAndComputer alloc] initWithXMLData:uacData error:&uacError] autorelease];
             if (uac == nil) {
                 HSLogError(@"error parsing UserAndComputer data %@: %@", theComputerUUID, uacError);
-            } else {
-                BackupSet *backupSet = [[[BackupSet alloc] initWithTarget:theTarget
-                                                             computerUUID:theComputerUUID
-                                                          userAndComputer:uac] autorelease];
-                [ret addObject:backupSet];
             }
         }
+        BackupSet *backupSet = [[[BackupSet alloc] initWithTarget:theTarget
+                                                     computerUUID:theComputerUUID
+                                                  userAndComputer:uac] autorelease];
+        [ret addObject:backupSet];
     }
     NSSortDescriptor *descriptor = [[[NSSortDescriptor alloc] initWithKey:@"description" ascending:YES] autorelease];
     [ret sortUsingDescriptors:[NSArray arrayWithObject:descriptor]];

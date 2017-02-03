@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -30,6 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+
+
 #ifdef USE_OPENSSL
 #import "OpenSSLCryptoKey.h"
 #else
@@ -49,5 +51,7 @@
 - (id)initLegacyWithPassword:(NSString *)thePassword error:(NSError **)error;
 
 - (NSData *)encrypt:(NSData *)plainData error:(NSError **)error;
+- (BOOL)encrypt:(NSData *)plainData intoBuffer:(NSMutableData *)theOutBuffer error:(NSError **)error;
 - (NSData *)decrypt:(NSData *)encrypted error:(NSError **)error;
+- (BOOL)decrypt:(NSData *)encrypted intoBuffer:(NSMutableData *)theOutBuffer error:(NSError **)error;
 @end

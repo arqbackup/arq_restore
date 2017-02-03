@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -29,6 +29,8 @@
  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+
 
 @class Vault;
 @class GlacierAuthorizationProvider;
@@ -60,7 +62,7 @@ enum {
 - (NSString *)uploadArchive:(NSData *)data toVaultName:(NSString *)theVaultName error:(NSError **)error;
 - (NSString *)uploadArchive:(NSData *)data toVaultName:(NSString *)theVaultName dataTransferDelegate:(id <DataTransferDelegate>)theDelegate error:(NSError **)error;
 - (BOOL)deleteArchive:(NSString *)theArchiveId inVault:(NSString *)theVaultName error:(NSError **)error;
-- (NSString *)initiateRetrievalJobForVaultName:(NSString *)theVaultName archiveId:(NSString *)theArchiveId snsTopicArn:(NSString *)theSNSTopicArn error:(NSError **)error;
+- (NSString *)initiateRetrievalJobForVaultName:(NSString *)theVaultName archiveId:(NSString *)theArchiveId tier:(int)theGlacierRetrievalTier snsTopicArn:(NSString *)theSNSTopicArn error:(NSError **)error;
 - (NSString *)initiateInventoryJobForVaultName:(NSString *)theVaultName snsTopicArn:(NSString *)theSNSTopicArn error:(NSError **)error;
 - (NSArray *)jobsForVaultName:(NSString *)theVaultName error:(NSError **)error;
 - (NSData *)dataForVaultName:(NSString *)theVaultName jobId:(NSString *)theJobId retries:(NSUInteger)theRetries error:(NSError **)error;

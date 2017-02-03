@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,6 +31,7 @@
  */
 
 
+
 #include <sys/stat.h>
 #include <sys/xattr.h>
 #import "XAttrSet.h"
@@ -38,12 +39,10 @@
 #import "DataIO.h"
 #import "IntegerIO.h"
 #import "DataInputStream.h"
-
-
 #import "Streams.h"
 #import "NSError_extra.h"
 #import "BufferedInputStream.h"
-#import "NSData-Gzip.h"
+
 
 #define HEADER_LENGTH (12)
 
@@ -87,16 +86,25 @@
     [path release];
     [super dealloc];
 }
+
+- (NSString *)errorDomain {
+    return @"XAttrSetErrorDomain";
+}
 - (NSData *)toData {
     NSMutableData *mutableData = [[[NSMutableData alloc] init] autorelease];
-    [mutableData appendBytes:"XAttrSetV002" length:HEADER_LENGTH];
-    uint64_t count = (uint64_t)[xattrs count];
-    [IntegerIO writeUInt64:count to:mutableData];
-    for (NSString *name in [xattrs allKeys]) {
-        [StringIO write:name to:mutableData];
-        [DataIO write:[xattrs objectForKey:name] to:mutableData];
-    }
+    [self toBuffer:mutableData];
     return mutableData;
+}
+- (void)toBuffer:(NSMutableData *)theOutBuffer {
+    [theOutBuffer setLength:0];
+    
+    [theOutBuffer appendBytes:"XAttrSetV002" length:HEADER_LENGTH];
+    uint64_t count = (uint64_t)[xattrs count];
+    [IntegerIO writeUInt64:count to:theOutBuffer];
+    for (NSString *name in [xattrs allKeys]) {
+        [StringIO write:name to:theOutBuffer];
+        [DataIO write:[xattrs objectForKey:name] to:theOutBuffer];
+    }
 }
 - (NSUInteger)count {
     return [xattrs count];
@@ -151,6 +159,9 @@
         int errnum = errno;
         HSLogError(@"lstat(%@) error %d: %s", thePath, errnum, strerror(errnum));
         SETNSERROR(@"UnixErrorDomain", errnum, @"xattr lstat(%@): %s", thePath, strerror(errnum));
+        if (errnum == ENOENT) {
+            SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"%@ not found", thePath);
+        }
         return NO;
     }
     if (S_ISREG(st.st_mode) || S_ISDIR(st.st_mode) || S_ISLNK(st.st_mode)) {
@@ -160,6 +171,12 @@
             int errnum = errno;
             HSLogError(@"listxattr(%@) error %d: %s", thePath, errnum, strerror(errnum));
             SETNSERROR(@"UnixErrorDomain", errnum, @"failed to list extended attributes of %@: %s", thePath, strerror(errnum));
+            
+            // One customer with an encfs volume gets not-found errors on symlinks on that volume, even though the lstat above succeeds!? So this could happen:
+            if (errnum == ENOENT) {
+                SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"%@ not found", thePath);
+            }
+            
             return NO;
         } 
         if (xattrsize > 0) {

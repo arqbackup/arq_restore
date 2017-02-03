@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,8 +31,10 @@
  */
 
 
+
+#import <CommonCrypto/CommonDigest.h>
 #import "Repo.h"
-#import "FarkImpl.h"
+#import "Fark.h"
 #import "CryptoKey.h"
 #import "Bucket.h"
 #import "BlobKey.h"
@@ -42,59 +44,65 @@
 #import "Commit.h"
 #import "Tree.h"
 #import "PackSet.h"
-#import "NSData-GZip.h"
+#import "NSData-Compress.h"
 #import "DictNode.h"
 #import "SHA1Hash.h"
 #import "Node.h"
-#import "ArqSalt.h"
+#import "CommitList.h"
+#import "ObjectEncryptor.h"
+#import "SynchronousPackSet.h"
+#import "MD5Hash.h"
+#import "PackIndexEntry.h"
+#import "PackId.h"
+#import "StorageType.h"
 
 
 #define MAX_CONSISTENCY_TRIES (20)
+#define ENCRYPTED_OBJECT_HEADER_LEN (116)
+#define REVALIDATE_INTERVAL_DAYS (180)
 
 
 @implementation Repo
++ (BlobKeyCompressionType)defaultBlobKeyCompressionType {
+    return BlobKeyCompressionLZ4;
+}
+
+
 - (id)initWithBucket:(Bucket *)theBucket
   encryptionPassword:(NSString *)theEncryptionPassword
-           targetUID:(uid_t)theTargetUID
-           targetGID:(gid_t)theTargetGID
-loadExistingMutablePackFiles:(BOOL)theLoadExistingMutablePackFiles
 targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD
         repoDelegate:(id<RepoDelegate>)theRepoDelegate
+    activityListener:(id <RepoActivityListener>)theActivityListener
                error:(NSError **)error {
     if (self = [super init]) {
         bucket = [theBucket retain];
-        targetUID = theTargetUID;
-        targetGID = theTargetGID;
         targetConnectionDelegate = theTCD;
         repoDelegate = theRepoDelegate;
-        cryptoKey = [[CryptoKey alloc] initLegacyWithPassword:theEncryptionPassword error:error];
-        if (cryptoKey == nil) {
+        repoActivityListener = theActivityListener;
+        encryptor = [[ObjectEncryptor alloc] initWithTarget:[theBucket target]
+                                               computerUUID:[theBucket computerUUID]
+                                         encryptionPassword:theEncryptionPassword
+                                   targetConnectionDelegate:targetConnectionDelegate
+                                                      error:error];
+        if (encryptor == nil) {
             [self release];
             return nil;
         }
-        ArqSalt *arqSalt = [[[ArqSalt alloc] initWithTarget:[theBucket target] targetUID:theTargetUID targetGID:theTargetGID computerUUID:[theBucket computerUUID]] autorelease];
-        NSData *theEncryptionSalt = [arqSalt saltWithTargetConnectionDelegate:theTCD error:error];
-        if (theEncryptionSalt == nil) {
+        
+        fark = [[Fark alloc] initWithTarget:[theBucket target]
+                               computerUUID:[theBucket computerUUID]
+                   targetConnectionDelegate:theTCD
+                                      error:error];
+        if (fark == nil) {
             [self release];
             return nil;
         }
-        stretchedCryptoKey = [[CryptoKey alloc] initWithPassword:theEncryptionPassword salt:theEncryptionSalt error:error];
-        if (stretchedCryptoKey == nil) {
-            [self release];
-            return nil;
-        }
-        fark = [[FarkImpl alloc] initWithTarget:[theBucket target]
-                                   computerUUID:[theBucket computerUUID]
-                       targetConnectionDelegate:theTCD
-                                      targetUID:theTargetUID
-                                      targetGID:theTargetGID];
-        treesPackSet = [[PackSet alloc] initWithFark:fark
-                                         storageType:StorageTypeS3
-                                         packSetName:[[bucket bucketUUID] stringByAppendingString:@"-trees"]
-                                    savePacksToCache:YES
-                                           targetUID:theTargetUID
-                                           targetGID:theTargetGID
-                        loadExistingMutablePackFiles:theLoadExistingMutablePackFiles];
+        treesPackSet = [[SynchronousPackSet alloc] initWithFark:fark
+                                                    storageType:StorageTypeS3
+                                                    packSetName:[[bucket bucketUUID] stringByAppendingString:@"-trees"]
+                                               cachePackFilesToDisk:YES
+                                               activityListener:self
+                                                          error:error];
         if (treesPackSet == nil) {
             [self release];
             return nil;
@@ -102,32 +110,39 @@ targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD
         
         // For StorageTypeGlacier Buckets, use StorageTypeS3Glacier going forward.
         StorageType convertedStorageType = ([bucket storageType] == StorageTypeGlacier) ? StorageTypeS3Glacier : [bucket storageType];
-        blobsPackSet = [[PackSet alloc] initWithFark:fark
-                                         storageType:convertedStorageType
-                                         packSetName:[[bucket bucketUUID] stringByAppendingString:@"-blobs"]
-                                    savePacksToCache:NO
-                                           targetUID:theTargetUID
-                                           targetGID:theTargetGID
-                        loadExistingMutablePackFiles:theLoadExistingMutablePackFiles];
+        blobsPackSet = [[SynchronousPackSet alloc] initWithFark:fark
+                                                    storageType:convertedStorageType
+                                                    packSetName:[[bucket bucketUUID] stringByAppendingString:@"-blobs"]
+                                               cachePackFilesToDisk:NO
+                                               activityListener:self
+                                                          error:error];
         if (blobsPackSet == nil) {
             [self release];
             return nil;
         }
+        
+        compressEncryptLock = [[NSLock alloc] init];
+        [compressEncryptLock setName:@"Repo Compress Encrypt lock"];
     }
     return self;
 }
 - (void)dealloc {
     [bucket release];
-    [cryptoKey release];
-    [stretchedCryptoKey release];
     [fark release];
     [treesPackSet release];
     [blobsPackSet release];
+    [compressEncryptLock release];
     [super dealloc];
 }
 
 - (NSString *)errorDomain {
     return @"RepoErrorDomain";
+}
+- (int)objectEncryptorVersion {
+    return [encryptor encryptionVersion];
+}
+- (id <TargetConnectionDelegate>)targetConnectionDelegate {
+    return targetConnectionDelegate;
 }
 - (Bucket *)bucket {
     return bucket;
@@ -203,79 +218,115 @@ targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD
     }
     return ret;
 }
-- (NSNumber *)containsBlobForBlobKey:(BlobKey *)theBlobKey error:(NSError **)error {
-    return [self containsBlobForBlobKey:theBlobKey dataSize:NULL error:error];
+- (NSNumber *)containsBlobsInCacheForBlobKeys:(NSArray *)theBlobKeys error:(NSError **)error {
+    for (BlobKey *blobKey in theBlobKeys) {
+        NSNumber *contains = [self containsBlobInCacheForBlobKey:blobKey error:error];
+        if (contains == nil) {
+            return nil;
+        }
+        if (![contains boolValue]) {
+            return contains;
+        }
+    }
+    return [NSNumber numberWithBool:YES];
 }
-- (NSNumber *)containsBlobForBlobKey:(BlobKey *)theBlobKey dataSize:(unsigned long long *)dataSize error:(NSError **)error {
-    return [self containsBlobForBlobKey:theBlobKey dataSize:dataSize forceTargetCheck:NO error:error];
+- (NSNumber *)containsBlobInCacheForBlobKey:(BlobKey *)theBlobKey error:(NSError **)error {
+    BOOL isPacked = NO;
+    return [self containsBlobInCacheForBlobKey:theBlobKey isPacked:&isPacked error:error];
 }
-- (NSNumber *)containsBlobForBlobKey:(BlobKey *)theBlobKey dataSize:(unsigned long long *)dataSize forceTargetCheck:(BOOL)forceTargetCheck error:(NSError **)error {
+- (NSNumber *)containsBlobInCacheForBlobKey:(BlobKey *)theBlobKey isPacked:(BOOL *)outIsPacked error:(NSError **)error {
     if (theBlobKey == nil) {
         SETNSERROR([self errorDomain], -1, @"containsBlobForBlobKey: theBlobKey is nil!");
         return nil;
-    }
-    
-    NSError *myError = nil;
-    NSNumber *ret = [blobsPackSet containsBlobForSHA1:[theBlobKey sha1] dataSize:dataSize error:&myError];
-    if (ret == nil) {
-        HSLogError(@"error checking if pack set contains blob: %@", myError);
-    } else {
-        if ([ret boolValue]) {
-            return ret;
-        }
     }
     
     if ([theBlobKey storageType] == StorageTypeGlacier) {
         // (Legacy) Glacier archives are never deleted, so we return YES:
         return [NSNumber numberWithBool:YES];
     }
+    NSError *myError = nil;
+    NSNumber *ret = [blobsPackSet containsBlobInCacheForSHA1:[theBlobKey sha1] error:&myError];
+    if (ret == nil) {
+        HSLogError(@"error checking if pack set contains blob: %@", myError);
+        SETERRORFROMMYERROR;
+        return nil;
+    }
+    if ([ret boolValue] && outIsPacked != NULL) {
+        *outIsPacked = YES;
+    }
+    if (![ret boolValue]) {
+        ret = [fark containsObjectInCacheForSHA1:[theBlobKey sha1] storageType:[theBlobKey storageType] error:error];
+    }
+    return ret;
+}
+- (NSNumber *)sizeOfBlobInCacheForBlobKey:(BlobKey *)theBlobKey error:(NSError **)error {
+    if (theBlobKey == nil) {
+        SETNSERROR([self errorDomain], -1, @"sizeOfBlobInCacheForBlobKey: theBlobKey is nil!");
+        return nil;
+    }
     
-    return [fark containsObjectForSHA1:[theBlobKey sha1] storageType:[theBlobKey storageType] dataSize:dataSize forceTargetCheck:forceTargetCheck error:error];
+    if ([theBlobKey storageType] == StorageTypeGlacier) {
+        // We have no idea.
+        return [NSNumber numberWithUnsignedLongLong:0];
+    }
+    
+    NSError *myError = nil;
+    NSNumber *ret = [blobsPackSet sizeOfBlobInCacheForSHA1:[theBlobKey sha1] error:&myError];
+    if (ret == nil) {
+        if ([myError code] != ERROR_NOT_FOUND) {
+            SETERRORFROMMYERROR;
+            return nil;
+        }
+        ret = [fark sizeOfObjectInCacheForSHA1:[theBlobKey sha1] storageType:[theBlobKey storageType] error:error];
+    }
+    return ret;
 }
 - (NSNumber *)isObjectDownloadableForBlobKey:(BlobKey *)theBlobKey error:(NSError **)error {
-    NSNumber *contains = [treesPackSet containsBlobForSHA1:[theBlobKey sha1] dataSize:NULL error:error];
-    if (contains == nil) {
-        return nil;
-    }
-    if ([contains boolValue]) {
-        return [treesPackSet isObjectDownloadableForSHA1:[theBlobKey sha1] error:error];
-    }
-    
-    contains = [blobsPackSet containsBlobForSHA1:[theBlobKey sha1] dataSize:NULL error:error];
-    if (contains == nil) {
-        return nil;
-    }
-    if ([contains boolValue]) {
-        return [blobsPackSet isObjectDownloadableForSHA1:[theBlobKey sha1] error:error];
-    }
-    
-    return [fark isObjectDownloadableForSHA1:[theBlobKey sha1] storageType:[theBlobKey storageType] error:error];
-}
-- (BOOL)restoreObjectForBlobKey:(BlobKey *)theBlobKey forDays:(NSUInteger)theDays alreadyRestoredOrRestoring:(BOOL *)alreadyRestoredOrRestoring error:(NSError **)error {
-    // If it's in a Pack, don't try to restore it because we
-    NSNumber *contains = [treesPackSet containsBlobForSHA1:[theBlobKey sha1] dataSize:NULL error:error];
-    if (contains == nil) {
-        return NO;
-    }
-    if ([contains boolValue]) {
-        return [treesPackSet restorePackForBlobWithSHA1:[theBlobKey sha1] forDays:theDays alreadyRestoredOrRestoring:alreadyRestoredOrRestoring error:error];
-    }
-
-    contains = [blobsPackSet containsBlobForSHA1:[theBlobKey sha1] dataSize:NULL error:error];
-    if (contains == nil) {
-        return NO;
-    }
-    if ([contains boolValue]) {
-        return [blobsPackSet restorePackForBlobWithSHA1:[theBlobKey sha1] forDays:theDays alreadyRestoredOrRestoring:alreadyRestoredOrRestoring error:error];
-    }
-
     NSError *myError = nil;
-    if (![fark restoreObjectForSHA1:[theBlobKey sha1] forDays:theDays storageType:[theBlobKey storageType] alreadyRestoredOrRestoring:alreadyRestoredOrRestoring error:&myError]) {
-        SETERRORFROMMYERROR;
-        if ([myError isErrorWithDomain:[fark errorDomain] code:ERROR_NOT_FOUND]) {
-            SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"object %@ can't be restored because it's not found", theBlobKey);
+    NSNumber *ret = [blobsPackSet isObjectDownloadableForSHA1:[theBlobKey sha1] error:&myError];
+    if (ret == nil) {
+        if ([myError code] != ERROR_NOT_FOUND) {
+            SETERRORFROMMYERROR;
+            return nil;
         }
-        return NO;
+    } else {
+        // Object was found in pack set.
+        return ret;
+    }
+    
+    
+    // Object was not found in pack set.
+    
+    ret = [treesPackSet isObjectDownloadableForSHA1:[theBlobKey sha1] error:&myError];
+    if (ret == nil) {
+        if ([myError code] != ERROR_NOT_FOUND) {
+            SETERRORFROMMYERROR;
+            return nil;
+        }
+    } else if ([ret boolValue]) {
+        return ret;
+    }
+    
+    ret = [fark isObjectDownloadableForSHA1:[theBlobKey sha1] storageType:[theBlobKey storageType] error:error];
+    return ret;
+}
+- (BOOL)restoreObjectForBlobKey:(BlobKey *)theBlobKey forDays:(NSUInteger)theDays tier:(int)theGlacierRetrievalTier alreadyRestoredOrRestoring:(BOOL *)alreadyRestoredOrRestoring error:(NSError **)error {
+    NSError *myError = nil;
+    if (![blobsPackSet restorePackForBlobWithSHA1:[theBlobKey sha1] forDays:theDays tier:theGlacierRetrievalTier alreadyRestoredOrRestoring:alreadyRestoredOrRestoring error:&myError]) {
+        if ([myError code] != ERROR_NOT_FOUND) {
+            SETERRORFROMMYERROR;
+            return NO;
+        }
+        if (![treesPackSet restorePackForBlobWithSHA1:[theBlobKey sha1] forDays:theDays tier:theGlacierRetrievalTier alreadyRestoredOrRestoring:alreadyRestoredOrRestoring error:&myError]) {
+            if ([myError code] != ERROR_NOT_FOUND) {
+                SETERRORFROMMYERROR;
+                return NO;
+            }
+            if (![fark restoreObjectForSHA1:[theBlobKey sha1] forDays:theDays tier:theGlacierRetrievalTier storageType:[theBlobKey storageType] alreadyRestoredOrRestoring:alreadyRestoredOrRestoring error:&myError]) {
+                SETERRORFROMMYERROR;
+                return NO;
+            }
+        }
     }
     return YES;
 }
@@ -297,26 +348,178 @@ targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD
     return ret;
 }
 
-- (NSData *)decryptData:(NSData *)theData error:(NSError **)error {
-    return [stretchedCryptoKey decrypt:theData error:error];
+- (BOOL)setHeadBlobKey:(BlobKey *)theHeadBlobKey rewrite:(BOOL)rewrite error:(NSError **)error {
+    HSLogDebug(@"entered setHeadBlobKey:%@ rewrite:%@", theHeadBlobKey, (rewrite ? @"YES" : @"NO"));
+    
+    NSAssert(theHeadBlobKey != nil, @"theHeadBlobKey must not be nil");
+    NSAssert([theHeadBlobKey stretchEncryptionKey], @"head SHA1 must use stretched key");
+    NSError *myError = nil;
+    BlobKey *currentHeadBlobKey = [self headBlobKey:&myError];
+    if (currentHeadBlobKey == nil && ![myError isErrorWithDomain:[self errorDomain] code:ERROR_NOT_FOUND]) {
+        HSLogError(@"error reading current headBlobKey: %@", myError);
+        SETERRORFROMMYERROR;
+        return NO;
+    }
+    
+    BOOL ret = YES;
+    if (currentHeadBlobKey == nil || ![currentHeadBlobKey isEqual:theHeadBlobKey]) {
+        NSError *myError = nil;
+        if (![blobsPackSet commit:&myError]) {
+            HSLogError(@"error committing blobs packset: %@", myError);
+            SETERRORFROMMYERROR;
+            return NO;
+        }
+        
+        if (![treesPackSet commit:&myError]) {
+            HSLogError(@"error committing trees packset: %@", myError);
+            SETERRORFROMMYERROR;
+            return NO;
+        }
+        
+        PackIndexEntry *pie = [treesPackSet packIndexEntryForSHA1:[theHeadBlobKey sha1] error:&myError];
+        if (pie == nil) {
+            HSLogError(@"failed to get pack index entry for our head blob key!: %@", myError);
+            SETERRORFROMMYERROR;
+            return NO;
+        }
+        
+        HSLogDebug(@"%@ putting head BlobKey %@ in repo", self, theHeadBlobKey);
+        if (![fark setHeadBlobKey:theHeadBlobKey forBucketUUID:[bucket bucketUUID] error:error]) {
+            return NO;
+        }
+        
+        if (![self writeReflogForOldHeadBlobKey:currentHeadBlobKey newHeadBlobKey:theHeadBlobKey isRewrite:rewrite packIndexEntry:pie error:&myError]) {
+            HSLogError(@"error writing to reflog: %@", myError);
+        }
+        
+        NSUInteger tries = 0;
+        NSTimeInterval sleepInterval = 2.0;
+        for (;;) {
+            [NSThread sleepForTimeInterval:sleepInterval];
+            sleepInterval *= 2.0;
+            if (sleepInterval > 30.0) {
+                sleepInterval = 30.0;
+            }
+            NSError *myError = nil;
+            BlobKey *receivedHeadBlobKey = [self headBlobKey:&myError];
+            if (receivedHeadBlobKey == nil) {
+                if (currentHeadBlobKey == nil) {
+                    if ([myError code] != ERROR_NOT_FOUND) {
+                        if (error != NULL) {
+                            *error = myError;
+                        }
+                        HSLogError(@"error re-reading headBlobKey");
+                        ret = NO;
+                        break;
+                    }
+                }
+            } else {
+                if ([receivedHeadBlobKey isEqualToBlobKey:theHeadBlobKey]) {
+                    HSLogDebug(@"received head BlobKey %@ matches expected %@", [receivedHeadBlobKey description], [theHeadBlobKey description]);
+                    break;
+                }
+            }
+            if (++tries > MAX_CONSISTENCY_TRIES) {
+                HSLogError(@"received head BlobKey %@ still doesn't match expected %@; giving up", [receivedHeadBlobKey description], [theHeadBlobKey description]);
+                SETNSERROR([self errorDomain], ERROR_DELAYS_IN_S3_EVENTUAL_CONSISTENCY, @"%@ seems to be experiencing long eventual-consistency delays", [[bucket target] endpointDisplayName]);
+                ret = NO;
+                break;
+            }
+            if (![targetConnectionDelegate targetConnectionShouldRetryOnTransientError:error]) {
+                ret = NO;
+                break;
+            }
+            HSLogDetail(@"received head BlobKey %@ doesn't match expected %@; retrying", [receivedHeadBlobKey description], [theHeadBlobKey description]);
+        }
+        if (!ret) {
+            return NO;
+        }
+        
+        [repoDelegate headBlobKeyDidChangeForTargetUUID:[[bucket target] targetUUID] computerUUID:[bucket computerUUID] bucketUUID:[bucket bucketUUID] from:currentHeadBlobKey to:theHeadBlobKey rewrite:rewrite];
+    } else {
+        HSLogDebug(@"current head blob key %@ already matches %@", currentHeadBlobKey, theHeadBlobKey);
+    }
+    
+    return YES;
 }
-- (NSData *)encryptData:(NSData *)theData error:(NSError **)error {
-    return [stretchedCryptoKey encrypt:theData error:error];
+- (BOOL)deleteHeadBlobKey:(NSError **)error {
+    if (![fark deleteHeadBlobKeyForBucketUUID:[bucket bucketUUID] error:error]) {
+        return NO;
+    }
+    [repoDelegate headBlobKeyWasDeletedForTargetUUID:[[bucket target] targetUUID] computerUUID:[bucket computerUUID] bucketUUID:[bucket bucketUUID]];
+    return YES;
+}
+- (NSData *)encryptV1Data:(NSData *)theData error:(NSError **)error {
+    return [encryptor encryptV1Data:theData error:error];
+}
+- (BlobKey *)blobKeyForV1Data:(NSData *)theData compressionType:(BlobKeyCompressionType)theCompressionType error:(NSError **)error {
+    StorageType convertedStorageType = ([bucket storageType] == StorageTypeGlacier) ? StorageTypeS3Glacier : [bucket storageType];
+    return [self blobKeyForV1Data:theData compressionType:theCompressionType storageType:convertedStorageType error:error];
+}
+- (BlobKey *)blobKeyForV1Data:(NSData *)theData compressionType:(BlobKeyCompressionType)theCompressionType storageType:(StorageType)theStorageType error:(NSError **)error {
+    NSString *theSHA1 = [SHA1Hash hashData:theData];
+    return [[[BlobKey alloc] initWithSHA1:theSHA1 storageType:theStorageType stretchEncryptionKey:YES compressionType:theCompressionType error:error] autorelease];
+}
+- (BlobKey *)blobKeyForV2Data:(NSData *)theFileData compressionType:(BlobKeyCompressionType)theCompressionType error:(NSError **)error {
+    StorageType convertedStorageType = ([bucket storageType] == StorageTypeGlacier) ? StorageTypeS3Glacier : [bucket storageType];
+    return [self blobKeyForV2Data:theFileData compressionType:theCompressionType storageType:convertedStorageType error:error];
+}
+- (BlobKey *)blobKeyForV2Data:(NSData *)theFileData compressionType:(BlobKeyCompressionType)theCompressionType storageType:(StorageType)theStorageType error:(NSError **)error {
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    BlobKey *ret = [self doBlobKeyForV2Data:theFileData compressionType:theCompressionType storageType:theStorageType error:error];
+    
+    [ret retain];
+    if (ret == nil && error != NULL) {
+        [*error retain];
+    }
+    [pool drain];
+    [ret autorelease];
+    if (ret == nil & error != NULL) {
+        [*error autorelease];
+    }
+    return ret;
+}
+- (BlobKey *)doBlobKeyForV2Data:(NSData *)theFileData compressionType:(BlobKeyCompressionType)theCompressionType storageType:(StorageType)theStorageType error:(NSError **)error {
+    NSString *theSHA1 = [encryptor sha1HashForV2Data:theFileData];
+    return [[[BlobKey alloc] initWithSHA1:theSHA1 storageType:theStorageType stretchEncryptionKey:YES compressionType:theCompressionType error:error] autorelease];
+}
+- (NSData *)encryptedObjectForBlobKey:(BlobKey *)theBlobKey v2CompressedData:(NSData *)theV2CompressedData masterIV:(NSData *)theMasterIV dataIVAndSymmetricKey:(NSData *)theDataIVAndSymmetricKey error:(NSError **)error {
+    
+    // Lock for safety.
+    [compressEncryptLock lock];
+    
+    // Make encrypted object from compressed data.
+    NSData *ret = [encryptor v2EncryptedObjectFromData:theV2CompressedData masterIV:theMasterIV dataIVAndSymmetricKey:theDataIVAndSymmetricKey error:error];
+    
+    // Unlock.
+    [compressEncryptLock unlock];
+    
+    return ret;
 }
 
-- (BOOL)addSHA1sForCommitBlobKey:(BlobKey *)commitBlobKey toSet:(NSMutableSet *)theSet error:(NSError **)error {
-    if ([theSet containsObject:[commitBlobKey sha1]]) {
-        return YES;
-    }
-    Commit *commit = [self commitForBlobKey:commitBlobKey error:error];
-    if (commit == nil) {
+
+- (NSData *)decryptData:(NSData *)theData error:(NSError **)error {
+    //    return [stretchedCryptoKey decrypt:theData error:error];
+    return [encryptor decryptedDataForObject:theData error:error];
+}
+- (BOOL)deleteBlobForBlobKey:(BlobKey *)theBlobKey error:(NSError **)error {
+    if (![blobsPackSet deleteBlobForSHA1:[theBlobKey sha1] error:error]) {
         return NO;
     }
-    if (![self addSHA1sForTreeBlobKey:[commit treeBlobKey] toSet:theSet error:error]) {
+    
+    if (![fark deleteObjectForSHA1:[theBlobKey sha1] storageType:[theBlobKey storageType] error:error]) {
         return NO;
     }
-    [theSet addObject:[commitBlobKey sha1]];
     return YES;
+}
+
+
+#pragma mark PackSetActivityListener
+- (void)packSetActivity:(NSString *)theActivity {
+    [repoActivityListener repoActivity:theActivity];
+}
+- (void)packSetActivityDidFinish {
+    [repoActivityListener repoActivityDidFinish];
 }
 
 
@@ -334,7 +537,7 @@ targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD
         SETERRORFROMMYERROR;
         if ([myError isErrorWithDomain:[treesPackSet errorDomain] code:ERROR_NOT_FOUND]) {
             HSLogDebug(@"commit %@ not found in pack set", commitBlobKey);
-            SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"commit %@ not found", commitBlobKey);
+            SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"Backup record %@ not found", [commitBlobKey sha1]);
         }
         return nil;
     }
@@ -373,8 +576,8 @@ targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD
     if (data == nil) {
         return nil;
     }
-    if ([blobKey compressed]) {
-        data = [data gzipInflate:error];
+    if ([blobKey compressionType] != BlobKeyCompressionNone) {
+        data = [data uncompress:[blobKey compressionType] error:error];
         if (data == nil) {
             return nil;
         }
@@ -396,121 +599,94 @@ targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD
     }
     
     NSError *myError = nil;
+    
+    // Try packset.
     NSData *data = [blobsPackSet dataForSHA1:[theBlobKey sha1] withRetry:NO error:&myError];
     if (data == nil) {
-        SETERRORFROMMYERROR;
         if (![myError isErrorWithDomain:[blobsPackSet errorDomain] code:ERROR_NOT_FOUND]) {
-            // Return nil if not a not-found error.
+            // Unexpected error.
             SETERRORFROMMYERROR;
             return nil;
         }
+        
+        // Try fark.
         data = [fark dataForSHA1:[theBlobKey sha1] storageType:[theBlobKey storageType] error:&myError];
-        if (data == nil) {
+    }
+    
+    if (data == nil) {
+        if ([myError isErrorWithDomain:[fark errorDomain] code:ERROR_NOT_DOWNLOADABLE]) {
+            // Glacier object that's not currently downloadable.
+            SETNSERROR([self errorDomain], ERROR_NOT_DOWNLOADABLE, @"%@", [myError localizedDescription]);
+            return nil;
+        }
+        if (![myError isErrorWithDomain:[fark errorDomain] code:ERROR_NOT_FOUND]) {
+            // Unexpected error.
             SETERRORFROMMYERROR;
-            if ([myError isErrorWithDomain:[fark errorDomain] code:ERROR_NOT_DOWNLOADABLE]) {
-                SETNSERROR([self errorDomain], ERROR_NOT_DOWNLOADABLE, @"%@", [myError localizedDescription]);
-                return nil;
-            }
-            if (![myError isErrorWithDomain:[fark errorDomain] code:ERROR_NOT_FOUND]) {
-                // Return nil if not a not-found error.
+            return nil;
+        }
+        
+        // Clear cache and try packset again unless it's a "fake" BlobKey.
+        if (![[theBlobKey sha1] isEqualToString:@"0000000000000000000000000000000000000000"]) {
+            HSLogInfo(@"refreshing cache of packed objects before searching again for %@", [theBlobKey sha1]);
+            if (![blobsPackSet clearCache:error]) {
                 return nil;
             }
             data = [blobsPackSet dataForSHA1:[theBlobKey sha1] withRetry:YES error:&myError];
-            if (data == nil) {
-                SETERRORFROMMYERROR;
-                if ([myError isErrorWithDomain:[blobsPackSet errorDomain] code:ERROR_NOT_FOUND]) {
-                    SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"object not found for %@", theBlobKey);
-                }
-                return nil;
-            }
         }
+    }
+
+    if (data == nil) {
+        if ([myError code] != ERROR_NOT_FOUND) {
+            // Unexpected error.
+            SETERRORFROMMYERROR;
+            return nil;
+        }
+        
+        if (![[bucket target] canAccessFilesByPath] && ![[theBlobKey sha1] isEqualToString:@"0000000000000000000000000000000000000000"]) {
+            HSLogInfo(@"refreshing cache of non-packed objects before searching again for %@", [theBlobKey sha1]);
+            // Google Drive and Amazon Drive can't just read a file by path, so we have to refresh the cache of the directory and get the item ID of the file if it actually exists.
+            data = [fark dataForSHA1:[theBlobKey sha1] storageType:[theBlobKey storageType] refreshCache:YES error:&myError];
+        }
+    }
+    
+    if (data == nil) {
+        if ([myError code] != ERROR_NOT_FOUND) {
+            // Unexpected error.
+            SETERRORFROMMYERROR;
+            return nil;
+        }
+        
+        HSLogDebug(@"object not found for %@", theBlobKey);
+        SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"object not found for %@", [theBlobKey sha1]);
+        return nil;
     }
     
     NSAssert(data != nil, @"data can't be nil at this point");
     
-    NSData *decrypted = [self decryptData:data forBlobKey:theBlobKey error:error];
+    NSData *decrypted = [self decryptData:data forBlobKey:theBlobKey error:&myError];
     if (decrypted == nil) {
-        return nil;
+        HSLogDebug(@"decrypt problem: %@", myError);
+        // Between Arq 5.0.0.0 and 5.0.0.64, we didn't save the encrypted compressed buffer; we saved the compressed buffer!
+        // So, if the decryption fails, it probably wasn't encrypted.
+        decrypted = data;
     }
+    
     return decrypted;
 }
 - (NSData *)decryptData:(NSData *)theData forBlobKey:(BlobKey *)theBlobKey error:(NSError **)error {
-    CryptoKey *selectedCryptoKey = [theBlobKey stretchEncryptionKey] ? stretchedCryptoKey : cryptoKey;
-    return [selectedCryptoKey decrypt:theData error:error];
-}
-- (NSData *)encryptData:(NSData *)theData forBlobKey:(BlobKey *)theBlobKey error:(NSError **)error {
-    CryptoKey *selectedCryptoKey = [theBlobKey stretchEncryptionKey] ? stretchedCryptoKey : cryptoKey;
-    return [selectedCryptoKey encrypt:theData error:error];
+    return [encryptor decryptedDataForObject:theData blobKey:theBlobKey error:error];
 }
 
-- (BOOL)writeReflogForOldHeadBlobKey:(BlobKey *)oldHeadBlobKey newHeadBlobKey:(BlobKey *)newHeadBlobKey isRewrite:(BOOL)rewrite error:(NSError **)error {
+- (BOOL)writeReflogForOldHeadBlobKey:(BlobKey *)oldHeadBlobKey newHeadBlobKey:(BlobKey *)newHeadBlobKey isRewrite:(BOOL)rewrite packIndexEntry:(PackIndexEntry *)thePIE error:(NSError **)error {
     DictNode *plist = [[[DictNode alloc] init] autorelease];
     [plist putString:[oldHeadBlobKey sha1] forKey:@"oldHeadSHA1"];
     [plist putBoolean:[oldHeadBlobKey stretchEncryptionKey] forKey:@"oldHeadStretchKey"];
     [plist putString:[newHeadBlobKey sha1] forKey:@"newHeadSHA1"];
     [plist putBoolean:[newHeadBlobKey stretchEncryptionKey] forKey:@"newHeadStretchKey"];
     [plist putBoolean:rewrite forKey:@"isRewrite"];
+    [plist putString:[[thePIE packId] packSHA1] forKey:@"packSHA1"];
     NSData *data = [plist XMLData];
     return [fark putReflogItem:data forBucketUUID:[bucket bucketUUID] error:error];
-}
-- (BOOL)addSHA1sForTreeBlobKey:(BlobKey *)treeBlobKey toSet:(NSMutableSet *)theSet error:(NSError **)error {
-    if (error != NULL) {
-        *error = nil;
-    }
-    NSAssert(treeBlobKey != nil, @"treeBlobKey can't be nil");
-    if ([theSet containsObject:[treeBlobKey sha1]]) {
-        return YES;
-    }
-    BOOL ret = YES;
-    Tree *tree = [self treeForBlobKey:treeBlobKey error:error];
-    if (tree == nil) {
-        ret = NO;
-    } else {
-        if ([tree xattrsBlobKey] != nil) {
-            [theSet addObject:[[tree xattrsBlobKey] sha1]];
-        }
-        if ([tree aclBlobKey] != nil) {
-            [theSet addObject:[[tree aclBlobKey] sha1]];
-        }
-        NSAutoreleasePool *pool = nil;
-        for (NSString *childNodeName in [tree childNodeNames]) {
-            [pool drain];
-            pool = [[NSAutoreleasePool alloc] init];
-            Node *node = [tree childNodeWithName:childNodeName];
-            NSArray *dataBlobKeys = [node dataBlobKeys];
-            if ([node isTree]) {
-                if ([dataBlobKeys count] != 1) {
-                    SETNSERROR(@"CommitTrimmerErrorDomain", -1, @"unexpected tree %@ node %@ has %lu dataBloKeys (expected 1)", treeBlobKey, childNodeName, (unsigned long)[dataBlobKeys count]);
-                    ret = NO;
-                    break;
-                }
-                if (![self addSHA1sForTreeBlobKey:[dataBlobKeys objectAtIndex:0] toSet:theSet error:error]) {
-                    ret = NO;
-                    break;
-                }
-            }
-            for (BlobKey *dataBlobKey in dataBlobKeys) {
-                [theSet addObject:[dataBlobKey sha1]];
-            }
-            if ([node xattrsBlobKey] != nil) {
-                [theSet addObject:[[node xattrsBlobKey] sha1]];
-            }
-            if ([node aclBlobKey] != nil) {
-                [theSet addObject:[[node aclBlobKey] sha1]];
-            }
-        }
-        if (error != NULL) {
-            [*error retain];
-        }
-        [pool drain];
-        if (error != NULL) {
-            [*error autorelease];
-        }
-    }
-    if (ret) {
-        [theSet addObject:[treeBlobKey sha1]];
-    }
-    return ret;
 }
 
 @end

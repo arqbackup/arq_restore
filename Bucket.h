@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,6 +31,8 @@
  */
 
 
+
+
 #import "StorageType.h"
 @class AWSRegion;
 @class DictNode;
@@ -40,7 +42,12 @@
 @class BufferedInputStream;
 @class BufferedOutputStream;
 @protocol TargetConnectionDelegate;
+@class TargetConnection;
 
+
+@protocol BucketActivityListener <NSObject>
+- (void)bucketActivity:(NSString *)theActivity;
+@end
 
 enum {
     BucketPathMixedState = -1,
@@ -59,10 +66,12 @@ typedef NSInteger BucketPathState;
     StorageType storageType;
     NSMutableArray *ignoredRelativePaths;
     BucketExcludeSet *excludeSet;
-    NSMutableArray *stringArrayPairs;
     NSString *vaultName;
     NSDate *vaultCreatedDate;
     NSDate *plistDeletedDate;
+    BOOL skipDuringBackup;
+    BOOL excludeItemsWithTimeMachineExcludeMetadataFlag;
+    BOOL skipIfNotMounted;
 }
 
 + (NSArray *)bucketsWithTarget:(Target *)theTarget
@@ -71,17 +80,17 @@ typedef NSInteger BucketPathState;
       targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD
                          error:(NSError **)error;
 
++ (NSArray *)bucketsWithTarget:(Target *)theTarget
+                  computerUUID:(NSString *)theComputerUUID
+            encryptionPassword:(NSString *)theEncryptionPassword
+      targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD
+              activityListener:(id <BucketActivityListener>)theActivityListener
+                         error:(NSError **)error;
+
 + (NSArray *)bucketUUIDsWithTarget:(Target *)theTarget
                       computerUUID:(NSString *)theComputerUUID
-                encryptionPassword:(NSString *)theEncryptionPassword
           targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD
                              error:(NSError **)error;
-
-+ (NSArray *)deletedBucketsWithTarget:(Target *)theTarget
-                         computerUUID:(NSString *)theComputerUUID
-                   encryptionPassword:(NSString *)theEncryptionPassword
-             targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD
-                                error:(NSError **)error;
 
 + (NSString *)errorDomain;
 
@@ -106,10 +115,12 @@ typedef NSInteger BucketPathState;
 - (NSString *)vaultName;
 - (NSDate *)vaultCreatedDate;
 - (NSDate *)plistDeletedDate;
+- (BOOL)skipDuringBackup;
+- (BOOL)excludeItemsWithTimeMachineExcludeMetadataFlag;
 - (BucketPathState)stateForPath:(NSString *)thePath ignoreExcludes:(BOOL)ignoreExcludes;
-- (void)setIgnoredRelativePaths:(NSSet *)theSet;
 - (NSSet *)ignoredRelativePaths;
-- (void)enteredPath:(NSString *)thePath;
-- (void)leftPath:(NSString *)thePath;
+- (BOOL)skipIfNotMounted;
 - (NSData *)toXMLData;
+- (BOOL)writeTo:(BufferedOutputStream *)theBOS error:(NSError **)error;
+- (void)writeTo:(NSMutableData *)data;
 @end

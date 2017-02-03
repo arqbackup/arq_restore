@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,6 +31,7 @@
  */
 
 
+
 @class S3Service;
 @class PackIndexEntry;
 @class PackId;
@@ -45,8 +46,6 @@
     PackId *packId;
     NSString *s3Path;
     NSString *localPath;
-    uid_t targetUID;
-    gid_t targetGID;
     NSMutableArray *pies;
     NSString *archiveId;
     unsigned long long packSize;
@@ -59,17 +58,13 @@
                             computerUUID:(NSString *)theComputerUUID
                              packSetName:(NSString *)thePackSetName
                 targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD
-                               targetUID:(uid_t)theTargetUID
-                               targetGID:(gid_t)theTargetGID
                                    error:(NSError **)error;
 
 - (id)initWithTarget:(Target *)theTarget
            s3Service:(S3Service *)theS3
         s3BucketName:(NSString *)theS3BucketName
         computerUUID:(NSString *)theComputerUUID
-              packId:(PackId *)thePackId
-           targetUID:(uid_t)theTargetUID
-           targetGID:(gid_t)theTargetGID;
+              packId:(PackId *)thePackId;
 - (BOOL)makeLocalWithTargetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
 - (NSArray *)allPackIndexEntriesWithTargetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
 - (PackIndexEntry *)entryForSHA1:(NSString *)sha1 error:(NSError **)error;

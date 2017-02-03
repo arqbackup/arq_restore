@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,6 +31,7 @@
  */
 
 
+
 #import "TargetConnection.h"
 #import "Restorer.h"
 @class S3GlacierRestorerParamSet;
@@ -38,7 +39,7 @@
 @class Repo;
 @class Commit;
 @class Tree;
-
+@class Node;
 
 
 @interface S3GlacierRestorer : NSObject <Restorer, TargetConnectionDelegate> {
@@ -48,12 +49,15 @@
     Repo *repo;
     Commit *commit;
     Tree *rootTree;
+    Node *rootNode;
     
     NSMutableArray *calculateItems;
     NSMutableArray *glacierRequestItems;
     NSMutableArray *restoreItems;
     
     NSString *skipFilesRoot;
+    
+    NSTimeInterval requestRoundTimeInterval;
     
     unsigned long long bytesActuallyRequestedThisRound;
     unsigned long long bytesRequested;

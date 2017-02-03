@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,6 +31,7 @@
  */
 
 
+
 #include <sys/stat.h>
 #import "StringIO.h"
 #import "IntegerIO.h"
@@ -40,7 +41,7 @@
 #import "DataInputStream.h"
 #import "RegexKitLite.h"
 #import "BufferedInputStream.h"
-#import "NSData-Gzip.h"
+#import "NSData-Compress.h"
 #import "GunzipInputStream.h"
 #import "BlobKey.h"
 #import "NSObject_extra.h"
@@ -52,7 +53,7 @@
 @end
 
 @implementation Tree
-@synthesize xattrsAreCompressed, xattrsBlobKey, xattrsSize, aclIsCompressed, aclBlobKey, uid, gid, mode, mtime_sec, mtime_nsec, flags, finderFlags, extendedFinderFlags, st_dev, treeVersion, st_rdev;
+@synthesize xattrsBlobKey, xattrsSize, aclBlobKey, uid, gid, mode, mtime_sec, mtime_nsec, flags, finderFlags, extendedFinderFlags, st_dev, treeVersion, st_rdev;
 @synthesize ctime_sec, ctime_nsec, createTime_sec, createTime_nsec, st_nlink, st_ino, st_blocks, st_blksize;
 @dynamic aggregateUncompressedDataSize;
 
@@ -76,17 +77,34 @@
             [self release];
             return nil;
         }
-        if (treeVersion >= 12) {
-            if (![BooleanIO read:&xattrsAreCompressed from:is error:error]
-                || ![BooleanIO read:&aclIsCompressed from:is error:error]) {
+        BlobKeyCompressionType xattrsCompressionType = BlobKeyCompressionNone;
+        BlobKeyCompressionType aclCompressionType = BlobKeyCompressionNone;
+        if (treeVersion >= 12 && treeVersion <= 18) {
+            BOOL theXattrsAreCompressed = NO;
+            BOOL theAclIsCompressed = NO;
+            if (![BooleanIO read:&theXattrsAreCompressed from:is error:error]
+                || ![BooleanIO read:&theAclIsCompressed from:is error:error]) {
                 [self release];
                 return nil;
             }
+            xattrsCompressionType = theXattrsAreCompressed ? BlobKeyCompressionGzip : BlobKeyCompressionNone;
+            aclCompressionType = theAclIsCompressed ? BlobKeyCompressionGzip : BlobKeyCompressionNone;
+        }
+        if (treeVersion >= 19) {
+            int32_t theXattrsCompressionType = 0;
+            int32_t theAclCompressionType = 0;
+            if (![IntegerIO readInt32:&theXattrsCompressionType from:is error:error]
+                || ![IntegerIO readInt32:&theAclCompressionType from:is error:error]) {
+                [self release];
+                return nil;
+            }
+            xattrsCompressionType = (BlobKeyCompressionType)theXattrsCompressionType;
+            aclCompressionType = (BlobKeyCompressionType)theAclCompressionType;
         }
         
-        BOOL ret = [BlobKeyIO read:&xattrsBlobKey from:is treeVersion:treeVersion compressed:xattrsAreCompressed error:error]
+        BOOL ret = [BlobKeyIO read:&xattrsBlobKey from:is treeVersion:treeVersion compressionType:xattrsCompressionType error:error]
         && [IntegerIO readUInt64:&xattrsSize from:is error:error]
-        && [BlobKeyIO read:&aclBlobKey from:is treeVersion:treeVersion compressed:aclIsCompressed error:error]
+        && [BlobKeyIO read:&aclBlobKey from:is treeVersion:treeVersion compressionType:aclCompressionType error:error]
         && [IntegerIO readInt32:&uid from:is error:error]
         && [IntegerIO readInt32:&gid from:is error:error]
         && [IntegerIO readInt32:&mode from:is error:error]
@@ -216,8 +234,8 @@ initDone:
 }
 - (NSData *)toData {
     NSMutableData *data = [[[NSMutableData alloc] init] autorelease];
-    [BooleanIO write:xattrsAreCompressed to:data];
-    [BooleanIO write:aclIsCompressed to:data];
+    [IntegerIO writeInt32:(int32_t)[xattrsBlobKey compressionType] to:data];
+    [IntegerIO writeInt32:(int32_t)[aclBlobKey compressionType] to:data];
     [BlobKeyIO write:xattrsBlobKey to:data];
     [IntegerIO writeUInt64:xattrsSize to:data];
     [BlobKeyIO write:aclBlobKey to:data];
@@ -263,9 +281,6 @@ initDone:
     [completeData appendBytes:[data bytes] length:[data length]];
     return completeData;
 }
-- (BOOL)ctimeMatchesStat:(struct stat *)st {
-    return st->st_ctimespec.tv_sec == ctime_sec && st->st_ctimespec.tv_nsec == ctime_nsec;
-}
 - (uint64_t)aggregateUncompressedDataSize {
     //FIXME: This doesn't include the size of the ACL.
     uint64_t ret = xattrsSize;
@@ -281,33 +296,94 @@ initDone:
         return NO;
     }
     Tree *other = (Tree *)object;
-    BOOL ret = (treeVersion == [other treeVersion]
-    && xattrsAreCompressed == [other xattrsAreCompressed]
-    && [NSObject equalObjects:xattrsBlobKey and:[other xattrsBlobKey]]
-    && xattrsSize == [other xattrsSize]
-    && aclIsCompressed == [other aclIsCompressed]
-    && [NSObject equalObjects:aclBlobKey and:[other aclBlobKey]]
-    && uid == [other uid]
-    && gid == [other gid]
-    && mode == [other mode]
-    && mtime_sec == [other mtime_sec]
-    && mtime_nsec == [other mtime_nsec]
-    && flags == [other flags]
-    && finderFlags == [other finderFlags]
-    && extendedFinderFlags == [other extendedFinderFlags]
-    && st_dev == [other st_dev]
-    && st_ino == [other st_ino]
-    && st_nlink == [other st_nlink]
-    && st_rdev == [other st_rdev]
-    && ctime_sec == [other ctime_sec]
-    && ctime_nsec == [other ctime_nsec]
-    && createTime_sec == [other createTime_sec]
-    && createTime_nsec == [other createTime_nsec]
-    && [missingNodes isEqual:[other missingNodes]]
-    && st_blocks == [other st_blocks]
-    && st_blksize == [other st_blksize]
-    && [nodes isEqual:[other nodes]]);
-    return ret;
+    if (treeVersion != [other treeVersion]) {
+        return NO;
+    }
+    if (![NSObject equalObjects:xattrsBlobKey and:[other xattrsBlobKey]]) {
+        return NO;
+    }
+    if (xattrsSize != [other xattrsSize]) {
+        return NO;
+    }
+    if (![NSObject equalObjects:aclBlobKey and:[other aclBlobKey]]) {
+        return NO;
+    }
+    if (uid != [other uid]) {
+        return NO;
+    }
+    if (gid != [other gid]) {
+        return NO;
+    }
+    if (mode != [other mode]) {
+        return NO;
+    }
+    if (mtime_sec != [other mtime_sec]) {
+        return NO;
+    }
+    if (mtime_nsec != [other mtime_nsec]) {
+        return NO;
+    }
+    if (flags != [other flags]) {
+        return NO;
+    }
+    if (finderFlags != [other finderFlags]) {
+        return NO;
+    }
+    if (extendedFinderFlags != [other extendedFinderFlags]) {
+        return NO;
+    }
+    if (st_dev != [other st_dev]) {
+        return NO;
+    }
+    if (st_ino != [other st_ino]) {
+        return NO;
+    }
+    if (st_nlink != [other st_nlink]) {
+        return NO;
+    }
+    if (st_rdev != [other st_rdev]) {
+        return NO;
+    }
+    if (ctime_sec != [other ctime_sec]) {
+        return NO;
+    }
+    if (ctime_nsec != [other ctime_nsec]) {
+        return NO;
+    }
+    if (createTime_sec != [other createTime_sec]) {
+        return NO;
+    }
+    if (createTime_nsec != [other createTime_nsec]) {
+        return NO;
+    }
+    if (![missingNodes isEqual:[other missingNodes]]) {
+        return NO;
+    }
+    if (st_blocks != [other st_blocks]) {
+        return NO;
+    }
+    if (st_blksize != [other st_blksize]) {
+        return NO;
+    }
+    if (![nodes isEqual:[other nodes]]) {
+//#ifdef DEBUG
+//        NSArray *sortedKeys = [[nodes allKeys] sortedArrayUsingSelector:@selector(compare:)];
+//        NSArray *otherSortedKeys = [[[other nodes] allKeys] sortedArrayUsingSelector:@selector(compare:)];
+//        if (![sortedKeys isEqual:otherSortedKeys]) {
+//            HSLogDebug(@"keys don't match");
+//        } else {
+//            for (NSString *key in sortedKeys) {
+//                Node *node = [self childNodeWithName:key];
+//                Node *otherNode = [other childNodeWithName:key];
+//                if (![node isEqual:otherNode]) {
+//                    HSLogDebug(@"node %@ doesn't match", key);
+//                }
+//            }
+//        }
+//#endif
+        return NO;
+    }
+    return YES;
 }
 - (NSUInteger)hash {
     return (NSUInteger)treeVersion + [nodes hash];

@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,8 +31,16 @@
  */
 
 
+
 #import "StorageType.h"
 @class BufferedInputStream;
+
+
+typedef enum {
+    BlobKeyCompressionNone = 0,
+    BlobKeyCompressionGzip = 1,
+    BlobKeyCompressionLZ4 = 2
+} BlobKeyCompressionType;
 
 
 @interface BlobKey : NSObject <NSCopying> {
@@ -42,11 +50,12 @@
     NSDate *archiveUploadedDate;
     unsigned char *sha1Bytes;
     BOOL stretchEncryptionKey;
-    BOOL compressed;
+    BlobKeyCompressionType compressionType;
 }
-- (id)initWithSHA1:(NSString *)theSHA1 archiveId:(NSString *)theArchiveId archiveSize:(uint64_t)theArchiveSize archiveUploadedDate:(NSDate *)theArchiveUploadedDate compressed:(BOOL)isCompressed error:(NSError **)error;
-- (id)initWithSHA1:(NSString *)theSHA1 storageType:(StorageType)theStorageType stretchEncryptionKey:(BOOL)isStretchedKey compressed:(BOOL)isCompressed error:(NSError **)error;
-- (id)initWithStorageType:(StorageType)theStorageType archiveId:(NSString *)theArchiveId archiveSize:(uint64_t)theArchiveSize archiveUploadedDate:(NSDate *)theArchiveUploadedDate sha1:(NSString *)theSHA1 stretchEncryptionKey:(BOOL)isStretchedKey compressed:(BOOL)isCompressed error:(NSError **)error;
+
+- (id)initWithSHA1:(NSString *)theSHA1 archiveId:(NSString *)theArchiveId archiveSize:(uint64_t)theArchiveSize archiveUploadedDate:(NSDate *)theArchiveUploadedDate compressionType:(BlobKeyCompressionType)theCompressionType error:(NSError **)error;
+- (id)initWithSHA1:(NSString *)theSHA1 storageType:(StorageType)theStorageType stretchEncryptionKey:(BOOL)isStretchedKey compressionType:(BlobKeyCompressionType)theCompressionType error:(NSError **)error;
+- (id)initWithStorageType:(StorageType)theStorageType archiveId:(NSString *)theArchiveId archiveSize:(uint64_t)theArchiveSize archiveUploadedDate:(NSDate *)theArchiveUploadedDate sha1:(NSString *)theSHA1 stretchEncryptionKey:(BOOL)isStretchedKey compressionType:(BlobKeyCompressionType)theCompressionType error:(NSError **)error;
 - (id)initCopyOfBlobKey:(BlobKey *)theBlobKey withStorageType:(StorageType)theStorageType;
 
 - (StorageType)storageType;
@@ -56,6 +65,6 @@
 - (NSString *)sha1;
 - (unsigned char *)sha1Bytes;
 - (BOOL)stretchEncryptionKey;
-- (BOOL)compressed;
+- (BlobKeyCompressionType)compressionType;
 - (BOOL)isEqualToBlobKey:(BlobKey *)other;
 @end

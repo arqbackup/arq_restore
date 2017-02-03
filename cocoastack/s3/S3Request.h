@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -32,7 +32,8 @@
 
 
 
-@class S3AuthorizationProvider;
+
+@protocol S3AuthorizationProvider;
 @protocol DataTransferDelegate;
 @protocol TargetConnectionDelegate;
 
@@ -40,7 +41,7 @@
 @interface S3Request : NSObject {
     NSString *method;
     NSURL *url;
-    S3AuthorizationProvider *sap;
+    id <S3AuthorizationProvider> sap;
     id <DataTransferDelegate> dataTransferDelegate;
     NSData *requestBody;
     NSMutableDictionary *extraRequestHeaders;
@@ -48,11 +49,12 @@
     int httpResponseCode;
     NSMutableDictionary *responseHeaders;
 }
-- (id)initWithMethod:(NSString *)theMethod endpoint:(NSURL *)theEndpoint path:(NSString *)thePath queryString:(NSString *)theQueryString authorizationProvider:(S3AuthorizationProvider *)theSAP error:(NSError **)error;
-- (id)initWithMethod:(NSString *)theMethod endpoint:(NSURL *)theEndpoint path:(NSString *)thePath queryString:(NSString *)theQueryString authorizationProvider:(S3AuthorizationProvider *)theSAP dataTransferDelegate:(id <DataTransferDelegate>)theDelegate error:(NSError **)error;
+- (id)initWithMethod:(NSString *)theMethod endpoint:(NSURL *)theEndpoint path:(NSString *)thePath queryString:(NSString *)theQueryString authorizationProvider:(id <S3AuthorizationProvider>)theSAP error:(NSError **)error;
+- (id)initWithMethod:(NSString *)theMethod endpoint:(NSURL *)theEndpoint path:(NSString *)thePath queryString:(NSString *)theQueryString authorizationProvider:(id <S3AuthorizationProvider>)theSAP dataTransferDelegate:(id <DataTransferDelegate>)theDelegate error:(NSError **)error;
 - (void)setRequestBody:(NSData *)theRequestBody;
 - (void)setRequestHeader:(NSString *)value forKey:(NSString *)key;
 - (int)httpResponseCode;
+- (NSArray *)responseHeaderKeys;
 - (NSString *)responseHeaderForKey:(NSString *)theKey;
 - (NSData *)dataWithTargetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
 @end

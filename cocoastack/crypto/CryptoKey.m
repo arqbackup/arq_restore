@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -30,6 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+
+
 #import "CryptoKey.h"
 
 #ifdef USE_OPENSSL
@@ -57,10 +59,10 @@
 
 #ifdef USE_OPENSSL
         cryptoKey = [[OpenSSLCryptoKey alloc] initWithPassword:thePassword salt:theSalt error:error];
-        HSLogDebug(@"using OpenSSL");
+//        HSLogDebug(@"using OpenSSL");
 #else
         cryptoKey = [[CCCryptoKey alloc] initWithPassword:thePassword salt:theSalt error:error];
-        HSLogDebug(@"using CommonCrypto");
+//        HSLogDebug(@"using CommonCrypto");
 #endif
         if (cryptoKey == nil) {
             [self release];
@@ -96,7 +98,13 @@
 - (NSData *)encrypt:(NSData *)plainData error:(NSError **)error {
     return [cryptoKey encrypt:plainData error:error];
 }
+- (BOOL)encrypt:(NSData *)plainData intoBuffer:(NSMutableData *)theOutBuffer error:(NSError **)error {
+    return [cryptoKey encrypt:plainData intoBuffer:theOutBuffer error:error];
+}
 - (NSData *)decrypt:(NSData *)encrypted error:(NSError **)error {
     return [cryptoKey decrypt:encrypted error:error];
+}
+- (BOOL)decrypt:(NSData *)encrypted intoBuffer:(NSMutableData *)theOutBuffer error:(NSError **)error {
+    return [cryptoKey decrypt:encrypted intoBuffer:theOutBuffer error:error];
 }
 @end

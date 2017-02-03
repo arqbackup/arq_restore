@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -29,6 +29,8 @@
  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+
 
 #ifdef USE_OPENSSL
 
@@ -74,7 +76,6 @@ static SSL_CTX *ctx;
         if ([msg length] > 0) {
             [msg appendString:@"; "];
         }
-        HSLogTrace(@"%s", ERR_error_string(err, NULL));
         [msg appendFormat:@"%s", ERR_reason_error_string(err)];
     }
     if ([msg length] == 0) {

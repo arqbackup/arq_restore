@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -30,6 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+
+
 #import "InputStream.h"
 #import "RegexKitLite.h"
 #import "S3Owner.h"
@@ -50,7 +52,11 @@
 #import "MD5Hash.h"
 #import "S3MultiDeleteResponse.h"
 #import "S3ErrorResult.h"
-#import "LifecycleConfiguration.h"
+#import "SHA256Hash.h"
+#import "NSString_extra.h"
+#import "ISO8601Date.h"
+#import "Item.h"
+#import "S3ObjectsLister.h"
 
 
 NSString *kS3StorageClassStandard = @"STANDARD";
@@ -67,11 +73,10 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
     return @"S3ServiceErrorDomain";
 }
 
-- (id)initWithS3AuthorizationProvider:(S3AuthorizationProvider *)theSAP endpoint:(NSURL *)theEndpoint useAmazonRRS:(BOOL)isUseAmazonRRS {
+- (id)initWithS3AuthorizationProvider:(id <S3AuthorizationProvider>)theSAP endpoint:(NSURL *)theEndpoint {
 	if (self = [super init]) {
 		sap = [theSAP retain];
         endpoint = [theEndpoint retain];
-        useAmazonRRS = isUseAmazonRRS;
     }
     return self;
 }
@@ -139,10 +144,20 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
     NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"https://s3.amazonaws.com/%@/?location", theS3BucketName]];
     id <HTTPConnection> conn = [[[HTTPConnectionFactory theFactory] newHTTPConnectionToURL:url method:@"GET" dataTransferDelegate:nil] autorelease];
     [conn setRequestHostHeader];
-    [conn setRFC822DateRequestHeader];
-    if (![sap setAuthorizationRequestHeaderOnHTTPConnection:conn error:error]) {
+    NSDate *now = [NSDate date];
+    NSString *contentSHA256 = [NSString hexStringWithData:[SHA256Hash hashData:[@"" dataUsingEncoding:NSUTF8StringEncoding]]];
+    if ([sap signatureVersion] == 4) {
+        [conn setRequestHeader:[[ISO8601Date sharedISO8601Date] basicDateTimeStringFromDate:now] forKey:@"x-amz-date"];
+        [conn setRequestHeader:contentSHA256 forKey:@"x-amz-content-sha256"];
+    } else {
+        [conn setRFC822DateRequestHeader];
+    }
+    NSString *stringToSign = nil;
+    NSString *canonicalRequest = nil;
+    if (![sap setAuthorizationOnHTTPConnection:conn contentSHA256:contentSHA256 now:now stringToSign:&stringToSign canonicalRequest:&canonicalRequest error:error]) {
         return nil;
     }
+    
     HSLogDebug(@"GET %@", url);
     NSData *response = [conn executeRequest:error];
     if (response == nil) {
@@ -153,7 +168,7 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
         SETNSERROR([S3Service errorDomain], ERROR_NOT_FOUND, @"bucket %@ not found", theS3BucketName);
         return nil;
     } else if (code != 200) {
-        S3ErrorResult *errorResult = [[[S3ErrorResult alloc] initWithAction:[NSString stringWithFormat:@"GET %@", url] data:response httpErrorCode:(int)code] autorelease];
+        S3ErrorResult *errorResult = [[[S3ErrorResult alloc] initWithAction:[NSString stringWithFormat:@"GET %@", url] data:response httpErrorCode:(int)code stringToSign:stringToSign canonicalRequest:canonicalRequest] autorelease];
         NSError *myError = [errorResult error];
         HSLogDebug(@"GET %@ error: %@", conn, myError);
         if (error != NULL) {
@@ -165,6 +180,7 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
     NSError *myError = nil;
     NSXMLDocument *xmlDoc = [[[NSXMLDocument alloc] initWithData:response options:0 error:&myError] autorelease];
     if (!xmlDoc) {
+        HSLogDebug(@"list Objects XML data: %@", [[[NSString alloc] initWithData:response encoding:NSUTF8StringEncoding] autorelease]);
         SETNSERROR([S3Service errorDomain], [myError code], @"error parsing List Objects XML response: %@", myError);
         return nil;
     }
@@ -181,75 +197,167 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
     NSString *constraint = [node stringValue];
     return constraint;
 }
-- (NSArray *)pathsWithPrefix:(NSString *)prefix targetConnectionDelegate:(id<TargetConnectionDelegate>)theDelegate error:(NSError **)error {
-    return [self pathsWithPrefix:prefix delimiter:nil targetConnectionDelegate:theDelegate error:error];
+
+
+#pragma mark ItemFS
+- (NSString *)itemFSDescription {
+    return [NSString stringWithFormat:@"s3:%@", [endpoint description]];
 }
-- (NSArray *)pathsWithPrefix:(NSString *)prefix delimiter:(NSString *)delimiter targetConnectionDelegate:(id<TargetConnectionDelegate>)theDelegate error:(NSError **)error {
-    PathReceiver *rec = [[[PathReceiver alloc] init] autorelease];
-    S3Lister *lister = [[[S3Lister alloc] initWithS3AuthorizationProvider:sap endpoint:endpoint prefix:prefix delimiter:delimiter receiver:rec] autorelease];
-    if (![lister listObjectsWithTargetConnectionDelegate:theDelegate error:error]) {
-        return nil;
+- (BOOL)canRemoveDirectoriesAtomically {
+    return NO;
+}
+- (BOOL)usesFolderIds {
+    return NO;
+}
+- (BOOL)enforcesUniqueFilenames {
+    return YES;
+}
+- (Item *)rootDirectoryItemWithTargetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error {
+    Item *item = [[[Item alloc] init] autorelease];
+    item.name = @"/";
+    item.isDirectory = YES;
+    return item;
+}
+- (NSDictionary *)itemsByNameInDirectoryItem:(Item *)theItem path:(NSString *)theDirectoryPath targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD duplicatesWereMerged:(BOOL *)duplicatesWereMerged error:(NSError **)error {
+    *duplicatesWereMerged = NO;
+    
+    if ([theDirectoryPath isEqualToString:@"/"]) {
+        NSArray *bucketNames = [self s3BucketNamesWithTargetConnectionDelegate:theTCD error:error];
+        if (bucketNames == nil) {
+            return nil;
+        }
+        NSMutableDictionary *ret = [NSMutableDictionary dictionary];
+        for (NSString *name in bucketNames) {
+            Item *item = [[[Item alloc] init] autorelease];
+            item.name = name;
+            item.isDirectory = YES;
+            [ret setObject:item forKey:name];
+        }
+        return ret;
     }
-    NSMutableArray *ret = [NSMutableArray arrayWithArray:[rec paths]];
-    [ret addObjectsFromArray:[lister foundPrefixes]];
-    [ret sortUsingSelector:@selector(compare:)];
+    if (![theDirectoryPath hasSuffix:@"/"]) {
+        theDirectoryPath = [theDirectoryPath stringByAppendingString:@"/"];
+    }
+    
+    NSDictionary *ret = nil;
+    if ([theDirectoryPath isMatchedByRegex:@"^/([^/]+)/(\\S{8}-\\S{4}-\\S{4}-\\S{4}-\\S{12})/objects/$"]) {
+        S3ObjectsLister *lister = [[[S3ObjectsLister alloc] initWithS3AuthorizationProvider:sap
+                                                                           endpoint:endpoint
+                                                                               path:theDirectoryPath
+                                                           targetConnectionDelegate:theTCD] autorelease];
+        ret = [lister itemsByName:error];
+    } else {
+        S3Lister *lister = [[[S3Lister alloc] initWithS3AuthorizationProvider:sap
+                                                                     endpoint:endpoint
+                                                                         path:theDirectoryPath
+                                                                    delimiter:@"/"
+                                                     targetConnectionDelegate:theTCD] autorelease];
+        ret = [lister itemsByName:error];
+    }
     return ret;
 }
-- (NSArray *)commonPrefixesForPathPrefix:(NSString *)prefix delimiter:(NSString *)delimiter targetConnectionDelegate:(id<TargetConnectionDelegate>)theDelegate error:(NSError **)error {
-    NSArray *paths = [self pathsWithPrefix:prefix delimiter:delimiter targetConnectionDelegate:theDelegate error:error];
-    if (paths == nil) {
-        return nil;
-    }
-    NSMutableArray *ret = [NSMutableArray array];
-    for (NSString *path in paths) {
-        [ret addObject:[path substringFromIndex:[prefix length]]];
-    }
-    return ret;
+- (Item *)createDirectoryWithName:(NSString *)theName inDirectoryItem:(Item *)theDirectoryItem itemPath:(NSString *)thePath targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error {
+    // There's no such thing as a directory in S3.
+    Item *item = [[[Item alloc] init] autorelease];
+    item.name = theName;
+    item.isDirectory = YES;
+    return item;
 }
-- (NSArray *)objectsWithPrefix:(NSString *)prefix targetConnectionDelegate:(id<TargetConnectionDelegate>)theDelegate error:(NSError **)error {
-    S3ObjectReceiver *receiver = [[[S3ObjectReceiver alloc] init] autorelease];
-    if (![self listObjectsWithPrefix:prefix receiver:receiver targetConnectionDelegate:theDelegate error:error]) {
-        return NO;
-    }
-    return [receiver objects];
+- (BOOL)removeDirectoryItem:(Item *)theItem inDirectoryItem:(Item *)theParentDirectoryItem itemPath:(NSString *)thePath targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD error:(NSError **)error {
+    // There's no such thing as a directory in S3.
+    return YES;
 }
-- (BOOL)listObjectsWithPrefix:(NSString *)prefix receiver:(id <S3Receiver>)receiver targetConnectionDelegate:(id<TargetConnectionDelegate>)theDelegate error:(NSError **)error {
-    S3Lister *lister = [[[S3Lister alloc] initWithS3AuthorizationProvider:sap endpoint:endpoint prefix:prefix delimiter:nil receiver:receiver] autorelease];
-    return lister && [lister listObjectsWithTargetConnectionDelegate:theDelegate error:error];
-}
-- (NSNumber *)containsObjectAtPath:(NSString *)path dataSize:(unsigned long long *)dataSize targetConnectionDelegate:(id<TargetConnectionDelegate>)theDelegate error:(NSError **)error {
-    BOOL ret = YES;
-    S3Request *s3r = [[S3Request alloc] initWithMethod:@"HEAD" endpoint:endpoint path:path queryString:nil authorizationProvider:sap error:error];
+- (NSData *)contentsOfRange:(NSRange)theRange ofFileItem:(Item *)theItem itemPath:(NSString *)theFullPath dataTransferDelegate:(id <DataTransferDelegate>)theDTD targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error {
+    S3Request *s3r = [[S3Request alloc] initWithMethod:@"GET" endpoint:endpoint path:theFullPath queryString:nil authorizationProvider:sap dataTransferDelegate:theDTD error:error];
     if (s3r == nil) {
         return nil;
     }
-    NSError *myError = nil;
-    BOOL contains = NO;
-    NSData *response = [s3r dataWithTargetConnectionDelegate:theDelegate error:&myError];
-    if (response != nil) {
-        contains = YES;
-        HSLogTrace(@"S3 path %@ exists", path);
-        if (dataSize != NULL) {
-            NSString *contentLength = [s3r responseHeaderForKey:@"Content-Length"];
-            *dataSize = (unsigned long long)[contentLength longLongValue]; // This would be bad for negative content-length (I guess that won't happen though)
-        }
-    } else if ([myError isErrorWithDomain:[S3Service errorDomain] code:ERROR_NOT_FOUND]) {
-        contains = NO;
-        HSLogDebug(@"S3 path %@ does NOT exist", path);
-    } else if ([myError isErrorWithDomain:[S3Service errorDomain] code:ERROR_RRS_NOT_FOUND]) {
-        contains = NO;
-        HSLogDebug(@"S3 path %@ returns 405 error", path);
-    } else {
-        contains = NO;
-        ret = NO;
-        HSLogDebug(@"error getting HEAD for %@: %@", path, myError);
-        SETERRORFROMMYERROR;
+    if (theRange.location != NSNotFound) {
+        [s3r setRequestHeader:[NSString stringWithFormat:@"bytes=%ld-%ld", theRange.location, (theRange.location + theRange.length - 1)] forKey:@"Range"];
     }
+    NSData *ret = [s3r dataWithTargetConnectionDelegate:theTCD error:error];
     [s3r release];
-    if (!ret) {
+    
+    if (theRange.location != NSNotFound && [ret length] != theRange.length) {
+        SETNSERROR([S3Service errorDomain], -1, @"requested bytes at %ld length %ld but got %ld bytes", theRange.location, theRange.length, [ret length]);
         return nil;
     }
-    return [NSNumber numberWithBool:contains];
+    return ret;
+}
+- (Item *)createFileWithData:(NSData *)theData name:(NSString *)theName inDirectoryItem:(Item *)theDirectoryItem existingItem:(Item *)theExistingItem itemPath:(NSString *)theFullPath dataTransferDelegate:(id <DataTransferDelegate>)theDTD targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error {
+    if (![theFullPath hasPrefix:@"/"]) {
+        SETNSERROR([S3Service errorDomain], S3SERVICE_INVALID_PARAMETERS, @"path must begin with '/'");
+        return nil;
+    }
+    S3Request *s3r = [[[S3Request alloc] initWithMethod:@"PUT" endpoint:endpoint path:theFullPath queryString:nil authorizationProvider:sap dataTransferDelegate:theDTD error:error] autorelease];
+    if (s3r == nil) {
+        return nil;
+    }
+    
+    [s3r setRequestBody:theData];
+    NSTimeInterval start = [NSDate timeIntervalSinceReferenceDate];
+    NSData *ret = [s3r dataWithTargetConnectionDelegate:theTCD error:error];
+    NSString *etag = [[[s3r responseHeaderForKey:@"ETag"] retain] autorelease];
+    if (etag == nil) {
+        // Sometimes S3 doesn't capitalize the T in ETag, even though their doc says "ETag".
+        etag = [s3r responseHeaderForKey:@"Etag"];
+    }
+    if (ret == nil) {
+        return nil;
+    }
+    NSTimeInterval end = [NSDate timeIntervalSinceReferenceDate];
+    NSTimeInterval duration = end - start;
+    if (duration != 0) {
+        HSLogDebug(@"uploaded %ld bytes to %@ in %0.1f seconds (%01.f bytes/sec)", (unsigned long)[theData length], theFullPath, duration, ([theData length] / duration));
+    }
+    
+    Item *item = [[[Item alloc] init] autorelease];
+    item.name = theName;
+    item.isDirectory = NO;
+    item.fileSize = [theData length];
+    item.fileLastModified = [NSDate date];
+    
+    if (etag != nil) {
+        if ([etag hasPrefix:@"\""] && [etag hasSuffix:@"\""]) {
+            etag = [etag substringWithRange:NSMakeRange(1, [etag length] - 2)];
+        }
+        item.checksum = [@"md5:" stringByAppendingString:etag];
+    }
+    if (item.checksum == nil) {
+        HSLogDebug(@"no checksum found in S3 response for %@: response headers=%@", theFullPath, [s3r responseHeaderKeys]);
+    }
+
+    return item;
+}
+- (BOOL)moveItem:(Item *)theItem toNewName:(NSString *)theNewName fromDirectoryItem:(Item *)theFromDirectoryItem fromDirectory:(NSString *)theFromDir toDirectoryItem:(Item *)theToDirectoryItem toDirectory:(NSString *)theToDir targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error {
+    SETNSERROR([S3Service errorDomain], -1, @"S3Service moveItem not implemented");
+    return NO;
+}
+- (BOOL)removeFileItem:(Item *)theItem itemPath:(NSString *)theFullPath targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error {
+    NSRange searchRange = NSMakeRange(1, [theFullPath length] - 1);
+    NSRange nextSlashRange = [theFullPath rangeOfString:@"/" options:0 range:searchRange];
+    if (nextSlashRange.location == NSNotFound) {
+        SETNSERROR([S3Service errorDomain], S3SERVICE_INVALID_PARAMETERS, @"path must be of the format /<bucket name>/path");
+        return NO;
+    }
+    
+    HSLogDebug(@"deleting %@", theFullPath);
+    S3Request *s3r = [[[S3Request alloc] initWithMethod:@"DELETE" endpoint:endpoint path:theFullPath queryString:nil authorizationProvider:sap error:error] autorelease];
+    if (s3r == nil) {
+        return NO;
+    }
+    NSData *response = [s3r dataWithTargetConnectionDelegate:theTCD error:error];
+    if (response == nil) {
+        return NO;
+    }
+    return YES;
+}
+- (NSNumber *)freeBytesAtPath:(NSString *)thePath targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error {
+    return [NSNumber numberWithUnsignedLongLong:LLONG_MAX];
+}
+- (BOOL)updateFingerprintWithTargetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error {
+    SETNSERROR([S3Service errorDomain], -1, @"S3Service updateFingerprintWithTargetConnectionDelegate not implemented");
+    return NO;
 }
 - (NSNumber *)isObjectRestoredAtPath:(NSString *)thePath targetConnectionDelegate:(id<TargetConnectionDelegate>)theDelegate error:(NSError **)error {
     S3Request *s3r = [[[S3Request alloc] initWithMethod:@"HEAD" endpoint:endpoint path:thePath queryString:nil authorizationProvider:sap error:error] autorelease];
@@ -274,7 +382,7 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
     BOOL restored = [restoreHeader rangeOfString:@"ongoing-request=\"false\""].location != NSNotFound;
     return [NSNumber numberWithBool:restored];
 }
-- (BOOL)restoreObjectAtPath:(NSString *)thePath forDays:(NSUInteger)theDays alreadyRestoredOrRestoring:(BOOL *)alreadyRestoredOrRestoring targetConnectionDelegate:(id<TargetConnectionDelegate>)theDelegate error:(NSError **)error {
+- (BOOL)restoreObjectAtPath:(NSString *)thePath forDays:(NSUInteger)theDays tier:(int)theGlacierRetrievalTier alreadyRestoredOrRestoring:(BOOL *)alreadyRestoredOrRestoring targetConnectionDelegate:(id<TargetConnectionDelegate>)theDelegate error:(NSError **)error {
     if (alreadyRestoredOrRestoring != NULL) {
         *alreadyRestoredOrRestoring = NO;
     }
@@ -282,12 +390,25 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
     if (s3r == nil) {
         return NO;
     }
-    NSString *requestBodyString = [NSString stringWithFormat:@"<RestoreRequest><Days>%ld</Days></RestoreRequest>", (unsigned long)theDays];
+    NSString *glacierRetrievalTierText = @"Standard";
+    switch (theGlacierRetrievalTier) {
+        case GLACIER_RETRIEVAL_TIER_BULK:
+            glacierRetrievalTierText = @"Bulk";
+        case GLACIER_RETRIEVAL_TIER_STANDARD:
+            glacierRetrievalTierText = @"Standard";
+            break;
+        case GLACIER_RETRIEVAL_TIER_EXPEDITED:
+            glacierRetrievalTierText = @"Expedited";
+            break;
+    }
+    NSString *requestBodyString = [NSString stringWithFormat:@"<RestoreRequest><Days>%ld</Days><GlacierJobParameters><Tier>%@</Tier></GlacierJobParameters></RestoreRequest>", (unsigned long)theDays, glacierRetrievalTierText];
     NSData *requestBody = [requestBodyString dataUsingEncoding:NSUTF8StringEncoding];
     NSString *md5Hash = [MD5Hash hashDataBase64Encode:requestBody];
     [s3r setRequestHeader:md5Hash forKey:@"Content-MD5"];
     [s3r setRequestHeader:@"application/xml" forKey:@"Content-Type"];
     [s3r setRequestBody:requestBody];
+    
+    HSLogDebug(@"requesting restore of %@ (tier=%@)", thePath, glacierRetrievalTierText);
     
     NSError *myError = nil;
     NSData *response = [s3r dataWithTargetConnectionDelegate:theDelegate error:&myError];
@@ -324,218 +445,15 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
     }
     return YES;
 }
-- (NSData *)dataAtPath:(NSString *)path targetConnectionDelegate:(id<TargetConnectionDelegate>)theDelegate error:(NSError **)error {
-    return [self dataAtPath:path dataTransferDelegate:nil targetConnectionDelegate:theDelegate error:error];
-}
-- (NSData *)dataAtPath:(NSString *)path dataTransferDelegate:(id<DataTransferDelegate>)theDTD targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD error:(NSError **)error {
-    S3Request *s3r = [[S3Request alloc] initWithMethod:@"GET" endpoint:endpoint path:path queryString:nil authorizationProvider:sap dataTransferDelegate:theDTD error:error];
-    if (s3r == nil) {
-        return nil;
-    }
-    NSData *ret = [s3r dataWithTargetConnectionDelegate:theTCD error:error];
-    [s3r release];
-    return ret;
-}
-- (S3AuthorizationProvider *)s3AuthorizationProvider {
-    return sap;
-}
-- (BOOL)createS3Bucket:(NSString *)s3BucketName withLocationConstraint:(NSString *)theLocationConstraint targetConnectionDelegate:(id<TargetConnectionDelegate>)theDelegate error:(NSError **)error {
-    S3Request *s3r = [[[S3Request alloc] initWithMethod:@"PUT" endpoint:endpoint path:[NSString stringWithFormat:@"/%@/", s3BucketName] queryString:nil authorizationProvider:sap error:error] autorelease];
-    if (s3r == nil) {
-        return NO;
-    }
-    //    [s3r setHeader:@"bucket-owner-full-control" forKey:@"x-amz-acl"];
-    
-    if (theLocationConstraint != nil) {
-        NSString *xml = [NSString stringWithFormat:@"<CreateBucketConfiguration xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\"><LocationConstraint>%@</LocationConstraint></CreateBucketConfiguration>", theLocationConstraint];
-        NSData *data = [xml dataUsingEncoding:NSUTF8StringEncoding];
-        [s3r setRequestBody:data];
-    } else {
-        [s3r setRequestBody:[NSData data]];
-    }
-    return [s3r dataWithTargetConnectionDelegate:theDelegate error:error] != nil;
-}
-- (BOOL)deleteS3Bucket:(NSString *)s3BucketName targetConnectionDelegate:(id<TargetConnectionDelegate>)theDelegate error:(NSError **)error {
-    S3Request *s3r = [[[S3Request alloc] initWithMethod:@"DELETE" endpoint:endpoint path:[NSString stringWithFormat:@"/%@/", s3BucketName] queryString:nil authorizationProvider:sap error:error] autorelease];
-    if (s3r == nil) {
-        return NO;
-    }
-    [s3r setRequestBody:[NSData data]]; // Do this so it sets Content-Length: 0 header.
-    return [s3r dataWithTargetConnectionDelegate:theDelegate error:error] != nil;
-}
-- (BOOL)putData:(NSData *)data atPath:(NSString *)path targetConnectionDelegate:(id<TargetConnectionDelegate>)theDelegate error:(NSError **)error {
-    return [self putData:data atPath:path dataTransferDelegate:nil targetConnectionDelegate:theDelegate error:error];
-}
-- (BOOL)putData:(NSData *)data atPath:(NSString *)path dataTransferDelegate:(id<DataTransferDelegate>)theDTD targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD error:(NSError **)error {
-    if (![path hasPrefix:@"/"]) {
-        SETNSERROR([S3Service errorDomain], S3SERVICE_INVALID_PARAMETERS, @"path must begin with '/'");
-        return NO;
-	}
-    HSLogDebug(@"putting %lu bytes in S3 at %@", (unsigned long)[data length], path);
-    S3Request *s3r = [[S3Request alloc] initWithMethod:@"PUT" endpoint:endpoint path:path queryString:nil authorizationProvider:sap dataTransferDelegate:theDTD error:error];
-    if (s3r == nil) {
-        return NO;
-    }
-    [s3r setRequestBody:data];
-    if (useAmazonRRS) {
-        [s3r setRequestHeader:kS3StorageClassReducedRedundancy forKey:@"x-amz-storage-class"];
-    }
-    NSData *ret = [s3r dataWithTargetConnectionDelegate:theTCD error:error];
-    [s3r release];
-    if (ret == nil) {
-        return NO;
-    }
-    return YES;
-}
-- (BOOL)deletePaths:(NSArray *)thePaths targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD error:(NSError **)error {
-    if ([thePaths count] == 0) {
-        HSLogWarn(@"0 paths to delete");
-        return YES;
-    }
-    
-    //    if ([AWSRegion regionWithS3Endpoint:endpoint] == nil) {
-    //        HSLogDebug(@"not an AWS endpoint; not using multi-delete");
-    
-    
-    // S3 Multi-delete doesn't seem to work! Using single delete:
-    
-    BOOL ret = YES;
-    NSAutoreleasePool *pool = nil;
-    for (NSString *path in thePaths) {
-        [pool drain];
-        pool = [[NSAutoreleasePool alloc] init];
-        if (![self deletePath:path targetConnectionDelegate:theTCD error:error]) {
-            ret = NO;
-            break;
-        }
-    }
-    if (!ret && error != NULL) {
-        [*error retain];
-    }
-    [pool drain];
-    if (!ret && error != NULL) {
-        [*error autorelease];
-    }
-    
-    return ret;
-}
-
-- (BOOL)deletePath:(NSString *)path targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD error:(NSError **)error {
-	if (![path hasPrefix:@"/"]) {
-        HSLogError(@"invalid path %@", path);
-        SETNSERROR([S3Service errorDomain], S3SERVICE_INVALID_PARAMETERS, @"path must begin with /");
-        return NO;
-	}
-	NSRange searchRange = NSMakeRange(1, [path length] - 1);
-	NSRange nextSlashRange = [path rangeOfString:@"/" options:0 range:searchRange];
-	if (nextSlashRange.location == NSNotFound) {
-        SETNSERROR([S3Service errorDomain], S3SERVICE_INVALID_PARAMETERS, @"path must be of the format /<bucket name>/path");
-        return NO;
-	}
-    
-    HSLogDebug(@"deleting %@", path);
-    S3Request *s3r = [[[S3Request alloc] initWithMethod:@"DELETE" endpoint:endpoint path:path queryString:nil authorizationProvider:sap error:error] autorelease];
-    if (s3r == nil) {
-        return NO;
-    }
-    NSData *response = [s3r dataWithTargetConnectionDelegate:theTCD error:error];
-    if (response == nil) {
-        return NO;
-    }
-    return YES;
-}
-- (BOOL)setStorageClass:(NSString *)storageClass forPath:(NSString *)path targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD error:(NSError **)error {
-    if (![path hasPrefix:@"/"]) {
-        SETNSERROR([S3Service errorDomain], S3SERVICE_INVALID_PARAMETERS, @"path must begin with '/'");
-        return NO;
-	}
-    HSLogTrace(@"setting storage class to %@ for %@", storageClass, path);
-    S3Request *s3r = [[S3Request alloc] initWithMethod:@"PUT" endpoint:endpoint path:path queryString:nil authorizationProvider:sap error:error];
-    if (s3r == nil) {
-        return NO;
-    }
-    [s3r setRequestHeader:storageClass forKey:@"x-amz-storage-class"];
-    [s3r setRequestHeader:path forKey:@"x-amz-copy-source"];
-    NSData *ret = [s3r dataWithTargetConnectionDelegate:theTCD error:error];
-    [s3r release];
-    if (ret == nil) {
-        return NO;
-    }
-    return YES;
-}
-- (NSString *)storageClass {
-    return useAmazonRRS ? kS3StorageClassReducedRedundancy : kS3StorageClassStandard;
-}
-- (BOOL)copy:(NSString *)sourcePath to:(NSString *)destPath targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD error:(NSError **)error {
-    S3Request *s3r = [[[S3Request alloc] initWithMethod:@"PUT" endpoint:endpoint path:destPath queryString:nil authorizationProvider:sap error:error] autorelease];
-    if (s3r == nil) {
-        return NO;
-    }
-    [s3r setRequestHeader:sourcePath forKey:@"x-amz-copy-source"];
-    NSData *response = [s3r dataWithTargetConnectionDelegate:theTCD error:error];
-    if (response == nil) {
-        return NO;
-    }
-    if ([response length] > 0) {
-        HSLogTrace(@"s3 copy response: %@", [[[NSString alloc] initWithBytes:[response bytes] length:[response length] encoding:NSUTF8StringEncoding] autorelease]);
-    }
-    return YES;
-}
-- (NSNumber *)containsLifecyclePolicyWithId:(NSString *)theId forS3BucketName:(NSString *)theS3BucketName targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD error:(NSError **)error {
-    NSString *path = [NSString stringWithFormat:@"/%@/", theS3BucketName];
-    S3Request *s3r = [[S3Request alloc] initWithMethod:@"GET" endpoint:endpoint path:path queryString:@"lifecycle" authorizationProvider:sap error:error];
-    if (s3r == nil) {
-        return NO;
-    }
-    NSError *myError = nil;
-    NSData *response = [s3r dataWithTargetConnectionDelegate:theTCD error:&myError];
-    [s3r release];
-    if (response == nil) {
-        if ([myError isErrorWithDomain:[S3Service errorDomain] code:ERROR_NOT_FOUND]) {
-            return [NSNumber numberWithBool:NO];
-        }
-        SETERRORFROMMYERROR;
-        return nil;
-    }
-    LifecycleConfiguration *config = [[[LifecycleConfiguration alloc] initWithData:response error:error] autorelease];
-    if (config == nil) {
-        return nil;
-    }
-    BOOL contains = [config containsRuleWithId:theId];
-    return [NSNumber numberWithBool:contains];
-}
-- (BOOL)putGlacierLifecyclePolicyWithId:(NSString *)theId forPrefixes:(NSArray *)thePrefixes s3BucketName:(NSString *)theS3BucketName transitionDays:(NSUInteger)theTransitionDays targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD error:(NSError **)error {
-    NSString *path = [NSString stringWithFormat:@"/%@/", theS3BucketName];
-    
-    NSMutableString *configurationXML = [NSMutableString string];
-    [configurationXML appendString:@"<LifecycleConfiguration>"];
-    for (NSUInteger index = 0; index < [thePrefixes count]; index++) {
-        NSString *ruleId = [NSString stringWithFormat:@"%@-%ld", theId, (unsigned long)index];
-        [configurationXML appendString:@"<Rule>"];
-        [configurationXML appendFormat:@"<ID>%@</ID>", ruleId];
-        [configurationXML appendFormat:@"<Prefix>%@</Prefix>", [thePrefixes objectAtIndex:index]];
-        [configurationXML appendString:@"<Status>Enabled</Status>"];
-        [configurationXML appendFormat:@"<Transition><Days>%lu</Days><StorageClass>GLACIER</StorageClass></Transition>", (unsigned long)theTransitionDays];
-        [configurationXML appendString:@"</Rule>"];
-    }
-    [configurationXML appendString:@"</LifecycleConfiguration>"];
-    NSData *requestBody = [configurationXML dataUsingEncoding:NSUTF8StringEncoding];
-    S3Request *s3r = [[S3Request alloc] initWithMethod:@"PUT" endpoint:endpoint path:path queryString:@"lifecycle" authorizationProvider:sap error:error];
-    if (s3r == nil) {
-        return NO;
-    }
-    NSString *md5Hash = [MD5Hash hashDataBase64Encode:requestBody];
-    [s3r setRequestHeader:md5Hash forKey:@"Content-MD5"];
-    [s3r setRequestBody:requestBody];
-    NSData *ret = [s3r dataWithTargetConnectionDelegate:theTCD error:error];
-    [s3r release];
-    return ret != nil;
+- (BOOL)removeItemById:(NSString *)theItemId targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD error:(NSError **)error {
+    SETNSERROR([S3Service errorDomain], -1, @"removeItemById not implemented");
+    return NO;
 }
 
 
 #pragma mark NSCopying
 - (id)copyWithZone:(NSZone *)zone {
-    return [[S3Service alloc] initWithS3AuthorizationProvider:sap endpoint:endpoint useAmazonRRS:useAmazonRRS];
+    return [[S3Service alloc] initWithS3AuthorizationProvider:sap endpoint:endpoint];
 }
 
 
@@ -578,5 +496,25 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
         [s3r setRequestBody:data];
     }
     return [s3r dataWithTargetConnectionDelegate:theDelegate error:error] != nil;
+}
+- (BOOL)removeDirectory:(NSString *)thePath targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD error:(NSError **)error {
+    BOOL duplicatesWereMerged = NO;
+    NSDictionary *itemsByName = [self itemsByNameInDirectoryItem:nil path:thePath targetConnectionDelegate:theTCD duplicatesWereMerged:&duplicatesWereMerged error:error];
+    if (itemsByName == nil) {
+        return NO;
+    }
+    for (Item *item in [itemsByName allValues]) {
+        NSString *childPath = [thePath stringByAppendingPathComponent:item.name];
+        if (item.isDirectory) {
+            if (![self removeDirectory:childPath targetConnectionDelegate:theTCD error:error]) {
+                return NO;
+            }
+        } else {
+            if (![self removeFileItem:nil itemPath:childPath targetConnectionDelegate:theTCD error:error]) {
+                return NO;
+            }
+        }
+    }
+    return YES;
 }
 @end

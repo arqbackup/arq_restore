@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -29,6 +29,7 @@
  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 
 #import "S3ObjectMetadata.h"
 #import "RFC822.h"
@@ -92,11 +93,15 @@ init_done:
 	return self;
 }
 - (id)initWithPath:(NSString *)thePath lastModified:(NSDate *)theLastModified size:(long)theSize storageClass:(NSString *)theStorageClass {
+    return [self initWithPath:thePath lastModified:theLastModified size:theSize storageClass:theStorageClass itemId:nil];
+}
+- (id)initWithPath:(NSString *)thePath lastModified:(NSDate *)theLastModified size:(long)theSize storageClass:(NSString *)theStorageClass itemId:(NSString  *)theItemId {
     if (self = [super init]) {
         path = [thePath retain];
         lastModified = [theLastModified retain];
         size = theSize;
         storageClass = [theStorageClass retain];
+        itemId = [theItemId retain];
     }
     return self;
 }
@@ -106,9 +111,11 @@ init_done:
         BOOL ret = [StringIO read:&path from:theBIS error:error]
         && [DateIO read:&lastModified from:theBIS error:error]
         && [IntegerIO readInt64:&theSize from:theBIS error:error]
-        && [StringIO read:&storageClass from:theBIS error:error];
+        && [StringIO read:&storageClass from:theBIS error:error]
+        && [StringIO read:&itemId from:theBIS error:error];
         [path retain];
         [lastModified retain];
+        [itemId retain];
         size = (long)theSize;
         [storageClass retain];
         if (!ret) {
@@ -122,13 +129,15 @@ init_done:
 	[path release];
 	[lastModified release];
     [storageClass release];
+    [itemId release];
 	[super dealloc];
 }
 - (BOOL)writeToBufferedOutputStream:(BufferedOutputStream *)theBOS error:(NSError **)error {
     return [StringIO write:path to:theBOS error:error]
     && [DateIO write:lastModified to:theBOS error:error]
     && [IntegerIO writeInt64:(int64_t)size to:theBOS error:error]
-    && [StringIO write:storageClass to:theBOS error:error];
+    && [StringIO write:storageClass to:theBOS error:error]
+    && [StringIO write:itemId to:theBOS error:error];
 }
 - (NSString *)path {
 	return path;
@@ -141,6 +150,9 @@ init_done:
 }
 - (NSString *)storageClass {
     return storageClass;
+}
+- (NSString *)itemId {
+    return itemId;
 }
 
 #pragma mark NSObject

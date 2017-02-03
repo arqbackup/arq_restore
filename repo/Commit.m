@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,6 +31,8 @@
  */
 
 
+
+
 #import "IntegerIO.h"
 #import "DateIO.h"
 #import "StringIO.h"
@@ -42,6 +44,7 @@
 #import "BooleanIO.h"
 #import "DataIO.h"
 #import "BlobKey.h"
+
 
 #define HEADER_LENGTH (10)
 
@@ -66,7 +69,8 @@ creationDate = _creationDate,
 commitFailedFiles = _commitFailedFiles,
 hasMissingNodes = _hasMissingNodes,
 isComplete = _isComplete,
-bucketXMLData = _bucketXMLData;
+bucketXMLData = _bucketXMLData,
+arqVersion = _arqVersion;
 
 
 - (id)initWithCommit:(Commit *)theCommit parentCommitBlobKey:(BlobKey *)theParentBlobKey {
@@ -82,20 +86,22 @@ bucketXMLData = _bucketXMLData;
         _hasMissingNodes = [theCommit hasMissingNodes];
         _isComplete = [theCommit isComplete];
         _bucketXMLData = [[theCommit bucketXMLData] copy];
+        _arqVersion = [[theCommit arqVersion] copy];
     }
     return self;
 }
 
-- (id)             initWithAuthor:(NSString *)theAuthor 
-                          comment:(NSString *)theComment 
-              parentCommitBlobKey:(BlobKey *)theParentCommitBlobKey
-                      treeBlobKey:(BlobKey *)theTreeBlobKey
-                         location:(NSString *)theLocation
-                     creationDate:(NSDate *)theCreationDate
-                commitFailedFiles:(NSArray *)theCommitFailedFiles
-                  hasMissingNodes:(BOOL)theHasMissingNodes
-                       isComplete:(BOOL)theIsComplete
-                    bucketXMLData:(NSData *)theBucketXMLData {
+- (id)initWithAuthor:(NSString *)theAuthor
+             comment:(NSString *)theComment
+ parentCommitBlobKey:(BlobKey *)theParentCommitBlobKey
+         treeBlobKey:(BlobKey *)theTreeBlobKey
+            location:(NSString *)theLocation
+        creationDate:(NSDate *)theCreationDate
+   commitFailedFiles:(NSArray *)theCommitFailedFiles
+     hasMissingNodes:(BOOL)theHasMissingNodes
+          isComplete:(BOOL)theIsComplete
+       bucketXMLData:(NSData *)theBucketXMLData
+          arqVersion:(NSString *)theArqVersion {
     if (self = [super init]) {
         commitVersion = CURRENT_COMMIT_VERSION;
         _author = [theAuthor copy];
@@ -115,6 +121,7 @@ bucketXMLData = _bucketXMLData;
         _hasMissingNodes = theHasMissingNodes;
         _isComplete = theIsComplete;
         _bucketXMLData = [theBucketXMLData copy];
+        _arqVersion = [theArqVersion copy];
     }
     return self;
 }
@@ -151,7 +158,7 @@ bucketXMLData = _bucketXMLData;
             if (_parentCommitBlobKey != nil) {
                 HSLogError(@"IGNORING EXTRA PARENT COMMIT BLOB KEY!");
             } else {
-                _parentCommitBlobKey = [[BlobKey alloc] initWithSHA1:key storageType:StorageTypeS3 stretchEncryptionKey:cryptoKeyStretched compressed:NO error:error];
+                _parentCommitBlobKey = [[BlobKey alloc] initWithSHA1:key storageType:StorageTypeS3 stretchEncryptionKey:cryptoKeyStretched compressionType:BlobKeyCompressionNone error:error];
                 if (_parentCommitBlobKey == nil) {
                     goto init_error;
                 }
@@ -168,13 +175,21 @@ bucketXMLData = _bucketXMLData;
                 goto init_error;
             }
         }
-        BOOL treeIsCompressed = NO;
-        if (commitVersion >= 8) {
+        BlobKeyCompressionType compressionType = BlobKeyCompressionNone;
+        if (commitVersion >= 8 && commitVersion <= 9) {
+            BOOL treeIsCompressed = NO;
             if (![BooleanIO read:&treeIsCompressed from:is error:error]) {
                 goto init_error;
             }
+            compressionType = treeIsCompressed ? BlobKeyCompressionGzip : BlobKeyCompressionNone;
+        } else if (commitVersion >= 10) {
+            int32_t theCompressionType = BlobKeyCompressionNone;
+            if (![IntegerIO readInt32:&theCompressionType from:is error:error]) {
+                goto init_error;
+            }
+            compressionType = (BlobKeyCompressionType)theCompressionType;
         }
-        _treeBlobKey = [[BlobKey alloc] initWithSHA1:treeSHA1 storageType:StorageTypeS3 stretchEncryptionKey:treeStretchedKey compressed:treeIsCompressed error:error];
+        _treeBlobKey = [[BlobKey alloc] initWithSHA1:treeSHA1 storageType:StorageTypeS3 stretchEncryptionKey:treeStretchedKey compressionType:compressionType error:error];
         if (_treeBlobKey == nil) {
             goto init_error;
         }
@@ -248,6 +263,12 @@ bucketXMLData = _bucketXMLData;
             }
             [_bucketXMLData retain];
         }
+        if (commitVersion >= 12) {
+            if (![StringIO read:&_arqVersion from:is error:error]) {
+                goto init_error;
+            }
+            [_arqVersion retain];
+        }
     }
     goto init_done;
     
@@ -268,7 +289,28 @@ init_done:
     [_creationDate release];
     [_commitFailedFiles release];
     [_bucketXMLData release];
+    [_arqVersion release];
     [super dealloc];
+}
+- (NSString *)displayDescription {
+    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+    [dateFormatter setDateStyle:NSDateFormatterMediumStyle];
+    [dateFormatter setTimeStyle:NSDateFormatterShortStyle];
+    NSMutableString *ret = [[[NSMutableString alloc] initWithString:[dateFormatter stringFromDate:[self creationDate]]] autorelease];
+    [dateFormatter release];
+    NSString *commitLocation = [self location];
+    NSRange range = [commitLocation rangeOfRegex:@"^([^/]+)://([^/]+)(.+)$" capture:3];
+    if (range.location != NSNotFound) {
+        commitLocation = [commitLocation substringWithRange:range];
+    }
+    //FIXME: We should show the old path here, like this:
+//    if (![commitLocation isEqualToString:[bucket localPath]]) {
+//        [ret appendFormat:@" (%@)", commitLocation];
+//    }
+    if (![self isComplete]) {
+        [ret appendString:@" (in progress)"];
+    }
+    return ret;
 }
 - (NSData *)toData {
     NSMutableData *data = [[[NSMutableData alloc] init] autorelease];
@@ -286,7 +328,7 @@ init_done:
     }
     [StringIO write:[_treeBlobKey sha1] to:data];
     [BooleanIO write:[_treeBlobKey stretchEncryptionKey] to:data];
-    [BooleanIO write:[_treeBlobKey compressed] to:data];
+    [IntegerIO writeInt32:(int32_t)[_treeBlobKey compressionType] to:data];
     [StringIO write:_location to:data];
     [DateIO write:_creationDate to:data];
     uint64_t commitFailedFilesCount = (uint64_t)[_commitFailedFiles count];
@@ -297,6 +339,7 @@ init_done:
     [BooleanIO write:_hasMissingNodes to:data];
     [BooleanIO write:_isComplete to:data];
     [DataIO write:_bucketXMLData to:data];
+    [StringIO write:_arqVersion to:data];
     return data;
 }
 

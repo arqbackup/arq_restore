@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -39,4 +39,5 @@
 
 }
 + (NSData *)slurp:(id <InputStream>)is error:(NSError **)error;
++ (BOOL)slurp:(id <InputStream>)is intoBuffer:(NSMutableData *)theBuffer error:(NSError **)error;
 @end

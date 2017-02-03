@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -38,11 +38,16 @@
 
 
 @implementation NSErrorIO
++ (NSString *)errorDomain {
+    return @"NSErrorIOErrorDomain";
+}
 + (BOOL)write:(NSError *)theError to:(BufferedOutputStream *)theBOS error:(NSError **)error {
+//    HSLogDebug(@"writing NSError %@", theError);
     if (![BooleanIO write:(theError != nil) to:theBOS error:error]) {
         return NO;
     }
     if (theError != nil) {
+        HSLogDebug(@"writing NSError %@", theError);
         if (![StringIO write:[theError domain] to:theBOS error:error]
             || ![IntegerIO writeInt64:[theError code] to:theBOS error:error]
             || ![StringIO write:[theError localizedDescription] to:theBOS error:error]) {
@@ -50,6 +55,14 @@
         }
     }
     return YES;
+}
++ (void)write:(NSError *)theError to:(NSMutableData *)data {
+    [BooleanIO write:(theError != nil) to:data];
+    if (theError != nil) {
+        [StringIO write:[theError domain] to:data];
+        [IntegerIO writeInt64:[theError code] to:data];
+        [StringIO write:[theError localizedDescription] to:data];
+    }
 }
 + (BOOL)read:(NSError **)theError from:(BufferedInputStream *)theBIS error:(NSError **)error {
     if (theError != NULL) {
@@ -68,9 +81,20 @@
             || ![StringIO read:&description from:theBIS error:error]) {
             return NO;
         }
+        HSLogDebug(@"received NSError data: domain=%@ code=%qd description=%@", domain, code, description);
         if (theError != NULL) {
-            *theError = [NSError errorWithDomain:domain code:(NSInteger)code description:description];
+            if (domain == nil) {
+                SETNSERROR([NSErrorIO errorDomain], -1, @"nil domain");
+                return NO;
+            }
+            if (description == nil) {
+                SETNSERROR([NSErrorIO errorDomain], -1, @"nil description");
+                return NO;
+            }
+            *theError = [[[NSError alloc] initWithDomain:domain code:(NSInteger)code description:description] autorelease];
         }
+//    } else {
+//        HSLogDebug(@"NSErrorIO: received nil NSError");
     }
     return YES;
 }

@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,12 +31,14 @@
  */
 
 
+
 #import "ArqSalt.h"
 #import "NSFileManager_extra.h"
 #import "UserLibrary_Arq.h"
 #import "Target.h"
 #import "TargetConnection.h"
 #import "Streams.h"
+#import "CacheOwnership.h"
 
 
 #define SALT_LENGTH (8)
@@ -44,13 +46,15 @@
 
 @implementation ArqSalt
 - (id)initWithTarget:(Target *)theTarget
-           targetUID:(uid_t)theTargetUID
-           targetGID:(gid_t)theTargetGID
-        computerUUID:(NSString *)theComputerUUID {
+        computerUUID:(NSString *)theComputerUUID
+               error:(NSError **)error {
+    if (theComputerUUID == nil) {
+        SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"no computer UUID given for salt file");
+        return nil;
+    }
+    
     if (self = [super init]) {
         target = [theTarget retain];
-        uid = theTargetUID;
-        gid = theTargetGID;
         computerUUID = [theComputerUUID retain];
     }
     return self;
@@ -61,53 +65,82 @@
     [super dealloc];
 }
 
-- (NSData *)saltWithTargetConnectionDelegate:(id<TargetConnectionDelegate>)theDelegate error:(NSError **)error {
-    NSData *ret = [NSData dataWithContentsOfFile:[self localPath] options:NSUncachedRead error:error];
-    if (ret == nil) {
-        id <TargetConnection> targetConnection = [target newConnection];
-        do {
-            ret = [targetConnection saltDataForComputerUUID:computerUUID delegate:theDelegate error:error];
-            if (ret != nil) {
-                NSError *myError = nil;
-                if (![[NSFileManager defaultManager] ensureParentPathExistsForPath:[self localPath] targetUID:uid targetGID:gid error:&myError]
-                    || ![Streams writeData:ret atomicallyToFile:[self localPath] targetUID:uid targetGID:gid bytesWritten:NULL error:&myError]) {
-                    HSLogError(@"error caching salt data to %@: %@", [self localPath], myError);
-                }
-            }
-        } while(0);
-        [targetConnection release];
-    }
-    return ret;
+- (NSString *)errorDomain {
+    return @"ArqSaltErrorDomain";
 }
-- (BOOL)saveSalt:(NSData *)theSalt targetConnectionDelegate:(id<TargetConnectionDelegate>)theDelegate error:(NSError **)error {
-    id <TargetConnection> targetConnection = [target newConnection];
-    BOOL ret = YES;
-    do {
-        ret = [targetConnection setSaltData:theSalt forComputerUUID:computerUUID delegate:theDelegate error:error]
-        && [[NSFileManager defaultManager] ensureParentPathExistsForPath:[self localPath] targetUID:uid targetGID:gid error:error]
-        && [Streams writeData:theSalt atomicallyToFile:[self localPath] targetUID:uid targetGID:gid bytesWritten:NULL error:error];
-    } while (0);
+
+- (BOOL)ensureSaltExistsAtTargetWithTargetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error {
+    TargetConnection *targetConnection = [target newConnection:error];
+    if (targetConnection == nil) {
+        return NO;
+    }
+    BOOL ret = [self ensureSaltExistsAtTargetWithTargetConnection:targetConnection targetConnectionDelegate:theDelegate error:error];
     [targetConnection release];
     return ret;
 }
-- (NSData *)createSaltWithTargetConnectionDelegate:(id<TargetConnectionDelegate>)theDelegate error:(NSError **)error {
-    NSData *theSalt = [self createRandomSalt];
-    if (![self saveSalt:theSalt targetConnectionDelegate:theDelegate error:error]) {
-        return nil;
+- (BOOL)ensureSaltExistsAtTargetWithTargetConnection:(TargetConnection *)targetConnection targetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error {
+    NSError *myError = nil;
+    NSData *saltData = [targetConnection saltDataForComputerUUID:computerUUID delegate:theDelegate error:&myError];
+    if (saltData == nil) {
+        if ([myError code] != ERROR_NOT_FOUND) {
+            HSLogError(@"error getting salt from target: %@", myError);
+            SETERRORFROMMYERROR;
+            return NO;
+        }
+        
+        
+        // Try to replace salt file with file from cache.
+        
+        saltData = [NSData dataWithContentsOfFile:[self localPath] options:NSUncachedRead error:&myError];
+        if (saltData == nil) {
+            if ([myError code] != ERROR_NOT_FOUND) {
+                HSLogError(@"error reading cached salt file: %@", myError);
+            }
+            SETNSERROR([self errorDomain], -1, @"salt data not found at target or in cache");
+            return NO;
+        }
+        
+        if (![targetConnection setSaltData:saltData forComputerUUID:computerUUID delegate:theDelegate error:error]) {
+            return NO;
+        }
     }
-    return theSalt;
+    return YES;
 }
-            
+- (NSData *)saltDataWithTargetConnectionDelegate:(id<TargetConnectionDelegate>)theDelegate error:(NSError **)error {
+    NSData *ret = [NSData dataWithContentsOfFile:[self localPath] options:NSUncachedRead error:error];
+    if (ret == nil) {
+        ret = [self saltFromTargetWithTargetConnectionDelegate:theDelegate error:error];
+    }
+    return ret;
+}
+
 
 #pragma mark internal
 - (NSData *)createRandomSalt {
     unsigned char buf[SALT_LENGTH];
     for (NSUInteger i = 0; i < SALT_LENGTH; i++) {
-        buf[i] = (unsigned char)(rand() % 256);
+        buf[i] = (unsigned char)arc4random_uniform(256);
     }
     return [[[NSData alloc] initWithBytes:buf length:SALT_LENGTH] autorelease];
 }
 - (NSString *)localPath {
-    return [NSString stringWithFormat:@"%@/Cache.noindex/%@/%@/salt.dat", [UserLibrary arqUserLibraryPath], [target targetUUID], computerUUID];
+    return [NSString stringWithFormat:@"%@/%@/%@/salt.dat", [UserLibrary arqCachePath], [target targetUUID], computerUUID];
+}
+- (NSData *)saltFromTargetWithTargetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error {
+    NSData *ret = nil;
+    TargetConnection *targetConnection = [target newConnection:error];
+    if (targetConnection == nil) {
+        return nil;
+    }
+    ret = [targetConnection saltDataForComputerUUID:computerUUID delegate:theDelegate error:error];
+    if (ret != nil) {
+        NSError *myError = nil;
+        if (![[NSFileManager defaultManager] ensureParentPathExistsForPath:[self localPath] targetUID:[[CacheOwnership sharedCacheOwnership] uid] targetGID:[[CacheOwnership sharedCacheOwnership] gid] error:&myError]
+            || ![Streams writeData:ret atomicallyToFile:[self localPath] targetUID:[[CacheOwnership sharedCacheOwnership] uid] targetGID:[[CacheOwnership sharedCacheOwnership] gid] bytesWritten:NULL error:&myError]) {
+            HSLogError(@"error caching salt data to %@: %@", [self localPath], myError);
+        }
+    }
+    [targetConnection release];
+    return ret;
 }
 @end

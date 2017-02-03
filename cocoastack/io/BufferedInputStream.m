@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -29,6 +29,7 @@
  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 
 
 #import "BufferedInputStream.h"
@@ -75,12 +76,19 @@
     return ret;
 }
 - (NSData *)readExactly:(NSUInteger)exactLength error:(NSError **)error {
-    NSMutableData *data = [NSMutableData dataWithLength:exactLength];
-    unsigned char *dataBuf = [data mutableBytes];
-    if (![self readExactly:exactLength into:dataBuf error:error]) {
+    NSMutableData *data = [NSMutableData data];
+    if (![self readExactly:exactLength intoBuffer:data error:error]) {
         return nil;
     }
     return data;
+}
+- (BOOL)readExactly:(NSUInteger)exactLength intoBuffer:(NSMutableData *)theOutBuffer error:(NSError **)error {
+    [theOutBuffer setLength:exactLength];
+    unsigned char *dataBuf = [theOutBuffer mutableBytes];
+    if (![self readExactly:exactLength into:dataBuf error:error]) {
+        return NO;
+    }
+    return YES;
 }
 - (BOOL)readExactly:(NSUInteger)exactLength into:(unsigned char *)outBuf error:(NSError **)error {
     if (exactLength > 2147483648) {
@@ -122,7 +130,6 @@
     }
     NSString *ret = [[[NSString alloc] initWithBytes:lineBuf length:received encoding:NSUTF8StringEncoding] autorelease];
     free(lineBuf);
-    HSLogTrace(@"got line <%@>", ret);
     return ret;
 }
 - (NSString *)readLine:(NSError **)error {
@@ -140,7 +147,6 @@
         received++;
     }
     NSString *ret = [[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] autorelease];
-    HSLogTrace(@"got line <%@> followed by \\n", ret);
     return ret;
 }
 - (uint64_t)bytesReceived {
@@ -183,6 +189,10 @@
 - (NSData *)slurp:(NSError **)error {
     return [InputStreams slurp:self error:error];
 }
+- (BOOL)slurpIntoBuffer:(NSMutableData *)theBuffer error:(NSError **)error {
+    return [InputStreams slurp:self intoBuffer:theBuffer error:error];
+}
+
 
 #pragma mark NSObject
 - (NSString *)description {

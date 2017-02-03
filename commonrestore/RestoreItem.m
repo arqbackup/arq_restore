@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,6 +31,7 @@
  */
 
 
+
 #import "RestoreItem.h"
 #import "Tree.h"
 #import "Node.h"
@@ -41,12 +42,13 @@
 #import "DataInputStream.h"
 #import "BufferedInputStream.h"
 #import "BlobKey.h"
-#import "NSData-GZip.h"
 #import "XAttrSet.h"
 #import "Restorer.h"
 #import "NSFileManager_extra.h"
 #import "FileOutputStream.h"
 #import "BufferedOutputStream.h"
+#import "NSData-Compress.h"
+#import "CacheOwnership.h"
 
 
 enum {
@@ -250,10 +252,6 @@ enum {
             if (![self createFile:node restorer:theRestorer error:error]) {
                 return NO;
             }
-            // We call this once here in case it's not a regular file. We also call it after the last blob in restoreFileDataWithRestorer so the metadata are set after the last file blob.
-            if (![self applyNodeWithRestorer:theRestorer error:error]) {
-                return NO;
-            }
         }
         [theHardlinks setObject:path forKey:inode];
     }
@@ -307,7 +305,7 @@ enum {
     if (![FileAttributes applyMode:[tree mode] toPath:path isDirectory:YES error:error]) {
         return NO;
     }
-    if (!S_ISLNK([tree mode]) && [tree treeVersion] >= 7 && ![FileAttributes applyMTimeSec:tree.mtime_sec mTimeNSec:tree.mtime_nsec toPath:path error:error]) {
+    if ([tree treeVersion] >= 7 && ![FileAttributes applyMTimeSec:tree.mtime_sec mTimeNSec:tree.mtime_nsec toPath:path error:error]) {
         return NO;
     }
     if (([tree treeVersion] >= 7) && ![FileAttributes applyCreateTimeSec:tree.createTime_sec createTimeNSec:tree.createTime_nsec to:&fsRef error:error]) {
@@ -329,11 +327,9 @@ enum {
     if (xattrsData == nil) {
         return NO;
     }
-    if ([xattrsBlobKey compressed]) {
-        xattrsData = [xattrsData gzipInflate:error];
-        if (xattrsData == nil) {
-            return NO;
-        }
+    xattrsData = [xattrsData uncompress:[xattrsBlobKey compressionType] error:error];
+    if (xattrsData == nil) {
+        return NO;
     }
     DataInputStream *dis = [[[DataInputStream alloc] initWithData:xattrsData description:[NSString stringWithFormat:@"xattrs %@", xattrsBlobKey]] autorelease];
     BufferedInputStream *bis = [[[BufferedInputStream alloc] initWithUnderlyingStream:dis] autorelease];
@@ -352,11 +348,9 @@ enum {
     if (data == nil) {
         return NO;
     }
-    if ([theACLBlobKey compressed]) {
-        data = [data gzipInflate:error];
-        if (data == nil) {
-            return NO;
-        }
+    data = [data uncompress:[theACLBlobKey compressionType] error:error];
+    if (data == nil) {
+        return NO;
     }
     NSString *aclString = [[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] autorelease];
     
@@ -407,7 +401,6 @@ enum {
             return NO;
         }
         
-        HSLogTrace(@"%qu bytes -> %@", [node uncompressedDataSize], path);
         if (S_ISLNK([node mode])) {
             NSMutableData *data = [NSMutableData data];
             for (BlobKey *dataBlobKey in [node dataBlobKeys]) {
@@ -416,11 +409,9 @@ enum {
                     HSLogError(@"error getting data for %@", dataBlobKey);
                     return NO;
                 }
-                if ([dataBlobKey compressed]) {
-                    blobData = [blobData gzipInflate:error];
-                    if (blobData == nil) {
-                        return NO;
-                    }
+                blobData = [blobData uncompress:[dataBlobKey compressionType] error:error];
+                if (blobData == nil) {
+                    return NO;
                 }
                 [data appendData:blobData];
             }
@@ -434,7 +425,7 @@ enum {
             }
             HSLogDetail(@"restored %@", path);
         } else if ([node uncompressedDataSize] > 0) {
-            fileOutputStream = [[FileOutputStream alloc] initWithPath:path append:NO];
+            fileOutputStream = [[FileOutputStream alloc] initWithPath:path targetUID:[[CacheOwnership sharedCacheOwnership] uid] targetGID:[[CacheOwnership sharedCacheOwnership] gid] append:NO];
             if ([[node dataBlobKeys] count] > 0) {
                 if (![self restoreFileDataWithRestorer:theRestorer error:error]) {
                     return NO;
@@ -468,6 +459,9 @@ enum {
                 return NO;
             }
         }
+        if (![self applyNodeWithRestorer:theRestorer error:error]) {
+            return NO;
+        }
     }
 
     return YES;
@@ -488,6 +482,7 @@ enum {
     return YES;
 }
 - (BOOL)doRestoreFileDataWithRestorer:(id <Restorer>)theRestorer error:(NSError **)error {
+    NSError *myError = nil;
     BlobKey *theBlobKey = [[node dataBlobKeys] objectAtIndex:dataBlobKeyIndex];
     NSNumber *available = [theRestorer isObjectAvailableForBlobKey:theBlobKey error:error];
     if (available == nil) {
@@ -497,9 +492,11 @@ enum {
         SETNSERROR([self errorDomain], ERROR_GLACIER_OBJECT_NOT_AVAILABLE, @"acl blob %@ not available", theBlobKey);
         return NO;
     }
-    NSData *blobData = [theRestorer dataForBlobKey:theBlobKey error:error];
+    NSData *blobData = [theRestorer dataForBlobKey:theBlobKey error:&myError];
     if (blobData == nil) {
-        NSError *myError = nil;
+        SETERRORFROMMYERROR;
+        HSLogError(@"failed to get data for %@: %@", [theBlobKey sha1], [myError localizedDescription]);
+        
         if (![[NSFileManager defaultManager] removeItemAtPath:path error:&myError]) {
             HSLogError(@"error deleting incomplete file %@: %@", path, [myError localizedDescription]);
         } else {
@@ -507,21 +504,20 @@ enum {
         }
         return NO;
     }
-    if ([theBlobKey compressed]) {
-        blobData = [blobData gzipInflate:error];
-        if (blobData == nil) {
-            return NO;
-            NSError *myError = nil;
-            if (![[NSFileManager defaultManager] removeItemAtPath:path error:&myError]) {
-                HSLogError(@"error deleting incomplete file %@: %@", path, [myError localizedDescription]);
-            } else {
-                HSLogError(@"deleted incomplete file %@", path);
-            }
+    blobData = [blobData uncompress:[theBlobKey compressionType] error:&myError];
+    if (blobData == nil) {
+        SETERRORFROMMYERROR;
+        HSLogError(@"failed to uncompress %@: %@", [theBlobKey sha1], [myError localizedDescription]);
+        
+        if (![[NSFileManager defaultManager] removeItemAtPath:path error:&myError]) {
+            HSLogError(@"error deleting incomplete file %@: %@", path, [myError localizedDescription]);
+        } else {
+            HSLogError(@"deleted incomplete file %@", path);
         }
+        return NO;
     }
 
     BufferedOutputStream *bos = [[BufferedOutputStream alloc] initWithUnderlyingOutputStream:fileOutputStream];
-    NSError *myError = nil;
     BOOL ret = [bos writeFully:[blobData bytes] length:[blobData length] error:&myError] && [bos flush:&myError];
     [bos release];
     if (!ret) {
@@ -535,7 +531,7 @@ enum {
         return NO;
     }
     dataBlobKeyIndex++;
-    HSLogDebug(@"appended blob %ld of %ld to %@", (unsigned long)dataBlobKeyIndex, (unsigned long)[[node dataBlobKeys] count], path);
+    HSLogDebug(@"appended blob %ld of %ld (%ld bytes) to %@", (unsigned long)dataBlobKeyIndex, (unsigned long)[[node dataBlobKeys] count], (unsigned long)[blobData length], path);
     
     if (dataBlobKeyIndex >= [[node dataBlobKeys] count]) {
         if ([theRestorer useTargetUIDAndGID]) {
@@ -583,14 +579,11 @@ enum {
     } else {
         oss = FSPathMakeRef((UInt8*)[path fileSystemRepresentation], &fsRef, &isDirectory);
     }
-    if (oss == bdNamErr) {
+    if (oss != noErr) {
         HSLogInfo(@"skipping applying some metadata for %@: %@", path, [OSStatusDescription descriptionForOSStatus:oss]);
-    } else if (oss != noErr) {
-        SETNSERROR(@"MacFilesErrorDomain", oss, @"error making FSRef for %@: %@", path, [OSStatusDescription descriptionForOSStatus:oss]);
-        return NO;
     } else {
         if (!S_ISFIFO([node mode])) {
-            FileAttributes *fa = [[[FileAttributes alloc] initWithPath:path stat:&st error:error] autorelease];
+            FileAttributes *fa = [[[FileAttributes alloc] initWithPath:path isSymLink:S_ISLNK([node mode]) error:error] autorelease];
             if (fa == nil) {
                 return NO;
             }
@@ -615,7 +608,7 @@ enum {
     if (st.st_mode != [node mode] && ![FileAttributes applyMode:[node mode] toPath:path isDirectory:NO error:error]) {
         return NO;
     }
-    if (!S_ISLNK([node mode]) && [node treeVersion] >= 7 && ![FileAttributes applyMTimeSec:node.mtime_sec mTimeNSec:node.mtime_nsec toPath:path error:error]) {
+    if ([node treeVersion] >= 7 && ![FileAttributes applyMTimeSec:node.mtime_sec mTimeNSec:node.mtime_nsec toPath:path error:error]) {
         return NO;
     }
     if (!S_ISFIFO([node mode])) {

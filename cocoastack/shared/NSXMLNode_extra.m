@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,6 +31,7 @@
  */
 
 
+
 #import "NSXMLNode_extra.h"
 
 @implementation NSXMLNode (extra)
@@ -42,7 +43,6 @@
         return nil;
     }
     if ([childNodes count] == 0) {
-        HSLogTrace(@"child node %@ not found for node %@", name, [self description]);
         return nil;
     }
     if ([childNodes count] > 1) {
