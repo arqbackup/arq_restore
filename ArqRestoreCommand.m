@@ -139,7 +139,7 @@
     NSString *oAuth2RedirectURI = nil;
     
     if ([targetType isEqualToString:@"aws"]) {
-        if ([args count] != 6) {
+        if ([args count] != 5) {
             SETNSERROR([self errorDomain], ERROR_USAGE, @"invalid arguments");
             return NO;
         }
@@ -149,7 +149,10 @@
         NSString *urlString = [NSString stringWithFormat:@"https://%@@%@/any_bucket", accessKeyId, [[usEast1 s3EndpointWithSSL:NO] host]];
         
         endpoint = [NSURL URLWithString:urlString];
-        secret = [args objectAtIndex:5];
+        secret = [self readPasswordWithPrompt:@"enter AWS secret key:" error:error];
+        if (secret == nil) {
+            return NO;
+        }
         
     } else if ([targetType isEqualToString:@"local"]) {
         if ([args count] != 5) {
@@ -259,7 +262,7 @@
     }
     
     NSString *theComputerUUID = [args objectAtIndex:3];
-    NSString *theEncryptionPassword = [self readEncryptionPassword:error];
+    NSString *theEncryptionPassword = [self readPasswordWithPrompt:@"enter encryption password:" error:error];
     if (theEncryptionPassword == nil) {
         return NO;
     }
@@ -301,7 +304,7 @@
     NSString *theComputerUUID = [args objectAtIndex:3];
     NSString *theBucketUUID = [args objectAtIndex:4];
     
-    NSString *theEncryptionPassword = [self readEncryptionPassword:error];
+    NSString *theEncryptionPassword = [self readPasswordWithPrompt:@"enter encryption password:" error:error];
     if (theEncryptionPassword == nil) {
         return NO;
     }
@@ -353,7 +356,7 @@
     NSString *theComputerUUID = [args objectAtIndex:3];
     NSString *theBucketUUID = [args objectAtIndex:4];
 
-    NSString *theEncryptionPassword = [self readEncryptionPassword:error];
+    NSString *theEncryptionPassword = [self readPasswordWithPrompt:@"enter encryption password:" error:error];
     if (theEncryptionPassword == nil) {
         return NO;
     }
@@ -441,7 +444,7 @@
     NSString *theComputerUUID = [args objectAtIndex:3];
     NSString *theBucketUUID = [args objectAtIndex:4];
     
-    NSString *theEncryptionPassword = [self readEncryptionPassword:error];
+    NSString *theEncryptionPassword = [self readPasswordWithPrompt:@"enter encryption password:" error:error];
     if (theEncryptionPassword == nil) {
         return NO;
     }
@@ -773,8 +776,8 @@
 
 
 #pragma mark internal
-- (NSString *)readEncryptionPassword:(NSError **)error {
-    printf("enter encryption password: ");
+- (NSString *)readPasswordWithPrompt:(NSString *)thePrompt error:(NSError **)error {
+    printf("%s ", [thePrompt UTF8String]);
     fflush(stdout);
     
     struct termios oldTermios;

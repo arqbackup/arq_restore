@@ -40,7 +40,7 @@
 static void printUsage(const char *exeName) {
 	fprintf(stderr, "Usage:\n");
     fprintf(stderr, "\t%s [-l loglevel] listtargets\n", exeName);
-    fprintf(stderr, "\t%s [-l loglevel] addtarget <nickname> aws <access_key> <secret_key> \n", exeName);
+    fprintf(stderr, "\t%s [-l loglevel] addtarget <nickname> aws <access_key>\n", exeName);
     fprintf(stderr, "\t%s [-l loglevel] addtarget <nickname> local <path>\n", exeName);
     fprintf(stderr, "\t%s [-l loglevel] deletetarget <nickname>\n", exeName);
     fprintf(stderr, "\n");
