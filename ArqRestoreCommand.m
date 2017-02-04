@@ -431,7 +431,7 @@
 }
 
 - (BOOL)restore:(NSArray *)args error:(NSError **)error {
-    if ([args count] != 5) {
+    if ([args count] != 5 && [args count] != 6) {
         SETNSERROR([self errorDomain], ERROR_USAGE, @"invalid arguments");
         return NO;
     }
@@ -489,8 +489,41 @@
     if (commit == nil) {
         return NO;
     }
-    
-    NSString *destinationPath = [[[NSFileManager defaultManager] currentDirectoryPath] stringByAppendingPathComponent:[[matchingBucket localPath] lastPathComponent]];
+
+    BlobKey *treeBlobKey = [commit treeBlobKey];
+    NSString *nodeName = nil;
+    if ([args count] == 6) {
+        NSString *path = [args objectAtIndex:5];
+        if ([path hasPrefix:@"/"]) {
+            path = [path substringFromIndex:1];
+        }
+        NSArray *pathComponents = [path pathComponents];
+        for (NSUInteger index = 0; index < [pathComponents count]; index++) {
+            NSString *component = [pathComponents objectAtIndex:index];
+            Tree *childTree = [repo treeForBlobKey:treeBlobKey error:error];
+            if (childTree == nil) {
+                return NO;
+            }
+            Node *childNode = [childTree childNodeWithName:component];
+            if (childNode == nil) {
+                SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"path component '%@' not found", component);
+                return NO;
+            }
+            if (![childNode isTree] && index < ([pathComponents count] - 1)) {
+                // If it's a directory and we're not at the end of the path, fail.
+                SETNSERROR([self errorDomain], -1, @"'%@' is not a directory", component);
+                return NO;
+            }
+            if ([childNode isTree]) {
+                treeBlobKey = [childNode treeBlobKey];
+            } else {
+                nodeName = component;
+            }
+        }
+    }
+
+    NSString *restoreFileName = [args count] == 6 ? [[args objectAtIndex:5] lastPathComponent] : [[matchingBucket localPath] lastPathComponent];
+    NSString *destinationPath = [[[NSFileManager defaultManager] currentDirectoryPath] stringByAppendingPathComponent:restoreFileName];
     if ([[NSFileManager defaultManager] fileExistsAtPath:destinationPath]) {
         SETNSERROR([self errorDomain], -1, @"%@ already exists", destinationPath);
         return NO;
@@ -511,8 +544,9 @@
                                                                                commitBlobKey:commitBlobKey
                                                                                 rootItemName:[[matchingBucket localPath] lastPathComponent]
                                                                                  treeVersion:CURRENT_TREE_VERSION
-                                                                                 treeBlobKey:[commit treeBlobKey]
-                                                                                    nodeName:nil targetUID:getuid()
+                                                                                 treeBlobKey:treeBlobKey
+                                                                                    nodeName:nodeName
+                                                                                   targetUID:getuid()
                                                                                    targetGID:getgid()
                                                                           useTargetUIDAndGID:YES
                                                                              destinationPath:destinationPath
@@ -527,8 +561,8 @@
                                                                                    commitBlobKey:commitBlobKey
                                                                                     rootItemName:[[matchingBucket localPath] lastPathComponent]
                                                                                      treeVersion:CURRENT_TREE_VERSION
-                                                                                     treeBlobKey:[commit treeBlobKey]
-                                                                                        nodeName:nil
+                                                                                     treeBlobKey:treeBlobKey
+                                                                                        nodeName:nodeName
                                                                                        targetUID:getuid()
                                                                                        targetGID:getgid()
                                                                               useTargetUIDAndGID:YES
@@ -542,8 +576,8 @@
                                                                                  commitBlobKey:commitBlobKey
                                                                                   rootItemName:[[matchingBucket localPath] lastPathComponent]
                                                                                    treeVersion:CURRENT_TREE_VERSION
-                                                                                   treeBlobKey:[commit treeBlobKey]
-                                                                                      nodeName:nil
+                                                                                   treeBlobKey:treeBlobKey
+                                                                                      nodeName:nodeName
                                                                                      targetUID:getuid()
                                                                                      targetGID:getgid()
                                                                             useTargetUIDAndGID:YES
