@@ -12,7 +12,7 @@ Use arq_restore to list the computers backed up to your destination, list folder
 Type `arq_restore` with no arguments to get help.
 
 
-## Usage
+## Prerequisites
 
 To compile, install OpenSSL 1.0.2.
 
