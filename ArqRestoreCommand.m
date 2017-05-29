@@ -811,8 +811,8 @@
 
 #pragma mark internal
 - (NSString *)readPasswordWithPrompt:(NSString *)thePrompt error:(NSError **)error {
-    printf("%s ", [thePrompt UTF8String]);
-    fflush(stdout);
+    fprintf(stderr, "%s ", [thePrompt UTF8String]);
+    fflush(stderr);
     
     struct termios oldTermios;
     struct termios newTermios;
@@ -835,7 +835,6 @@
     if (len > 0 && buf[len - 1] == '\n') {
         --len;
     }
-    printf("\n");
     
     return [[[NSString alloc] initWithBytes:buf length:len encoding:NSUTF8StringEncoding] autorelease];
 }
