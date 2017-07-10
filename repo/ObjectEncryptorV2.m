@@ -50,8 +50,9 @@
 #define SYMMETRIC_KEY_LEN kCCKeySizeAES256
 #define DATA_IV_AND_SYMMETRIC_KEY_LEN (IV_LEN + SYMMETRIC_KEY_LEN)
 #define ENCRYPTED_DATA_IV_AND_SYMMETRIC_KEY_LEN (DATA_IV_AND_SYMMETRIC_KEY_LEN + kCCBlockSizeAES128)
-#define ENCRYPTION_VERSION (2)
 #define MAX_ENCRYPTIONS_PER_SYMMETRIC_KEY (256)
+#define V3_MASTER_KEYS_LEN (kCCKeySizeAES256 * 3)
+#define V2_MASTER_KEYS_LEN (kCCKeySizeAES256 * 2)
 
 
 @implementation ObjectEncryptorV2
@@ -63,7 +64,6 @@
     if (self = [super init]) {
         target = [theTarget retain];
         computerUUID = [theComputerUUID retain];
-        computerUUIDData = [[computerUUID dataUsingEncoding:NSUTF8StringEncoding] retain];
         
         symmetricKey = (unsigned char *)malloc(SYMMETRIC_KEY_LEN);
         
@@ -71,6 +71,28 @@
         masterKey = [masterKeys bytes];
         hmacKey = (unsigned char *)masterKey + kCCKeySizeAES256;
         
+        encryptionVersion = [theEDF encryptionVersion];
+        
+        if ([theEDF encryptionVersion] == 3) {
+            if ([masterKeys length] != V3_MASTER_KEYS_LEN) {
+                SETNSERROR([ObjectEncryptor errorDomain], -1, @"master keys data is not %d bytes", V3_MASTER_KEYS_LEN);
+                [self release];
+                return nil;
+            }
+            blobKeySaltData = [[NSData alloc] initWithBytes:(hmacKey + kCCKeySizeAES256) length:kCCKeySizeAES256];
+        } else if ([theEDF encryptionVersion] == 2) {
+            if ([masterKeys length] != V2_MASTER_KEYS_LEN) {
+                SETNSERROR([ObjectEncryptor errorDomain], -1, @"master keys data is not %d bytes", V2_MASTER_KEYS_LEN);
+                [self release];
+                return nil;
+            }
+            blobKeySaltData = [[computerUUID dataUsingEncoding:NSUTF8StringEncoding] retain];
+        } else {
+            SETNSERROR([ObjectEncryptor errorDomain], -1, @"unexpected encryption version: %d", [theEDF encryptionVersion]);
+            [self release];
+            return nil;
+        }
+
         [self resetSymmetricKey];
         symmetricKeyLock = [[NSLock alloc] init];
         [symmetricKeyLock setName:@"symmetric key lock"];
@@ -81,6 +103,7 @@
 - (void)dealloc {
     [target release];
     [computerUUID release];
+    [blobKeySaltData release];
     [masterKeys release];
     free(symmetricKey);
     [symmetricKeyLock release];
@@ -91,14 +114,14 @@
 #pragma ObjectEncryptorImpl
 - (BOOL)ensureDatFileExistsAtTargetWithEncryptionPassword:(NSString *)theEncryptionPassword targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD error:(NSError **)error {
     NSError *myError = nil;
-    EncryptionDatFile *encryptionDatFile = [[[EncryptionDatFile alloc] initFromTargetWithEncryptionPassword:theEncryptionPassword target:target computerUUID:computerUUID encryptionVersion:ENCRYPTION_VERSION targetConnectionDelegate:theTCD error:&myError] autorelease];
+    EncryptionDatFile *encryptionDatFile = [[[EncryptionDatFile alloc] initFromTargetWithEncryptionPassword:theEncryptionPassword target:target computerUUID:computerUUID encryptionVersion:encryptionVersion targetConnectionDelegate:theTCD error:&myError] autorelease];
     if (encryptionDatFile == nil) {
         if ([myError code] != ERROR_NOT_FOUND) {
             SETERRORFROMMYERROR;
             return NO;
         }
         
-        encryptionDatFile = [[[EncryptionDatFile alloc] initFromLocalCacheWithEncryptionPassword:theEncryptionPassword target:target computerUUID:computerUUID encryptionVersion:ENCRYPTION_VERSION error:error] autorelease];
+        encryptionDatFile = [[[EncryptionDatFile alloc] initFromLocalCacheWithEncryptionPassword:theEncryptionPassword target:target computerUUID:computerUUID encryptionVersion:encryptionVersion error:error] autorelease];
         if (encryptionDatFile == nil) {
             SETERRORFROMMYERROR;
             return NO;
@@ -122,7 +145,7 @@
     unsigned char digest[CC_SHA1_DIGEST_LENGTH];
     CC_SHA1_CTX ctx;
     CC_SHA1_Init(&ctx);
-    CC_SHA1_Update(&ctx, [computerUUIDData bytes], (CC_LONG)[computerUUIDData length]);
+    CC_SHA1_Update(&ctx, [blobKeySaltData bytes], (CC_LONG)[blobKeySaltData length]);
     CC_SHA1_Update(&ctx, [theData bytes], (CC_LONG)[theData length]);
     CC_SHA1_Final(digest, &ctx);
     return [NSString hexStringWithBytes:digest length:CC_SHA1_DIGEST_LENGTH];

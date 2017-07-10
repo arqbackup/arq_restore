@@ -40,13 +40,14 @@
 @interface ObjectEncryptorV2 : NSObject <ObjectEncryptorImpl> {
     Target *target;
     NSString *computerUUID;
-    NSData *computerUUIDData;
+    NSData *blobKeySaltData;
     NSData *masterKeys;
     const void *masterKey;
     const void *hmacKey;
     unsigned char *symmetricKey;
     NSLock *symmetricKeyLock;
     int encryptCount;
+    int encryptionVersion;
 }
 
 - (id)initWithTarget:(Target *)theTarget
