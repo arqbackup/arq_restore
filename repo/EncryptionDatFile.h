@@ -45,21 +45,6 @@
     NSData *masterKeys;
 }
 
-+ (EncryptionDatFile *)createWithRandomMasterKeysAndEncryptionPassword:(NSString *)theEncryptionPassword
-                                                                target:(Target *)theTarget
-                                                          computerUUID:(NSString *)theComputerUUID
-                                                     encryptionVersion:(int)theEncryptionVersion
-                                              targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD
-                                                                 error:(NSError **)error;
-
-+ (EncryptionDatFile *)createWithMasterKeys:(NSData *)theMasterKeys
-                         encryptionPassword:(NSString *)theEncryptionPassword
-                                     target:(Target *)theTarget
-                               computerUUID:(NSString *)theComputerUUID
-                          encryptionVersion:(int)theEncryptionVersion
-                   targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD
-                                      error:(NSError **)error;
-
 + (EncryptionDatFile *)encryptionDatFileForTarget:(Target *)theTarget
                                      computerUUID:(NSString *)theComputerUUID
                                encryptionPassword:(NSString *)theEncryptionPassword
