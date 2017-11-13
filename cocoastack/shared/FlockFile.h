@@ -42,5 +42,5 @@
 }
 - (id)initWithPath:(NSString *)thePath;
 - (BOOL)tryLock:(NSError **)error;
-- (BOOL)lockAndExecute:(void (^)())block error:(NSError **)error;
+- (BOOL)lockAndExecute:(void (^)(void))block error:(NSError **)error;
 @end

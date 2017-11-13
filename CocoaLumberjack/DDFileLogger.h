@@ -283,7 +283,7 @@ extern unsigned long long const kDDDefaultLogFilesDiskQuota;
 // You can optionally force the current log file to be rolled with this method.
 // CompletionBlock will be called on main queue.
 
-- (void)rollLogFileWithCompletionBlock:(void (^)())completionBlock;
+- (void)rollLogFileWithCompletionBlock:(void (^)(void))completionBlock;
 
 // Method is deprecated. Use rollLogFileWithCompletionBlock: method instead.
 

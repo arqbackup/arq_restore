@@ -61,7 +61,7 @@
 - (BOOL)tryLock:(NSError **)error {
     return [self lockWithBlockUntilAvailable:NO error:error];
 }
-- (BOOL)lockAndExecute:(void (^)())block error:(NSError **)error {
+- (BOOL)lockAndExecute:(void (^)(void))block error:(NSError **)error {
     if (![self lockWithBlockUntilAvailable:YES error:error]) {
         return NO;
     }
