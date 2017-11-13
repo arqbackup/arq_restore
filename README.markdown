@@ -11,10 +11,12 @@ Use arq_restore to list the computers backed up to your destination, list folder
 
 Type `arq_restore` with no arguments to get help.
 
+arq_restore works with Arq backups on AWS or a local filesystem. If you need to restore from backups stored at a different cloud provider, download the backup data to a local filesystem and use arq_restore on that.
+
 
 ## Prerequisites
 
-To compile, install OpenSSL 1.0.2.
+To compile, arq_restore expects OpenSSL 1.0.2 installed in the default location.
 
 
 ## License
