@@ -520,6 +520,15 @@
                 nodeName = component;
             }
         }
+    } else {
+        Tree *rootTree = [repo treeForBlobKey:[commit treeBlobKey] error:error];
+        if (rootTree == nil) {
+            return NO;
+        }
+        if ([[rootTree childNodeNames] isEqualToArray:[NSArray arrayWithObject:@"."]]) {
+            // Single-file case.
+            nodeName = [[commit location] lastPathComponent];
+        }
     }
 
     NSString *restoreFileName = [args count] == 6 ? [[args objectAtIndex:5] lastPathComponent] : [[matchingBucket localPath] lastPathComponent];
