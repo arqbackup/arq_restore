@@ -141,7 +141,7 @@ targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD
 }
 - (NSData *)v2EncryptedObjectFromData:(NSData *)theData masterIV:(NSData *)theMasterIV dataIVAndSymmetricKey:(NSData *)theDataIVAndSymmetricKey error:(NSError **)error {
     SETNSERROR(@"ObjectEncryptorV1", -1, @"writeV2EncryptedObjectFromData not supported");
-    return NO;
+    return nil;
 }
 //
 //- (NSString *)sha1HashForData:(NSData *)theData error:(NSError **)error {

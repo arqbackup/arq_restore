@@ -161,7 +161,7 @@
             int errnum = errno;
             HSLogError(@"chown(%@) error %d: %s", thePath, errnum, strerror(errnum));
             SETNSERROR(@"UnixErrorDomain", errnum, @"failed to change ownership of %@: %s", thePath, strerror(errnum));
-            return NO;
+            return nil;
         }
     }
     
@@ -200,14 +200,14 @@
     if (![self ensureTempDirExists:&myError]) {
         SETERRORFROMMYERROR;
         HSLogError(@"error ensuring temp dir %@ exists: %@", tempDir, myError);
-        return NO;
+        return nil;
     }
     
     NSString *tempPath = [tempDir stringByAppendingPathComponent:[NSString stringWithRandomUUID]];
     if (![theData writeToFile:tempPath options:NSAtomicWrite error:&myError]) {
         SETERRORFROMMYERROR;
         HSLogError(@"error creating temp file %@: %@", tempPath, myError);
-        return NO;
+        return nil;
     }
     
     if (![[NSFileManager defaultManager] ensureParentPathExistsForPath:theFullPath targetUID:[[CacheOwnership sharedCacheOwnership] uid] targetGID:[[CacheOwnership sharedCacheOwnership] gid] error:error]) {
@@ -217,21 +217,21 @@
         if (![myError isErrorWithDomain:NSCocoaErrorDomain code:NSFileWriteFileExistsError]) {
             SETERRORFROMMYERROR;
             HSLogError(@"error renaming %@ to %@: %@", tempPath, theFullPath, myError);
-            return NO;
+            return nil;
         }
         // Delete the file that's in the way.
         HSLogDebug(@"deleting existing file before overwriting: %@", theFullPath);
         if (![[NSFileManager defaultManager] removeItemAtPath:theFullPath error:&myError]) {
             SETERRORFROMMYERROR;
             HSLogError(@"error removing a file that's in the way (%@): %@", theFullPath, myError);
-            return NO;
+            return nil;
         }
         // Try again.
         if (![[NSFileManager defaultManager] moveItemAtPath:tempPath toPath:theFullPath error:&myError]) {
             if (![myError isErrorWithDomain:NSCocoaErrorDomain code:NSFileWriteFileExistsError]) {
                 SETERRORFROMMYERROR;
                 HSLogError(@"error renaming %@ to %@: %@", tempPath, theFullPath, myError);
-                return NO;
+                return nil;
             }
         }
     }
@@ -246,7 +246,7 @@
             int errnum = errno;
             HSLogError(@"chown(%@) error %d: %s", theFullPath, errnum, strerror(errnum));
             SETNSERROR(@"UnixErrorDomain", errnum, @"failed to change ownership of %@: %s", theFullPath, strerror(errnum));
-            return NO;
+            return nil;
         }
     }
     Item *item = [[[Item alloc] init] autorelease];

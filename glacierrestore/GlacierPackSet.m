@@ -102,7 +102,7 @@ static unsigned long long DEFAULT_MAX_PACK_ITEM_SIZE_BYTES = 65536;
 }
 - (PackIndexEntry *)packIndexEntryForObjectSHA1:(NSString *)theSHA1 targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error {
     if (!loadedPIEs && ![self loadPackIndexEntriesWithTargetConnectionDelegate:theTCD error:error]) {
-        return NO;
+        return nil;
     }
     PackIndexEntry *ret = [packIndexEntriesByObjectSHA1 objectForKey:theSHA1];
     if (ret == nil) {

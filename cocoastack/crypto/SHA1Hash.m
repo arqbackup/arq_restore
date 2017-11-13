@@ -68,7 +68,7 @@
         int errnum = errno;
         HSLogError(@"lstat(%@) error %d: %s", path, errnum, strerror(errnum));
         SETNSERROR(@"UnixErrorDomain", errnum, @"%@: %s", path, strerror(errnum));
-        return NO;
+        return nil;
     }
     unsigned long long length = (unsigned long long)st.st_size;
     FileInputStream *fis = [[FileInputStream alloc] initWithPath:path offset:0 length:length];

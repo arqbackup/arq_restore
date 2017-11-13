@@ -387,7 +387,7 @@
     FlockFile *ff = [[[FlockFile alloc] initWithPath:lockFilePath] autorelease];
     __block FMDatabaseQueue *ret = nil;
     if (![ff lockAndExecute:^void() { ret = [self lockedInitDB:error]; } error:error]) {
-        ret = NO;
+        ret = nil;
     }
     return ret;
 }

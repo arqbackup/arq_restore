@@ -109,7 +109,7 @@
             id <PListNode> node = [self makeNode:childNode error:error];
             if (!node) {
                 [nodes release];
-                return NO;
+                return nil;
             }
 			[nodes addObject:node];
 		}
@@ -134,7 +134,7 @@
             } else {
                 id <PListNode> node = [self makeNode:childNode error:error];
                 if (!node) {
-                    return NO;
+                    return nil;
                 }
 				NSAssert(key != nil, @"must have key before adding value");
 				[dn put:node forKey:key];

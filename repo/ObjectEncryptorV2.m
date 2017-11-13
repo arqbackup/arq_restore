@@ -137,7 +137,7 @@
 }
 - (NSData *)encryptV1Data:(NSData *)theData error:(NSError **)error {
     SETNSERROR(@"ObjectEncryptorV2ErrorDomain", -1, @"encryptV1Data not supported");
-    return NO;
+    return nil;
 }
 - (NSString *)sha1HashForV2Data:(NSData *)theData {
     // Calculate SHA1 hash of computerUUID+plaintext.
@@ -157,7 +157,7 @@
     if (theDataIVAndSymmetricKey != nil) {
         if ([theDataIVAndSymmetricKey length] < DATA_IV_AND_SYMMETRIC_KEY_LEN) {
             SETNSERROR([ObjectEncryptor errorDomain], -1, @"given dataIVAndSymmetricKey is less than %d bytes", DATA_IV_AND_SYMMETRIC_KEY_LEN);
-            return NO;
+            return nil;
         }
         memcpy(dataIVAndSymmetricKey, [theDataIVAndSymmetricKey bytes], DATA_IV_AND_SYMMETRIC_KEY_LEN);
         memcpy(mySymmetricKey, [theDataIVAndSymmetricKey bytes] + IV_LEN, SYMMETRIC_KEY_LEN);
@@ -202,7 +202,7 @@
     if (status != kCCSuccess) {
         SETNSERROR([ObjectEncryptor errorDomain], -1, @"encrypt: %@", [self errorMessageForStatus:status]);
         free(outbuf);
-        return NO;
+        return nil;
     }
     
     // Reset theOutBuffer's length.
@@ -213,7 +213,7 @@
         if ([theMasterIV length] != IV_LEN) {
             SETNSERROR([ObjectEncryptor errorDomain], -1, @"invalid masterIV length");
             free(outbuf);
-            return NO;
+            return nil;
         }
         memcpy(masterIV, [theMasterIV bytes], IV_LEN);
     } else {
@@ -241,12 +241,12 @@
     if (status != kCCSuccess) {
         SETNSERROR([ObjectEncryptor errorDomain], -1, @"encrypt: %@", [self errorMessageForStatus:status]);
         free(outbuf);
-        return NO;
+        return nil;
     }
     if (encryptedMetadataActualLen != ENCRYPTED_DATA_IV_AND_SYMMETRIC_KEY_LEN) {
         SETNSERROR([ObjectEncryptor errorDomain], -1, @"unexpected encrypted metadata length");
         free(outbuf);
-        return NO;
+        return nil;
     }
     
     // Calculate HMACSHA256 of (master IV + encryptedMetadata + ciphertext) using second half of master key.

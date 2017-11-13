@@ -327,7 +327,7 @@ typedef struct pack_index {
     close(fd);
     if (endIndex == 0) {
         SETNSERROR(@"PacksErrorDomain", ERROR_NOT_FOUND, @"sha1 %@ not found in pack", sha1);
-        return NO;
+        return nil;
     }
     fd = open([localPath fileSystemRepresentation], O_RDONLY);
     if (fd == -1) {
@@ -352,7 +352,7 @@ typedef struct pack_index {
         int errnum = errno;
         HSLogError(@"mmap(%@) error %d: %s", localPath, errnum, strerror(errnum));
         SETNSERROR(@"UnixErrorDomain", errnum, @"error mapping %@ to memory: %s", localPath, strerror(errnum));
-        return NO;
+        return nil;
     }
     int64_t left = startIndex;
     int64_t right = endIndex - 1;

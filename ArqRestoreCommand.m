@@ -610,7 +610,7 @@
 - (BackupSet *)backupSetForTarget:(Target *)theInitialTarget computerUUID:(NSString *)theComputerUUID error:(NSError **)error {
     NSArray *expandedTargetList = [self expandedTargetListForTarget:theInitialTarget error:error];
     if (expandedTargetList == nil) {
-        return NO;
+        return nil;
     }
     
     for (Target *theTarget in expandedTargetList) {
@@ -622,7 +622,7 @@
             } else {
                 HSLogError(@"error getting backup sets for %@: %@", theTarget, myError);
                 SETERRORFROMMYERROR;
-                return NO;
+                return nil;
             }
         } else {
             for (BackupSet *backupSet in backupSets) {

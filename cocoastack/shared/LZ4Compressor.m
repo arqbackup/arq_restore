@@ -67,7 +67,7 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(LZ4Compressor)
 - (NSData *)lockedLZ4Deflate:(NSData *)data error:(NSError **)error {
     if ([data length] > (NSUInteger)INT_MAX) {
         SETNSERROR([self errorDomain], -1, @"length larger than INT_MAX");
-        return NO;
+        return nil;
     }
     
     int originalSize = (int)[data length];
@@ -83,7 +83,7 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(LZ4Compressor)
     if (compressed == 0) {
         SETNSERROR([self errorDomain], -1, @"LZ4_compress_default failed");
         free(outBuf);
-        return NO;
+        return nil;
     }
     uint32_t nboSize = OSSwapHostToBigInt32(originalSize);
     memcpy(outBuf, &nboSize, 4);

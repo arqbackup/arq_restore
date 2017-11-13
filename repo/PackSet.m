@@ -301,7 +301,7 @@ cachePackFilesToDisk:(BOOL)theCachePackFilesToDisk
 - (NSNumber *)isObjectDownloadableForSHA1:(NSString *)theSHA1 error:(NSError **)error {
     PackIndexEntry *pie = [self packIndexEntryForSHA1:theSHA1 error:error];
     if (pie == nil) {
-        return NO;
+        return nil;
     }
     return [fark isPackDownloadableWithId:[pie packId] storageType:storageType error:error];
 }

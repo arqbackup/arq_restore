@@ -237,14 +237,14 @@
     if (!xmlDoc) {
         HSLogDebug(@"list Objects XML data: %@", [[[NSString alloc] initWithData:response encoding:NSUTF8StringEncoding] autorelease]);
         SETNSERROR([S3Service errorDomain], [myError code], @"error parsing List Objects XML response: %@", myError);
-        return NO;
+        return nil;
     }
     NSXMLElement *rootElement = [xmlDoc rootElement];
     NSArray *isTruncatedNodes = [rootElement nodesForXPath:@"//ListBucketResult/IsTruncated" error:&myError];
     if (isTruncatedNodes == nil) {
         HSLogError(@"nodesForXPath: %@", myError);
         SETERRORFROMMYERROR;
-        return NO;
+        return nil;
     }
     if ([isTruncatedNodes count] == 0) {
         isTruncated = NO;
@@ -256,7 +256,7 @@
         if (error != NULL) {
             HSLogError(@"error getting //ListBucketResult/CommonPrefixes/Prefix nodes: %@", *error);
         }
-        return NO;
+        return nil;
     }
     NSMutableArray *theFoundPrefixes = [NSMutableArray array];
     for (NSXMLNode *prefixNode in prefixNodes) {

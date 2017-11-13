@@ -922,12 +922,12 @@
     if ([[NSFileManager defaultManager] fileExistsAtPath:statusPath]) {
         NSDictionary *attribs = [[NSFileManager defaultManager] attributesOfItemAtPath:statusPath error:error];
         if (attribs == nil) {
-            return NO;
+            return nil;
         }
         if ([[attribs objectForKey:NSFileSize] unsignedLongLongValue] > 0) {
             NSData *jobIdData = [NSData dataWithContentsOfFile:statusPath options:NSUncachedRead error:error];
             if (jobIdData == nil) {
-                return NO;
+                return nil;
             }
             ret = [[[NSString alloc] initWithData:jobIdData encoding:NSUTF8StringEncoding] autorelease];
         }
