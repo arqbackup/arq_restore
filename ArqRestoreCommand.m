@@ -138,18 +138,22 @@
     NSString *oAuth2ClientSecret = nil;
     NSString *oAuth2RedirectURI = nil;
     
-    if ([targetType isEqualToString:@"aws"]) {
+    if ([targetType isEqualToString:@"aws"] || [targetType isEqualToString:@"wasabi"]) {
         if ([args count] != 5) {
             SETNSERROR([self errorDomain], ERROR_USAGE, @"invalid arguments");
             return NO;
         }
         
         NSString *accessKeyId = [args objectAtIndex:4];
-        AWSRegion *usEast1 = [AWSRegion usEast1];
-        NSString *urlString = [NSString stringWithFormat:@"https://%@@%@/any_bucket", accessKeyId, [[usEast1 s3EndpointWithSSL:NO] host]];
+        NSString *urlString = [NSString stringWithFormat:@"https://%@@s3.wasabisys.com/any_bucket", accessKeyId];
         
+        if ([targetType isEqualToString:@"aws"]) {
+            AWSRegion *usEast1 = [AWSRegion usEast1];
+            urlString = [NSString stringWithFormat:@"https://%@@%@/any_bucket", accessKeyId, [[usEast1 s3EndpointWithSSL:NO] host]];
+        }
         endpoint = [NSURL URLWithString:urlString];
-        secret = [self readPasswordWithPrompt:@"enter AWS secret key:" error:error];
+        NSString *prompt = [NSString stringWithFormat:@"enter %@ secret key:",  [targetType isEqualToString:@"aws"] ? @"AWS" : @"Wasabi"];
+        secret = [self readPasswordWithPrompt:prompt error:error];
         if (secret == nil) {
             return NO;
         }
@@ -648,7 +652,7 @@
 - (NSArray *)expandedTargetListForTarget:(Target *)theTarget error:(NSError **)error {
     NSArray *targets = nil;
     
-    if ([theTarget targetType] == kTargetAWS) {
+    if ([theTarget targetType] == kTargetAWS || [theTarget targetType] == kTargetWasabi) {
         targets = [self expandedTargetsForS3Target:theTarget error:error];
     } else {
         targets = [NSArray arrayWithObject:theTarget];

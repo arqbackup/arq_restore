@@ -254,7 +254,11 @@ awsRequestSignatureVersion:(int32_t)theAWSRequestSignatureVersion {
 
 - (DictNode *)toPlist {
     DictNode *ret = [[[DictNode alloc] init] autorelease];
-    [ret putString:@"s3" forKey:@"targetType"]; // Used by TargetFactory
+    if (targetType == kTargetWasabi) {
+        [ret putString:@"wasabi" forKey:@"targetType"]; // Used by TargetFactory
+    } else {
+        [ret putString:@"s3" forKey:@"targetType"]; // Used by TargetFactory
+    }
     [ret putString:nickname forKey:@"nickname"];
     [ret putString:uuid forKey:@"uuid"];
     [ret putString:[endpoint absoluteString] forKey:@"endpointDescription"];
@@ -345,6 +349,10 @@ awsRequestSignatureVersion:(int32_t)theAWSRequestSignatureVersion {
 - (TargetType)targetTypeForEndpoint {
     if ([[[self endpoint] scheme] isEqualToString:@"file"]) {
         return kTargetLocal;
+    }
+    NSString *host = [[self endpoint] host];
+    if ([host hasSuffix:@"wasabisys.com"]) {
+        return kTargetWasabi;
     }
     
     return kTargetAWS;

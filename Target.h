@@ -41,6 +41,7 @@
 
 enum TargetType {
     kTargetAWS = 0,
+    kTargetWasabi = 6,
     kTargetLocal = 12
 };
 typedef int TargetType;
