@@ -1,0 +1,622 @@
+Arq stores backup data in a format similar to that of the open-source version
+control system 'git'.  
+
+Content-Addressable Storage
+---------------------------
+At the most basic level, Arq stores "blobs" using the SHA1 hash of the
+contents as the name, much like git. Because of this, each unique blob is only
+stored once. If 2 files on your system have the same contents, only 1 copy of
+the contents will be stored. If the contents of a file change, the SHA1 hash is
+different and the file is stored as a different blob.
+
+Files are blobs, and commits and trees are blobs as well.
+
+(It's not quite that simple actually. To make the names less susceptible to
+lookup tables, Arq actually calculates the SHA1 hash of the third encryption
+key (see "Encryption Dat File" below) concatenated with the blob's data. We'll
+use "SHA1" as shorthand throughout this document for this identifier.)
+
+
+"Computer UUID"
+---------------
+
+When you first run Arq and add a target ("destination"), it creates a
+"universally unique identifier" (UUID) for your computer (referred to below as
+the "computerUUID"). All backup objects are stored with that as a prefix.
+
+
+Encryption Dat File
+-------------------
+
+The first time you add a folder to Arq for backing up, it prompts you to choose
+an encryption password.  Arq creates 3 randomly-generated encryption keys.  The
+first key is used for encrypting/decrypting; the second key is used for
+creating HMACs; the third key is concatenated with file data to calculate a
+SHA1 identifier.
+
+Arq stores those keys, encrypted with the encryption password you chose, in a
+file called /<computerUUID>/encryptionv3.dat. You can change your encryption
+password at any time by decrypting this file with the old encryption password
+and then re-encrypting it with your new encryption password.
+
+The encryptionv3.dat file format is:
+
+header                      45 4e 43 52 ENCR
+                            59 50 54 49 YPTI
+                            4f 4e 56 32 ONV2
+salt                        xx xx xx xx
+                            xx xx xx xx
+HMACSHA256                  xx xx xx xx
+                            xx xx xx xx
+                            xx xx xx xx
+                            xx xx xx xx
+                            xx xx xx xx
+                            xx xx xx xx
+                            xx xx xx xx
+                            xx xx xx xx
+IV                          xx xx xx xx
+                            xx xx xx xx
+                            xx xx xx xx
+                            xx xx xx xx
+encrypted master keys       xx xx xx xx
+                            ...
+
+
+To create the encryptionv3.dat file:
+1. Generate a random salt.
+2. Generate a random IV.
+3. Generate 3 random 32-byte "master keys" (96 bytes total).
+4. Derive 64-byte encryption key from user-supplied encryption password using PBKDF2/HMACSHA1 (200000 rounds) and the salt from step 1.
+5. Encrypt the master keys with AES256-CBC using the first 32 bytes of the derived key from step 4 and IV from step 2.
+6. Calculate the HMAC-SHA256 of (IV + encrypted master keys) using the second 32 bytes of the derived key from step 4.
+7. Concatenate the items as described in the file format shown above.
+
+To get the 3 "master keys":
+1. Copy salt from the 8 bytes after the header.
+2. Derive 64-byte encryption key from user-supplied encryption password using PBKDF2/HMACSHA1 (200000 rounds) and the salt from step 1.
+3. Calculate HMAC-SHA256 of (IV + encrypted master keys) using second 32 bytes of key from step 2, and verify against HMAC-SHA256 in the file.
+4. Decrypt the ciphertext using the first 32 bytes of the derived key from step 2 to get 3 32-byte "master keys".
+
+Note: We use HMACSHA1 as the PRF with PBKDF2 because that's the only one available on Windows (in .NET).
+
+
+Note: If you created your backup set with an older version of Arq, you may have
+an encryptionv2.dat file instead of an encryptionv3.dat file. The
+encryptionv2.dat file is the same format as encryptionv3.dat, but there are
+only 2 256-bit master keys. In this case Arq adds the computerUUID (instead of
+the 3rd key) to object data when calculating the SHA1 hash (see
+"Content-Addressable Storage" above). Arq changed to using a third secret key
+for salting the hash instead of a known value to address a privacy issue.
+
+
+
+EncryptedObject
+---------------
+
+We use the term "EncryptedObject" throughout this document as shorthand to
+describe an object containing data in the following format:
+
+header                              41 52 51 4f  ARQO
+HMACSHA256                          xx xx xx xx
+                                    xx xx xx xx
+                                    xx xx xx xx
+                                    xx xx xx xx
+                                    xx xx xx xx
+                                    xx xx xx xx
+                                    xx xx xx xx
+                                    xx xx xx xx
+master IV                           xx xx xx xx
+                                    xx xx xx xx
+                                    xx xx xx xx
+                                    xx xx xx xx
+encrypted data IV + session key     xx xx xx xx 
+                                    ...
+ciphertext                          xx xx xx xx
+                                    ...
+
+To create an EncryptedObject:
+1. Generate a random 256-bit session key (Arq reuses it for up to 256 objects before replacing it).
+2. Generate a random "data IV".
+3. Encrypt plaintext with AES/CBC using session key and data IV.
+4. Generate a random "master IV".
+5. Encrypt (data IV + session key) with AES/CBC using the first "master key" from the Encryption Dat File and the "master IV".
+4. Calculate HMAC-SHA256 of (master IV + "encrypted data IV + session key" + ciphertext) using the second 256-bit "master key".
+7. Assemble the data in the format shown above.
+
+To get the plaintext:
+1. Calculate HMAC-SHA256 of (master IV + "encrypted data IV + session key" + ciphertext) and verify against HMAC-SHA256 in the file using the second "master key" from the Encryption Dat File.
+2. Ensure the calculated HMAC-SHA256 matches the value in the object header.
+3. Decrypt "encrypted data IV + session key" using the first "master key" from the Encryption Dat File and the "master IV".
+4. Decrypt the ciphertext using the session key and data IV.
+
+
+
+Folder Configuration Files
+--------------------------
+
+Each time you add a folder for backup, Arq creates a UUID for it and stores 2
+objects at the target:
+
+object: /<computer_uuid>/buckets/<folder_uuid>
+
+    This file contains a "plist"-format XML document containing:
+        1. the 9-byte header "encrypted"
+        2. an EncryptedObject containing a plist like this:
+
+        <plist version="1.0">
+            <dict>
+                <key>AWSRegionName</key>
+                <string>us-east-1</string>
+                <key>BucketUUID</key>
+                <string>408E376B-ECF7-4688-902A-1E7671BC5B9A</string>
+                <key>BucketName</key>
+                <string>company</string>
+                <key>ComputerUUID</key>
+                <string>600150F6-70BB-47C6-A538-6F3A2258D524</string>
+                <key>LocalPath</key>
+                <string>/Users/stefan/src/company</string>
+                <key>LocalMountPoint</key>
+                </string>/</string>
+                <key>StorageType</key>
+                <integer>1</integer>
+                <key>VaultName</key>
+                <string>arq_408E376B-ECF7-4688-902A-1E7671BC5B9A</string>
+                <key>VaultCreatedTime</key>
+                <real>12345678.0</real>
+                <key>Excludes</key>
+                <dict>
+                    <key>Enabled</key>
+                    <false></false>
+                    <key>MatchAny</key>
+                    <true></true>
+                    <key>Conditions</key>
+                    <array></array>
+                </dict>
+            </dict>
+        </plist>
+
+    Only Glacier-backed folders have "VaultName" and "VaultCreatedTime" keys.
+
+    NOTE: The folder's UUID and name are called "BucketUUID" and "BucketName"
+    in the plist; this is a holdover from previous iterations of Arq and is not
+    to be confused with S3's "bucket" concept.
+
+
+
+Commits, Trees and Blobs
+------------------------
+
+When Arq backs up a folder, it creates 3 types of objects: "commits", "trees"
+and "blobs". 
+
+Each backup that you see in Arq corresponds to a "commit" object in the backup
+data.  Its name is the SHA1 of its contents. The commit contains the SHA1 of a
+"tree" object in the backup data. This tree corresponds to the folder you're
+backing up.  
+
+Each tree contains "nodes"; each node has either the SHA1 of another tree, or
+the SHA1 of a file (or multiple SHA1s, see "Tree format" below).
+
+All commits, trees and blobs are stored as EncryptedObjects (see
+"EncryptedObject" above).
+
+
+Commit Format
+-------------
+
+A "commit" contains the following bytes (see "Data Format Documentation" below
+for explanation of [String], [UInt32], [Date], etc):
+
+    43 6f 6d 6d 69 74 56 30 31 32      "CommitV012"
+    [String:"<author>"]
+    [String:"<comment>"]
+    [UInt64:num_parent_commits]        (this is always 0 or 1)
+    (
+        [String:parent_commit_sha1] /* can't be null */
+        [Bool:parent_commit_encryption_key_stretched]] /* present for Commit version >= 4 */
+    )   /* repeat num_parent_commits times */
+    [String:tree_sha1]] /* can't be null */
+    [Bool:tree_encryption_key_stretched]] /* present for Commit version >= 4 */
+    [Bool:tree_is_compressed] /* present for Commit version 8 and 9 only; indicates Gzip compression or none */
+    [CompressionType:tree_compression_type] /* present for Commit version >= 10 */
+
+    [String:"file://<hostname><path_to_folder>"]
+    [String:"<merge_common_ancestor_sha1>"] /* only present for Commit version 7 or *older* (was never used) */
+    [Bool:is_merge_common_ancestor_encryption_key_stretched] /* only present for Commit version 4 to 7 */
+    [Date:creation_date]
+    [UInt64:num_failed_files] /* only present for Commit version 3 or later */
+    (
+        [String:"<relative_path>"] /* only present for Commit version 3 or later */
+        [String:"<error_message>"] /* only present for Commit version 3 or later */
+    )   /* repeat num_failed_files times */
+    [Bool:has_missing_nodes] /* only present for Commit version 8 or later */
+    [Bool:is_complete] /* only present for Commit version 9 or later */
+    [Data:config_plist_xml] /* a copy of the XML file as described above */
+    [String:arq_version] /* the version of the Arq app that created this Commit */
+
+
+The SHA1 of the most recent Commit is stored in 
+/<computer_uuid>/bucketdata/<folder_uuid>/refs/heads/master
+appended with a "Y" for historical reasons.
+
+In addition, Arq writes a file in 
+/<computer_uuid>/bucketdata/<folder_uuid>/refs/logs/master
+each time a new Commit is created (the filename is a timestamp). It's a plist
+containing the previous and current Commit SHA1s, the SHA1 of the pack file
+containing the new Commit,  and whether the new Commit is a "rewrite" (because
+the user deleted a backup record for instance).
+
+
+    
+Tree Format 
+-----------
+
+A tree contains the following bytes:
+
+    54 72 65 65 56 30 32 32             "TreeV022"
+    [Bool:xattrs_are_compressed] /* present for Tree versions 12-18 */
+    [CompressionType:xattrs_compression_type] /* present for Tree version >= 19; indicates Gzip compression or none */
+    [Bool:acl_is_compressed] /* present for Tree versions 12-18 */
+    [CompressionType:acl_compression_type] /* present for Tree version >= 19; indicates Gzip compression or none */
+    [Int32:xattrs_compression_type] /* present for Tree version >= 20; older Trees are gzip compression type */
+    [Int32:acl_compression_type] /* present for Tree version >= 20; older Trees are gzip compression type */
+    [BlobKey:xattrs_blob_key] /* null if directory has no xattrs */
+    [UInt64:xattrs_size]
+    [BlobKey:acl_blob_key] /* null if directory has no acl */
+    [Int32:uid]
+    [Int32:gid]
+    [Int32:mode]
+    [Int64:mtime_sec]
+    [Int64:mtime_nsec]
+    [Int64:flags]
+    [Int32:finderFlags]
+    [Int32:extendedFinderFlags]
+    [Int32:st_dev]
+    [Int32:st_ino]
+    [UInt32:st_nlink]
+    [Int32:st_rdev]
+    [Int64:ctime_sec]
+    [Int64:ctime_nsec]
+    [Int64:st_blocks]
+    [UInt32:st_blksize]
+    [UInt64:aggregate_size_on_disk] /* only present for Tree version 11 to 16 (never used) */
+    [Int64:create_time_sec] /* only present for Tree version 15 or later */
+    [Int64:create_time_nsec] /* only present for Tree version 15 or later */
+    [UInt32:missing_node_count] /* only present for Tree version 18 or later */
+    (
+        [String:"<missing_node_name>"] /* only present for Tree version 18 or later */
+    )   /* repeat <missing_node_count> times */
+    [UInt32:node_count] 
+    (
+        [String:"<file name>"] /* can't be null */
+        [Node]
+    )   /* repeat <node_count> times */
+
+
+Each [Node] contains the following bytes:
+
+    [Bool:isTree]
+    [Bool:treeContainsMissingItems] /* present for Tree version >= 18 */
+    [Bool:data_are_compressed] /* present for Tree versions 12-18 */
+    [CompressionType:data_compression_type] /* present for Tree version >= 19; indicates Gzip compression or none */
+    [Bool:xattrs_are_compressed] /* present for Tree versions 12-18 */
+    [CompressionType:xattrs_compression_type] /* present for Tree version >= 19; indicates Gzip compression or none */
+    [Bool:acl_is_compressed] /* present for Tree versions 12-18 */
+    [CompressionType:acl_compression_type] /* present for Tree version >= 19; indicates Gzip compression or none */
+    [Int32:data_blob_keys_count] 
+    (
+        [BlobKey:data_blob_key]
+    )   /* repeat <data_blob_keys_count> times */
+    [UIn64:data_size]
+    [String:"<thumbnail sha1>"] /* only present for Tree version 18 or earlier (never used) */
+    [Bool:is_thumbnail_encryption_key_stretched] /* only present for Tree version 14 to 18 */
+    [String:"<preview sha1>"] /* only present for Tree version 18 or earlier (never used) */
+    [Bool:is_preview_encryption_key_stretched] /* only present for Tree version 14 to 18 */
+    [BlobKey:xattrs_blob_key] /* null if file has no xattrs */
+    [UInt64:xattrs_size]
+    [BlobKey:acl_blob_key] /* null if file has no acl */
+    [Int32:uid]
+    [Int32:gid]
+    [Int32:mode]
+    [Int64:mtime_sec]
+    [Int64:mtime_nsec]
+    [Int64:flags]
+    [Int32:finderFlags]
+    [Int32:extendedFinderFlags]
+    [String:"<finder file type>"]
+    [String:"<finder file creator>"]
+    [Bool:is_file_extension_hidden]
+    [Int32:st_dev]
+    [Int32:st_ino]
+    [UInt32:st_nlink]
+    [Int32:st_rdev]
+    [Int64:ctime_sec]
+    [Int64:ctime_nsec]
+    [Int64:create_time_sec]
+    [Int64:create_time_nsec]
+    [Int64:st_blocks]
+    [UInt32:st_blksize]
+
+Notes:
+
+- A Node can have multiple data SHA1s if the file is very large. Arq breaks up
+  large files into multiple blobs using a rolling checksum algorithm. This way
+  Arq only backs up the parts of a file that have changed.
+- "<xattrs_blob_key>" is the key of a blob containing the sorted extended
+  attributes of the file (see "XAttrSet Format" below). Note this means
+  extended-attribute sets are "de-duplicated".
+- "<acl_blob_key>" is the SHA1 of the blob containing the result of acl_to_text()
+  on the file's ACL. Note this means the ACLs are "de-duplicated".
+- "create_time_sec" and "create_time_nsec" contain the value of the
+  ATTR_CMN_CRTIME attribute of the file
+
+
+XAttrSet Format
+---------------
+
+Each XAttrSet blob contains the following bytes:
+
+    58 41 74 74 72 53 65 74  56 30 30 32    "XAttrSetV002"
+    [UInt64:xattr_count]
+    (
+        [String:"<xattr name>"] /* can't be null */
+        [Data:xattr_data]
+    )
+
+
+More on Object Storage
+----------------------
+
+In general, each blob is stored as an object with a path of the form:
+
+    /<computer_uuid>/objects/<sha1>
+
+(For some destination types the objects are in 256 subdirectories of
+/<computer_uuid>/objects/; the directory name is the first 2 characters of the
+sha1 and the file name is the remaining 38 characters.)
+
+But for small files, the overhead associated with putting and getting the
+objects to/from the storage destination makes backing them up very inefficient.
+
+So, small files (files under 64KB in length) are stored in "packs", which are
+explained below.
+
+
+Packs
+-----
+
+Each folder configured for backup maintains 2 "packsets", one for trees and
+commits, and one for all other small files. The packsets are named:
+
+    <folder_uuid>-trees
+    <folder_uuid>-blobs
+
+Small files are separated into 2 packsets because the trees and commits are
+cached locally (so that Arq gives reasonable performance for browsing backups);
+all other small blobs don't need to be cached.
+
+A packset is a set of "packs". When Arq is backing up a folder, it combines
+small files into a single larger packfile; when the packfile reaches 10MB, it
+is stored at the destination. Also, when Arq finishes backing up a folder it
+stores its unsaved packfiles no matter their sizes.
+
+When storing a pack, Arq stores the packfile as:
+
+    /<computer_uuid>/packsets/<folder_uuid>-(blobs|trees)/<sha1>.pack
+
+It also stores an index of the SHA1s contained in the pack as:
+
+    /<computer_uuid>/packsets/<folder_uuid>-(blobs|trees)/<sha1>.index
+
+
+Pack Index Format
+-----------------
+
+magic number                ff 74 4f 63  
+version (2)                 00 00 00 02 network-byte-order
+fanout[0]                   00 00 00 02 (4-byte count of SHA1s starting with 0x00)
+...
+fanout[255]                 00 00 f0 f2 (4-byte count of total objects == count of SHA1s starting with 0xff or smaller)
+object[0]                   00 00 00 00 (8-byte network-byte-order offset)
+                            00 00 00 00
+                            00 00 00 00 (8-byte network-byte-order data length)
+                            00 00 00 00
+                            00 xx xx xx (sha1 starting with 00)
+                            xx xx xx xx
+                            xx xx xx xx
+                            xx xx xx xx
+                            xx xx xx xx
+                            00 00 00 00 (4 bytes for alignment)
+object[1]                   00 00 00 00 (8-byte network-byte-order offset)
+                            00 00 00 00
+                            00 00 00 00 (8-byte network-byte-order data length)
+                            00 00 00 00
+                            00 xx xx xx (sha1 starting with 00)
+                            xx xx xx xx
+                            xx xx xx xx
+                            xx xx xx xx
+                            xx xx xx xx
+                            00 00 00 00 (4 bytes for alignment)
+object[2]                   00 00 00 00 (8-byte network-byte-order offset)
+                            00 00 00 00
+                            00 00 00 00 (8-byte network-byte-order data length)
+                            00 00 00 00
+                            00 xx xx xx (sha1 starting with 00)
+                            xx xx xx xx
+                            xx xx xx xx
+                            xx xx xx xx
+                            xx xx xx xx
+                            00 00 00 00 (4 bytes for alignment)
+...
+object[f0f1]                00 00 00 00 (8-byte network-byte-order offset)
+                            00 00 00 00
+                            00 00 00 00 (8-byte network-byte-order data length)
+                            00 00 00 00
+                            ff xx xx xx (sha1 starting with ff)
+                            xx xx xx xx
+                            xx xx xx xx
+                            xx xx xx xx
+                            xx xx xx xx
+                            00 00 00 00 (4 bytes for alignment)
+Glacier archiveId not null  01          (1 byte)                                    /* Glacier only */
+Glacier archiveId strlen    00 00 00 00 (network-byte-order 8 bytes)                /* Glacier only */
+                            00 00 00 08                                             /* Glacier only */
+Glacier archiveId string    xx xx xx xx (n bytes)                                   /* Glacier only */
+                            xx xx xx xx                                             /* Glacier only */
+Glacier pack size           00 00 00 00 (8-byte network-byte-order data length)     /* Glacier only */
+                            00 00 00 00                                             /* Glacier only */
+20-byte SHA1 of all of the  xx xx xx xx
+above                       xx xx xx xx
+                            xx xx xx xx
+                            xx xx xx xx
+                            xx xx xx xx
+
+
+Pack File Format
+----------------
+
+signature                   50 41 43 4b ("PACK")
+version (2)                 00 00 00 02 (network-byte-order 4 bytes)
+object count                00 00 00 00 (network-byte-order 8 bytes)
+object count                00 00 f0 f2
+object[0] mimetype not null 01          (1 byte) (this is usually zero)
+object[0] mimetype strlen   00 00 00 00 (network-byte-order 8 bytes) (this isn't here if not-null is zero)
+                            00 00 00 08
+object[0] mimetype string   xx xx xx xx (n bytes)
+                            xx xx xx xx
+object[0] name not null     01          (1 byte) (this is usually zero)
+object[0] name strlen       00 00 00 00 (network-byte-order 8 bytes) (this isn't here if not-null is zero)
+                            00 00 00 08
+object[0] name string       xx xx xx xx (n bytes)
+                            xx xx xx xx
+object[0] data length       00 00 00 00 (network-byte-order 8 bytes)
+                            00 00 00 06
+object[0] data              xx xx xx xx (n bytes)
+                            xx xx
+...
+object[f0f2] mimetype not null 01       (1 byte) (this is usually zero)
+object[f0f2] mimetype len   00 00 00 00 (network-byte-order 8 bytes) (this isn't here if not-null is zero)
+                            00 00 00 08
+object[f0f2] mimetype str   xx xx xx xx (n bytes)
+                            xx xx xx xx
+object[f0f2] name not null  01          (1 byte) (this is usually zero)
+object[f0f2] name strlen    00 00 00 00 (network-byte-order 8 bytes) (this isn't here if not-null is zero)
+                            00 00 00 08
+object[f0f2] name string    xx xx xx xx (n bytes)
+                            xx xx xx xx
+object[f0f2] data length    00 00 00 00 (network-byte-order 8 bytes)
+                            00 00 00 04
+object[f0f2] data           12 34 12 34
+20-byte SHA1 of all of the  xx xx xx xx
+above                       xx xx xx xx
+                            xx xx xx xx
+                            xx xx xx xx
+                            xx xx xx xx
+
+
+
+Data Format Documentation Conventions
+-------------------------------------
+
+We used a few shortcuts in some of the data format explanations above:
+
+[BlobKey:value]
+
+    A [BlobKey] is stored as:
+
+        [String:sha1] /* can't be null */
+        [Bool:is_encryption_key_stretched] /* only present for Tree version 14 or later, Commit version 4 or later */
+        [UInt32:storage_type] /* 1==S3, 2==Glacier; only present for Tree version 17 or later */
+        [String:archive_id] /* only present for Tree version 17 or later */
+        [UInt64:archive_size] /* only present for Tree version 17 or later */
+        [Date:archive_upload_date] /* only present for Tree version 17 or later */
+
+
+[Bool:value]
+
+    A [Bool] is stored as 1 byte, either 00 or 01.
+
+[String:"<string>"]
+
+    A [String] is stored as:
+
+        00 or 01    isNotNull flag
+
+        if not null:
+
+            00 00 00 00    8-byte network-byte-order length
+            00 00 00 0c
+            xx xx xx xx    UTF-8 string data
+            xx xx xx xx    
+            xx xx xx xx    
+        
+[UInt32:<the_number>]
+
+    A [UInt32] is stored as:
+
+            00 00 00 00     network-byte-order uint32_t
+
+[Int32:<the_number>]
+
+    An [Int32] is stored as:
+
+            00 00 00 00     network-byte-order int32_t
+
+[UInt64:<the_number>]
+
+    A [UInt64] is stored as:
+
+            00 00 00 00     network-byte-order uint64_t
+            00 00 00 00
+
+[Int64:<the_number>]
+
+    An [Int64] is stored as:
+
+            00 00 00 00     network-byte-order int64_t
+            00 00 00 00
+
+[Date:<the_date>]
+    
+    A [Date] is stored as:
+
+        00 or 01        isNotNull flag
+        if not null:
+
+            00 00 01 26     8-byte network-byte-order milliseconds 
+            a8 79 09 48     since the first instant of 1 January 1970, GMT.
+
+[Data:<xattr_data>]
+
+    A [Data] is stored as:
+
+        [UInt64:<length>]       data length
+        xx xx xx xx             bytes
+        xx xx xx xx
+        xx xx xx xx
+        ...
+
+[CompressionType]
+
+    Compression type is stored as an [Int32].
+    0 == none
+    1 == Gzip
+    2 == LZ4
+
+
+Other Files Not Needed for Restoring
+------------------------------------
+
+/<computer_uuid>/computerinfo 
+
+	Arq writes the computer name and user name in this file. This is so that
+	you can identify which backup set is which when you browse the backup sets
+	in your cloud storage account.
+
+/<computer_uuid>/chunker_version.dat
+
+	Arq writes a 4-byte integer to this file indicating the version of
+	"chunker" Arq originally used when this backup set was created. Arq uses
+	the same chunker version when backing up new files so that de-duplication
+	works.
+
