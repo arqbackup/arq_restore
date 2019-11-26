@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -30,6 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+
+
 #import "AWSQueryError.h"
 
 
@@ -43,7 +45,7 @@
         [parser parse];
         [parser release];
         if (parseErrorOccurred) {
-            nsError = [[NSError errorWithDomain:theDomain code:theCode description:@"SNS error"] retain];
+            nsError = [[NSError alloc] initWithDomain:theDomain code:theCode description:@"SNS error"];
         } else {
             NSMutableDictionary *userInfo = [NSMutableDictionary dictionary];
             [userInfo setObject:[NSNumber numberWithInt:theCode] forKey:@"HTTPStatusCode"];
@@ -58,7 +60,7 @@
                 msg = @"Your AWS account is not signed up all services. Please visit http://aws.amazon.com and sign up for S3, Glacier, SNS and SQS.";
             }
             [userInfo setObject:msg forKey:NSLocalizedDescriptionKey];
-            nsError = [[NSError errorWithDomain:theDomain code:theCode userInfo:userInfo] retain];
+            nsError = [[NSError alloc] initWithDomain:theDomain code:theCode userInfo:userInfo];
         }
     }
     return self;

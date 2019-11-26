@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -30,23 +30,38 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+
+
+#import "ItemFS.h"
 @protocol DataTransferDelegate;
 @protocol TargetConnectionDelegate;
+@class Item;
+@protocol DeleteDelegate;
 
 
-@protocol RemoteFS <NSObject>
-- (NSString *)errorDomain;
+@interface RemoteFS : NSObject {
+    NSString *lockFilePath;
+    id <ItemFS> itemFS;
+    NSString *cacheUUID;
+}
+- (id)initWithItemFS:(id <ItemFS>)theItemFS cacheUUID:(NSString *)theCacheUUID;
 
-- (NSNumber *)fileExistsAtPath:(NSString *)thePath isDirectory:(BOOL *)isDirectory targetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
-- (NSNumber *)fileExistsAtPath:(NSString *)thePath dataSize:(unsigned long long *)theDataSize targetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
-- (NSArray *)contentsOfDirectoryAtPath:(NSString *)thePath targetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
-- (NSData *)contentsOfFileAtPath:(NSString *)thePath dataTransferDelegate:(id <DataTransferDelegate>)theDTDelegate targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCDelegate error:(NSError **)error;
-- (BOOL)writeData:(NSData *)theData atomicallyToFileAtPath:(NSString *)thePath dataTransferDelegate:(id <DataTransferDelegate>)theDTDelegate targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCDelegate error:(NSError **)error;
-- (BOOL)removeItemAtPath:(NSString *)thePath targetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
-- (BOOL)createDirectoryAtPath:(NSString *)path withIntermediateDirectories:(BOOL)createIntermediates targetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
-- (NSNumber *)sizeOfItemAtPath:(NSString *)thePath targetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
-- (NSArray *)objectsAtPath:(NSString *)thePath targetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
-- (NSArray *)pathsOfObjectsAtPath:(NSString *)thePath targetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
-- (NSNumber *)isObjectRestoredAtPath:(NSString *)thePath targetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
-- (BOOL)restoreObjectAtPath:(NSString *)thePath forDays:(NSUInteger)theDays alreadyRestoredOrRestoring:(BOOL *)alreadyRestoredOrRestoring targetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
+- (BOOL)updateFingerprintWithTargetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
+
+- (Item *)itemAtPath:(NSString *)thePath targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
+- (NSDictionary *)itemsByNameInDirectory:(NSString *)thePath targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
+- (NSDictionary *)itemsByNameInDirectory:(NSString *)thePath useCachedData:(BOOL)theUseCachedData targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
+- (NSData *)contentsOfFileAtPath:(NSString *)thePath dataTransferDelegate:(id <DataTransferDelegate>)theDTD targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
+- (NSData *)contentsOfRange:(NSRange)theRange ofFileAtPath:(NSString *)thePath dataTransferDelegate:(id <DataTransferDelegate>)theDTD targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
+- (Item *)createFileAtomicallyWithData:(NSData *)theData atPath:(NSString *)thePath dataTransferDelegate:(id <DataTransferDelegate>)theDTD targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
+- (BOOL)moveItemAtPath:(NSString *)thePath toPath:(NSString *)theDestinationPath targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
+- (BOOL)removeItemAtPath:(NSString *)theSourcePath targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
+- (Item *)createDirectoryAtPath:(NSString *)path targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
+- (NSNumber *)isObjectRestoredAtPath:(NSString *)thePath targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
+- (BOOL)restoreObjectAtPath:(NSString *)thePath forDays:(NSUInteger)theDays tier:(int)theGlacierRetrievalTier alreadyRestoredOrRestoring:(BOOL *)alreadyRestoredOrRestoring targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
+
+- (NSNumber *)freeBytesAtPath:(NSString *)thePath targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
+
+- (BOOL)clearCacheForPath:(NSString *)thePath error:(NSError **)error;
+- (BOOL)clearCache:(NSError **)error;
 @end

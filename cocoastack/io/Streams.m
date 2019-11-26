@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,7 +31,9 @@
  */
 
 
-
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #import "Streams.h"
 
 #import "Sysctl.h"
@@ -43,9 +45,6 @@
 
 #define MY_BUF_SIZE (4096)
 
-@interface Streams (internal)
-+ (BOOL)transferFrom:(id <InputStream>)is toBufferedOutputStream:(BufferedOutputStream *)bos bytesWritten:(unsigned long long *)written error:(NSError **)error;
-@end
 
 @implementation Streams
 + (BOOL)transferFrom:(id <InputStream>)is to:(id <OutputStream>)os error:(NSError **)error {
@@ -61,10 +60,10 @@
     [bos release];
     return ret;
 }
-+ (BOOL)transferFrom:(id <InputStream>)is atomicallyToFile:(NSString *)path bytesWritten:(unsigned long long *)written error:(NSError **)error {
-    return [Streams transferFrom:is atomicallyToFile:path targetUID:getuid() targetGID:getgid() bytesWritten:written error:error];
-}
 + (BOOL)transferFrom:(id <InputStream>)is atomicallyToFile:(NSString *)path targetUID:(uid_t)theTargetUID targetGID:(gid_t)theTargetGID bytesWritten:(unsigned long long *)written error:(NSError **)error {
+    return [Streams transferFrom:is atomicallyToFile:path setUIDs:YES targetUID:theTargetUID targetGID:theTargetGID bytesWritten:written error:error];
+}
++ (BOOL)transferFrom:(id <InputStream>)is atomicallyToFile:(NSString *)path setUIDs:(BOOL)theSetUIDs targetUID:(uid_t)theTargetUID targetGID:(gid_t)theTargetGID bytesWritten:(unsigned long long *)written error:(NSError **)error {
     NSString *tempFileTemplate = [path stringByAppendingString:@".XXXXXX"];
     const char *tempFileTemplateCString = [tempFileTemplate fileSystemRepresentation];
     char *tempFileCString = strdup(tempFileTemplateCString);
@@ -77,43 +76,53 @@
         SETNSERROR(@"UnixErrorDomain", errnum, @"failed to make temp file with template %@: %s", tempFileTemplate, strerror(errnum));
         return NO;
     }
-    if (fchown(fd, theTargetUID, theTargetGID) == -1) {
-        int errnum = errno;
-        HSLogError(@"fchown(%@) error %d: %s", tempFile, errnum, strerror(errnum));
-        SETNSERROR(@"UnixErrorDomain", errnum, @"failed to change ownership of %@: %s", tempFile, strerror(errnum));
-        return NO;
+    if (theSetUIDs && (theTargetUID != getuid() || theTargetGID != getgid())) {
+        if (fchown(fd, theTargetUID, theTargetGID) == -1) {
+            int errnum = errno;
+            HSLogError(@"fchown(%@) error %d: %s", tempFile, errnum, strerror(errnum));
+            SETNSERROR(@"UnixErrorDomain", errnum, @"failed to change ownership of %@: %s", tempFile, strerror(errnum));
+            return NO;
+        }
     }
     
     FDOutputStream *fos = [[FDOutputStream alloc] initWithFD:fd];
     BOOL ret = [Streams transferFrom:is to:fos error:error];
     if (ret) {
-        if (rename([tempFile fileSystemRepresentation], [path fileSystemRepresentation]) == -1) {
-            int errnum = errno;
-            HSLogError(@"rename(%@, %@) error %d: %s", tempFile, path, errnum, strerror(errnum));
-            SETNSERROR(@"UnixErrorDomain", errnum, @"failed to rename %@ to %@: %s", tempFile, path, strerror(errnum));
+        if (![self rename:tempFile to:path error:error]) {
             ret = NO;
         } else {
+            if (chmod([path fileSystemRepresentation], S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH) < 0) {
+                int errnum = errno;
+                HSLogError(@"chmod(%@, %d, %d) error %d: %s", path, theTargetUID, theTargetGID, errnum, strerror(errnum));
+            }
+            if (chown([path fileSystemRepresentation], theTargetUID, theTargetGID) < 0) {
+                int errnum = errno;
+                HSLogError(@"chown(%@, %d, %d) error %d: %s", path, theTargetUID, theTargetGID, errnum, strerror(errnum));
+            }
             [[NSFileManager defaultManager] removeItemAtPath:tempFile error:NULL];
         }
     }
     if (ret) {
+        HSLogDetail(@"wrote %ld bytes to %@", (unsigned long)[fos bytesWritten], path);
         if (written != NULL) {
             *written = [fos bytesWritten];
         }
     } else {
-        HSLogError(@"error transferring bytes to %@", path);
+        if (error != NULL) {
+            HSLogError(@"error transferring bytes to %@: %@", path, [*error localizedDescription]);
+        }
     }
     [fos release];
     close(fd);
     return ret;
 }
 + (BOOL)writeData:(NSData *)theData atomicallyToFile:(NSString *)path targetUID:(uid_t)theTargetUID targetGID:(gid_t)theTargetGID bytesWritten:(unsigned long long *)written error:(NSError **)error {
-    DataInputStream *dis = [[[DataInputStream alloc] initWithData:theData description:@"no description"] autorelease];
-    return [Streams transferFrom:dis atomicallyToFile:path targetUID:theTargetUID targetGID:theTargetGID bytesWritten:written error:error];
+    return [Streams writeData:theData atomicallyToFile:path setUIDs:YES targetUID:theTargetUID targetGID:theTargetGID bytesWritten:written error:error];
 }
-@end
-
-@implementation Streams (internal)
++ (BOOL)writeData:(NSData *)theData atomicallyToFile:(NSString *)path setUIDs:(BOOL)theSetUIDs targetUID:(uid_t)theTargetUID targetGID:(gid_t)theTargetGID bytesWritten:(unsigned long long *)written error:(NSError **)error {
+    DataInputStream *dis = [[[DataInputStream alloc] initWithData:theData description:@"no description"] autorelease];
+    return [Streams transferFrom:dis atomicallyToFile:path setUIDs:theSetUIDs targetUID:theTargetUID targetGID:theTargetGID bytesWritten:written error:error];
+}
 + (BOOL)transferFrom:(id <InputStream>)is toBufferedOutputStream:(BufferedOutputStream *)bos bytesWritten:(unsigned long long *)written error:(NSError **)error {
     NSInteger received = 0;
     unsigned char *buf = (unsigned char *)malloc(MY_BUF_SIZE);
@@ -133,5 +142,34 @@
         received = -1;
     }
     return received >= 0;
+}
++ (BOOL)rename:(NSString *)theFromPath to:(NSString *)theToPath error:(NSError **)error {
+    BOOL ret = NO;
+    for (int tries = 0; ; tries++) {
+        if (rename([theFromPath fileSystemRepresentation], [theToPath fileSystemRepresentation]) == 0) {
+            ret = YES;
+            break;
+        }
+        int errnum = errno;
+        HSLogDebug(@"rename(%@, %@) attempt #%d failed with error %d: %s", theFromPath, theToPath, tries, errnum, strerror(errnum));
+        
+        if (errnum == EEXIST) {
+            HSLogDetail(@"destination file %@ exists; deleting existing file and trying again", theToPath);
+            [NSThread sleepForTimeInterval:1.0];
+            if (unlink([theToPath fileSystemRepresentation]) == -1) {
+                errnum = errno;
+                HSLogError(@"failed to delete existing destination file %@: error %d: %s", theToPath, errnum, strerror(errnum));
+            }
+        } else if (errnum == EBUSY) {
+            HSLogDetail(@"rename %@ to %@ returned EBUSY; trying again after short wait", theFromPath, theToPath);
+            [NSThread sleepForTimeInterval:1.0];
+        } else {
+            HSLogError(@"rename(%@, %@) error %d: %s", theFromPath, theToPath, errnum, strerror(errnum));
+            SETNSERROR(@"UnixErrorDomain", errnum, @"failed to rename %@ to %@: %s", theFromPath, theToPath, strerror(errnum));
+            ret = NO;
+            break;
+        }
+    }
+    return ret;
 }
 @end

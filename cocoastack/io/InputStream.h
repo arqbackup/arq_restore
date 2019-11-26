@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,11 +31,11 @@
  */
 
 
-
 @protocol InputStream <NSObject>
 /*
  * Returns 0 on EOF, just like read(2).
  */
 - (NSInteger)read:(unsigned char *)theBuf bufferLength:(NSUInteger)theBufferLength error:(NSError **)error;
 - (NSData *)slurp:(NSError **)error;
+- (BOOL)slurpIntoBuffer:(NSMutableData *)theBuffer error:(NSError **)error;
 @end

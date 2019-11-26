@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -29,6 +29,8 @@
  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+
 
 #ifdef USE_OPENSSL
 
@@ -127,47 +129,63 @@
 }
 
 - (NSData *)encrypt:(NSData *)plainData error:(NSError **)error {
-    if ([plainData length] == 0) {
-        return [NSData data];
+    NSMutableData *outBuffer = [NSMutableData data];
+    if (![self encrypt:plainData intoBuffer:outBuffer error:error]) {
+        return nil;
     }
+    return outBuffer;
+}
+- (BOOL)encrypt:(NSData *)plainData intoBuffer:(NSMutableData *)theOutBuffer error:(NSError **)error {
+    [theOutBuffer setLength:0];
+    if ([plainData length] == 0) {
+        return YES;
+    }
+    
     EVP_CIPHER_CTX cipherContext;
     EVP_CIPHER_CTX_init(&cipherContext);
     if (!EVP_EncryptInit(&cipherContext, cipher, evpKey, iv)) {
         SETNSERROR([CryptoKey errorDomain], -1, @"EVP_EncryptInit: %@", [OpenSSL errorMessage]);
         EVP_CIPHER_CTX_cleanup(&cipherContext);
-        return nil;
+        return NO;
     }
     
     // Need room for data + cipher block size - 1.
-    unsigned char *outbuf = (unsigned char *)malloc([plainData length] + EVP_CIPHER_CTX_block_size(&cipherContext) - 1);
+    [theOutBuffer setLength:([plainData length] + EVP_CIPHER_CTX_block_size(&cipherContext))];
+    unsigned char *outbuf = (unsigned char *)[theOutBuffer mutableBytes];
     
     int outlen = 0;
     if (!EVP_EncryptUpdate(&cipherContext, outbuf, &outlen, [plainData bytes], (int)[plainData length])) {
         SETNSERROR([CryptoKey errorDomain], -1, @"EVP_EncryptUpdate: %@",  [OpenSSL errorMessage]);
-        free(outbuf);
         EVP_CIPHER_CTX_cleanup(&cipherContext);
-        return nil;
+        return NO;
     }
     
     int extralen = 0;
     if (!EVP_EncryptFinal(&cipherContext, outbuf + outlen, &extralen)) {
         SETNSERROR([CryptoKey errorDomain], -1, @"EVP_EncryptFinal: %@",  [OpenSSL errorMessage]);
-        free(outbuf);
         EVP_CIPHER_CTX_cleanup(&cipherContext);
-        return nil;
+        return NO;
     }
     EVP_CIPHER_CTX_cleanup(&cipherContext);
     
-    NSData *ret = [[[NSData alloc] initWithBytesNoCopy:outbuf length:(outlen + extralen)] autorelease];
-    return ret;
+    [theOutBuffer setLength:(outlen + extralen)];
+    return YES;
 }
 - (NSData *)decrypt:(NSData *)encrypted error:(NSError **)error {
-    if (encrypted == nil) {
-        SETNSERROR([CryptoKey errorDomain], -1, @"decrypt: nil input NSData");
+    NSMutableData *outBuffer = [NSMutableData data];
+    if (![self decrypt:encrypted intoBuffer:outBuffer error:error]) {
         return nil;
     }
+    return outBuffer;
+}
+- (BOOL)decrypt:(NSData *)encrypted intoBuffer:(NSMutableData *)theOutBuffer error:(NSError **)error {
+    if (encrypted == nil) {
+        SETNSERROR([CryptoKey errorDomain], -1, @"decrypt: nil input NSData");
+        return NO;
+    }
     if ([encrypted length] == 0) {
-        return [NSData data];
+        [theOutBuffer setLength:0];
+        return YES;
     }
     
     int inlen = (int)[encrypted length];
@@ -178,30 +196,28 @@
     if (!EVP_DecryptInit(&cipherContext, cipher, evpKey, iv)) {
         SETNSERROR([CryptoKey errorDomain], -1, @"EVP_DecryptInit: %@", [OpenSSL errorMessage]);
         EVP_CIPHER_CTX_cleanup(&cipherContext);
-        return nil;
+        return NO;
     }
     
-    unsigned char *outbuf = (unsigned char *)malloc(inlen + EVP_CIPHER_CTX_block_size(&cipherContext));
-    
+    [theOutBuffer setLength:(inlen + EVP_CIPHER_CTX_block_size(&cipherContext))];
+    unsigned char *outbuf = (unsigned char *)[theOutBuffer mutableBytes];
     int outlen = 0;
     if (!EVP_DecryptUpdate(&cipherContext, outbuf, &outlen, input, inlen)) {
         SETNSERROR([CryptoKey errorDomain], -1, @"EVP_DecryptUpdate: %@", [OpenSSL errorMessage]);
-        free(outbuf);
         EVP_CIPHER_CTX_cleanup(&cipherContext);
-        return nil;
+        return NO;
     }
     
     int extralen = 0;
     if (!EVP_DecryptFinal(&cipherContext, outbuf + outlen, &extralen)) {
         SETNSERROR([CryptoKey errorDomain], -1, @"EVP_DecryptFinal: %@", [OpenSSL errorMessage]);
-        free(outbuf);
         EVP_CIPHER_CTX_cleanup(&cipherContext);
-        return nil;
+        return NO;
     }
     
     EVP_CIPHER_CTX_cleanup(&cipherContext);
-    NSData *ret = [[[NSData alloc] initWithBytesNoCopy:outbuf length:(outlen + extralen)] autorelease];
-    return ret;
+    [theOutBuffer setLength:(outlen + extralen)];
+    return YES;
 }
 @end
 

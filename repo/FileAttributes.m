@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -29,6 +29,7 @@
  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 
 
 #include <CoreServices/CoreServices.h>
@@ -104,7 +105,7 @@ OSStatus SymlinkPathMakeRef(const UInt8 *path, FSRef *ref, Boolean *isDirectory)
 + (NSString *)errorDomain {
     return @"FileAttributesErrorDomain";
 }
-- (id)initWithPath:(NSString *)thePath stat:(struct stat *)theStat error:(NSError **)error {
+- (id)initWithPath:(NSString *)thePath isSymLink:(BOOL)isSymLink error:(NSError **)error {
     if (self = [super init]) {
         NSError *myError = nil;
         NSDictionary *attribs = [[NSFileManager defaultManager] attributesOfItemAtPath:thePath error:&myError];
@@ -123,7 +124,7 @@ OSStatus SymlinkPathMakeRef(const UInt8 *path, FSRef *ref, Boolean *isDirectory)
         isFileExtensionHidden = [[attribs objectForKey:NSFileExtensionHidden] boolValue];
         
         targetExists = YES;
-        if (S_ISLNK(theStat->st_mode)) {
+        if (isSymLink) {
             struct stat targetSt;
             int ret = stat([thePath fileSystemRepresentation], &targetSt);
             if (ret == -1 && errno == ENOENT) {
@@ -134,21 +135,13 @@ OSStatus SymlinkPathMakeRef(const UInt8 *path, FSRef *ref, Boolean *isDirectory)
             FSRef fsRef;
             Boolean isDirectory = false;
             OSStatus oss = 0;
-            if (S_ISLNK(theStat->st_mode)) {
+            if (isSymLink) {
                 oss = SymlinkPathMakeRef((UInt8*)[thePath fileSystemRepresentation], &fsRef, &isDirectory);
             } else {
                 oss = FSPathMakeRef((UInt8*)[thePath fileSystemRepresentation], &fsRef, &isDirectory);
             }
-            if (oss == bdNamErr) {
+            if (oss != noErr) {
                 HSLogInfo(@"skipping finder flags for %@: %@", thePath, [OSStatusDescription descriptionForOSStatus:oss]);
-            } else if (oss == ioErr) {
-                HSLogInfo(@"skipping finder flags for %@: %@", thePath, [OSStatusDescription descriptionForOSStatus:oss]);
-            } else if (oss != noErr) {
-                HSLogError(@"error making FSRef for %@: %@", thePath, [OSStatusDescription descriptionForOSStatus:oss]);
-                SETNSERROR([FileAttributes errorDomain], oss, @"error making FSRef for %@: %@", thePath, [OSStatusDescription descriptionForOSStatus:oss]);
-                [self release];
-                self = nil;
-                return self;
             } else {
                 FSCatalogInfo catalogInfo;
                 OSErr oserr = FSGetCatalogInfo(&fsRef, kFSCatInfoCreateDate | kFSCatInfoFinderInfo | kFSCatInfoFinderXInfo, &catalogInfo, NULL, NULL, NULL);
@@ -233,9 +226,9 @@ OSStatus SymlinkPathMakeRef(const UInt8 *path, FSRef *ref, Boolean *isDirectory)
 
 + (BOOL)applyFinderFileType:(NSString *)fft finderFileCreator:(NSString *)ffc to:(FSRef *)fsRef error:(NSError **)error {
     if ([fft length] != 4) {
-        HSLogTrace(@"not applying finder file type '%@': invalid length (must be 4 characters)", fft);
+        HSLogDebug(@"not applying finder file type '%@': invalid length (must be 4 characters)", fft);
     } else if ([ffc length] != 4) {
-        HSLogTrace(@"not applying finder file type '%@': invalid length (must be 4 characters)", ffc);
+        HSLogDebug(@"not applying finder file type '%@': invalid length (must be 4 characters)", ffc);
     } else {
         FSCatalogInfo catalogInfo;
         OSErr oserr = FSGetCatalogInfo(fsRef, kFSCatInfoFinderInfo, &catalogInfo, NULL, NULL, NULL);
@@ -267,7 +260,6 @@ OSStatus SymlinkPathMakeRef(const UInt8 *path, FSRef *ref, Boolean *isDirectory)
     return YES;
 }
 + (BOOL)applyFlags:(unsigned long)flags toPath:(NSString *)thePath error:(NSError **)error {
-    HSLogTrace(@"chflags(%@, %ld)", thePath, flags);
     if (chflags([thePath fileSystemRepresentation], (unsigned int)flags) == -1) {
         int errnum = errno;
         HSLogError(@"chflags(%@, %ld) error %d: %s", thePath, flags, errnum, strerror(errnum));
@@ -372,9 +364,9 @@ OSStatus SymlinkPathMakeRef(const UInt8 *path, FSRef *ref, Boolean *isDirectory)
     struct timeval timevals[2];
     timevals[0] = atimeVal;
     timevals[1] = mtimeVal;
-    if (utimes([thePath fileSystemRepresentation], timevals) == -1) {
+    if (lutimes([thePath fileSystemRepresentation], timevals) == -1) {
         int errnum = errno;
-        HSLogError(@"utimes(%@) error %d: %s", thePath, errnum, strerror(errnum));
+        HSLogError(@"lutimes(%@) error %d: %s", thePath, errnum, strerror(errnum));
         SETNSERROR(@"UnixErrorDomain", errnum, @"failed to set timestamps on %@: %s", thePath, strerror(errnum));
         return NO;
     }

@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,45 +31,84 @@
  */
 
 
-@protocol TargetConnection;
-@class S3Service;
+
+@class DictNode;
 @class BufferedInputStream;
+@class BufferedOutputStream;
+@class S3Service;
+@class TargetConnection;
 
 
 enum TargetType {
     kTargetAWS = 0,
-    kTargetSFTP = 1,
-    kTargetGreenQloud = 2,
-    kTargetDreamObjects = 3,
-    kTargetGoogleCloudStorage = 4,
-    kTargetS3Compatible = 5,
-    kTargetGoogleDrive = 6
+    kTargetLocal = 12
 };
 typedef int TargetType;
 
 
+
+/*
+ * Example endpoints:
+ * https://AKIAIYUK3N3TME6L4HFA@s3.amazonaws.com/arq-akiaiyuk3n3tme6l4hfa-us-east-1
+ * sftp://stefan@filosync.reitshamer.com/home/stefan
+ */
+
 @interface Target : NSObject {
     NSString *uuid;
+    NSString *nickname;
     NSURL *endpoint;
+    int32_t awsRequestSignatureVersion;
+    NSString *oAuth2ClientId;
+    NSString *oAuth2RedirectURI;
+    
     TargetType targetType;
-    NSString *secret;
-    NSString *passphrase;
-
-    BOOL budgetEnabled;
-    double budgetDollars;
-    uint32_t budgetGB;
-    BOOL useRRS;
 }
 
-- (id)initWithEndpoint:(NSURL *)theEndpoint secret:(NSString *)theSecret passphrase:(NSString *)thePassphrase;
+- (id)initWithUUID:(NSString *)theUUID
+          nickname:(NSString *)theNickname
+          endpoint:(NSURL *)theEndpoint
+awsRequestSignatureVersion:(int32_t)theAWSRequestSignatureVersion;
+
+- (id)initWithPlist:(DictNode *)thePlist;
+
 - (id)initWithBufferedInputStream:(BufferedInputStream *)theBIS error:(NSError **)error;
 
+- (NSString *)errorDomain;
+
 - (NSString *)targetUUID;
+- (NSString *)nickname;
 - (NSURL *)endpoint;
 - (NSString *)endpointDisplayName;
+
+- (int)awsRequestSignatureVersion;
+
 - (NSString *)secret:(NSError **)error;
+- (BOOL)setSecret:(NSString *)theSecret trustedAppPaths:(NSArray *)theTrustedAppPaths error:(NSError **)error;
+- (BOOL)deleteSecret:(NSError **)error;
+
 - (NSString *)passphrase:(NSError **)error;
-- (TargetType)targetType;
-- (id <TargetConnection>)newConnection;
+- (BOOL)setPassphrase:(NSString *)theSecret trustedAppPaths:(NSArray *)theTrustedAppPaths error:(NSError **)error;
+- (BOOL)deletePassphrase:(NSError **)error;
+
+- (NSString *)oAuth2ClientId;
+- (void)setOAuth2ClientId:(NSString *)value;
+
+- (NSString *)oAuth2RedirectURI;
+- (void)setOAuth2RedirectURI:(NSString *)value;
+
+- (NSString *)oAuth2ClientSecret:(NSError **)error;
+- (BOOL)setOAuth2ClientSecret:(NSString *)theSecret trustedAppPaths:(NSArray *)theTrustedAppPaths error:(NSError **)error;
+- (BOOL)deleteOAuth2ClientSecret:(NSError **)error;
+
+- (DictNode *)toPlist;
+
+- (BOOL)writeTo:(BufferedOutputStream *)theBOS error:(NSError **)error;
+- (void)writeTo:(NSData *)data;
+
 - (S3Service *)s3:(NSError **)error;
+
+- (TargetConnection *)newConnection:(NSError **)error;
+
+- (TargetType)targetType;
+- (BOOL)canAccessFilesByPath;
 @end

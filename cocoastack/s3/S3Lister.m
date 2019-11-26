@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,180 +31,241 @@
  */
 
 
+
 #import "RFC2616DateFormatter.h"
 #import "S3AuthorizationProvider.h"
 #import "S3Lister.h"
 #import "HTTP.h"
 #import "S3Service.h"
 #import "S3Request.h"
+#import "Item.h"
+#import "RFC822.h"
+#import "TargetConnection.h"
 
 
 @implementation S3Lister
-- (id)initWithS3AuthorizationProvider:(S3AuthorizationProvider *)theSAP endpoint:(NSURL *)theEndpoint prefix:(NSString *)thePrefix delimiter:(NSString *)theDelimiter receiver:(id)theReceiver {
-	if (self = [super init]) {
-        dateFormatter = [[RFC2616DateFormatter alloc] init];
-		sap = [theSAP retain];
+- (id)initWithS3AuthorizationProvider:(id <S3AuthorizationProvider>)theSAP
+                             endpoint:(NSURL *)theEndpoint
+                                 path:(NSString *)thePath
+                            delimiter:(NSString *)theDelimiter
+             targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD {
+    if (self = [super init]) {
+        sap = [theSAP retain];
         endpoint = [theEndpoint retain];
-		received = 0;
+		path = [thePath retain];
+        delimiter = [theDelimiter retain];
+        targetConnectionDelegate = theTCD;
+
+        numberFormatter = [[NSNumberFormatter alloc] init];
+        
 		isTruncated = YES;
-		prefix = [thePrefix copy];
-        delimiter = [theDelimiter copy];
-		receiver = [theReceiver retain];
-		marker = nil;
-        foundPrefixes = [[NSMutableArray alloc] init];
-	}
-	return self;
+    }
+    return self;
 }
 - (void)dealloc {
-    [dateFormatter release];
     [endpoint release];
 	[sap release];
-	[prefix release];
+    [path release];
     [delimiter release];
-	[receiver release];
+    [numberFormatter release];
+    [s3BucketName release];
+    [s3Path release];
+    [escapedS3ObjectPathPrefix release];
     [marker release];
-    [foundPrefixes release];
 	[super dealloc];
 }
-- (BOOL)listObjectsWithTargetConnectionDelegate:(id<TargetConnectionDelegate>)theDelegate error:(NSError **)error {
-	if (error != NULL) {
-		*error = nil;
-	}
-    BOOL ret = YES;
+- (NSDictionary *)itemsByName:(NSError **)error {
+    if (![path hasPrefix:@"/"]) {
+        SETNSERROR([S3Service errorDomain], -1, @"path must start with '/'");
+        return nil;
+    }
+    NSString *strippedPrefix = [path substringFromIndex:1];
+    NSRange range = [strippedPrefix rangeOfString:@"/"];
+    if (range.location == NSNotFound) {
+        SETNSERROR([S3Service errorDomain], -1, @"path must contain S3 bucket name plus object path");
+        return nil;
+    }
+    s3BucketName = [[strippedPrefix substringToIndex:range.location] retain];
+    s3Path = [[NSString alloc] initWithFormat:@"/%@/", s3BucketName];
+    escapedS3ObjectPathPrefix = [[[strippedPrefix substringFromIndex:(range.location + 1)] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding] retain];
+    
+    
+    NSMutableDictionary *ret = [NSMutableDictionary dictionary];
     
     NSAutoreleasePool *pool = nil;
 	while (isTruncated) {
         [pool drain];
         pool = [[NSAutoreleasePool alloc] init];
-        if (![self getWithTargetConnectionDelegate:theDelegate error:error]) {
-            ret = NO;
+        NSArray *items = [self nextPage:error];
+        if (items == nil) {
+            ret = nil;
             break;
         }
-	}
-
-	if (!ret && error != NULL) {
-		[*error retain];
-	}
+        for (Item *item in items) {
+            [ret setObject:item forKey:item.name];
+        }
+    }
+    
+    if (ret == nil && error != NULL) {
+        [*error retain];
+    }
     [pool drain];
-	if (!ret && error != NULL) {
-		[*error autorelease];
-	}
+    if (ret == nil && error != NULL) {
+        [*error autorelease];
+    }
     return ret;
 }
-- (NSArray *)foundPrefixes {
-    return foundPrefixes;
-}
-              
+
+
 #pragma mark internal
-- (BOOL)getWithTargetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error {
-	if (![prefix hasPrefix:@"/"]) {
-        SETNSERROR([S3Service errorDomain], S3SERVICE_INVALID_PARAMETERS, @"path must start with /");
-        return NO;
-	}
-	NSString *strippedPrefix = [prefix substringFromIndex:1];
-	NSRange range = [strippedPrefix rangeOfString:@"/"];
-	if (range.location == NSNotFound) {
-        SETNSERROR([S3Service errorDomain], S3SERVICE_INVALID_PARAMETERS, @"path must contain S3 bucket name plus path");
-        return NO;
-	}
-	NSString *s3BucketName = [strippedPrefix substringToIndex:range.location];
-	NSString *pathPrefix = [strippedPrefix substringFromIndex:range.location];
-	NSMutableString *queryString = [NSMutableString stringWithFormat:@"prefix=%@", [[pathPrefix substringFromIndex:1] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
-    if (delimiter != nil) {
-        [queryString appendString:@"&delimiter="];
-        [queryString appendString:[delimiter stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+- (NSArray *)nextPage:(NSError **)error {
+    if (targetConnectionDelegate != nil && ![targetConnectionDelegate targetConnectionShouldRetryOnTransientError:error]) {
+        return nil;
     }
-	if (marker != nil) {
+    
+    NSMutableString *queryString = [NSMutableString stringWithFormat:@"prefix=%@", escapedS3ObjectPathPrefix];
+    if (delimiter != nil) {
+        [queryString appendFormat:@"&delimiter=%@", [delimiter stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    }
+    if (marker != nil) {
         NSAssert([marker hasPrefix:s3BucketName], @"marker must start with S3 bucket name");
         NSString *suffix = [marker substringFromIndex:([s3BucketName length] + 1)];
-		[queryString appendString:[NSString stringWithFormat:@"&marker=%@", [suffix stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]]];
-	}
-    
+        [queryString appendFormat:@"&marker=%@", [suffix stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    }
+    [queryString appendString:@"&max-keys=500"];
     S3Request *s3r = [[[S3Request alloc] initWithMethod:@"GET" endpoint:endpoint path:[NSString stringWithFormat:@"/%@/", s3BucketName] queryString:queryString authorizationProvider:sap error:error] autorelease];
     if (s3r == nil) {
-        return NO;
-    }
-    NSData *response = [s3r dataWithTargetConnectionDelegate:theDelegate error:error];
-    if (response == nil) {
-        return NO;
+        return nil;
     }
     NSError *myError = nil;
-    NSArray *listBucketResultContents = [self parseXMLResponse:response s3BucketName:s3BucketName error:&myError];
+    NSData *response = [s3r dataWithTargetConnectionDelegate:targetConnectionDelegate error:&myError];
+    if (response == nil) {
+        if ([myError isErrorWithDomain:[S3Service errorDomain] code:ERROR_NOT_FOUND]) {
+            // minio (S3-compatible server) returns not found instead of an empty result set.
+            isTruncated = NO;
+            return [NSArray array];
+        }
+        SETERRORFROMMYERROR;
+        return nil;
+    }
+    NSArray *foundPrefixes = nil;
+    NSArray *listBucketResultContents = [self parseXMLResponse:response foundPrefixes:&foundPrefixes error:&myError];
     if (listBucketResultContents == nil && myError == nil) {
         [NSThread sleepForTimeInterval:0.2];
-        listBucketResultContents = [self parseXMLResponse:response s3BucketName:s3BucketName error:&myError];
+        listBucketResultContents = [self parseXMLResponse:response foundPrefixes:&foundPrefixes error:&myError];
     }
     if (listBucketResultContents == nil) {
         if (myError == nil) {
-            myError = [NSError errorWithDomain:[S3Service errorDomain] code:-1 description:@"Failed to parse ListBucketResult XML response"];
+            myError = [[[NSError alloc] initWithDomain:[S3Service errorDomain] code:-1 description:@"Failed to parse ListBucketResult XML response"] autorelease];
         }
+        HSLogDebug(@"response was %@", [[[NSString alloc] initWithData:response encoding:NSUTF8StringEncoding] autorelease]);
+        HSLogError(@"error getting //ListBucketResult/Contents nodes: %@", myError);
         SETERRORFROMMYERROR;
-        if (error != NULL) {
-            HSLogError(@"error getting //ListBucketResult/Contents nodes: %@", *error);
-        }
-        return NO;
-    }
-    if (listBucketResultContents == nil) {
-        return NO;
+        return nil;
     }
     
-    NSString *lastPath = nil;
-
+    NSString *lastObjectPath = nil;
+    NSMutableArray *ret = [NSMutableArray array];
+    
+    for (NSString *foundPrefix in foundPrefixes) {
+        Item *item = [[[Item alloc] init] autorelease];
+        item.isDirectory = YES;
+        item.name = [foundPrefix lastPathComponent];
+        [ret addObject:item];
+    }
+    
     for (NSXMLNode *objectNode in listBucketResultContents) {
-        S3ObjectMetadata *md = [[S3ObjectMetadata alloc] initWithS3BucketName:s3BucketName node:objectNode error:error];
-        if (!md) {
-            return NO;
+        Item *item = [[[Item alloc] init] autorelease];
+        item.isDirectory = NO;
+        
+        NSXMLNode *keyNode = [[objectNode nodesForXPath:@"Key" error:error] lastObject];
+        if (keyNode == nil) {
+            return nil;
         }
-        if (![receiver receiveS3ObjectMetadata:md error:error]) {
-            [md release];
-            if (error != NULL) {
-                HSLogError(@"error receiving object metadata: %@", *error);
+        NSString *objectPath = [NSString stringWithFormat:@"/%@/%@", s3BucketName, [keyNode stringValue]];
+        item.name = [objectPath lastPathComponent];
+        lastObjectPath = objectPath;
+        
+        NSXMLNode *lastModifiedNode = [[objectNode nodesForXPath:@"LastModified" error:error] lastObject];
+        if (lastModifiedNode == nil) {
+            return nil;
+        }
+        NSDate *lastModified = [RFC822 dateFromString:[lastModifiedNode stringValue] error:error];
+        if (lastModified == nil) {
+            return nil;
+        }
+        item.fileLastModified = lastModified;
+        
+        NSXMLNode *sizeNode = [[objectNode nodesForXPath:@"Size" error:error] lastObject];
+        if (sizeNode == nil) {
+            return nil;
+        }
+        unsigned long long size = [[numberFormatter numberFromString:[sizeNode stringValue]] unsignedLongLongValue];
+        item.fileSize = size;
+        
+        NSArray *nodes = [objectNode nodesForXPath:@"StorageClass" error:error];
+        if (nodes == nil) {
+            return nil;
+        }
+        NSString *storageClass = [[nodes lastObject] stringValue];
+        if (storageClass == nil) {
+            storageClass = @"STANDARD";
+        }
+        item.storageClass = storageClass;
+        
+        NSString *etag = [[[objectNode nodesForXPath:@"ETag" error:NULL] lastObject] stringValue];
+        if (etag != nil) {
+            if ([etag hasPrefix:@"\""] && [etag hasSuffix:@"\""]) {
+                etag = [etag substringWithRange:NSMakeRange(1, [etag length] - 2)];
             }
-            return NO;
+            item.checksum = [@"md5:" stringByAppendingString:etag];
         }
-        lastPath = [[[md path] retain] autorelease];
-        [md release];
-        received++;
+        
+        [ret addObject:item];
+        
     }
-    if (lastPath != nil) {
+    if (lastObjectPath != nil) {
         [marker release];
-        marker = [[lastPath substringFromIndex:1] retain];
+        marker = [[lastObjectPath substringFromIndex:1] retain];
     }
-    return YES;
+    return ret;
 }
 
-- (NSArray *)parseXMLResponse:(NSData *)response s3BucketName:(NSString *)s3BucketName error:(NSError **)error {
+- (NSArray *)parseXMLResponse:(NSData *)response foundPrefixes:(NSArray **)foundPrefixes error:(NSError **)error {
     NSError *myError = nil;
     NSXMLDocument *xmlDoc = [[[NSXMLDocument alloc] initWithData:response options:0 error:&myError] autorelease];
     if (!xmlDoc) {
+        HSLogDebug(@"list Objects XML data: %@", [[[NSString alloc] initWithData:response encoding:NSUTF8StringEncoding] autorelease]);
         SETNSERROR([S3Service errorDomain], [myError code], @"error parsing List Objects XML response: %@", myError);
-        return NO;
+        return nil;
     }
     NSXMLElement *rootElement = [xmlDoc rootElement];
     NSArray *isTruncatedNodes = [rootElement nodesForXPath:@"//ListBucketResult/IsTruncated" error:&myError];
     if (isTruncatedNodes == nil) {
         HSLogError(@"nodesForXPath: %@", myError);
         SETERRORFROMMYERROR;
-        return NO;
+        return nil;
     }
     if ([isTruncatedNodes count] == 0) {
         isTruncated = NO;
     } else {
         isTruncated = [[[isTruncatedNodes objectAtIndex:0] stringValue] isEqualToString:@"true"];
     }
-    if (delimiter != nil) {
-        NSArray *prefixNodes = [rootElement nodesForXPath:@"//ListBucketResult/CommonPrefixes/Prefix" error:error];
-        if (prefixNodes == nil) {
-            if (error != NULL) {
-                HSLogError(@"error getting //ListBucketResult/CommonPrefixes/Prefix nodes: %@", *error);
-            }
-            return NO;
+    NSArray *prefixNodes = [rootElement nodesForXPath:@"//ListBucketResult/CommonPrefixes/Prefix" error:error];
+    if (prefixNodes == nil) {
+        if (error != NULL) {
+            HSLogError(@"error getting //ListBucketResult/CommonPrefixes/Prefix nodes: %@", *error);
         }
-        for (NSXMLNode *prefixNode in prefixNodes) {
-            NSString *thePrefix = [prefixNode stringValue];
-            thePrefix = [thePrefix substringToIndex:([thePrefix length] - 1)];
-            [foundPrefixes addObject:[NSString stringWithFormat:@"/%@/%@", s3BucketName, thePrefix]];
-        }
+        return nil;
+    }
+    NSMutableArray *theFoundPrefixes = [NSMutableArray array];
+    for (NSXMLNode *prefixNode in prefixNodes) {
+        NSString *thePrefix = [prefixNode stringValue];
+        thePrefix = [thePrefix substringToIndex:([thePrefix length] - 1)];
+        [theFoundPrefixes addObject:[NSString stringWithFormat:@"/%@/%@", s3BucketName, thePrefix]];
+    }
+    if (foundPrefixes != NULL) {
+        *foundPrefixes = theFoundPrefixes;
     }
     return [rootElement nodesForXPath:@"//ListBucketResult/Contents" error:error];
 }

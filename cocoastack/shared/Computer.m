@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -30,9 +30,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+
+
 #import "Computer.h"
 #include <SystemConfiguration/SCDynamicStoreCopySpecific.h>
-
 
 #define SERIAL_BUF_SIZE (1024)
 
@@ -58,13 +59,13 @@ static void get_serial_number(char *buf, int bufSize) {
     get_serial_number(buf, SERIAL_BUF_SIZE);
     return [NSString stringWithUTF8String:buf];
 }
-+ (NSString *)machineType {
-	OSErr err;
-	char *machineName=NULL;    // This is really a Pascal-string with a length byte.
-	err = Gestalt(gestaltUserVisibleMachineName, (SInt32*) &machineName); //gestaltUserVisibleMachineName = 'mnam'
-	if (err != noErr) {
-        return nil;
-    }
-    return [[[NSString alloc] initWithBytes:machineName+1 length:machineName[0] encoding:NSUTF8StringEncoding] autorelease];
-}
+//+ (NSString *)machineType {
+//	OSErr err;
+//	char *machineName=NULL;    // This is really a Pascal-string with a length byte.
+//	err = Gestalt(gestaltUserVisibleMachineName, (SInt32*) &machineName); //gestaltUserVisibleMachineName = 'mnam'
+//	if (err != noErr) {
+//        return nil;
+//    }
+//    return [[[NSString alloc] initWithBytes:machineName+1 length:machineName[0] encoding:NSUTF8StringEncoding] autorelease];
+//}
 @end

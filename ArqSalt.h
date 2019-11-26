@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,6 +31,7 @@
  */
 
 
+
 #import "TargetConnection.h"
 @class AWSRegion;
 @class Target;
@@ -38,15 +39,12 @@
 
 @interface ArqSalt : NSObject {
     Target *target;
-    uid_t uid;
-    gid_t gid;
     NSString *computerUUID;
 }
 - (id)initWithTarget:(Target *)theTarget
-           targetUID:(uid_t)theTargetUID
-           targetGID:(gid_t)theTargetGID
-        computerUUID:(NSString *)theComputerUUID;
-- (NSData *)saltWithTargetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
-- (BOOL)saveSalt:(NSData *)theSalt targetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
-- (NSData *)createSaltWithTargetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
+        computerUUID:(NSString *)theComputerUUID
+               error:(NSError **)error;
+
+- (BOOL)ensureSaltExistsAtTargetWithTargetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
+- (NSData *)saltDataWithTargetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error;
 @end

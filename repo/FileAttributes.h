@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,6 +31,7 @@
  */
 
 
+
 #include <sys/stat.h>
 
 
@@ -48,7 +49,7 @@ OSStatus SymlinkPathMakeRef(const UInt8 *path, FSRef *ref, Boolean *isDirectory)
 }
 + (NSString *)errorDomain;
 
-- (id)initWithPath:(NSString *)thePath stat:(struct stat *)theStat error:(NSError **)error;
+- (id)initWithPath:(NSString *)thePath isSymLink:(BOOL)isSymLink error:(NSError **)error;
 
 - (int)finderFlags;
 - (int)extendedFinderFlags;

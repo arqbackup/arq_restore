@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -30,6 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+
+#include <termios.h>
 #import "ArqRestoreCommand.h"
 #import "Target.h"
 #import "AWSRegion.h"
@@ -38,24 +40,30 @@
 #import "UserAndComputer.h"
 #import "Bucket.h"
 #import "Repo.h"
-#import "S3RestorerParamSet.h"
+#import "StandardRestorerParamSet.h"
 #import "Tree.h"
 #import "Commit.h"
+#import "Node.h"
 #import "BlobKey.h"
-#import "S3Restorer.h"
+#import "StandardRestorer.h"
 #import "S3GlacierRestorerParamSet.h"
 #import "S3GlacierRestorer.h"
 #import "GlacierRestorerParamSet.h"
 #import "GlacierRestorer.h"
 #import "S3AuthorizationProvider.h"
+#import "S3AuthorizationProviderFactory.h"
+#import "NSString_extra.h"
+#import "TargetFactory.h"
+#import "RegexKitLite.h"
+#import "BackupSet.h"
+#import "ExePath.h"
+#import "AWSRegion.h"
+
+
+#define BUFSIZE (65536)
 
 
 @implementation ArqRestoreCommand
-- (void)dealloc {
-    [target release];
-    [super dealloc];
-}
-
 - (NSString *)errorDomain {
     return @"ArqRestoreCommandErrorDomain";
 }
@@ -71,60 +79,31 @@
         return NO;
     }
     
-    int index = 1;
-    if ([[args objectAtIndex:1] isEqualToString:@"-l"]) {
-        if ([args count] < 4) {
-            SETNSERROR([self errorDomain], ERROR_USAGE, @"missing arguments");
-            return NO;
-        }
-        setHSLogLevel(hsLogLevelForName([args objectAtIndex:2]));
-        index += 2;
+    if ([args count] > 3 && [[args objectAtIndex:1] isEqualToString:@"-l"]) {
+        [[HSLog sharedHSLog] setHSLogLevel:[HSLog hsLogLevelForName:[args objectAtIndex:2]]];
+        args = [NSMutableArray arrayWithArray:[args subarrayWithRange:NSMakeRange(2, [args count] - 2)]];
     }
     
-    NSString *cmd = [args objectAtIndex:index];
+    NSString *cmd = [args objectAtIndex:1];
     
-    int targetParamsIndex = index + 1;
-    if ([cmd isEqualToString:@"listcomputers"]) {
-        // Valid command, but no additional args.
-        
+    if ([cmd isEqualToString:@"listtargets"]) {
+        return [self listTargets:error];
+    } else if ([cmd isEqualToString:@"addtarget"]) {
+        return [self addTarget:args error:error];
+    } else if ([cmd isEqualToString:@"deletetarget"]) {
+        return [self deleteTarget:args error:error];
+    } else if ([cmd isEqualToString:@"listcomputers"]) {
+        return [self listComputers:args error:error];
     } else if ([cmd isEqualToString:@"listfolders"]) {
-        if ((argc - targetParamsIndex) < 2) {
-            SETNSERROR([self errorDomain], ERROR_USAGE, @"missing arguments for listfolders command");
-            return NO;
-        }
-        targetParamsIndex += 2;
+        return [self listFolders:args error:error];
+    } else if ([cmd isEqualToString:@"printplist"]) {
+        return [self printPlist:args error:error];
+    } else if ([cmd isEqualToString:@"listtree"]) {
+        return [self listTree:args error:error];
     } else if ([cmd isEqualToString:@"restore"]) {
-        if ((argc - targetParamsIndex) < 4) {
-            SETNSERROR([self errorDomain], ERROR_USAGE, @"missing arguments");
-            return NO;
-        }
-        targetParamsIndex += 4;
-    } else {
-        SETNSERROR([self errorDomain], ERROR_USAGE, @"unknown command: %@", cmd);
-        return NO;
-    }
-    
-    if (targetParamsIndex >= argc) {
-        SETNSERROR([self errorDomain], ERROR_USAGE, @"missing target type params");
-        return NO;
-    }
-    target = [[self targetForParams:[args subarrayWithRange:NSMakeRange(targetParamsIndex, argc - targetParamsIndex)] error:error] retain];
-    if (target == nil) {
-        return NO;
-    }
-    
-    if ([cmd isEqualToString:@"listcomputers"]) {
-        if (![self listComputers:error]) {
-            return NO;
-        }
-    } else if ([cmd isEqualToString:@"listfolders"]) {
-        if (![self listBucketsForComputerUUID:[args objectAtIndex:index+1] encryptionPassword:[args objectAtIndex:index+2] error:error]) {
-            return NO;
-        }
-    } else if ([cmd isEqualToString:@"restore"]) {
-        if (![self restoreComputerUUID:[args objectAtIndex:index+1] bucketUUID:[args objectAtIndex:index+3] encryptionPassword:[args objectAtIndex:index+2] restoreBytesPerSecond:[args objectAtIndex:index+4] error:error]) {
-            return NO;
-        }
+        return [self restore:args error:error];
+    } else if ([cmd isEqualToString:@"clearcache"]) {
+        return [self clearCache:args error:error];
     } else {
         SETNSERROR([self errorDomain], ERROR_USAGE, @"unknown command: %@", cmd);
         return NO;
@@ -135,156 +114,129 @@
 
 
 #pragma mark internal
-- (Target *)targetForParams:(NSArray *)theParams error:(NSError **)error {
-    NSString *theTargetType = [theParams objectAtIndex:0];
-    
-    Target *ret = nil;
-    if ([theTargetType isEqualToString:@"aws"]) {
-        if ([theParams count] != 4) {
-            SETNSERROR([self errorDomain], ERROR_USAGE, @"invalid aws parameters");
-            return nil;
-        }
-        
-        NSString *theAccessKey = [theParams objectAtIndex:1];
-        NSString *theSecretKey = [theParams objectAtIndex:2];
-        NSString *theBucketName = [theParams objectAtIndex:3];
-        AWSRegion *awsRegion = [self awsRegionForAccessKey:theAccessKey secretKey:theSecretKey bucketName:theBucketName error:error];
-        if (awsRegion == nil) {
-            return nil;
-        }
-        NSURL *s3Endpoint = [awsRegion s3EndpointWithSSL:YES];
-        int port = [[s3Endpoint port] intValue];
-        NSString *portString = @"";
-        if (port != 0) {
-            portString = [NSString stringWithFormat:@":%d", port];
-        }
-        NSURL *targetEndpoint = [NSURL URLWithString:[NSString stringWithFormat:@"%@://%@@%@%@/%@", [s3Endpoint scheme], theAccessKey, [s3Endpoint host], portString, theBucketName]];
-        ret = [[[Target alloc] initWithEndpoint:targetEndpoint secret:theSecretKey passphrase:nil] autorelease];
-    } else if ([theTargetType isEqualToString:@"sftp"]) {
-        if ([theParams count] != 6 && [theParams count] != 7) {
-            SETNSERROR([self errorDomain], ERROR_USAGE, @"invalid sftp parameters");
-            return nil;
-        }
-        
-        NSString *hostname = [theParams objectAtIndex:1];
-        int port = [[theParams objectAtIndex:2] intValue];
-        NSString *path = [theParams objectAtIndex:3];
-        NSString *username = [theParams objectAtIndex:4];
-        NSString *secret = [theParams objectAtIndex:5];
-        NSString *keyfilePassphrase = [theParams count] > 6 ? [theParams objectAtIndex:6] : nil;
-        
-        if (![path hasPrefix:@"/"]) {
-            path = [@"/~/" stringByAppendingString:path];
-        }
-        NSString *escapedPath = (NSString *)CFURLCreateStringByAddingPercentEscapes(NULL, (CFStringRef)path, NULL, (CFStringRef)@"!*'();:@&=+$,?%#[]", kCFStringEncodingUTF8);
-        NSString *escapedUsername = (NSString *)CFURLCreateStringByAddingPercentEscapes(NULL, (CFStringRef)username, NULL, (CFStringRef)@"!*'();:@&=+$,?%#[]", kCFStringEncodingUTF8);
-        NSURL *endpoint = [NSURL URLWithString:[NSString stringWithFormat:@"sftp://%@@%@:%d%@", escapedUsername, hostname, port, escapedPath]];
+- (BOOL)listTargets:(NSError **)error {
+    printf("%-20s %s\n", "nickname:", "url:");
+    for (Target *target in [[TargetFactory sharedTargetFactory] sortedTargets]) {
+        printf("%-20s %s\n", [[target nickname] UTF8String], [[[target endpoint] description] UTF8String]);
+    }
+    return YES;
+}
 
-        ret = [[[Target alloc] initWithEndpoint:endpoint secret:secret passphrase:keyfilePassphrase] autorelease];
-    } else if ([theTargetType isEqualToString:@"greenqloud"]
-               || [theTargetType isEqualToString:@"dreamobjects"]
-               || [theTargetType isEqualToString:@"googlecloudstorage"]) {
-        if ([theParams count] != 4) {
-            SETNSERROR([self errorDomain], ERROR_USAGE, @"invalid %@ parameters", theTargetType);
-            return nil;
+- (BOOL)addTarget:(NSArray *)args error:(NSError **)error {
+    if ([args count] < 5) {
+        SETNSERROR([self errorDomain], ERROR_USAGE, @"missing arguments");
+        return NO;
+    }
+    NSString *targetUUID = [NSString stringWithRandomUUID];
+    NSString *targetNickname = [args objectAtIndex:2];
+    NSString *targetType = [args objectAtIndex:3];
+    
+    NSURL *endpoint = nil;
+    NSString *secret = nil;
+    NSString *passphrase = nil;
+    NSString *oAuth2ClientId = nil;
+    NSString *oAuth2ClientSecret = nil;
+    NSString *oAuth2RedirectURI = nil;
+    
+    if ([targetType isEqualToString:@"aws"]) {
+        if ([args count] != 5) {
+            SETNSERROR([self errorDomain], ERROR_USAGE, @"invalid arguments");
+            return NO;
         }
         
-        NSString *theAccessKey = [theParams objectAtIndex:1];
-        NSString *theSecretKey = [theParams objectAtIndex:2];
-        NSString *theBucketName = [theParams objectAtIndex:3];
-        NSString *theHostname = nil;
-        if ([theTargetType isEqualToString:@"greenqloud"]) {
-            theHostname = @"s.greenqloud.com";
-        } else if ([theTargetType isEqualToString:@"dreamobjects"]) {
-            theHostname = @"objects.dreamhost.com";
-        } else if ([theTargetType isEqualToString:@"googlecloudstorage"]) {
-            theHostname = @"storage.googleapis.com";
-        } else {
-            SETNSERROR([self errorDomain], ERROR_USAGE, @"no hostname for target type: %@", theTargetType);
-            return nil;
+        NSString *accessKeyId = [args objectAtIndex:4];
+        AWSRegion *usEast1 = [AWSRegion usEast1];
+        NSString *urlString = [NSString stringWithFormat:@"https://%@@%@/any_bucket", accessKeyId, [[usEast1 s3EndpointWithSSL:NO] host]];
+        
+        endpoint = [NSURL URLWithString:urlString];
+        secret = [self readPasswordWithPrompt:@"enter AWS secret key:" error:error];
+        if (secret == nil) {
+            return NO;
         }
         
-        NSURL *endpoint = [NSURL URLWithString:[NSString stringWithFormat:@"https://%@@%@/%@", theAccessKey, theHostname, theBucketName]];
-        ret = [[[Target alloc] initWithEndpoint:endpoint secret:theSecretKey passphrase:nil] autorelease];
-    } else if ([theTargetType isEqualToString:@"s3compatible"]) {
-        if ([theParams count] != 5) {
-            SETNSERROR([self errorDomain], ERROR_USAGE, @"invalid %@ parameters", theTargetType);
-            return nil;
+    } else if ([targetType isEqualToString:@"local"]) {
+        if ([args count] != 5) {
+            SETNSERROR([self errorDomain], ERROR_USAGE, @"invalid arguments");
+            return NO;
         }
         
-        NSURL *theURL = [NSURL URLWithString:[theParams objectAtIndex:1]];
-        if (theURL == nil) {
-            SETNSERROR([self errorDomain], ERROR_USAGE, @"invalid url %@", [theParams objectAtIndex:1]);
-            return nil;
-        }
-        
-        NSString *theAccessKey = [theParams objectAtIndex:2];
-        NSString *theSecretKey = [theParams objectAtIndex:3];
-        NSString *theBucketName = [theParams objectAtIndex:4];
-        
-        NSMutableString *urlString = [NSMutableString stringWithString:[theURL scheme]];
-        [urlString appendFormat:@"://%@@%@", theAccessKey, [theURL host]];
-        NSNumber *port = [theURL port];
-        if (port != nil) {
-            [urlString appendFormat:@":%d", [port intValue]];
-        }
-        [urlString appendString:@"/"];
-        [urlString appendString:theBucketName];
-        NSURL *endpoint = [NSURL URLWithString:urlString];
-        ret = [[[Target alloc] initWithEndpoint:endpoint secret:theSecretKey passphrase:nil] autorelease];
-        
-    } else if ([theTargetType isEqualToString:@"googledrive"]) {
-        if ([theParams count] != 3) {
-            SETNSERROR([self errorDomain], ERROR_USAGE, @"invalid googledrive parameters");
-            return nil;
-        }
-        
-        NSString *theRefreshToken = [theParams objectAtIndex:1];
-        NSString *thePath = [theParams objectAtIndex:2];
-        
-        NSString *escapedPath = (NSString *)CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, (CFStringRef)thePath, CFSTR("/"), CFSTR("@?=&+"), kCFStringEncodingUTF8);
-        [escapedPath autorelease];
-        
-        NSURL *endpoint = [NSURL URLWithString:[NSString stringWithFormat:@"googledrive://unknown_email_address@www.googleapis.com%@", escapedPath]];
-        ret = [[[Target alloc] initWithEndpoint:endpoint secret:theRefreshToken passphrase:nil] autorelease];
+        endpoint = [NSURL fileURLWithPath:[args objectAtIndex:4]];
+        secret = @"unused";
     } else {
-        SETNSERROR([self errorDomain], ERROR_USAGE, @"unknown target type: %@", theTargetType);
-        return nil;
+        SETNSERROR([self errorDomain], -1, @"unknown target type: %@", targetType);
+        return NO;
     }
-    return ret;
-}
-
-- (AWSRegion *)awsRegionForAccessKey:(NSString *)theAccessKey secretKey:(NSString *)theSecretKey bucketName:(NSString *)theBucketName error:(NSError **)error {
-    S3AuthorizationProvider *sap = [[[S3AuthorizationProvider alloc] initWithAccessKey:theAccessKey secretKey:theSecretKey] autorelease];
-    NSURL *endpoint = [[AWSRegion usEast1] s3EndpointWithSSL:YES];
-    S3Service *s3 = [[[S3Service alloc] initWithS3AuthorizationProvider:sap endpoint:endpoint useAmazonRRS:NO] autorelease];
     
-    NSString *location = [s3 locationOfS3Bucket:theBucketName targetConnectionDelegate:nil error:error];
-    if (location == nil) {
-        return nil;
+    Target *target = [[[Target alloc] initWithUUID:targetUUID nickname:targetNickname endpoint:endpoint awsRequestSignatureVersion:4] autorelease];
+    [target setOAuth2ClientId:oAuth2ClientId];
+    [target setOAuth2RedirectURI:oAuth2RedirectURI];
+    if (![[TargetFactory sharedTargetFactory] saveTarget:target error:error]) {
+        return NO;
     }
-    return [AWSRegion regionWithLocation:location];
+    if (![target setSecret:secret trustedAppPaths:[NSArray arrayWithObject:[ExePath exePath]] error:error]) {
+        return NO;
+    }
+    if (passphrase != nil) {
+        if (![target setPassphrase:passphrase trustedAppPaths:[NSArray arrayWithObject:[ExePath exePath]] error:error]) {
+            return NO;
+        }
+    }
+    if (oAuth2ClientSecret != nil) {
+        if (![target setOAuth2ClientSecret:oAuth2ClientSecret trustedAppPaths:[NSArray arrayWithObject:[ExePath exePath]] error:error]) {
+            return NO;
+        }
+    }
+    
+    return YES;
+}
+- (BOOL)deleteTarget:(NSArray *)args error:(NSError **)error {
+    if ([args count] != 3) {
+        SETNSERROR([self errorDomain], ERROR_USAGE, @"invalid arguments");
+        return NO;
+    }
+    Target *target = [[TargetFactory sharedTargetFactory] targetWithNickname:[args objectAtIndex:2]];
+    if (target == nil) {
+        SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"target not found");
+        return NO;
+    }
+    TargetConnection *conn = [[target newConnection:error] autorelease];
+    if (conn == nil) {
+        return NO;
+    }
+    if (![conn clearAllCachedData:error]) {
+        return NO;
+    }
+
+    return [[TargetFactory sharedTargetFactory] deleteTarget:target error:error];
 }
 
-- (BOOL)listComputers:(NSError **)error {
-    NSArray *expandedTargetList = [self expandedTargetList:error];
+- (BOOL)listComputers:(NSArray *)args error:(NSError **)error {
+    if ([args count] != 3) {
+        SETNSERROR([self errorDomain], ERROR_USAGE, @"invalid arguments");
+        return NO;
+    }
+    Target *target = [[TargetFactory sharedTargetFactory] targetWithNickname:[args objectAtIndex:2]];
+    if (target == nil) {
+        SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"target not found");
+        return NO;
+    }
+    NSArray *expandedTargetList = [self expandedTargetListForTarget:target error:error];
     if (expandedTargetList == nil) {
         return NO;
     }
     
-    NSMutableArray *ret = [NSMutableArray array];
     for (Target *theTarget in expandedTargetList) {
         NSError *myError = nil;
         HSLogDebug(@"getting backup sets for %@", theTarget);
         
-        NSArray *backupSets = [BackupSet allBackupSetsForTarget:theTarget targetConnectionDelegate:nil error:&myError];
+        NSArray *backupSets = [BackupSet allBackupSetsForTarget:theTarget targetConnectionDelegate:nil activityListener:nil error:&myError];
         if (backupSets == nil) {
             if ([myError isErrorWithDomain:[S3Service errorDomain] code:S3SERVICE_ERROR_AMAZON_ERROR] && [[[myError userInfo] objectForKey:@"HTTPStatusCode"] intValue] == 403) {
                 HSLogError(@"access denied getting backup sets for %@", theTarget);
             } else {
                 HSLogError(@"error getting backup sets for %@: %@", theTarget, myError);
                 SETERRORFROMMYERROR;
-                return nil;
+                return NO;
             }
         } else {
             printf("target: %s\n", [[theTarget endpointDisplayName] UTF8String]);
@@ -294,65 +246,35 @@
             }
         }
     }
-    return ret;
-}
-- (NSArray *)expandedTargetList:(NSError **)error {
-    NSMutableArray *expandedTargetList = [NSMutableArray arrayWithObject:target];
-//    if ([target targetType] == kTargetAWS
-//        || [target targetType] == kTargetDreamObjects
-//        || [target targetType] == kTargetGoogleCloudStorage
-//        || [target targetType] == kTargetGreenQloud
-//        || [target targetType] == kTargetS3Compatible) {
-//        NSError *myError = nil;
-//        NSArray *targets = [self expandedTargetsForS3Target:target error:&myError];
-//        if (targets == nil) {
-//            HSLogError(@"failed to expand target list for %@: %@", target, myError);
-//        } else {
-//            [expandedTargetList setArray:targets];
-//            HSLogDebug(@"expandedTargetList is now: %@", expandedTargetList);
-//        }
-//    }
-    return expandedTargetList;
-}
-- (NSArray *)expandedTargetsForS3Target:(Target *)theTarget error:(NSError **)error {
-    S3Service *s3 = [theTarget s3:error];
-    if (s3 == nil) {
-        return nil;
-    }
-    NSArray *s3BucketNames = [s3 s3BucketNamesWithTargetConnectionDelegate:nil error:error];
-    if (s3BucketNames == nil) {
-        return nil;
-    }
-    HSLogDebug(@"s3BucketNames for %@: %@", theTarget, s3BucketNames);
-    
-    NSURL *originalEndpoint = [theTarget endpoint];
-    NSMutableArray *ret = [NSMutableArray array];
-    
-    for (NSString *s3BucketName in s3BucketNames) {
-        NSURL *endpoint = nil;
-        if ([theTarget targetType] == kTargetAWS) {
-            NSString *location = [s3 locationOfS3Bucket:s3BucketName targetConnectionDelegate:nil error:error];
-            if (location == nil) {
-                return nil;
-            }
-            AWSRegion *awsRegion = [AWSRegion regionWithLocation:location];
-            HSLogDebug(@"awsRegion for s3BucketName %@: %@", s3BucketName, location);
-            
-            NSURL *s3Endpoint = [awsRegion s3EndpointWithSSL:YES];
-            HSLogDebug(@"s3Endpoint: %@", s3Endpoint);
-            endpoint = [NSURL URLWithString:[NSString stringWithFormat:@"https://%@@%@/%@", [originalEndpoint user], [s3Endpoint host], s3BucketName]];
-        } else {
-            endpoint = [NSURL URLWithString:[NSString stringWithFormat:@"%@://%@@%@/%@", [originalEndpoint scheme], [originalEndpoint user], [originalEndpoint host], s3BucketName]];
-        }
-        HSLogDebug(@"endpoint: %@", endpoint);
-        
-        Target *theTarget = [[[Target alloc] initWithEndpoint:endpoint secret:[theTarget secret:NULL] passphrase:[theTarget passphrase:NULL]] autorelease];
-        [ret addObject:theTarget];
-    }
-    return ret;
+    return YES;
 }
 
-- (BOOL)listBucketsForComputerUUID:(NSString *)theComputerUUID encryptionPassword:(NSString *)theEncryptionPassword error:(NSError **)error {
+
+- (BOOL)listFolders:(NSArray *)args error:(NSError **)error {
+    if ([args count] != 4) {
+        SETNSERROR([self errorDomain], ERROR_USAGE, @"invalid arguments");
+        return NO;
+    }
+    Target *target = [[TargetFactory sharedTargetFactory] targetWithNickname:[args objectAtIndex:2]];
+    if (target == nil) {
+        SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"target not found");
+        return NO;
+    }
+    
+    NSString *theComputerUUID = [args objectAtIndex:3];
+    NSString *theEncryptionPassword = [self readPasswordWithPrompt:@"enter encryption password:" error:error];
+    if (theEncryptionPassword == nil) {
+        return NO;
+    }
+    
+    BackupSet *backupSet = [self backupSetForTarget:target computerUUID:theComputerUUID error:error];
+    if (backupSet == nil) {
+        return NO;
+    }
+    
+    // Reset Target:
+    target = [backupSet target];
+    
     NSArray *buckets = [Bucket bucketsWithTarget:target computerUUID:theComputerUUID encryptionPassword:theEncryptionPassword targetConnectionDelegate:nil error:error];
     if (buckets == nil) {
         return NO;
@@ -366,151 +288,462 @@
         printf("\t\tuuid %s\n", [[bucket bucketUUID] UTF8String]);
         
     }
-    
     return YES;
 }
-- (BOOL)restoreComputerUUID:(NSString *)theComputerUUID bucketUUID:(NSString *)theBucketUUID encryptionPassword:(NSString *)theEncryptionPassword restoreBytesPerSecond:(NSString *)theRestoreBytesPerSecond error:(NSError **)error {
-    Bucket *myBucket = nil;
-    NSArray *expandedTargetList = [self expandedTargetList:error];
-    if (expandedTargetList == nil) {
+- (BOOL)printPlist:(NSArray *)args error:(NSError **)error {
+    if ([args count] != 5) {
+        SETNSERROR([self errorDomain], ERROR_USAGE, @"invalid arguments");
         return NO;
     }
-    for (Target *theTarget in expandedTargetList) {
-        NSArray *buckets = [Bucket bucketsWithTarget:theTarget computerUUID:theComputerUUID encryptionPassword:theEncryptionPassword targetConnectionDelegate:nil error:error];
-        if (buckets == nil) {
-            return NO;
-        }
-        for (Bucket *bucket in buckets) {
-            if ([[bucket bucketUUID] isEqualToString:theBucketUUID]) {
-                myBucket = bucket;
-                break;
-            }
-        }
-        
-        if (myBucket != nil) {
+    Target *target = [[TargetFactory sharedTargetFactory] targetWithNickname:[args objectAtIndex:2]];
+    if (target == nil) {
+        SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"target not found");
+        return NO;
+    }
+    
+    NSString *theComputerUUID = [args objectAtIndex:3];
+    NSString *theBucketUUID = [args objectAtIndex:4];
+    
+    NSString *theEncryptionPassword = [self readPasswordWithPrompt:@"enter encryption password:" error:error];
+    if (theEncryptionPassword == nil) {
+        return NO;
+    }
+    
+    BackupSet *backupSet = [self backupSetForTarget:target computerUUID:theComputerUUID error:error];
+    if (backupSet == nil) {
+        return NO;
+    }
+    
+    // Reset Target:
+    target = [backupSet target];
+    
+    NSArray *buckets = [Bucket bucketsWithTarget:target computerUUID:theComputerUUID encryptionPassword:theEncryptionPassword targetConnectionDelegate:nil error:error];
+    if (buckets == nil) {
+        return NO;
+    }
+    Bucket *matchingBucket = nil;
+    for (Bucket *bucket in buckets) {
+        if ([[bucket bucketUUID] isEqualToString:theBucketUUID]) {
+            matchingBucket = bucket;
             break;
         }
     }
-    if (myBucket == nil) {
+    if (matchingBucket == nil) {
         SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"folder %@ not found", theBucketUUID);
         return NO;
     }
     
-    Repo *repo = [[[Repo alloc] initWithBucket:myBucket encryptionPassword:theEncryptionPassword targetUID:getuid() targetGID:getgid() loadExistingMutablePackFiles:NO targetConnectionDelegate:nil repoDelegate:nil error:error] autorelease];
-    if (repo == nil) {
+    printf("target   %s\n", [[target endpointDisplayName] UTF8String]);
+    printf("computer %s\n", [theComputerUUID UTF8String]);
+    printf("folder   %s\n", [theBucketUUID UTF8String]);
+    
+    NSData *xmlData = [matchingBucket toXMLData];
+    NSString *xmlString = [[[NSString alloc] initWithData:xmlData encoding:NSUTF8StringEncoding] autorelease];
+    printf("%s\n", [xmlString UTF8String]);
+    return YES;
+}
+- (BOOL)listTree:(NSArray *)args error:(NSError **)error {
+    if ([args count] != 5) {
+        SETNSERROR([self errorDomain], ERROR_USAGE, @"invalid arguments");
+        return NO;
+    }
+    Target *target = [[TargetFactory sharedTargetFactory] targetWithNickname:[args objectAtIndex:2]];
+    if (target == nil) {
+        SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"target not found");
         return NO;
     }
     
+    NSString *theComputerUUID = [args objectAtIndex:3];
+    NSString *theBucketUUID = [args objectAtIndex:4];
+
+    NSString *theEncryptionPassword = [self readPasswordWithPrompt:@"enter encryption password:" error:error];
+    if (theEncryptionPassword == nil) {
+        return NO;
+    }
     
+    BackupSet *backupSet = [self backupSetForTarget:target computerUUID:theComputerUUID error:error];
+    if (backupSet == nil) {
+        return NO;
+    }
+    
+    // Reset Target:
+    target = [backupSet target];
+    
+    NSArray *buckets = [Bucket bucketsWithTarget:target computerUUID:theComputerUUID encryptionPassword:theEncryptionPassword targetConnectionDelegate:nil error:error];
+    if (buckets == nil) {
+        return NO;
+    }
+    Bucket *matchingBucket = nil;
+    for (Bucket *bucket in buckets) {
+        if ([[bucket bucketUUID] isEqualToString:theBucketUUID]) {
+            matchingBucket = bucket;
+            break;
+        }
+    }
+    if (matchingBucket == nil) {
+        SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"folder %@ not found", theBucketUUID);
+        return NO;
+    }
+    
+    printf("target   %s\n", [[target endpointDisplayName] UTF8String]);
+    printf("computer %s\n", [theComputerUUID UTF8String]);
+    printf("folder   %s\n", [theBucketUUID UTF8String]);
+    
+    Repo *repo = [[[Repo alloc] initWithBucket:matchingBucket encryptionPassword:theEncryptionPassword targetConnectionDelegate:nil repoDelegate:nil activityListener:nil error:error] autorelease];
+    if (repo == nil) {
+        return NO;
+    }
+    BlobKey *headBlobKey = [repo headBlobKey:error];
+    if (headBlobKey == nil) {
+        return NO;
+    }
+    Commit *head = [repo commitForBlobKey:headBlobKey error:error];
+    if (head == nil) {
+        return NO;
+    }
+    Tree *rootTree = [repo treeForBlobKey:[head treeBlobKey] error:error];
+    if (rootTree == nil) {
+        return NO;
+    }
+    return [self printTree:rootTree repo:repo relativePath:@"" error:error];
+}
+- (BOOL)printTree:(Tree *)theTree repo:(Repo *)theRepo relativePath:(NSString *)theRelativePath error:(NSError **)error {
+    for (NSString *childName in [theTree childNodeNames]) {
+        NSString *childRelativePath = [theRelativePath stringByAppendingFormat:@"/%@", childName];
+        Node *childNode = [theTree childNodeWithName:childName];
+        if ([childNode isTree]) {
+            printf("%s:\n", [childRelativePath UTF8String]);
+            Tree *childTree = [theRepo treeForBlobKey:[childNode treeBlobKey] error:error];
+            if (childTree == nil) {
+                return NO;
+            }
+            if (![self printTree:childTree
+                            repo:theRepo
+                    relativePath:childRelativePath
+                           error:error]) {
+                return NO;
+            }
+        } else {
+            printf("%s\n", [childRelativePath UTF8String]);
+        }
+    }
+    return YES;
+}
+
+- (BOOL)restore:(NSArray *)args error:(NSError **)error {
+    if ([args count] != 5 && [args count] != 6) {
+        SETNSERROR([self errorDomain], ERROR_USAGE, @"invalid arguments");
+        return NO;
+    }
+    Target *target = [[TargetFactory sharedTargetFactory] targetWithNickname:[args objectAtIndex:2]];
+    if (target == nil) {
+        SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"target not found");
+        return NO;
+    }
+    
+    NSString *theComputerUUID = [args objectAtIndex:3];
+    NSString *theBucketUUID = [args objectAtIndex:4];
+    
+    NSString *theEncryptionPassword = [self readPasswordWithPrompt:@"enter encryption password:" error:error];
+    if (theEncryptionPassword == nil) {
+        return NO;
+    }
+    
+    BackupSet *backupSet = [self backupSetForTarget:target computerUUID:theComputerUUID error:error];
+    if (backupSet == nil) {
+        return NO;
+    }
+    
+    // Reset Target:
+    target = [backupSet target];
+    
+    NSArray *buckets = [Bucket bucketsWithTarget:target computerUUID:theComputerUUID encryptionPassword:theEncryptionPassword targetConnectionDelegate:nil error:error];
+    if (buckets == nil) {
+        return NO;
+    }
+    Bucket *matchingBucket = nil;
+    for (Bucket *bucket in buckets) {
+        if ([[bucket bucketUUID] isEqualToString:theBucketUUID]) {
+            matchingBucket = bucket;
+            break;
+        }
+    }
+    if (matchingBucket == nil) {
+        SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"folder %@ not found", theBucketUUID);
+        return NO;
+    }
+    
+    printf("target   %s\n", [[target endpointDisplayName] UTF8String]);
+    printf("computer %s\n", [theComputerUUID UTF8String]);
+    printf("folder   %s\n", [theBucketUUID UTF8String]);
+    
+    Repo *repo = [[[Repo alloc] initWithBucket:matchingBucket encryptionPassword:theEncryptionPassword targetConnectionDelegate:nil repoDelegate:nil activityListener:nil error:error] autorelease];
+    if (repo == nil) {
+        return NO;
+    }
     BlobKey *commitBlobKey = [repo headBlobKey:error];
     if (commitBlobKey == nil) {
         return NO;
     }
-    Commit *commit = [repo commitForBlobKey:commitBlobKey dataSize:NULL error:error];
+    Commit *commit = [repo commitForBlobKey:commitBlobKey error:error];
     if (commit == nil) {
         return NO;
     }
-    
-    NSString *destinationPath = [[[NSFileManager defaultManager] currentDirectoryPath] stringByAppendingPathComponent:[[myBucket localPath] lastPathComponent]];
+
+    BlobKey *treeBlobKey = [commit treeBlobKey];
+    NSString *nodeName = nil;
+    if ([args count] == 6) {
+        NSString *path = [args objectAtIndex:5];
+        if ([path hasPrefix:@"/"]) {
+            path = [path substringFromIndex:1];
+        }
+        NSArray *pathComponents = [path pathComponents];
+        for (NSUInteger index = 0; index < [pathComponents count]; index++) {
+            NSString *component = [pathComponents objectAtIndex:index];
+            Tree *childTree = [repo treeForBlobKey:treeBlobKey error:error];
+            if (childTree == nil) {
+                return NO;
+            }
+            Node *childNode = [childTree childNodeWithName:component];
+            if (childNode == nil) {
+                SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"path component '%@' not found", component);
+                return NO;
+            }
+            if (![childNode isTree] && index < ([pathComponents count] - 1)) {
+                // If it's a directory and we're not at the end of the path, fail.
+                SETNSERROR([self errorDomain], -1, @"'%@' is not a directory", component);
+                return NO;
+            }
+            if ([childNode isTree]) {
+                treeBlobKey = [childNode treeBlobKey];
+            } else {
+                nodeName = component;
+            }
+        }
+    } else {
+        Tree *rootTree = [repo treeForBlobKey:[commit treeBlobKey] error:error];
+        if (rootTree == nil) {
+            return NO;
+        }
+        if ([[rootTree childNodeNames] isEqualToArray:[NSArray arrayWithObject:@"."]]) {
+            // Single-file case.
+            nodeName = [[commit location] lastPathComponent];
+        }
+    }
+
+    NSString *restoreFileName = [args count] == 6 ? [[args objectAtIndex:5] lastPathComponent] : [[matchingBucket localPath] lastPathComponent];
+    NSString *destinationPath = [[[NSFileManager defaultManager] currentDirectoryPath] stringByAppendingPathComponent:restoreFileName];
     if ([[NSFileManager defaultManager] fileExistsAtPath:destinationPath]) {
         SETNSERROR([self errorDomain], -1, @"%@ already exists", destinationPath);
         return NO;
     }
     
     
-    printf("target   %s\n", [[[myBucket target] endpointDisplayName] UTF8String]);
-    printf("computer %s\n", [[myBucket computerUUID] UTF8String]);
-    printf("\nrestoring folder %s to %s\n\n", [[myBucket localPath] UTF8String], [destinationPath UTF8String]);
+    printf("\nrestoring folder %s to %s\n\n", [[matchingBucket localPath] UTF8String], [destinationPath UTF8String]);
+    
+    int bytesPerSecond = 500000;
     
     AWSRegion *region = [AWSRegion regionWithS3Endpoint:[target endpoint]];
     BOOL isGlacierDestination = [region supportsGlacier];
-    if ([myBucket storageType] == StorageTypeGlacier && isGlacierDestination) {
-        int bytesPerSecond = [theRestoreBytesPerSecond intValue];
-        if (bytesPerSecond == 0) {
-            SETNSERROR([self errorDomain], -1, @"invalid bytes_per_second %@", theRestoreBytesPerSecond);
-            return NO;
-        }
-        
-        GlacierRestorerParamSet *paramSet = [[[GlacierRestorerParamSet alloc] initWithBucket:myBucket
+    if ([matchingBucket storageType] == StorageTypeGlacier && isGlacierDestination) {
+        GlacierRestorerParamSet *paramSet = [[[GlacierRestorerParamSet alloc] initWithBucket:matchingBucket
                                                                           encryptionPassword:theEncryptionPassword
                                                                       downloadBytesPerSecond:bytesPerSecond
+                                                                        glacierRetrievalTier:GLACIER_RETRIEVAL_TIER_EXPEDITED
                                                                                commitBlobKey:commitBlobKey
-                                                                                rootItemName:[[myBucket localPath] lastPathComponent]
+                                                                                rootItemName:[[matchingBucket localPath] lastPathComponent]
                                                                                  treeVersion:CURRENT_TREE_VERSION
-                                                                            treeIsCompressed:[[commit treeBlobKey] compressed]
-                                                                                 treeBlobKey:[commit treeBlobKey]
-                                                                                    nodeName:nil targetUID:getuid()
+                                                                                 treeBlobKey:treeBlobKey
+                                                                                    nodeName:nodeName
+                                                                                   targetUID:getuid()
                                                                                    targetGID:getgid()
                                                                           useTargetUIDAndGID:YES
                                                                              destinationPath:destinationPath
-                                                                                    logLevel:global_hslog_level] autorelease];
+                                                                                    logLevel:[[HSLog sharedHSLog] hsLogLevel]] autorelease];
         [[[GlacierRestorer alloc] initWithGlacierRestorerParamSet:paramSet delegate:self] autorelease];
         
-    } else if ([myBucket storageType] == StorageTypeS3Glacier && isGlacierDestination) {
-        int bytesPerSecond = [theRestoreBytesPerSecond intValue];
-        if (bytesPerSecond == 0) {
-            SETNSERROR([self errorDomain], -1, @"invalid bytes_per_second %@", theRestoreBytesPerSecond);
-            return NO;
-        }
-        
-        S3GlacierRestorerParamSet *paramSet = [[[S3GlacierRestorerParamSet alloc] initWithBucket:myBucket
+    } else if ([matchingBucket storageType] == StorageTypeS3Glacier && isGlacierDestination) {
+        S3GlacierRestorerParamSet *paramSet = [[[S3GlacierRestorerParamSet alloc] initWithBucket:matchingBucket
                                                                               encryptionPassword:theEncryptionPassword
                                                                           downloadBytesPerSecond:bytesPerSecond
+                                                                            glacierRetrievalTier:GLACIER_RETRIEVAL_TIER_EXPEDITED
                                                                                    commitBlobKey:commitBlobKey
-                                                                                    rootItemName:[[myBucket localPath] lastPathComponent]
+                                                                                    rootItemName:[[matchingBucket localPath] lastPathComponent]
                                                                                      treeVersion:CURRENT_TREE_VERSION
-                                                                                treeIsCompressed:[[commit treeBlobKey] compressed]
-                                                                                     treeBlobKey:[commit treeBlobKey]
-                                                                                        nodeName:nil
+                                                                                     treeBlobKey:treeBlobKey
+                                                                                        nodeName:nodeName
                                                                                        targetUID:getuid()
                                                                                        targetGID:getgid()
                                                                               useTargetUIDAndGID:YES
                                                                                  destinationPath:destinationPath
-                                                                                        logLevel:global_hslog_level] autorelease];
+                                                                                        logLevel:[[HSLog sharedHSLog] hsLogLevel]] autorelease];
         S3GlacierRestorer *restorer = [[[S3GlacierRestorer alloc] initWithS3GlacierRestorerParamSet:paramSet delegate:self] autorelease];
         [restorer run];
     } else {
-        S3RestorerParamSet *paramSet = [[[S3RestorerParamSet alloc] initWithBucket:myBucket
-                                                                encryptionPassword:theEncryptionPassword
-                                                                     commitBlobKey:commitBlobKey
-                                                                      rootItemName:[[myBucket localPath] lastPathComponent]
-                                                                       treeVersion:CURRENT_TREE_VERSION
-                                                                  treeIsCompressed:[[commit treeBlobKey] compressed]
-                                                                       treeBlobKey:[commit treeBlobKey]
-                                                                          nodeName:nil
-                                                                         targetUID:getuid()
-                                                                         targetGID:getgid()
-                                                                useTargetUIDAndGID:YES
-                                                                   destinationPath:destinationPath
-                                                                          logLevel:global_hslog_level] autorelease];
-        [[[S3Restorer alloc] initWithParamSet:paramSet delegate:self] autorelease];
+        StandardRestorerParamSet *paramSet = [[[StandardRestorerParamSet alloc] initWithBucket:matchingBucket
+                                                                            encryptionPassword:theEncryptionPassword
+                                                                                 commitBlobKey:commitBlobKey
+                                                                                  rootItemName:[[matchingBucket localPath] lastPathComponent]
+                                                                                   treeVersion:CURRENT_TREE_VERSION
+                                                                                   treeBlobKey:treeBlobKey
+                                                                                      nodeName:nodeName
+                                                                                     targetUID:getuid()
+                                                                                     targetGID:getgid()
+                                                                            useTargetUIDAndGID:YES
+                                                                               destinationPath:destinationPath
+                                                                                      logLevel:[[HSLog sharedHSLog] hsLogLevel]] autorelease];
+        [[[StandardRestorer alloc] initWithParamSet:paramSet delegate:self] autorelease];
     }
     
     return YES;
 }
+- (BOOL)clearCache:(NSArray *)args error:(NSError **)error {
+    if ([args count] != 3) {
+        SETNSERROR([self errorDomain], ERROR_USAGE, @"invalid arguments");
+        return NO;
+    }
+    Target *target = [[TargetFactory sharedTargetFactory] targetWithNickname:[args objectAtIndex:2]];
+    if (target == nil) {
+        SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"target not found");
+        return NO;
+    }
+    TargetConnection *conn = [[target newConnection:error] autorelease];
+    if (conn == nil) {
+        return NO;
+    }
+    return [conn clearAllCachedData:error];
+}
 
 
-#pragma mark S3RestorerDelegate
+
+- (BackupSet *)backupSetForTarget:(Target *)theInitialTarget computerUUID:(NSString *)theComputerUUID error:(NSError **)error {
+    NSArray *expandedTargetList = [self expandedTargetListForTarget:theInitialTarget error:error];
+    if (expandedTargetList == nil) {
+        return nil;
+    }
+    
+    for (Target *theTarget in expandedTargetList) {
+        NSError *myError = nil;
+        NSArray *backupSets = [BackupSet allBackupSetsForTarget:theTarget targetConnectionDelegate:nil activityListener:nil error:&myError];
+        if (backupSets == nil) {
+            if ([myError isErrorWithDomain:[S3Service errorDomain] code:S3SERVICE_ERROR_AMAZON_ERROR] && [[[myError userInfo] objectForKey:@"HTTPStatusCode"] intValue] == 403) {
+                HSLogError(@"access denied getting backup sets for %@", theTarget);
+            } else {
+                HSLogError(@"error getting backup sets for %@: %@", theTarget, myError);
+                SETERRORFROMMYERROR;
+                return nil;
+            }
+        } else {
+            for (BackupSet *backupSet in backupSets) {
+                if ([[backupSet computerUUID] isEqualToString:theComputerUUID]) {
+                    return backupSet;
+                }
+            }
+        }
+    }
+    SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"backup set %@ not found at target\n", theComputerUUID);
+    return nil;
+}
+
+- (NSArray *)expandedTargetListForTarget:(Target *)theTarget error:(NSError **)error {
+    NSArray *targets = nil;
+    
+    if ([theTarget targetType] == kTargetAWS) {
+        targets = [self expandedTargetsForS3Target:theTarget error:error];
+    } else {
+        targets = [NSArray arrayWithObject:theTarget];
+    }
+    return targets;
+}
+- (NSArray *)expandedTargetsForS3Target:(Target *)theTarget error:(NSError **)error {
+    NSString *theSecretKey = [theTarget secret:error];
+    if (theSecretKey == nil) {
+        return nil;
+    }
+    S3Service *s3 = nil;
+    if ([AWSRegion regionWithS3Endpoint:[theTarget endpoint]] != nil) {
+        // It's S3. Get bucket name list from us-east-1 region.
+        NSURL *usEast1Endpoint = [[AWSRegion usEast1] s3EndpointWithSSL:YES];
+        id <S3AuthorizationProvider> sap = [[S3AuthorizationProviderFactory sharedS3AuthorizationProviderFactory] providerForEndpoint:usEast1Endpoint
+                                                                                                                            accessKey:[[theTarget endpoint] user]
+                                                                                                                            secretKey:theSecretKey
+                                                                                                                     signatureVersion:4
+                                                                                                                            awsRegion:[AWSRegion usEast1]];
+        s3 = [[[S3Service alloc] initWithS3AuthorizationProvider:sap endpoint:usEast1Endpoint] autorelease];
+    } else {
+        s3 = [theTarget s3:error];
+        if (s3 == nil) {
+            return nil;
+        }
+    }
+    NSArray *s3BucketNames = [s3 s3BucketNamesWithTargetConnectionDelegate:nil error:error];
+    if (s3BucketNames == nil) {
+        return nil;
+    }
+    HSLogDebug(@"s3BucketNames for %@: %@", theTarget, s3BucketNames);
+    
+    NSURL *originalEndpoint = [theTarget endpoint];
+    NSMutableArray *ret = [NSMutableArray array];
+    
+    // WARNING: This is a hack! We're creating this Target using the same UUID so that the keychain lookups work!
+    NSString *targetUUID = [theTarget targetUUID];
+    
+    for (NSString *s3BucketName in s3BucketNames) {
+        NSURL *endpoint = nil;
+        if ([theTarget targetType] == kTargetAWS) {
+            NSError *myError = nil;
+            NSString *location = [s3 locationOfS3Bucket:s3BucketName targetConnectionDelegate:nil error:&myError];
+            if (location == nil) {
+                HSLogError(@"failed to get location of %@: %@", s3BucketName, myError);
+            } else {
+                AWSRegion *awsRegion = [AWSRegion regionWithLocation:location];
+                HSLogDebug(@"awsRegion for s3BucketName %@: %@", s3BucketName, location);
+                
+                NSURL *s3Endpoint = [awsRegion s3EndpointWithSSL:YES];
+                HSLogDebug(@"s3Endpoint: %@", s3Endpoint);
+                endpoint = [NSURL URLWithString:[NSString stringWithFormat:@"https://%@@%@/%@", [originalEndpoint user], [s3Endpoint host], s3BucketName]];
+            }
+        } else {
+            NSNumber *originalPort = [originalEndpoint port];
+            NSString *portString = (originalPort == nil) ? @"" : [NSString stringWithFormat:@":%d", [originalPort intValue]];
+            endpoint = [NSURL URLWithString:[NSString stringWithFormat:@"%@://%@@%@%@/%@", [originalEndpoint scheme], [originalEndpoint user], [originalEndpoint host], portString, s3BucketName]];
+        }
+        
+        if (endpoint != nil) {
+            HSLogDebug(@"endpoint: %@", endpoint);
+            
+            Target *target = [[[Target alloc] initWithUUID:targetUUID
+                                                  nickname:s3BucketName
+                                                  endpoint:endpoint
+                                awsRequestSignatureVersion:[theTarget awsRequestSignatureVersion]] autorelease];
+            [ret addObject:target];
+        }
+    }
+    return ret;
+}
+
+
+#pragma mark StandardRestorerDelegate
 // Methods return YES if cancel is requested.
 
-- (BOOL)s3RestorerMessageDidChange:(NSString *)message {
+- (BOOL)standardRestorerMessageDidChange:(NSString *)message {
     printf("status: %s\n", [message UTF8String]);
     return NO;
 }
-- (BOOL)s3RestorerBytesTransferredDidChange:(NSNumber *)theTransferred {
+- (BOOL)standardRestorerFileBytesRestoredDidChange:(NSNumber *)theTransferred {
     return NO;
 }
-- (BOOL)s3RestorerTotalBytesToTransferDidChange:(NSNumber *)theTotal {
+- (BOOL)standardRestorerTotalFileBytesToRestoreDidChange:(NSNumber *)theTotal {
     return NO;
 }
-- (BOOL)s3RestorerErrorMessage:(NSString *)theErrorMessage didOccurForPath:(NSString *)thePath {
+- (BOOL)standardRestorerErrorMessage:(NSString *)theErrorMessage didOccurForPath:(NSString *)thePath {
     printf("%s error: %s\n", [thePath UTF8String], [theErrorMessage UTF8String]);
     return NO;
 }
-- (BOOL)s3RestorerDidSucceed {
+- (BOOL)standardRestorerDidSucceed {
     return NO;
 }
-- (BOOL)s3RestorerDidFail:(NSError *)error {
+- (BOOL)standardRestorerDidFail:(NSError *)error {
     printf("failed: %s\n", [[error localizedDescription] UTF8String]);
     return NO;
 }
@@ -584,4 +817,34 @@
     return NO;
 }
 
+
+#pragma mark internal
+- (NSString *)readPasswordWithPrompt:(NSString *)thePrompt error:(NSError **)error {
+    fprintf(stderr, "%s ", [thePrompt UTF8String]);
+    fflush(stderr);
+    
+    struct termios oldTermios;
+    struct termios newTermios;
+    
+    if (tcgetattr(STDIN_FILENO, &oldTermios) != 0) {
+        int errnum = errno;
+        HSLogError(@"tcgetattr error %d: %s", errnum, strerror(errnum));
+        SETNSERROR(@"UnixErrorDomain", errnum, @"%s", strerror(errnum));
+        return nil;
+    }
+    newTermios = oldTermios;
+    newTermios.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newTermios);
+    size_t bufsize = BUFSIZE;
+    char *buf = malloc(bufsize);
+    ssize_t len = getline(&buf, &bufsize, stdin);
+    free(buf);
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldTermios);
+    
+    if (len > 0 && buf[len - 1] == '\n') {
+        --len;
+    }
+    
+    return [[[NSString alloc] initWithBytes:buf length:len encoding:NSUTF8StringEncoding] autorelease];
+}
 @end

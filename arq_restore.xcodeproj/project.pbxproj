@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		8DD76F9C0486AA7600D96B5E /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08FB779EFE84155DC02AAC07 /* Foundation.framework */; };
 		F805B8891160EB39007EC01E /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F805B8881160EB39007EC01E /* libcrypto.dylib */; };
 		F805B88B1160EB3A007EC01E /* libicucore.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F805B88A1160EB39007EC01E /* libicucore.dylib */; };
 		F805B88F1160EB45007EC01E /* libssl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F805B88E1160EB45007EC01E /* libssl.dylib */; };
@@ -17,34 +16,8 @@
 		F805B8CE1160ECD7007EC01E /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F805B8CD1160ECD7007EC01E /* CoreServices.framework */; };
 		F829512419868345001DC91B /* HSLog.m in Sources */ = {isa = PBXBuildFile; fileRef = F829512319868345001DC91B /* HSLog.m */; };
 		F829512919868394001DC91B /* NSError_extra.m in Sources */ = {isa = PBXBuildFile; fileRef = F829512819868394001DC91B /* NSError_extra.m */; };
-		F8295157198683D5001DC91B /* agent.c in Sources */ = {isa = PBXBuildFile; fileRef = F8295140198683D5001DC91B /* agent.c */; settings = {COMPILER_FLAGS = "-w"; }; };
-		F8295158198683D5001DC91B /* channel.c in Sources */ = {isa = PBXBuildFile; fileRef = F8295141198683D5001DC91B /* channel.c */; settings = {COMPILER_FLAGS = "-w"; }; };
-		F8295159198683D5001DC91B /* comp.c in Sources */ = {isa = PBXBuildFile; fileRef = F8295142198683D5001DC91B /* comp.c */; settings = {COMPILER_FLAGS = "-w"; }; };
-		F829515A198683D5001DC91B /* crypt.c in Sources */ = {isa = PBXBuildFile; fileRef = F8295143198683D5001DC91B /* crypt.c */; settings = {COMPILER_FLAGS = "-w"; }; };
-		F829515B198683D5001DC91B /* global.c in Sources */ = {isa = PBXBuildFile; fileRef = F8295144198683D5001DC91B /* global.c */; settings = {COMPILER_FLAGS = "-w"; }; };
-		F829515C198683D5001DC91B /* hostkey.c in Sources */ = {isa = PBXBuildFile; fileRef = F8295145198683D5001DC91B /* hostkey.c */; settings = {COMPILER_FLAGS = "-w"; }; };
-		F829515D198683D5001DC91B /* keepalive.c in Sources */ = {isa = PBXBuildFile; fileRef = F8295146198683D5001DC91B /* keepalive.c */; settings = {COMPILER_FLAGS = "-w"; }; };
-		F829515E198683D5001DC91B /* kex.c in Sources */ = {isa = PBXBuildFile; fileRef = F8295147198683D5001DC91B /* kex.c */; settings = {COMPILER_FLAGS = "-w"; }; };
-		F829515F198683D5001DC91B /* knownhost.c in Sources */ = {isa = PBXBuildFile; fileRef = F8295148198683D5001DC91B /* knownhost.c */; settings = {COMPILER_FLAGS = "-w"; }; };
-		F8295160198683D5001DC91B /* libgcrypt.c in Sources */ = {isa = PBXBuildFile; fileRef = F8295149198683D5001DC91B /* libgcrypt.c */; settings = {COMPILER_FLAGS = "-w"; }; };
-		F8295161198683D5001DC91B /* mac.c in Sources */ = {isa = PBXBuildFile; fileRef = F829514A198683D5001DC91B /* mac.c */; settings = {COMPILER_FLAGS = "-w"; }; };
-		F8295162198683D5001DC91B /* misc.c in Sources */ = {isa = PBXBuildFile; fileRef = F829514B198683D5001DC91B /* misc.c */; settings = {COMPILER_FLAGS = "-w"; }; };
-		F8295163198683D5001DC91B /* openssl.c in Sources */ = {isa = PBXBuildFile; fileRef = F829514C198683D5001DC91B /* openssl.c */; settings = {COMPILER_FLAGS = "-w"; }; };
-		F8295164198683D5001DC91B /* packet.c in Sources */ = {isa = PBXBuildFile; fileRef = F829514D198683D5001DC91B /* packet.c */; settings = {COMPILER_FLAGS = "-w"; }; };
-		F8295165198683D5001DC91B /* pem.c in Sources */ = {isa = PBXBuildFile; fileRef = F829514E198683D5001DC91B /* pem.c */; settings = {COMPILER_FLAGS = "-w"; }; };
-		F8295166198683D5001DC91B /* publickey.c in Sources */ = {isa = PBXBuildFile; fileRef = F829514F198683D5001DC91B /* publickey.c */; settings = {COMPILER_FLAGS = "-w"; }; };
-		F8295167198683D5001DC91B /* scp.c in Sources */ = {isa = PBXBuildFile; fileRef = F8295150198683D5001DC91B /* scp.c */; settings = {COMPILER_FLAGS = "-w"; }; };
-		F8295168198683D5001DC91B /* session.c in Sources */ = {isa = PBXBuildFile; fileRef = F8295151198683D5001DC91B /* session.c */; settings = {COMPILER_FLAGS = "-w"; }; };
-		F8295169198683D5001DC91B /* sftp.c in Sources */ = {isa = PBXBuildFile; fileRef = F8295152198683D5001DC91B /* sftp.c */; settings = {COMPILER_FLAGS = "-w"; }; };
-		F829516A198683D5001DC91B /* transport.c in Sources */ = {isa = PBXBuildFile; fileRef = F8295153198683D5001DC91B /* transport.c */; settings = {COMPILER_FLAGS = "-w"; }; };
-		F829516B198683D5001DC91B /* userauth.c in Sources */ = {isa = PBXBuildFile; fileRef = F8295154198683D5001DC91B /* userauth.c */; settings = {COMPILER_FLAGS = "-w"; }; };
-		F829516C198683D5001DC91B /* version.c in Sources */ = {isa = PBXBuildFile; fileRef = F8295155198683D5001DC91B /* version.c */; settings = {COMPILER_FLAGS = "-w"; }; };
-		F829518E198683F9001DC91B /* LifecycleConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = F829516F198683F9001DC91B /* LifecycleConfiguration.m */; };
 		F829518F198683F9001DC91B /* LocalS3Signer.m in Sources */ = {isa = PBXBuildFile; fileRef = F8295171198683F9001DC91B /* LocalS3Signer.m */; };
 		F8295190198683F9001DC91B /* PathReceiver.m in Sources */ = {isa = PBXBuildFile; fileRef = F8295173198683F9001DC91B /* PathReceiver.m */; };
-		F8295191198683F9001DC91B /* RemoteS3Signer.m in Sources */ = {isa = PBXBuildFile; fileRef = F8295175198683F9001DC91B /* RemoteS3Signer.m */; };
-		F8295192198683F9001DC91B /* S3AuthorizationProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = F8295177198683F9001DC91B /* S3AuthorizationProvider.m */; };
-		F8295193198683F9001DC91B /* S3DeleteReceiver.m in Sources */ = {isa = PBXBuildFile; fileRef = F8295179198683F9001DC91B /* S3DeleteReceiver.m */; };
 		F8295194198683F9001DC91B /* S3ErrorResult.m in Sources */ = {isa = PBXBuildFile; fileRef = F829517B198683F9001DC91B /* S3ErrorResult.m */; };
 		F8295195198683F9001DC91B /* S3Lister.m in Sources */ = {isa = PBXBuildFile; fileRef = F829517D198683F9001DC91B /* S3Lister.m */; };
 		F8295196198683F9001DC91B /* S3MultiDeleteResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = F829517F198683F9001DC91B /* S3MultiDeleteResponse.m */; };
@@ -61,11 +34,6 @@
 		F82951F219868D90001DC91B /* RFC2616DateFormatter.m in Sources */ = {isa = PBXBuildFile; fileRef = F82951AE19868D90001DC91B /* RFC2616DateFormatter.m */; };
 		F82951F519868D90001DC91B /* URLConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = F82951B419868D90001DC91B /* URLConnection.m */; };
 		F829521319868DE6001DC91B /* RegexKitLite.m in Sources */ = {isa = PBXBuildFile; fileRef = F829521219868DE6001DC91B /* RegexKitLite.m */; };
-		F829522019868E26001DC91B /* GoogleDrive.m in Sources */ = {isa = PBXBuildFile; fileRef = F829521719868E26001DC91B /* GoogleDrive.m */; };
-		F829522119868E26001DC91B /* GoogleDriveErrorResult.m in Sources */ = {isa = PBXBuildFile; fileRef = F829521919868E26001DC91B /* GoogleDriveErrorResult.m */; };
-		F829522219868E26001DC91B /* GoogleDriveFactory.m in Sources */ = {isa = PBXBuildFile; fileRef = F829521B19868E26001DC91B /* GoogleDriveFactory.m */; };
-		F829522319868E26001DC91B /* GoogleDriveRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = F829521D19868E26001DC91B /* GoogleDriveRequest.m */; };
-		F829522419868E26001DC91B /* GoogleDriveFolderLister.m in Sources */ = {isa = PBXBuildFile; fileRef = F829521F19868E26001DC91B /* GoogleDriveFolderLister.m */; };
 		F829523019868E59001DC91B /* NSObject+SBJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = F829522719868E59001DC91B /* NSObject+SBJSON.m */; };
 		F829523119868E59001DC91B /* NSString+SBJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = F829522919868E59001DC91B /* NSString+SBJSON.m */; };
 		F829523219868E59001DC91B /* SBJsonBase.m in Sources */ = {isa = PBXBuildFile; fileRef = F829522B19868E59001DC91B /* SBJsonBase.m */; };
@@ -100,16 +68,80 @@
 		F829DC311986930300D637E0 /* OpenSSL.m in Sources */ = {isa = PBXBuildFile; fileRef = F829DC301986930300D637E0 /* OpenSSL.m */; };
 		F829DC35198697EB00D637E0 /* Target.m in Sources */ = {isa = PBXBuildFile; fileRef = F829DC34198697EB00D637E0 /* Target.m */; };
 		F83C1AE311CA7C7C0001958F /* arq_restore.m in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* arq_restore.m */; };
+		F83D0A831E3F5D75009FBE98 /* BaseKeychain.m in Sources */ = {isa = PBXBuildFile; fileRef = F83D0A7D1E3F5D75009FBE98 /* BaseKeychain.m */; };
+		F83D0A841E3F5D75009FBE98 /* KeychainFactory.m in Sources */ = {isa = PBXBuildFile; fileRef = F83D0A801E3F5D75009FBE98 /* KeychainFactory.m */; };
+		F83D0A851E3F5D75009FBE98 /* KeychainItem.m in Sources */ = {isa = PBXBuildFile; fileRef = F83D0A821E3F5D75009FBE98 /* KeychainItem.m */; };
+		F83D0A881E3F786B009FBE98 /* TargetFactory.m in Sources */ = {isa = PBXBuildFile; fileRef = F83D0A871E3F786A009FBE98 /* TargetFactory.m */; };
+		F83D0A8B1E3F87A8009FBE98 /* ExePath.m in Sources */ = {isa = PBXBuildFile; fileRef = F83D0A8A1E3F87A8009FBE98 /* ExePath.m */; };
 		F83F9B2D1983303F007CBFB4 /* ArqRestoreCommand.m in Sources */ = {isa = PBXBuildFile; fileRef = F83F9B2C1983303F007CBFB4 /* ArqRestoreCommand.m */; };
-		F89A204613FAE29E0071D321 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F89A204513FAE29E0071D321 /* libz.dylib */; };
+		F874D8E71DF7618500B7EC02 /* DDAbstractDatabaseLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = F874D8D21DF7618500B7EC02 /* DDAbstractDatabaseLogger.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		F874D8E81DF7618500B7EC02 /* DDASLLogCapture.m in Sources */ = {isa = PBXBuildFile; fileRef = F874D8D41DF7618500B7EC02 /* DDASLLogCapture.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		F874D8E91DF7618500B7EC02 /* DDASLLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = F874D8D61DF7618500B7EC02 /* DDASLLogger.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		F874D8EA1DF7618500B7EC02 /* DDContextFilterLogFormatter.m in Sources */ = {isa = PBXBuildFile; fileRef = F874D8D91DF7618500B7EC02 /* DDContextFilterLogFormatter.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		F874D8EB1DF7618500B7EC02 /* DDDispatchQueueLogFormatter.m in Sources */ = {isa = PBXBuildFile; fileRef = F874D8DB1DF7618500B7EC02 /* DDDispatchQueueLogFormatter.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		F874D8EC1DF7618500B7EC02 /* DDFileLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = F874D8DD1DF7618500B7EC02 /* DDFileLogger.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		F874D8ED1DF7618500B7EC02 /* DDLog.m in Sources */ = {isa = PBXBuildFile; fileRef = F874D8E01DF7618500B7EC02 /* DDLog.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		F874D8EE1DF7618500B7EC02 /* DDMultiFormatter.m in Sources */ = {isa = PBXBuildFile; fileRef = F874D8E41DF7618500B7EC02 /* DDMultiFormatter.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		F874D8EF1DF7618500B7EC02 /* DDTTYLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = F874D8E61DF7618500B7EC02 /* DDTTYLogger.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		F874D8F21DF766A000B7EC02 /* System.m in Sources */ = {isa = PBXBuildFile; fileRef = F874D8F11DF766A000B7EC02 /* System.m */; };
+		F874D8F51DF766C600B7EC02 /* ByteSize.m in Sources */ = {isa = PBXBuildFile; fileRef = F874D8F41DF766C600B7EC02 /* ByteSize.m */; };
+		F874D9121DF7676E00B7EC02 /* CommitList.m in Sources */ = {isa = PBXBuildFile; fileRef = F874D8F71DF7676E00B7EC02 /* CommitList.m */; };
+		F874D9131DF7676E00B7EC02 /* EncryptionDatFile.m in Sources */ = {isa = PBXBuildFile; fileRef = F874D8F91DF7676E00B7EC02 /* EncryptionDatFile.m */; };
+		F874D9141DF7676E00B7EC02 /* Fark.m in Sources */ = {isa = PBXBuildFile; fileRef = F874D8FA1DF7676E00B7EC02 /* Fark.m */; };
+		F874D9151DF7676E00B7EC02 /* KeyValuePair.m in Sources */ = {isa = PBXBuildFile; fileRef = F874D8FC1DF7676E00B7EC02 /* KeyValuePair.m */; };
+		F874D9161DF7676E00B7EC02 /* NSData-Compress.m in Sources */ = {isa = PBXBuildFile; fileRef = F874D8FE1DF7676E00B7EC02 /* NSData-Compress.m */; };
+		F874D9171DF7676E00B7EC02 /* ObjectEncryptor.m in Sources */ = {isa = PBXBuildFile; fileRef = F874D9001DF7676E00B7EC02 /* ObjectEncryptor.m */; };
+		F874D9181DF7676E00B7EC02 /* ObjectEncryptorV1.m in Sources */ = {isa = PBXBuildFile; fileRef = F874D9031DF7676E00B7EC02 /* ObjectEncryptorV1.m */; };
+		F874D9191DF7676E00B7EC02 /* ObjectEncryptorV2.m in Sources */ = {isa = PBXBuildFile; fileRef = F874D9051DF7676E00B7EC02 /* ObjectEncryptorV2.m */; };
+		F874D91A1DF7676E00B7EC02 /* PackSetDB.m in Sources */ = {isa = PBXBuildFile; fileRef = F874D9071DF7676E00B7EC02 /* PackSetDB.m */; };
+		F874D91B1DF7676E00B7EC02 /* PIELoader.m in Sources */ = {isa = PBXBuildFile; fileRef = F874D9091DF7676E00B7EC02 /* PIELoader.m */; };
+		F874D91C1DF7676E00B7EC02 /* PIELoaderWorker.m in Sources */ = {isa = PBXBuildFile; fileRef = F874D90B1DF7676E00B7EC02 /* PIELoaderWorker.m */; };
+		F874D91D1DF7676E00B7EC02 /* S3PIEInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F874D90D1DF7676E00B7EC02 /* S3PIEInputStream.m */; };
+		F874D91E1DF7676E00B7EC02 /* SynchronousPackSet.m in Sources */ = {isa = PBXBuildFile; fileRef = F874D90F1DF7676E00B7EC02 /* SynchronousPackSet.m */; };
+		F874D9221DF767BA00B7EC02 /* CacheOwnership.m in Sources */ = {isa = PBXBuildFile; fileRef = F874D9211DF767BA00B7EC02 /* CacheOwnership.m */; };
+		F8A18C891E3E146000AF9F97 /* StandardRestorer.m in Sources */ = {isa = PBXBuildFile; fileRef = F8A18C881E3E146000AF9F97 /* StandardRestorer.m */; };
+		F8A18C911E3E14A900AF9F97 /* StandardRestorerDelegateMux.m in Sources */ = {isa = PBXBuildFile; fileRef = F8A18C8C1E3E14A900AF9F97 /* StandardRestorerDelegateMux.m */; };
+		F8A18C921E3E14A900AF9F97 /* StandardRestorerError.m in Sources */ = {isa = PBXBuildFile; fileRef = F8A18C8E1E3E14A900AF9F97 /* StandardRestorerError.m */; };
+		F8A18C931E3E14A900AF9F97 /* StandardRestorerParamSet.m in Sources */ = {isa = PBXBuildFile; fileRef = F8A18C901E3E14A900AF9F97 /* StandardRestorerParamSet.m */; };
+		F8A18C961E3E14CA00AF9F97 /* StandardRestoreWorker.m in Sources */ = {isa = PBXBuildFile; fileRef = F8A18C951E3E14CA00AF9F97 /* StandardRestoreWorker.m */; };
+		F8A18C991E3E14DD00AF9F97 /* StandardRestoreItem.m in Sources */ = {isa = PBXBuildFile; fileRef = F8A18C981E3E14DD00AF9F97 /* StandardRestoreItem.m */; };
+		F8A18C9A1E3E165F00AF9F97 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F805B8C51160EC4E007EC01E /* Cocoa.framework */; };
+		F8A18C9E1E3E16A400AF9F97 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = F8A18C9C1E3E16A400AF9F97 /* sqlite3.c */; };
+		F8A18CA11E3E16C400AF9F97 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = F8A18CA01E3E16C400AF9F97 /* libz.tbd */; };
+		F8A18CA61E3E170F00AF9F97 /* S3SignatureV1AuthorizationProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = F8A18CA31E3E170F00AF9F97 /* S3SignatureV1AuthorizationProvider.m */; };
+		F8A18CA71E3E170F00AF9F97 /* S3SignatureV4AuthorizationProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = F8A18CA51E3E170F00AF9F97 /* S3SignatureV4AuthorizationProvider.m */; };
+		F8A18CAA1E3E173200AF9F97 /* HMACSHA256.m in Sources */ = {isa = PBXBuildFile; fileRef = F8A18CA91E3E173200AF9F97 /* HMACSHA256.m */; };
+		F8A18CAD1E3E17A200AF9F97 /* HSLogFileManager.m in Sources */ = {isa = PBXBuildFile; fileRef = F8A18CAC1E3E17A200AF9F97 /* HSLogFileManager.m */; };
+		F8A18CC21E3E18B400AF9F97 /* ItemFSFileDeleter.m in Sources */ = {isa = PBXBuildFile; fileRef = F8A18CBB1E3E18B400AF9F97 /* ItemFSFileDeleter.m */; };
+		F8A18CC31E3E18B400AF9F97 /* ItemFSFileDeleterWorker.m in Sources */ = {isa = PBXBuildFile; fileRef = F8A18CBD1E3E18B400AF9F97 /* ItemFSFileDeleterWorker.m */; };
+		F8A18CC41E3E18B400AF9F97 /* RemoteFSFileDeleter.m in Sources */ = {isa = PBXBuildFile; fileRef = F8A18CBF1E3E18B400AF9F97 /* RemoteFSFileDeleter.m */; };
+		F8A18CC51E3E18B400AF9F97 /* RemoteFSFileDeleterWorker.m in Sources */ = {isa = PBXBuildFile; fileRef = F8A18CC11E3E18B400AF9F97 /* RemoteFSFileDeleterWorker.m */; };
+		F8A18CC81E3E193A00AF9F97 /* LZ4Compressor.m in Sources */ = {isa = PBXBuildFile; fileRef = F8A18CC71E3E193A00AF9F97 /* LZ4Compressor.m */; };
+		F8A18CCB1E3E194C00AF9F97 /* lz4.c in Sources */ = {isa = PBXBuildFile; fileRef = F8A18CC91E3E194C00AF9F97 /* lz4.c */; };
+		F8A18CD01E3E195B00AF9F97 /* S3ObjectsLister.m in Sources */ = {isa = PBXBuildFile; fileRef = F8A18CCD1E3E195B00AF9F97 /* S3ObjectsLister.m */; };
+		F8A18CD11E3E195B00AF9F97 /* S3ObjectsListerWorker.m in Sources */ = {isa = PBXBuildFile; fileRef = F8A18CCF1E3E195B00AF9F97 /* S3ObjectsListerWorker.m */; };
+		F8CD479F1DF6FD270061C3D6 /* LocalItemFS.m in Sources */ = {isa = PBXBuildFile; fileRef = F8CD479B1DF6FD270061C3D6 /* LocalItemFS.m */; };
+		F8CD47A01DF6FD270061C3D6 /* RemoteFS.m in Sources */ = {isa = PBXBuildFile; fileRef = F8CD479C1DF6FD270061C3D6 /* RemoteFS.m */; };
+		F8E1A30A1E3D3E6900A61EEA /* FMDatabase.m in Sources */ = {isa = PBXBuildFile; fileRef = F8E1A3001E3D3E6900A61EEA /* FMDatabase.m */; };
+		F8E1A30B1E3D3E6900A61EEA /* FMDatabaseAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = F8E1A3021E3D3E6900A61EEA /* FMDatabaseAdditions.m */; };
+		F8E1A30C1E3D3E6900A61EEA /* FMDatabasePool.m in Sources */ = {isa = PBXBuildFile; fileRef = F8E1A3041E3D3E6900A61EEA /* FMDatabasePool.m */; };
+		F8E1A30D1E3D3E6900A61EEA /* FMDatabaseQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = F8E1A3061E3D3E6900A61EEA /* FMDatabaseQueue.m */; };
+		F8E1A30E1E3D3E6900A61EEA /* FMResultSet.m in Sources */ = {isa = PBXBuildFile; fileRef = F8E1A3091E3D3E6900A61EEA /* FMResultSet.m */; };
+		F8E1A3141E3D3EEE00A61EEA /* Item.m in Sources */ = {isa = PBXBuildFile; fileRef = F8E1A3111E3D3EEE00A61EEA /* Item.m */; };
+		F8E1A3151E3D3EEE00A61EEA /* ItemsDB.m in Sources */ = {isa = PBXBuildFile; fileRef = F8E1A3131E3D3EEE00A61EEA /* ItemsDB.m */; };
+		F8E1A3181E3D3F1A00A61EEA /* TargetItemsDB.m in Sources */ = {isa = PBXBuildFile; fileRef = F8E1A3171E3D3F1A00A61EEA /* TargetItemsDB.m */; };
+		F8E1A31D1E3D3F8000A61EEA /* TargetConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = F8E1A31C1E3D3F8000A61EEA /* TargetConnection.m */; };
+		F8E1A3241E3D3FDF00A61EEA /* PackBuilder.m in Sources */ = {isa = PBXBuildFile; fileRef = F8E1A31F1E3D3FDF00A61EEA /* PackBuilder.m */; };
+		F8E1A3251E3D3FDF00A61EEA /* PackBuilderEntry.m in Sources */ = {isa = PBXBuildFile; fileRef = F8E1A3211E3D3FDF00A61EEA /* PackBuilderEntry.m */; };
+		F8E1A3261E3D3FDF00A61EEA /* PackIndexGenerator.m in Sources */ = {isa = PBXBuildFile; fileRef = F8E1A3231E3D3FDF00A61EEA /* PackIndexGenerator.m */; };
+		F8E1A3291E3D400800A61EEA /* ReflogEntry.m in Sources */ = {isa = PBXBuildFile; fileRef = F8E1A3281E3D400800A61EEA /* ReflogEntry.m */; };
+		F8E1A32C1E3D419E00A61EEA /* FlockFile.m in Sources */ = {isa = PBXBuildFile; fileRef = F8E1A32B1E3D419E00A61EEA /* FlockFile.m */; };
+		F8E1A32F1E3D427A00A61EEA /* NSData-LZ4.m in Sources */ = {isa = PBXBuildFile; fileRef = F8E1A32E1E3D427A00A61EEA /* NSData-LZ4.m */; };
+		F8E1A33D1E3D474800A61EEA /* S3AuthorizationProviderFactory.m in Sources */ = {isa = PBXBuildFile; fileRef = F8E1A33C1E3D474800A61EEA /* S3AuthorizationProviderFactory.m */; };
+		F8E1A3631E3D47F300A61EEA /* NSData-Random.m in Sources */ = {isa = PBXBuildFile; fileRef = F8E1A3621E3D47F300A61EEA /* NSData-Random.m */; };
+		F8E1A3831E3D4B5600A61EEA /* FSStat.m in Sources */ = {isa = PBXBuildFile; fileRef = F8E1A3821E3D4B5600A61EEA /* FSStat.m */; };
+		F8E1A3861E3D4B6100A61EEA /* Volume.m in Sources */ = {isa = PBXBuildFile; fileRef = F8E1A3851E3D4B6100A61EEA /* Volume.m */; };
 		F8F2D8681986B58000997A15 /* BackupSet.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D8671986B58000997A15 /* BackupSet.m */; };
-		F8F2D86D1986B5CC00997A15 /* S3TargetConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D86A1986B5CC00997A15 /* S3TargetConnection.m */; };
-		F8F2D86E1986B5CC00997A15 /* SFTPTargetConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D86C1986B5CC00997A15 /* SFTPTargetConnection.m */; };
-		F8F2D8711986B5D900997A15 /* GoogleDriveTargetConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D8701986B5D900997A15 /* GoogleDriveTargetConnection.m */; };
-		F8F2D87A1986B61800997A15 /* S3RemoteFS.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D8751986B61800997A15 /* S3RemoteFS.m */; };
-		F8F2D87B1986B61800997A15 /* SFTPRemoteFS.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D8771986B61800997A15 /* SFTPRemoteFS.m */; };
-		F8F2D87C1986B61800997A15 /* GoogleDriveRemoteFS.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D8791986B61800997A15 /* GoogleDriveRemoteFS.m */; };
-		F8F2D8821986B63400997A15 /* BaseTargetConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D8811986B63400997A15 /* BaseTargetConnection.m */; };
 		F8F2D8851986B64D00997A15 /* GlacierAuthorizationProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D8841986B64D00997A15 /* GlacierAuthorizationProvider.m */; };
 		F8F2D8921986B66000997A15 /* GlacierJob.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D8871986B66000997A15 /* GlacierJob.m */; };
 		F8F2D8931986B66000997A15 /* GlacierJobLister.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D8891986B66000997A15 /* GlacierJobLister.m */; };
@@ -155,7 +187,6 @@
 		F8F2D90D1986B7AF00997A15 /* NSObject_extra.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D90C1986B7AF00997A15 /* NSObject_extra.m */; };
 		F8F2D9121986B80800997A15 /* CryptoKey.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D90F1986B80800997A15 /* CryptoKey.m */; };
 		F8F2D9131986B80800997A15 /* OpenSSLCryptoKey.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D9111986B80800997A15 /* OpenSSLCryptoKey.m */; };
-		F8F2D9171986B92100997A15 /* SFTPServer.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D9161986B92100997A15 /* SFTPServer.m */; };
 		F8F2D9251986B98600997A15 /* BlobKey.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D9241986B98600997A15 /* BlobKey.m */; };
 		F8F2D92A1986B9DF00997A15 /* SHA1Hash.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D9291986B9DF00997A15 /* SHA1Hash.m */; };
 		F8F2D92E1986BA1400997A15 /* Commit.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D92D1986BA1400997A15 /* Commit.m */; };
@@ -169,8 +200,6 @@
 		F8F2D9461986BA9B00997A15 /* BucketExcludeSet.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D9431986BA9B00997A15 /* BucketExcludeSet.m */; };
 		F8F2D9491986BAD200997A15 /* Repo.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D9481986BAD200997A15 /* Repo.m */; };
 		F8F2D94C1986BB4900997A15 /* NSString_slashed.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D94B1986BB4900997A15 /* NSString_slashed.m */; };
-		F8F2D94F1986BD1600997A15 /* TargetSchedule.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D94E1986BD1600997A15 /* TargetSchedule.m */; };
-		F8F2D9531986BE2A00997A15 /* FarkImpl.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D9521986BE2A00997A15 /* FarkImpl.m */; };
 		F8F2D9561986BE3C00997A15 /* PackId.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D9551986BE3C00997A15 /* PackId.m */; };
 		F8F2D95B1986BE4E00997A15 /* PackIndex.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D9581986BE4E00997A15 /* PackIndex.m */; };
 		F8F2D95C1986BE4E00997A15 /* PackIndexEntry.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D95A1986BE4E00997A15 /* PackIndexEntry.m */; };
@@ -181,8 +210,6 @@
 		F8F2D96B1986BF5100997A15 /* GunzipInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D96A1986BF5100997A15 /* GunzipInputStream.m */; };
 		F8F2D96E1986BF6800997A15 /* PackSet.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D96D1986BF6800997A15 /* PackSet.m */; };
 		F8F2D9701986C09300997A15 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8F2D96F1986C09300997A15 /* IOKit.framework */; };
-		F8F2D9741986D02D00997A15 /* S3RestorerParamSet.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D9731986D02D00997A15 /* S3RestorerParamSet.m */; };
-		F8F2D9771986D32B00997A15 /* S3Restorer.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D9761986D32B00997A15 /* S3Restorer.m */; };
 		F8F2D97C1986D38900997A15 /* OSStatusDescription.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D97B1986D38900997A15 /* OSStatusDescription.m */; };
 		F8F2D97F1986D3A100997A15 /* FileAttributes.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D97E1986D3A100997A15 /* FileAttributes.m */; };
 		F8F2D9821986D3B100997A15 /* FileACL.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F2D9811986D3B100997A15 /* FileACL.m */; };
@@ -233,58 +260,11 @@
 		F829512619868379001DC91B /* SetNSError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SetNSError.h; sourceTree = "<group>"; };
 		F829512719868394001DC91B /* NSError_extra.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSError_extra.h; sourceTree = "<group>"; };
 		F829512819868394001DC91B /* NSError_extra.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSError_extra.m; sourceTree = "<group>"; };
-		F829512C198683D5001DC91B /* channel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = channel.h; sourceTree = "<group>"; };
-		F829512D198683D5001DC91B /* comp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = comp.h; sourceTree = "<group>"; };
-		F829512E198683D5001DC91B /* crypto.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = crypto.h; sourceTree = "<group>"; };
-		F829512F198683D5001DC91B /* libgcrypt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = libgcrypt.h; sourceTree = "<group>"; };
-		F8295130198683D5001DC91B /* libssh2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = libssh2.h; sourceTree = "<group>"; };
-		F8295131198683D5001DC91B /* libssh2_config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = libssh2_config.h; sourceTree = "<group>"; };
-		F8295132198683D5001DC91B /* libssh2_priv.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = libssh2_priv.h; sourceTree = "<group>"; };
-		F8295133198683D5001DC91B /* libssh2_publickey.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = libssh2_publickey.h; sourceTree = "<group>"; };
-		F8295134198683D5001DC91B /* libssh2_sftp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = libssh2_sftp.h; sourceTree = "<group>"; };
-		F8295135198683D5001DC91B /* mac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mac.h; sourceTree = "<group>"; };
-		F8295136198683D5001DC91B /* misc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = misc.h; sourceTree = "<group>"; };
-		F8295137198683D5001DC91B /* openssl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = openssl.h; sourceTree = "<group>"; };
-		F8295138198683D5001DC91B /* packet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = packet.h; sourceTree = "<group>"; };
-		F8295139198683D5001DC91B /* session.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = session.h; sourceTree = "<group>"; };
-		F829513A198683D5001DC91B /* sftp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sftp.h; sourceTree = "<group>"; };
-		F829513B198683D5001DC91B /* transport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = transport.h; sourceTree = "<group>"; };
-		F829513C198683D5001DC91B /* userauth.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = userauth.h; sourceTree = "<group>"; };
-		F829513E198683D5001DC91B /* libssh2.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libssh2.1.dylib; sourceTree = "<group>"; };
-		F8295140198683D5001DC91B /* agent.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = agent.c; sourceTree = "<group>"; };
-		F8295141198683D5001DC91B /* channel.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = channel.c; sourceTree = "<group>"; };
-		F8295142198683D5001DC91B /* comp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = comp.c; sourceTree = "<group>"; };
-		F8295143198683D5001DC91B /* crypt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = crypt.c; sourceTree = "<group>"; };
-		F8295144198683D5001DC91B /* global.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = global.c; sourceTree = "<group>"; };
-		F8295145198683D5001DC91B /* hostkey.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = hostkey.c; sourceTree = "<group>"; };
-		F8295146198683D5001DC91B /* keepalive.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = keepalive.c; sourceTree = "<group>"; };
-		F8295147198683D5001DC91B /* kex.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = kex.c; sourceTree = "<group>"; };
-		F8295148198683D5001DC91B /* knownhost.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = knownhost.c; sourceTree = "<group>"; };
-		F8295149198683D5001DC91B /* libgcrypt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = libgcrypt.c; sourceTree = "<group>"; };
-		F829514A198683D5001DC91B /* mac.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mac.c; sourceTree = "<group>"; };
-		F829514B198683D5001DC91B /* misc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = misc.c; sourceTree = "<group>"; };
-		F829514C198683D5001DC91B /* openssl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = openssl.c; sourceTree = "<group>"; };
-		F829514D198683D5001DC91B /* packet.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = packet.c; sourceTree = "<group>"; };
-		F829514E198683D5001DC91B /* pem.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pem.c; sourceTree = "<group>"; };
-		F829514F198683D5001DC91B /* publickey.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = publickey.c; sourceTree = "<group>"; };
-		F8295150198683D5001DC91B /* scp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = scp.c; sourceTree = "<group>"; };
-		F8295151198683D5001DC91B /* session.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = session.c; sourceTree = "<group>"; };
-		F8295152198683D5001DC91B /* sftp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sftp.c; sourceTree = "<group>"; };
-		F8295153198683D5001DC91B /* transport.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = transport.c; sourceTree = "<group>"; };
-		F8295154198683D5001DC91B /* userauth.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = userauth.c; sourceTree = "<group>"; };
-		F8295155198683D5001DC91B /* version.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = version.c; sourceTree = "<group>"; };
-		F829516E198683F9001DC91B /* LifecycleConfiguration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LifecycleConfiguration.h; sourceTree = "<group>"; };
-		F829516F198683F9001DC91B /* LifecycleConfiguration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LifecycleConfiguration.m; sourceTree = "<group>"; };
 		F8295170198683F9001DC91B /* LocalS3Signer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LocalS3Signer.h; sourceTree = "<group>"; };
 		F8295171198683F9001DC91B /* LocalS3Signer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LocalS3Signer.m; sourceTree = "<group>"; };
 		F8295172198683F9001DC91B /* PathReceiver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PathReceiver.h; sourceTree = "<group>"; };
 		F8295173198683F9001DC91B /* PathReceiver.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PathReceiver.m; sourceTree = "<group>"; };
-		F8295174198683F9001DC91B /* RemoteS3Signer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RemoteS3Signer.h; sourceTree = "<group>"; };
-		F8295175198683F9001DC91B /* RemoteS3Signer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RemoteS3Signer.m; sourceTree = "<group>"; };
 		F8295176198683F9001DC91B /* S3AuthorizationProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = S3AuthorizationProvider.h; sourceTree = "<group>"; };
-		F8295177198683F9001DC91B /* S3AuthorizationProvider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = S3AuthorizationProvider.m; sourceTree = "<group>"; };
-		F8295178198683F9001DC91B /* S3DeleteReceiver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = S3DeleteReceiver.h; sourceTree = "<group>"; };
-		F8295179198683F9001DC91B /* S3DeleteReceiver.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = S3DeleteReceiver.m; sourceTree = "<group>"; };
 		F829517A198683F9001DC91B /* S3ErrorResult.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = S3ErrorResult.h; sourceTree = "<group>"; };
 		F829517B198683F9001DC91B /* S3ErrorResult.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = S3ErrorResult.m; sourceTree = "<group>"; };
 		F829517C198683F9001DC91B /* S3Lister.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = S3Lister.h; sourceTree = "<group>"; };
@@ -322,16 +302,6 @@
 		F829521119868DD0001DC91B /* InputStream.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = InputStream.h; sourceTree = "<group>"; };
 		F829521219868DE6001DC91B /* RegexKitLite.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RegexKitLite.m; sourceTree = "<group>"; };
 		F829521419868DEA001DC91B /* RegexKitLite.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RegexKitLite.h; sourceTree = "<group>"; };
-		F829521619868E26001DC91B /* GoogleDrive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GoogleDrive.h; sourceTree = "<group>"; };
-		F829521719868E26001DC91B /* GoogleDrive.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GoogleDrive.m; sourceTree = "<group>"; };
-		F829521819868E26001DC91B /* GoogleDriveErrorResult.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GoogleDriveErrorResult.h; sourceTree = "<group>"; };
-		F829521919868E26001DC91B /* GoogleDriveErrorResult.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GoogleDriveErrorResult.m; sourceTree = "<group>"; };
-		F829521A19868E26001DC91B /* GoogleDriveFactory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GoogleDriveFactory.h; sourceTree = "<group>"; };
-		F829521B19868E26001DC91B /* GoogleDriveFactory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GoogleDriveFactory.m; sourceTree = "<group>"; };
-		F829521C19868E26001DC91B /* GoogleDriveRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GoogleDriveRequest.h; sourceTree = "<group>"; };
-		F829521D19868E26001DC91B /* GoogleDriveRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GoogleDriveRequest.m; sourceTree = "<group>"; };
-		F829521E19868E26001DC91B /* GoogleDriveFolderLister.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GoogleDriveFolderLister.h; sourceTree = "<group>"; };
-		F829521F19868E26001DC91B /* GoogleDriveFolderLister.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GoogleDriveFolderLister.m; sourceTree = "<group>"; };
 		F829522619868E59001DC91B /* NSObject+SBJSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSObject+SBJSON.h"; sourceTree = "<group>"; };
 		F829522719868E59001DC91B /* NSObject+SBJSON.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSObject+SBJSON.m"; sourceTree = "<group>"; };
 		F829522819868E59001DC91B /* NSString+SBJSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+SBJSON.h"; sourceTree = "<group>"; };
@@ -342,8 +312,8 @@
 		F829522D19868E59001DC91B /* SBJsonParser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBJsonParser.m; sourceTree = "<group>"; };
 		F829522E19868E59001DC91B /* SBJsonWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBJsonWriter.h; sourceTree = "<group>"; };
 		F829522F19868E59001DC91B /* SBJsonWriter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBJsonWriter.m; sourceTree = "<group>"; };
-		F829523619868E83001DC91B /* AWSRegion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AWSRegion.h; sourceTree = "<group>"; };
-		F829523719868E83001DC91B /* AWSRegion.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AWSRegion.m; sourceTree = "<group>"; };
+		F829523619868E83001DC91B /* AWSRegion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = AWSRegion.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		F829523719868E83001DC91B /* AWSRegion.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = AWSRegion.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		F829523919868E94001DC91B /* CWLSynthesizeSingleton.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CWLSynthesizeSingleton.h; sourceTree = "<group>"; };
 		F829523A19868EA4001DC91B /* NetMonitor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NetMonitor.h; sourceTree = "<group>"; };
 		F829523B19868EA4001DC91B /* NetMonitor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NetMonitor.m; sourceTree = "<group>"; };
@@ -402,27 +372,160 @@
 		F829DC301986930300D637E0 /* OpenSSL.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OpenSSL.m; sourceTree = "<group>"; };
 		F829DC33198697EB00D637E0 /* Target.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Target.h; sourceTree = "<group>"; };
 		F829DC34198697EB00D637E0 /* Target.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Target.m; sourceTree = "<group>"; };
+		F83D0A7C1E3F5D75009FBE98 /* BaseKeychain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = BaseKeychain.h; path = keychain/BaseKeychain.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		F83D0A7D1E3F5D75009FBE98 /* BaseKeychain.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; name = BaseKeychain.m; path = keychain/BaseKeychain.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
+		F83D0A7E1E3F5D75009FBE98 /* Keychain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Keychain.h; path = keychain/Keychain.h; sourceTree = "<group>"; };
+		F83D0A7F1E3F5D75009FBE98 /* KeychainFactory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = KeychainFactory.h; path = keychain/KeychainFactory.h; sourceTree = "<group>"; };
+		F83D0A801E3F5D75009FBE98 /* KeychainFactory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = KeychainFactory.m; path = keychain/KeychainFactory.m; sourceTree = "<group>"; };
+		F83D0A811E3F5D75009FBE98 /* KeychainItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = KeychainItem.h; path = keychain/KeychainItem.h; sourceTree = "<group>"; };
+		F83D0A821E3F5D75009FBE98 /* KeychainItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = KeychainItem.m; path = keychain/KeychainItem.m; sourceTree = "<group>"; };
+		F83D0A861E3F786A009FBE98 /* TargetFactory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TargetFactory.h; sourceTree = "<group>"; };
+		F83D0A871E3F786A009FBE98 /* TargetFactory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TargetFactory.m; sourceTree = "<group>"; };
+		F83D0A891E3F87A8009FBE98 /* ExePath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExePath.h; sourceTree = "<group>"; };
+		F83D0A8A1E3F87A8009FBE98 /* ExePath.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ExePath.m; sourceTree = "<group>"; };
 		F83F9B2B1983303F007CBFB4 /* ArqRestoreCommand.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ArqRestoreCommand.h; sourceTree = "<group>"; };
 		F83F9B2C1983303F007CBFB4 /* ArqRestoreCommand.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ArqRestoreCommand.m; sourceTree = "<group>"; };
-		F89A204513FAE29E0071D321 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
-		F89A20A413FAE5300071D321 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
+		F874D8D01DF7618500B7EC02 /* CocoaLumberjack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CocoaLumberjack.h; path = CocoaLumberjack/CocoaLumberjack.h; sourceTree = "<group>"; };
+		F874D8D11DF7618500B7EC02 /* DDAbstractDatabaseLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DDAbstractDatabaseLogger.h; path = CocoaLumberjack/DDAbstractDatabaseLogger.h; sourceTree = "<group>"; };
+		F874D8D21DF7618500B7EC02 /* DDAbstractDatabaseLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DDAbstractDatabaseLogger.m; path = CocoaLumberjack/DDAbstractDatabaseLogger.m; sourceTree = "<group>"; };
+		F874D8D31DF7618500B7EC02 /* DDASLLogCapture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DDASLLogCapture.h; path = CocoaLumberjack/DDASLLogCapture.h; sourceTree = "<group>"; };
+		F874D8D41DF7618500B7EC02 /* DDASLLogCapture.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DDASLLogCapture.m; path = CocoaLumberjack/DDASLLogCapture.m; sourceTree = "<group>"; };
+		F874D8D51DF7618500B7EC02 /* DDASLLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DDASLLogger.h; path = CocoaLumberjack/DDASLLogger.h; sourceTree = "<group>"; };
+		F874D8D61DF7618500B7EC02 /* DDASLLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DDASLLogger.m; path = CocoaLumberjack/DDASLLogger.m; sourceTree = "<group>"; };
+		F874D8D71DF7618500B7EC02 /* DDAssertMacros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DDAssertMacros.h; path = CocoaLumberjack/DDAssertMacros.h; sourceTree = "<group>"; };
+		F874D8D81DF7618500B7EC02 /* DDContextFilterLogFormatter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DDContextFilterLogFormatter.h; path = CocoaLumberjack/DDContextFilterLogFormatter.h; sourceTree = "<group>"; };
+		F874D8D91DF7618500B7EC02 /* DDContextFilterLogFormatter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DDContextFilterLogFormatter.m; path = CocoaLumberjack/DDContextFilterLogFormatter.m; sourceTree = "<group>"; };
+		F874D8DA1DF7618500B7EC02 /* DDDispatchQueueLogFormatter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DDDispatchQueueLogFormatter.h; path = CocoaLumberjack/DDDispatchQueueLogFormatter.h; sourceTree = "<group>"; };
+		F874D8DB1DF7618500B7EC02 /* DDDispatchQueueLogFormatter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DDDispatchQueueLogFormatter.m; path = CocoaLumberjack/DDDispatchQueueLogFormatter.m; sourceTree = "<group>"; };
+		F874D8DC1DF7618500B7EC02 /* DDFileLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DDFileLogger.h; path = CocoaLumberjack/DDFileLogger.h; sourceTree = "<group>"; };
+		F874D8DD1DF7618500B7EC02 /* DDFileLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DDFileLogger.m; path = CocoaLumberjack/DDFileLogger.m; sourceTree = "<group>"; };
+		F874D8DE1DF7618500B7EC02 /* DDLegacyMacros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DDLegacyMacros.h; path = CocoaLumberjack/DDLegacyMacros.h; sourceTree = "<group>"; };
+		F874D8DF1DF7618500B7EC02 /* DDLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DDLog.h; path = CocoaLumberjack/DDLog.h; sourceTree = "<group>"; };
+		F874D8E01DF7618500B7EC02 /* DDLog.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DDLog.m; path = CocoaLumberjack/DDLog.m; sourceTree = "<group>"; };
+		F874D8E11DF7618500B7EC02 /* DDLog+LOGV.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "DDLog+LOGV.h"; path = "CocoaLumberjack/DDLog+LOGV.h"; sourceTree = "<group>"; };
+		F874D8E21DF7618500B7EC02 /* DDLogMacros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DDLogMacros.h; path = CocoaLumberjack/DDLogMacros.h; sourceTree = "<group>"; };
+		F874D8E31DF7618500B7EC02 /* DDMultiFormatter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DDMultiFormatter.h; path = CocoaLumberjack/DDMultiFormatter.h; sourceTree = "<group>"; };
+		F874D8E41DF7618500B7EC02 /* DDMultiFormatter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DDMultiFormatter.m; path = CocoaLumberjack/DDMultiFormatter.m; sourceTree = "<group>"; };
+		F874D8E51DF7618500B7EC02 /* DDTTYLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DDTTYLogger.h; path = CocoaLumberjack/DDTTYLogger.h; sourceTree = "<group>"; };
+		F874D8E61DF7618500B7EC02 /* DDTTYLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DDTTYLogger.m; path = CocoaLumberjack/DDTTYLogger.m; sourceTree = "<group>"; };
+		F874D8F01DF766A000B7EC02 /* System.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = System.h; sourceTree = "<group>"; };
+		F874D8F11DF766A000B7EC02 /* System.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = System.m; sourceTree = "<group>"; };
+		F874D8F31DF766C600B7EC02 /* ByteSize.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ByteSize.h; sourceTree = "<group>"; };
+		F874D8F41DF766C600B7EC02 /* ByteSize.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ByteSize.m; sourceTree = "<group>"; };
+		F874D8F61DF7676E00B7EC02 /* CommitList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CommitList.h; sourceTree = "<group>"; };
+		F874D8F71DF7676E00B7EC02 /* CommitList.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CommitList.m; sourceTree = "<group>"; };
+		F874D8F81DF7676E00B7EC02 /* EncryptionDatFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EncryptionDatFile.h; sourceTree = "<group>"; };
+		F874D8F91DF7676E00B7EC02 /* EncryptionDatFile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EncryptionDatFile.m; sourceTree = "<group>"; };
+		F874D8FA1DF7676E00B7EC02 /* Fark.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Fark.m; sourceTree = "<group>"; };
+		F874D8FB1DF7676E00B7EC02 /* KeyValuePair.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KeyValuePair.h; sourceTree = "<group>"; };
+		F874D8FC1DF7676E00B7EC02 /* KeyValuePair.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KeyValuePair.m; sourceTree = "<group>"; };
+		F874D8FD1DF7676E00B7EC02 /* NSData-Compress.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSData-Compress.h"; sourceTree = "<group>"; };
+		F874D8FE1DF7676E00B7EC02 /* NSData-Compress.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSData-Compress.m"; sourceTree = "<group>"; };
+		F874D8FF1DF7676E00B7EC02 /* ObjectEncryptor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ObjectEncryptor.h; sourceTree = "<group>"; };
+		F874D9001DF7676E00B7EC02 /* ObjectEncryptor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ObjectEncryptor.m; sourceTree = "<group>"; };
+		F874D9011DF7676E00B7EC02 /* ObjectEncryptorImpl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ObjectEncryptorImpl.h; sourceTree = "<group>"; };
+		F874D9021DF7676E00B7EC02 /* ObjectEncryptorV1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ObjectEncryptorV1.h; sourceTree = "<group>"; };
+		F874D9031DF7676E00B7EC02 /* ObjectEncryptorV1.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ObjectEncryptorV1.m; sourceTree = "<group>"; };
+		F874D9041DF7676E00B7EC02 /* ObjectEncryptorV2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ObjectEncryptorV2.h; sourceTree = "<group>"; };
+		F874D9051DF7676E00B7EC02 /* ObjectEncryptorV2.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ObjectEncryptorV2.m; sourceTree = "<group>"; };
+		F874D9061DF7676E00B7EC02 /* PackSetDB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PackSetDB.h; sourceTree = "<group>"; };
+		F874D9071DF7676E00B7EC02 /* PackSetDB.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PackSetDB.m; sourceTree = "<group>"; };
+		F874D9081DF7676E00B7EC02 /* PIELoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PIELoader.h; sourceTree = "<group>"; };
+		F874D9091DF7676E00B7EC02 /* PIELoader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PIELoader.m; sourceTree = "<group>"; };
+		F874D90A1DF7676E00B7EC02 /* PIELoaderWorker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PIELoaderWorker.h; sourceTree = "<group>"; };
+		F874D90B1DF7676E00B7EC02 /* PIELoaderWorker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PIELoaderWorker.m; sourceTree = "<group>"; };
+		F874D90C1DF7676E00B7EC02 /* S3PIEInputStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = S3PIEInputStream.h; sourceTree = "<group>"; };
+		F874D90D1DF7676E00B7EC02 /* S3PIEInputStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = S3PIEInputStream.m; sourceTree = "<group>"; };
+		F874D90E1DF7676E00B7EC02 /* SynchronousPackSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SynchronousPackSet.h; sourceTree = "<group>"; };
+		F874D90F1DF7676E00B7EC02 /* SynchronousPackSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SynchronousPackSet.m; sourceTree = "<group>"; };
+		F874D9201DF767BA00B7EC02 /* CacheOwnership.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CacheOwnership.h; sourceTree = "<group>"; };
+		F874D9211DF767BA00B7EC02 /* CacheOwnership.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CacheOwnership.m; sourceTree = "<group>"; };
+		F8A18C871E3E146000AF9F97 /* StandardRestorer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StandardRestorer.h; sourceTree = "<group>"; };
+		F8A18C881E3E146000AF9F97 /* StandardRestorer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StandardRestorer.m; sourceTree = "<group>"; };
+		F8A18C8A1E3E14A900AF9F97 /* StandardRestorerDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StandardRestorerDelegate.h; sourceTree = "<group>"; };
+		F8A18C8B1E3E14A900AF9F97 /* StandardRestorerDelegateMux.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StandardRestorerDelegateMux.h; sourceTree = "<group>"; };
+		F8A18C8C1E3E14A900AF9F97 /* StandardRestorerDelegateMux.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StandardRestorerDelegateMux.m; sourceTree = "<group>"; };
+		F8A18C8D1E3E14A900AF9F97 /* StandardRestorerError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StandardRestorerError.h; sourceTree = "<group>"; };
+		F8A18C8E1E3E14A900AF9F97 /* StandardRestorerError.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StandardRestorerError.m; sourceTree = "<group>"; };
+		F8A18C8F1E3E14A900AF9F97 /* StandardRestorerParamSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StandardRestorerParamSet.h; sourceTree = "<group>"; };
+		F8A18C901E3E14A900AF9F97 /* StandardRestorerParamSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StandardRestorerParamSet.m; sourceTree = "<group>"; };
+		F8A18C941E3E14CA00AF9F97 /* StandardRestoreWorker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StandardRestoreWorker.h; sourceTree = "<group>"; };
+		F8A18C951E3E14CA00AF9F97 /* StandardRestoreWorker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StandardRestoreWorker.m; sourceTree = "<group>"; };
+		F8A18C971E3E14DD00AF9F97 /* StandardRestoreItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StandardRestoreItem.h; sourceTree = "<group>"; };
+		F8A18C981E3E14DD00AF9F97 /* StandardRestoreItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StandardRestoreItem.m; sourceTree = "<group>"; };
+		F8A18C9C1E3E16A400AF9F97 /* sqlite3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sqlite3.c; sourceTree = "<group>"; };
+		F8A18C9D1E3E16A400AF9F97 /* sqlite3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sqlite3.h; sourceTree = "<group>"; };
+		F8A18CA01E3E16C400AF9F97 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
+		F8A18CA21E3E170F00AF9F97 /* S3SignatureV1AuthorizationProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = S3SignatureV1AuthorizationProvider.h; sourceTree = "<group>"; };
+		F8A18CA31E3E170F00AF9F97 /* S3SignatureV1AuthorizationProvider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = S3SignatureV1AuthorizationProvider.m; sourceTree = "<group>"; };
+		F8A18CA41E3E170F00AF9F97 /* S3SignatureV4AuthorizationProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = S3SignatureV4AuthorizationProvider.h; sourceTree = "<group>"; };
+		F8A18CA51E3E170F00AF9F97 /* S3SignatureV4AuthorizationProvider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = S3SignatureV4AuthorizationProvider.m; sourceTree = "<group>"; };
+		F8A18CA81E3E173200AF9F97 /* HMACSHA256.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HMACSHA256.h; sourceTree = "<group>"; };
+		F8A18CA91E3E173200AF9F97 /* HMACSHA256.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HMACSHA256.m; sourceTree = "<group>"; };
+		F8A18CAB1E3E17A200AF9F97 /* HSLogFileManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HSLogFileManager.h; sourceTree = "<group>"; };
+		F8A18CAC1E3E17A200AF9F97 /* HSLogFileManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HSLogFileManager.m; sourceTree = "<group>"; };
+		F8A18CBA1E3E18B400AF9F97 /* ItemFSFileDeleter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ItemFSFileDeleter.h; sourceTree = "<group>"; };
+		F8A18CBB1E3E18B400AF9F97 /* ItemFSFileDeleter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ItemFSFileDeleter.m; sourceTree = "<group>"; };
+		F8A18CBC1E3E18B400AF9F97 /* ItemFSFileDeleterWorker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ItemFSFileDeleterWorker.h; sourceTree = "<group>"; };
+		F8A18CBD1E3E18B400AF9F97 /* ItemFSFileDeleterWorker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ItemFSFileDeleterWorker.m; sourceTree = "<group>"; };
+		F8A18CBE1E3E18B400AF9F97 /* RemoteFSFileDeleter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RemoteFSFileDeleter.h; sourceTree = "<group>"; };
+		F8A18CBF1E3E18B400AF9F97 /* RemoteFSFileDeleter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RemoteFSFileDeleter.m; sourceTree = "<group>"; };
+		F8A18CC01E3E18B400AF9F97 /* RemoteFSFileDeleterWorker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RemoteFSFileDeleterWorker.h; sourceTree = "<group>"; };
+		F8A18CC11E3E18B400AF9F97 /* RemoteFSFileDeleterWorker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RemoteFSFileDeleterWorker.m; sourceTree = "<group>"; };
+		F8A18CC61E3E193A00AF9F97 /* LZ4Compressor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LZ4Compressor.h; sourceTree = "<group>"; };
+		F8A18CC71E3E193A00AF9F97 /* LZ4Compressor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LZ4Compressor.m; sourceTree = "<group>"; };
+		F8A18CC91E3E194C00AF9F97 /* lz4.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = lz4.c; sourceTree = "<group>"; };
+		F8A18CCA1E3E194C00AF9F97 /* lz4.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lz4.h; sourceTree = "<group>"; };
+		F8A18CCC1E3E195B00AF9F97 /* S3ObjectsLister.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = S3ObjectsLister.h; sourceTree = "<group>"; };
+		F8A18CCD1E3E195B00AF9F97 /* S3ObjectsLister.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = S3ObjectsLister.m; sourceTree = "<group>"; };
+		F8A18CCE1E3E195B00AF9F97 /* S3ObjectsListerWorker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = S3ObjectsListerWorker.h; sourceTree = "<group>"; };
+		F8A18CCF1E3E195B00AF9F97 /* S3ObjectsListerWorker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = S3ObjectsListerWorker.m; sourceTree = "<group>"; };
+		F8CD47991DF6FD270061C3D6 /* ItemFS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ItemFS.h; sourceTree = "<group>"; };
+		F8CD479A1DF6FD270061C3D6 /* LocalItemFS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LocalItemFS.h; sourceTree = "<group>"; };
+		F8CD479B1DF6FD270061C3D6 /* LocalItemFS.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LocalItemFS.m; sourceTree = "<group>"; };
+		F8CD479C1DF6FD270061C3D6 /* RemoteFS.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RemoteFS.m; sourceTree = "<group>"; };
+		F8E1A2FF1E3D3E6900A61EEA /* FMDatabase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FMDatabase.h; path = fmdb/FMDatabase.h; sourceTree = "<group>"; };
+		F8E1A3001E3D3E6900A61EEA /* FMDatabase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FMDatabase.m; path = fmdb/FMDatabase.m; sourceTree = "<group>"; };
+		F8E1A3011E3D3E6900A61EEA /* FMDatabaseAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FMDatabaseAdditions.h; path = fmdb/FMDatabaseAdditions.h; sourceTree = "<group>"; };
+		F8E1A3021E3D3E6900A61EEA /* FMDatabaseAdditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FMDatabaseAdditions.m; path = fmdb/FMDatabaseAdditions.m; sourceTree = "<group>"; };
+		F8E1A3031E3D3E6900A61EEA /* FMDatabasePool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FMDatabasePool.h; path = fmdb/FMDatabasePool.h; sourceTree = "<group>"; };
+		F8E1A3041E3D3E6900A61EEA /* FMDatabasePool.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FMDatabasePool.m; path = fmdb/FMDatabasePool.m; sourceTree = "<group>"; };
+		F8E1A3051E3D3E6900A61EEA /* FMDatabaseQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FMDatabaseQueue.h; path = fmdb/FMDatabaseQueue.h; sourceTree = "<group>"; };
+		F8E1A3061E3D3E6900A61EEA /* FMDatabaseQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FMDatabaseQueue.m; path = fmdb/FMDatabaseQueue.m; sourceTree = "<group>"; };
+		F8E1A3071E3D3E6900A61EEA /* FMDB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FMDB.h; path = fmdb/FMDB.h; sourceTree = "<group>"; };
+		F8E1A3081E3D3E6900A61EEA /* FMResultSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FMResultSet.h; path = fmdb/FMResultSet.h; sourceTree = "<group>"; };
+		F8E1A3091E3D3E6900A61EEA /* FMResultSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FMResultSet.m; path = fmdb/FMResultSet.m; sourceTree = "<group>"; };
+		F8E1A30F1E3D3E8C00A61EEA /* DeleteDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DeleteDelegate.h; sourceTree = "<group>"; };
+		F8E1A3101E3D3EEE00A61EEA /* Item.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Item.h; sourceTree = "<group>"; };
+		F8E1A3111E3D3EEE00A61EEA /* Item.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Item.m; sourceTree = "<group>"; };
+		F8E1A3121E3D3EEE00A61EEA /* ItemsDB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ItemsDB.h; sourceTree = "<group>"; };
+		F8E1A3131E3D3EEE00A61EEA /* ItemsDB.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ItemsDB.m; sourceTree = "<group>"; };
+		F8E1A3161E3D3F1A00A61EEA /* TargetItemsDB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TargetItemsDB.h; sourceTree = "<group>"; };
+		F8E1A3171E3D3F1A00A61EEA /* TargetItemsDB.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TargetItemsDB.m; sourceTree = "<group>"; };
+		F8E1A31C1E3D3F8000A61EEA /* TargetConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TargetConnection.m; sourceTree = "<group>"; };
+		F8E1A31E1E3D3FDF00A61EEA /* PackBuilder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PackBuilder.h; sourceTree = "<group>"; };
+		F8E1A31F1E3D3FDF00A61EEA /* PackBuilder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PackBuilder.m; sourceTree = "<group>"; };
+		F8E1A3201E3D3FDF00A61EEA /* PackBuilderEntry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PackBuilderEntry.h; sourceTree = "<group>"; };
+		F8E1A3211E3D3FDF00A61EEA /* PackBuilderEntry.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PackBuilderEntry.m; sourceTree = "<group>"; };
+		F8E1A3221E3D3FDF00A61EEA /* PackIndexGenerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PackIndexGenerator.h; sourceTree = "<group>"; };
+		F8E1A3231E3D3FDF00A61EEA /* PackIndexGenerator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PackIndexGenerator.m; sourceTree = "<group>"; };
+		F8E1A3271E3D400800A61EEA /* ReflogEntry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ReflogEntry.h; sourceTree = "<group>"; };
+		F8E1A3281E3D400800A61EEA /* ReflogEntry.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ReflogEntry.m; sourceTree = "<group>"; };
+		F8E1A32A1E3D419E00A61EEA /* FlockFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FlockFile.h; sourceTree = "<group>"; };
+		F8E1A32B1E3D419E00A61EEA /* FlockFile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FlockFile.m; sourceTree = "<group>"; };
+		F8E1A32D1E3D427A00A61EEA /* NSData-LZ4.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSData-LZ4.h"; sourceTree = "<group>"; };
+		F8E1A32E1E3D427A00A61EEA /* NSData-LZ4.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSData-LZ4.m"; sourceTree = "<group>"; };
+		F8E1A33B1E3D474800A61EEA /* S3AuthorizationProviderFactory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = S3AuthorizationProviderFactory.h; sourceTree = "<group>"; };
+		F8E1A33C1E3D474800A61EEA /* S3AuthorizationProviderFactory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = S3AuthorizationProviderFactory.m; sourceTree = "<group>"; };
+		F8E1A3611E3D47F300A61EEA /* NSData-Random.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSData-Random.h"; sourceTree = "<group>"; };
+		F8E1A3621E3D47F300A61EEA /* NSData-Random.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSData-Random.m"; sourceTree = "<group>"; };
+		F8E1A3811E3D4B5600A61EEA /* FSStat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FSStat.h; sourceTree = "<group>"; };
+		F8E1A3821E3D4B5600A61EEA /* FSStat.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FSStat.m; sourceTree = "<group>"; };
+		F8E1A3841E3D4B6100A61EEA /* Volume.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Volume.h; sourceTree = "<group>"; };
+		F8E1A3851E3D4B6100A61EEA /* Volume.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Volume.m; sourceTree = "<group>"; };
 		F8F2D8661986B57D00997A15 /* BackupSet.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BackupSet.h; sourceTree = "<group>"; };
 		F8F2D8671986B58000997A15 /* BackupSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BackupSet.m; sourceTree = "<group>"; };
-		F8F2D8691986B5CC00997A15 /* S3TargetConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = S3TargetConnection.h; sourceTree = "<group>"; };
-		F8F2D86A1986B5CC00997A15 /* S3TargetConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = S3TargetConnection.m; sourceTree = "<group>"; };
-		F8F2D86B1986B5CC00997A15 /* SFTPTargetConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFTPTargetConnection.h; sourceTree = "<group>"; };
-		F8F2D86C1986B5CC00997A15 /* SFTPTargetConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFTPTargetConnection.m; sourceTree = "<group>"; };
-		F8F2D86F1986B5D900997A15 /* GoogleDriveTargetConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GoogleDriveTargetConnection.h; sourceTree = "<group>"; };
-		F8F2D8701986B5D900997A15 /* GoogleDriveTargetConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GoogleDriveTargetConnection.m; sourceTree = "<group>"; };
 		F8F2D8731986B61800997A15 /* RemoteFS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RemoteFS.h; sourceTree = "<group>"; };
-		F8F2D8741986B61800997A15 /* S3RemoteFS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = S3RemoteFS.h; sourceTree = "<group>"; };
-		F8F2D8751986B61800997A15 /* S3RemoteFS.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = S3RemoteFS.m; sourceTree = "<group>"; };
-		F8F2D8761986B61800997A15 /* SFTPRemoteFS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFTPRemoteFS.h; sourceTree = "<group>"; };
-		F8F2D8771986B61800997A15 /* SFTPRemoteFS.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFTPRemoteFS.m; sourceTree = "<group>"; };
-		F8F2D8781986B61800997A15 /* GoogleDriveRemoteFS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GoogleDriveRemoteFS.h; sourceTree = "<group>"; };
-		F8F2D8791986B61800997A15 /* GoogleDriveRemoteFS.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GoogleDriveRemoteFS.m; sourceTree = "<group>"; };
-		F8F2D8801986B63400997A15 /* BaseTargetConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BaseTargetConnection.h; sourceTree = "<group>"; };
-		F8F2D8811986B63400997A15 /* BaseTargetConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BaseTargetConnection.m; sourceTree = "<group>"; };
 		F8F2D8831986B64D00997A15 /* GlacierAuthorizationProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GlacierAuthorizationProvider.h; sourceTree = "<group>"; };
 		F8F2D8841986B64D00997A15 /* GlacierAuthorizationProvider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GlacierAuthorizationProvider.m; sourceTree = "<group>"; };
 		F8F2D8861986B66000997A15 /* GlacierJob.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GlacierJob.h; sourceTree = "<group>"; };
@@ -474,12 +577,12 @@
 		F8F2D8C71986B6E900997A15 /* SQSMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SQSMessage.m; sourceTree = "<group>"; };
 		F8F2D8CE1986B6FD00997A15 /* SignatureV2Provider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SignatureV2Provider.h; sourceTree = "<group>"; };
 		F8F2D8CF1986B6FD00997A15 /* SignatureV2Provider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SignatureV2Provider.m; sourceTree = "<group>"; };
-		F8F2D8D11986B70300997A15 /* AWSQueryError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AWSQueryError.h; sourceTree = "<group>"; };
-		F8F2D8D21986B70300997A15 /* AWSQueryError.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AWSQueryError.m; sourceTree = "<group>"; };
-		F8F2D8D31986B70300997A15 /* AWSQueryRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AWSQueryRequest.h; sourceTree = "<group>"; };
-		F8F2D8D41986B70300997A15 /* AWSQueryRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AWSQueryRequest.m; sourceTree = "<group>"; };
-		F8F2D8D51986B70300997A15 /* AWSQueryResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AWSQueryResponse.h; sourceTree = "<group>"; };
-		F8F2D8D61986B70300997A15 /* AWSQueryResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AWSQueryResponse.m; sourceTree = "<group>"; };
+		F8F2D8D11986B70300997A15 /* AWSQueryError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = AWSQueryError.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		F8F2D8D21986B70300997A15 /* AWSQueryError.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = AWSQueryError.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
+		F8F2D8D31986B70300997A15 /* AWSQueryRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = AWSQueryRequest.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		F8F2D8D41986B70300997A15 /* AWSQueryRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = AWSQueryRequest.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
+		F8F2D8D51986B70300997A15 /* AWSQueryResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = AWSQueryResponse.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		F8F2D8D61986B70300997A15 /* AWSQueryResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = AWSQueryResponse.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		F8F2D8DA1986B72000997A15 /* GlacierSigner.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GlacierSigner.h; sourceTree = "<group>"; };
 		F8F2D8DB1986B72900997A15 /* GlacierAuthorization.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GlacierAuthorization.h; sourceTree = "<group>"; };
 		F8F2D8DC1986B72900997A15 /* GlacierAuthorization.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GlacierAuthorization.m; sourceTree = "<group>"; };
@@ -487,12 +590,12 @@
 		F8F2D8DF1986B74400997A15 /* UserAndComputer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UserAndComputer.m; sourceTree = "<group>"; };
 		F8F2D8E11986B75C00997A15 /* Computer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Computer.h; sourceTree = "<group>"; };
 		F8F2D8E21986B75C00997A15 /* Computer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Computer.m; sourceTree = "<group>"; };
-		F8F2D8E51986B78600997A15 /* ArrayNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ArrayNode.h; sourceTree = "<group>"; };
-		F8F2D8E61986B78600997A15 /* ArrayNode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ArrayNode.m; sourceTree = "<group>"; };
-		F8F2D8E71986B78600997A15 /* BinaryPListReader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BinaryPListReader.h; sourceTree = "<group>"; };
-		F8F2D8E81986B78600997A15 /* BinaryPListReader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BinaryPListReader.m; sourceTree = "<group>"; };
-		F8F2D8E91986B78600997A15 /* BinaryPListWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BinaryPListWriter.h; sourceTree = "<group>"; };
-		F8F2D8EA1986B78600997A15 /* BinaryPListWriter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BinaryPListWriter.m; sourceTree = "<group>"; };
+		F8F2D8E51986B78600997A15 /* ArrayNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = ArrayNode.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		F8F2D8E61986B78600997A15 /* ArrayNode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = ArrayNode.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
+		F8F2D8E71986B78600997A15 /* BinaryPListReader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = BinaryPListReader.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		F8F2D8E81986B78600997A15 /* BinaryPListReader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = BinaryPListReader.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
+		F8F2D8E91986B78600997A15 /* BinaryPListWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = BinaryPListWriter.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		F8F2D8EA1986B78600997A15 /* BinaryPListWriter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = BinaryPListWriter.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		F8F2D8EB1986B78600997A15 /* BooleanNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BooleanNode.h; sourceTree = "<group>"; };
 		F8F2D8EC1986B78600997A15 /* BooleanNode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BooleanNode.m; sourceTree = "<group>"; };
 		F8F2D8ED1986B78600997A15 /* DictNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DictNode.h; sourceTree = "<group>"; };
@@ -517,8 +620,6 @@
 		F8F2D90F1986B80800997A15 /* CryptoKey.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CryptoKey.m; sourceTree = "<group>"; };
 		F8F2D9101986B80800997A15 /* OpenSSLCryptoKey.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenSSLCryptoKey.h; sourceTree = "<group>"; };
 		F8F2D9111986B80800997A15 /* OpenSSLCryptoKey.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OpenSSLCryptoKey.m; sourceTree = "<group>"; };
-		F8F2D9151986B92100997A15 /* SFTPServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFTPServer.h; sourceTree = "<group>"; };
-		F8F2D9161986B92100997A15 /* SFTPServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFTPServer.m; sourceTree = "<group>"; };
 		F8F2D9231986B98600997A15 /* BlobKey.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BlobKey.h; sourceTree = "<group>"; };
 		F8F2D9241986B98600997A15 /* BlobKey.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BlobKey.m; sourceTree = "<group>"; };
 		F8F2D9271986B9CE00997A15 /* StorageType.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StorageType.h; sourceTree = "<group>"; };
@@ -544,13 +645,9 @@
 		F8F2D9431986BA9B00997A15 /* BucketExcludeSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BucketExcludeSet.m; sourceTree = "<group>"; };
 		F8F2D9471986BAD200997A15 /* Repo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Repo.h; sourceTree = "<group>"; };
 		F8F2D9481986BAD200997A15 /* Repo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Repo.m; sourceTree = "<group>"; };
-		F8F2D94A1986BB4900997A15 /* NSString_slashed.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSString_slashed.h; sourceTree = "<group>"; };
-		F8F2D94B1986BB4900997A15 /* NSString_slashed.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSString_slashed.m; sourceTree = "<group>"; };
-		F8F2D94D1986BD1600997A15 /* TargetSchedule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TargetSchedule.h; sourceTree = "<group>"; };
-		F8F2D94E1986BD1600997A15 /* TargetSchedule.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TargetSchedule.m; sourceTree = "<group>"; };
+		F8F2D94A1986BB4900997A15 /* NSString_slashed.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NSString_slashed.h; path = ../../NSString_slashed.h; sourceTree = "<group>"; };
+		F8F2D94B1986BB4900997A15 /* NSString_slashed.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NSString_slashed.m; path = ../../NSString_slashed.m; sourceTree = "<group>"; };
 		F8F2D9501986BE2A00997A15 /* Fark.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Fark.h; sourceTree = "<group>"; };
-		F8F2D9511986BE2A00997A15 /* FarkImpl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FarkImpl.h; sourceTree = "<group>"; };
-		F8F2D9521986BE2A00997A15 /* FarkImpl.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FarkImpl.m; sourceTree = "<group>"; };
 		F8F2D9541986BE3C00997A15 /* PackId.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PackId.h; sourceTree = "<group>"; };
 		F8F2D9551986BE3C00997A15 /* PackId.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PackId.m; sourceTree = "<group>"; };
 		F8F2D9571986BE4E00997A15 /* PackIndex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PackIndex.h; sourceTree = "<group>"; };
@@ -570,11 +667,6 @@
 		F8F2D96C1986BF6800997A15 /* PackSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PackSet.h; sourceTree = "<group>"; };
 		F8F2D96D1986BF6800997A15 /* PackSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PackSet.m; sourceTree = "<group>"; };
 		F8F2D96F1986C09300997A15 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
-		F8F2D9721986D02D00997A15 /* S3RestorerParamSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = S3RestorerParamSet.h; sourceTree = "<group>"; };
-		F8F2D9731986D02D00997A15 /* S3RestorerParamSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = S3RestorerParamSet.m; sourceTree = "<group>"; };
-		F8F2D9751986D32B00997A15 /* S3Restorer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = S3Restorer.h; sourceTree = "<group>"; };
-		F8F2D9761986D32B00997A15 /* S3Restorer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = S3Restorer.m; sourceTree = "<group>"; };
-		F8F2D9791986D36D00997A15 /* S3RestorerDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = S3RestorerDelegate.h; sourceTree = "<group>"; };
 		F8F2D97A1986D38900997A15 /* OSStatusDescription.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OSStatusDescription.h; sourceTree = "<group>"; };
 		F8F2D97B1986D38900997A15 /* OSStatusDescription.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OSStatusDescription.m; sourceTree = "<group>"; };
 		F8F2D97D1986D3A100997A15 /* FileAttributes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileAttributes.h; sourceTree = "<group>"; };
@@ -615,8 +707,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F8A18CA11E3E16C400AF9F97 /* libz.tbd in Frameworks */,
+				F8A18C9A1E3E165F00AF9F97 /* Cocoa.framework in Frameworks */,
 				F8F2D9701986C09300997A15 /* IOKit.framework in Frameworks */,
-				8DD76F9C0486AA7600D96B5E /* Foundation.framework in Frameworks */,
 				F805B8891160EB39007EC01E /* libcrypto.dylib in Frameworks */,
 				F805B88B1160EB3A007EC01E /* libicucore.dylib in Frameworks */,
 				F805B88F1160EB45007EC01E /* libssl.dylib in Frameworks */,
@@ -624,7 +717,6 @@
 				F805B8A11160EBAA007EC01E /* CoreFoundation.framework in Frameworks */,
 				F805B8C21160EC41007EC01E /* Security.framework in Frameworks */,
 				F805B8CE1160ECD7007EC01E /* CoreServices.framework in Frameworks */,
-				F89A204613FAE29E0071D321 /* libz.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -634,19 +726,20 @@
 		08FB7794FE84155DC02AAC07 /* arq_restore */ = {
 			isa = PBXGroup;
 			children = (
+				F8A18C9B1E3E167B00AF9F97 /* sqlite3 */,
+				F8E1A2FE1E3D3E4A00A61EEA /* fmdb */,
+				F874D8CF1DF7617800B7EC02 /* CocoaLumberjack */,
 				F8F2D96F1986C09300997A15 /* IOKit.framework */,
-				F829512A198683D5001DC91B /* libssh2 */,
 				F829512019868345001DC91B /* cocoastack */,
 				F8F2D92B1986BA0700997A15 /* repo */,
 				08FB7795FE84155DC02AAC07 /* arq_restore */,
 				F8F2D98C1986D49600997A15 /* commonrestore */,
-				F8F2D9711986D00C00997A15 /* s3restore */,
+				F8F2D9711986D00C00997A15 /* standardrestore */,
 				F8F2D9951986DCBD00997A15 /* s3glacierrestore */,
 				F8F2D9941986DCB100997A15 /* glacierrestore */,
 				08FB779DFE84155DC02AAC07 /* External Frameworks and Libraries */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
-				F89A204513FAE29E0071D321 /* libz.dylib */,
-				F89A20A413FAE5300071D321 /* libz.dylib */,
+				F8A18C9F1E3E16C300AF9F97 /* Frameworks */,
 			);
 			name = arq_restore;
 			sourceTree = "<group>";
@@ -662,8 +755,6 @@
 				F8F2D9331986BA2B00997A15 /* ArqSalt.m */,
 				F8F2D8661986B57D00997A15 /* BackupSet.h */,
 				F8F2D8671986B58000997A15 /* BackupSet.m */,
-				F8F2D8801986B63400997A15 /* BaseTargetConnection.h */,
-				F8F2D8811986B63400997A15 /* BaseTargetConnection.m */,
 				F8F2D9231986B98600997A15 /* BlobKey.h */,
 				F8F2D9241986B98600997A15 /* BlobKey.m */,
 				F8F2D9661986BEA300997A15 /* BlobKeyIO.h */,
@@ -674,19 +765,21 @@
 				F8F2D9411986BA9B00997A15 /* BucketExclude.m */,
 				F8F2D9421986BA9B00997A15 /* BucketExcludeSet.h */,
 				F8F2D9431986BA9B00997A15 /* BucketExcludeSet.m */,
-				F8F2D86F1986B5D900997A15 /* GoogleDriveTargetConnection.h */,
-				F8F2D8701986B5D900997A15 /* GoogleDriveTargetConnection.m */,
-				F8F2D94A1986BB4900997A15 /* NSString_slashed.h */,
-				F8F2D94B1986BB4900997A15 /* NSString_slashed.m */,
-				F8F2D8691986B5CC00997A15 /* S3TargetConnection.h */,
-				F8F2D86A1986B5CC00997A15 /* S3TargetConnection.m */,
-				F8F2D86B1986B5CC00997A15 /* SFTPTargetConnection.h */,
-				F8F2D86C1986B5CC00997A15 /* SFTPTargetConnection.m */,
+				F874D8F31DF766C600B7EC02 /* ByteSize.h */,
+				F874D8F41DF766C600B7EC02 /* ByteSize.m */,
+				F874D9201DF767BA00B7EC02 /* CacheOwnership.h */,
+				F874D9211DF767BA00B7EC02 /* CacheOwnership.m */,
+				F8E1A30F1E3D3E8C00A61EEA /* DeleteDelegate.h */,
+				F8E1A3271E3D400800A61EEA /* ReflogEntry.h */,
+				F8E1A3281E3D400800A61EEA /* ReflogEntry.m */,
+				F874D8F01DF766A000B7EC02 /* System.h */,
+				F874D8F11DF766A000B7EC02 /* System.m */,
 				F829DC33198697EB00D637E0 /* Target.h */,
 				F829DC34198697EB00D637E0 /* Target.m */,
-				F8F2D94D1986BD1600997A15 /* TargetSchedule.h */,
-				F8F2D94E1986BD1600997A15 /* TargetSchedule.m */,
+				F83D0A861E3F786A009FBE98 /* TargetFactory.h */,
+				F83D0A871E3F786A009FBE98 /* TargetFactory.m */,
 				F829523D19868EBB001DC91B /* TargetConnection.h */,
+				F8E1A31C1E3D3F8000A61EEA /* TargetConnection.m */,
 				F8F2D8DE1986B74400997A15 /* UserAndComputer.h */,
 				F8F2D8DF1986B74400997A15 /* UserAndComputer.m */,
 				F8F2D9381986BA6900997A15 /* UserLibrary_Arq.h */,
@@ -727,18 +820,23 @@
 				F829523519868E70001DC91B /* aws */,
 				F829519D19868D90001DC91B /* crypto */,
 				F829524419868EF8001DC91B /* glacier */,
-				F829521519868E0D001DC91B /* googledrive */,
 				F82951A019868D90001DC91B /* http */,
 				F829521019868DC7001DC91B /* io */,
 				F829522519868E4F001DC91B /* json */,
+				F83D0A7B1E3F5D65009FBE98 /* keychain */,
 				F8F2D8E41986B77600997A15 /* plist */,
 				F8F2D8721986B60200997A15 /* remotefs */,
-				F8F2D9141986B91200997A15 /* sftp */,
 				F829516D198683F9001DC91B /* s3 */,
 				F829512119868345001DC91B /* shared */,
 				F8F2D8AE1986B6BA00997A15 /* sns */,
 				F8F2D8AF1986B6BA00997A15 /* sqs */,
 				F8F2D9261986B9AB00997A15 /* storage */,
+				F8E1A3101E3D3EEE00A61EEA /* Item.h */,
+				F8E1A3111E3D3EEE00A61EEA /* Item.m */,
+				F8E1A3121E3D3EEE00A61EEA /* ItemsDB.h */,
+				F8E1A3131E3D3EEE00A61EEA /* ItemsDB.m */,
+				F8E1A3161E3D3F1A00A61EEA /* TargetItemsDB.h */,
+				F8E1A3171E3D3F1A00A61EEA /* TargetItemsDB.m */,
 			);
 			path = cocoastack;
 			sourceTree = "<group>";
@@ -746,24 +844,42 @@
 		F829512119868345001DC91B /* shared */ = {
 			isa = PBXGroup;
 			children = (
-				F829523919868E94001DC91B /* CWLSynthesizeSingleton.h */,
 				F8F2D8E11986B75C00997A15 /* Computer.h */,
 				F8F2D8E21986B75C00997A15 /* Computer.m */,
+				F829523919868E94001DC91B /* CWLSynthesizeSingleton.h */,
+				F83D0A891E3F87A8009FBE98 /* ExePath.h */,
+				F83D0A8A1E3F87A8009FBE98 /* ExePath.m */,
 				F8F2D9801986D3B100997A15 /* FileACL.h */,
 				F8F2D9811986D3B100997A15 /* FileACL.m */,
+				F8E1A32A1E3D419E00A61EEA /* FlockFile.h */,
+				F8E1A32B1E3D419E00A61EEA /* FlockFile.m */,
+				F8E1A3811E3D4B5600A61EEA /* FSStat.h */,
+				F8E1A3821E3D4B5600A61EEA /* FSStat.m */,
+				F8A18CC91E3E194C00AF9F97 /* lz4.c */,
+				F8A18CCA1E3E194C00AF9F97 /* lz4.h */,
+				F8A18CC61E3E193A00AF9F97 /* LZ4Compressor.h */,
+				F8A18CC71E3E193A00AF9F97 /* LZ4Compressor.m */,
+				F829512219868345001DC91B /* HSLog.h */,
+				F829512319868345001DC91B /* HSLog.m */,
+				F8A18CAB1E3E17A200AF9F97 /* HSLogFileManager.h */,
+				F8A18CAC1E3E17A200AF9F97 /* HSLogFileManager.m */,
 				F8F2D9631986BE7600997A15 /* NSData-GZip.h */,
 				F8F2D9641986BE7600997A15 /* NSData-GZip.m */,
+				F8E1A32D1E3D427A00A61EEA /* NSData-LZ4.h */,
+				F8E1A32E1E3D427A00A61EEA /* NSData-LZ4.m */,
 				F829512719868394001DC91B /* NSError_extra.h */,
 				F829512819868394001DC91B /* NSError_extra.m */,
 				F829512519868379001DC91B /* NSErrorCodes.h */,
+				F8E1A3611E3D47F300A61EEA /* NSData-Random.h */,
+				F8E1A3621E3D47F300A61EEA /* NSData-Random.m */,
 				F8F2D90B1986B7AF00997A15 /* NSObject_extra.h */,
 				F8F2D90C1986B7AF00997A15 /* NSObject_extra.m */,
 				F8F2D8A81986B68800997A15 /* NSXMLNode_extra.h */,
 				F8F2D8A91986B68800997A15 /* NSXMLNode_extra.m */,
-				F829512219868345001DC91B /* HSLog.h */,
-				F829512319868345001DC91B /* HSLog.m */,
 				F829523E19868EC7001DC91B /* NSString_extra.h */,
 				F829523F19868EC7001DC91B /* NSString_extra.m */,
+				F8F2D94A1986BB4900997A15 /* NSString_slashed.h */,
+				F8F2D94B1986BB4900997A15 /* NSString_slashed.m */,
 				F8F2D97A1986D38900997A15 /* OSStatusDescription.h */,
 				F8F2D97B1986D38900997A15 /* OSStatusDescription.m */,
 				F829DBFA19868FCA00D637E0 /* RFC822.h */,
@@ -775,102 +891,36 @@
 				F829DC1E1986923100D637E0 /* Sysctl.m */,
 				F8F2D93B1986BA7900997A15 /* UserLibrary.h */,
 				F8F2D93C1986BA7900997A15 /* UserLibrary.m */,
+				F8E1A3841E3D4B6100A61EEA /* Volume.h */,
+				F8E1A3851E3D4B6100A61EEA /* Volume.m */,
 			);
 			path = shared;
-			sourceTree = "<group>";
-		};
-		F829512A198683D5001DC91B /* libssh2 */ = {
-			isa = PBXGroup;
-			children = (
-				F829512B198683D5001DC91B /* include */,
-				F829513D198683D5001DC91B /* lib */,
-				F829513F198683D5001DC91B /* src */,
-			);
-			path = libssh2;
-			sourceTree = "<group>";
-		};
-		F829512B198683D5001DC91B /* include */ = {
-			isa = PBXGroup;
-			children = (
-				F829512C198683D5001DC91B /* channel.h */,
-				F829512D198683D5001DC91B /* comp.h */,
-				F829512E198683D5001DC91B /* crypto.h */,
-				F829512F198683D5001DC91B /* libgcrypt.h */,
-				F8295130198683D5001DC91B /* libssh2.h */,
-				F8295131198683D5001DC91B /* libssh2_config.h */,
-				F8295132198683D5001DC91B /* libssh2_priv.h */,
-				F8295133198683D5001DC91B /* libssh2_publickey.h */,
-				F8295134198683D5001DC91B /* libssh2_sftp.h */,
-				F8295135198683D5001DC91B /* mac.h */,
-				F8295136198683D5001DC91B /* misc.h */,
-				F8295137198683D5001DC91B /* openssl.h */,
-				F8295138198683D5001DC91B /* packet.h */,
-				F8295139198683D5001DC91B /* session.h */,
-				F829513A198683D5001DC91B /* sftp.h */,
-				F829513B198683D5001DC91B /* transport.h */,
-				F829513C198683D5001DC91B /* userauth.h */,
-			);
-			path = include;
-			sourceTree = "<group>";
-		};
-		F829513D198683D5001DC91B /* lib */ = {
-			isa = PBXGroup;
-			children = (
-				F829513E198683D5001DC91B /* libssh2.1.dylib */,
-			);
-			path = lib;
-			sourceTree = "<group>";
-		};
-		F829513F198683D5001DC91B /* src */ = {
-			isa = PBXGroup;
-			children = (
-				F8295140198683D5001DC91B /* agent.c */,
-				F8295141198683D5001DC91B /* channel.c */,
-				F8295142198683D5001DC91B /* comp.c */,
-				F8295143198683D5001DC91B /* crypt.c */,
-				F8295144198683D5001DC91B /* global.c */,
-				F8295145198683D5001DC91B /* hostkey.c */,
-				F8295146198683D5001DC91B /* keepalive.c */,
-				F8295147198683D5001DC91B /* kex.c */,
-				F8295148198683D5001DC91B /* knownhost.c */,
-				F8295149198683D5001DC91B /* libgcrypt.c */,
-				F829514A198683D5001DC91B /* mac.c */,
-				F829514B198683D5001DC91B /* misc.c */,
-				F829514C198683D5001DC91B /* openssl.c */,
-				F829514D198683D5001DC91B /* packet.c */,
-				F829514E198683D5001DC91B /* pem.c */,
-				F829514F198683D5001DC91B /* publickey.c */,
-				F8295150198683D5001DC91B /* scp.c */,
-				F8295151198683D5001DC91B /* session.c */,
-				F8295152198683D5001DC91B /* sftp.c */,
-				F8295153198683D5001DC91B /* transport.c */,
-				F8295154198683D5001DC91B /* userauth.c */,
-				F8295155198683D5001DC91B /* version.c */,
-			);
-			path = src;
 			sourceTree = "<group>";
 		};
 		F829516D198683F9001DC91B /* s3 */ = {
 			isa = PBXGroup;
 			children = (
-				F829516E198683F9001DC91B /* LifecycleConfiguration.h */,
-				F829516F198683F9001DC91B /* LifecycleConfiguration.m */,
 				F8295170198683F9001DC91B /* LocalS3Signer.h */,
 				F8295171198683F9001DC91B /* LocalS3Signer.m */,
 				F8295172198683F9001DC91B /* PathReceiver.h */,
 				F8295173198683F9001DC91B /* PathReceiver.m */,
-				F8295174198683F9001DC91B /* RemoteS3Signer.h */,
-				F8295175198683F9001DC91B /* RemoteS3Signer.m */,
+				F8E1A33B1E3D474800A61EEA /* S3AuthorizationProviderFactory.h */,
+				F8E1A33C1E3D474800A61EEA /* S3AuthorizationProviderFactory.m */,
 				F8295176198683F9001DC91B /* S3AuthorizationProvider.h */,
-				F8295177198683F9001DC91B /* S3AuthorizationProvider.m */,
-				F8295178198683F9001DC91B /* S3DeleteReceiver.h */,
-				F8295179198683F9001DC91B /* S3DeleteReceiver.m */,
 				F829517A198683F9001DC91B /* S3ErrorResult.h */,
 				F829517B198683F9001DC91B /* S3ErrorResult.m */,
 				F829517C198683F9001DC91B /* S3Lister.h */,
 				F829517D198683F9001DC91B /* S3Lister.m */,
 				F829517E198683F9001DC91B /* S3MultiDeleteResponse.h */,
 				F829517F198683F9001DC91B /* S3MultiDeleteResponse.m */,
+				F8A18CCC1E3E195B00AF9F97 /* S3ObjectsLister.h */,
+				F8A18CCD1E3E195B00AF9F97 /* S3ObjectsLister.m */,
+				F8A18CCE1E3E195B00AF9F97 /* S3ObjectsListerWorker.h */,
+				F8A18CCF1E3E195B00AF9F97 /* S3ObjectsListerWorker.m */,
+				F8A18CA21E3E170F00AF9F97 /* S3SignatureV1AuthorizationProvider.h */,
+				F8A18CA31E3E170F00AF9F97 /* S3SignatureV1AuthorizationProvider.m */,
+				F8A18CA41E3E170F00AF9F97 /* S3SignatureV4AuthorizationProvider.h */,
+				F8A18CA51E3E170F00AF9F97 /* S3SignatureV4AuthorizationProvider.m */,
 				F8295180198683F9001DC91B /* S3ObjectMetadata.h */,
 				F8295181198683F9001DC91B /* S3ObjectMetadata.m */,
 				F8295182198683F9001DC91B /* S3ObjectReceiver.h */,
@@ -892,14 +942,16 @@
 			children = (
 				F8F2D90E1986B80800997A15 /* CryptoKey.h */,
 				F8F2D90F1986B80800997A15 /* CryptoKey.m */,
-				F8F2D9101986B80800997A15 /* OpenSSLCryptoKey.h */,
-				F8F2D9111986B80800997A15 /* OpenSSLCryptoKey.m */,
+				F8A18CA81E3E173200AF9F97 /* HMACSHA256.h */,
+				F8A18CA91E3E173200AF9F97 /* HMACSHA256.m */,
 				F829DC1A1986921E00D637E0 /* MD5Hash.h */,
 				F829DC1B1986921E00D637E0 /* MD5Hash.m */,
 				F829519E19868D90001DC91B /* NSData-Base64Extensions.h */,
 				F829519F19868D90001DC91B /* NSData-Base64Extensions.m */,
 				F829DC2F1986930300D637E0 /* OpenSSL.h */,
 				F829DC301986930300D637E0 /* OpenSSL.m */,
+				F8F2D9101986B80800997A15 /* OpenSSLCryptoKey.h */,
+				F8F2D9111986B80800997A15 /* OpenSSLCryptoKey.m */,
 				F8F2D9281986B9DF00997A15 /* SHA1Hash.h */,
 				F8F2D9291986B9DF00997A15 /* SHA1Hash.m */,
 				F8F2D8AB1986B6A300997A15 /* SHA256Hash.h */,
@@ -983,23 +1035,6 @@
 			path = io;
 			sourceTree = "<group>";
 		};
-		F829521519868E0D001DC91B /* googledrive */ = {
-			isa = PBXGroup;
-			children = (
-				F829521619868E26001DC91B /* GoogleDrive.h */,
-				F829521719868E26001DC91B /* GoogleDrive.m */,
-				F829521819868E26001DC91B /* GoogleDriveErrorResult.h */,
-				F829521919868E26001DC91B /* GoogleDriveErrorResult.m */,
-				F829521A19868E26001DC91B /* GoogleDriveFactory.h */,
-				F829521B19868E26001DC91B /* GoogleDriveFactory.m */,
-				F829521C19868E26001DC91B /* GoogleDriveRequest.h */,
-				F829521D19868E26001DC91B /* GoogleDriveRequest.m */,
-				F829521E19868E26001DC91B /* GoogleDriveFolderLister.h */,
-				F829521F19868E26001DC91B /* GoogleDriveFolderLister.m */,
-			);
-			path = googledrive;
-			sourceTree = "<group>";
-		};
 		F829522519868E4F001DC91B /* json */ = {
 			isa = PBXGroup;
 			children = (
@@ -1071,16 +1106,101 @@
 			path = glacier;
 			sourceTree = "<group>";
 		};
+		F83D0A7B1E3F5D65009FBE98 /* keychain */ = {
+			isa = PBXGroup;
+			children = (
+				F83D0A7C1E3F5D75009FBE98 /* BaseKeychain.h */,
+				F83D0A7D1E3F5D75009FBE98 /* BaseKeychain.m */,
+				F83D0A7E1E3F5D75009FBE98 /* Keychain.h */,
+				F83D0A7F1E3F5D75009FBE98 /* KeychainFactory.h */,
+				F83D0A801E3F5D75009FBE98 /* KeychainFactory.m */,
+				F83D0A811E3F5D75009FBE98 /* KeychainItem.h */,
+				F83D0A821E3F5D75009FBE98 /* KeychainItem.m */,
+			);
+			name = keychain;
+			sourceTree = "<group>";
+		};
+		F874D8CF1DF7617800B7EC02 /* CocoaLumberjack */ = {
+			isa = PBXGroup;
+			children = (
+				F874D8D01DF7618500B7EC02 /* CocoaLumberjack.h */,
+				F874D8D11DF7618500B7EC02 /* DDAbstractDatabaseLogger.h */,
+				F874D8D21DF7618500B7EC02 /* DDAbstractDatabaseLogger.m */,
+				F874D8D31DF7618500B7EC02 /* DDASLLogCapture.h */,
+				F874D8D41DF7618500B7EC02 /* DDASLLogCapture.m */,
+				F874D8D51DF7618500B7EC02 /* DDASLLogger.h */,
+				F874D8D61DF7618500B7EC02 /* DDASLLogger.m */,
+				F874D8D71DF7618500B7EC02 /* DDAssertMacros.h */,
+				F874D8D81DF7618500B7EC02 /* DDContextFilterLogFormatter.h */,
+				F874D8D91DF7618500B7EC02 /* DDContextFilterLogFormatter.m */,
+				F874D8DA1DF7618500B7EC02 /* DDDispatchQueueLogFormatter.h */,
+				F874D8DB1DF7618500B7EC02 /* DDDispatchQueueLogFormatter.m */,
+				F874D8DC1DF7618500B7EC02 /* DDFileLogger.h */,
+				F874D8DD1DF7618500B7EC02 /* DDFileLogger.m */,
+				F874D8DE1DF7618500B7EC02 /* DDLegacyMacros.h */,
+				F874D8DF1DF7618500B7EC02 /* DDLog.h */,
+				F874D8E01DF7618500B7EC02 /* DDLog.m */,
+				F874D8E11DF7618500B7EC02 /* DDLog+LOGV.h */,
+				F874D8E21DF7618500B7EC02 /* DDLogMacros.h */,
+				F874D8E31DF7618500B7EC02 /* DDMultiFormatter.h */,
+				F874D8E41DF7618500B7EC02 /* DDMultiFormatter.m */,
+				F874D8E51DF7618500B7EC02 /* DDTTYLogger.h */,
+				F874D8E61DF7618500B7EC02 /* DDTTYLogger.m */,
+			);
+			name = CocoaLumberjack;
+			sourceTree = "<group>";
+		};
+		F8A18C9B1E3E167B00AF9F97 /* sqlite3 */ = {
+			isa = PBXGroup;
+			children = (
+				F8A18C9C1E3E16A400AF9F97 /* sqlite3.c */,
+				F8A18C9D1E3E16A400AF9F97 /* sqlite3.h */,
+			);
+			name = sqlite3;
+			sourceTree = "<group>";
+		};
+		F8A18C9F1E3E16C300AF9F97 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				F8A18CA01E3E16C400AF9F97 /* libz.tbd */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		F8E1A2FE1E3D3E4A00A61EEA /* fmdb */ = {
+			isa = PBXGroup;
+			children = (
+				F8E1A2FF1E3D3E6900A61EEA /* FMDatabase.h */,
+				F8E1A3001E3D3E6900A61EEA /* FMDatabase.m */,
+				F8E1A3011E3D3E6900A61EEA /* FMDatabaseAdditions.h */,
+				F8E1A3021E3D3E6900A61EEA /* FMDatabaseAdditions.m */,
+				F8E1A3031E3D3E6900A61EEA /* FMDatabasePool.h */,
+				F8E1A3041E3D3E6900A61EEA /* FMDatabasePool.m */,
+				F8E1A3051E3D3E6900A61EEA /* FMDatabaseQueue.h */,
+				F8E1A3061E3D3E6900A61EEA /* FMDatabaseQueue.m */,
+				F8E1A3071E3D3E6900A61EEA /* FMDB.h */,
+				F8E1A3081E3D3E6900A61EEA /* FMResultSet.h */,
+				F8E1A3091E3D3E6900A61EEA /* FMResultSet.m */,
+			);
+			name = fmdb;
+			sourceTree = "<group>";
+		};
 		F8F2D8721986B60200997A15 /* remotefs */ = {
 			isa = PBXGroup;
 			children = (
+				F8CD47991DF6FD270061C3D6 /* ItemFS.h */,
+				F8A18CBA1E3E18B400AF9F97 /* ItemFSFileDeleter.h */,
+				F8A18CBB1E3E18B400AF9F97 /* ItemFSFileDeleter.m */,
+				F8A18CBC1E3E18B400AF9F97 /* ItemFSFileDeleterWorker.h */,
+				F8A18CBD1E3E18B400AF9F97 /* ItemFSFileDeleterWorker.m */,
+				F8CD479A1DF6FD270061C3D6 /* LocalItemFS.h */,
+				F8CD479B1DF6FD270061C3D6 /* LocalItemFS.m */,
 				F8F2D8731986B61800997A15 /* RemoteFS.h */,
-				F8F2D8741986B61800997A15 /* S3RemoteFS.h */,
-				F8F2D8751986B61800997A15 /* S3RemoteFS.m */,
-				F8F2D8761986B61800997A15 /* SFTPRemoteFS.h */,
-				F8F2D8771986B61800997A15 /* SFTPRemoteFS.m */,
-				F8F2D8781986B61800997A15 /* GoogleDriveRemoteFS.h */,
-				F8F2D8791986B61800997A15 /* GoogleDriveRemoteFS.m */,
+				F8CD479C1DF6FD270061C3D6 /* RemoteFS.m */,
+				F8A18CBE1E3E18B400AF9F97 /* RemoteFSFileDeleter.h */,
+				F8A18CBF1E3E18B400AF9F97 /* RemoteFSFileDeleter.m */,
+				F8A18CC01E3E18B400AF9F97 /* RemoteFSFileDeleterWorker.h */,
+				F8A18CC11E3E18B400AF9F97 /* RemoteFSFileDeleterWorker.m */,
 			);
 			path = remotefs;
 			sourceTree = "<group>";
@@ -1150,15 +1270,6 @@
 			path = plist;
 			sourceTree = "<group>";
 		};
-		F8F2D9141986B91200997A15 /* sftp */ = {
-			isa = PBXGroup;
-			children = (
-				F8F2D9151986B92100997A15 /* SFTPServer.h */,
-				F8F2D9161986B92100997A15 /* SFTPServer.m */,
-			);
-			path = sftp;
-			sourceTree = "<group>";
-		};
 		F8F2D9261986B9AB00997A15 /* storage */ = {
 			isa = PBXGroup;
 			children = (
@@ -1176,23 +1287,53 @@
 				F8F2D92D1986BA1400997A15 /* Commit.m */,
 				F8F2D92F1986BA2200997A15 /* CommitFailedFile.h */,
 				F8F2D9301986BA2200997A15 /* CommitFailedFile.m */,
+				F874D8F61DF7676E00B7EC02 /* CommitList.h */,
+				F874D8F71DF7676E00B7EC02 /* CommitList.m */,
+				F874D8F81DF7676E00B7EC02 /* EncryptionDatFile.h */,
+				F874D8F91DF7676E00B7EC02 /* EncryptionDatFile.m */,
 				F8F2D9501986BE2A00997A15 /* Fark.h */,
-				F8F2D9511986BE2A00997A15 /* FarkImpl.h */,
-				F8F2D9521986BE2A00997A15 /* FarkImpl.m */,
+				F874D8FA1DF7676E00B7EC02 /* Fark.m */,
 				F8F2D97D1986D3A100997A15 /* FileAttributes.h */,
 				F8F2D97E1986D3A100997A15 /* FileAttributes.m */,
+				F874D8FB1DF7676E00B7EC02 /* KeyValuePair.h */,
+				F874D8FC1DF7676E00B7EC02 /* KeyValuePair.m */,
+				F874D8FD1DF7676E00B7EC02 /* NSData-Compress.h */,
+				F874D8FE1DF7676E00B7EC02 /* NSData-Compress.m */,
 				F8F2D95D1986BE6100997A15 /* Node.h */,
 				F8F2D95E1986BE6100997A15 /* Node.m */,
+				F874D8FF1DF7676E00B7EC02 /* ObjectEncryptor.h */,
+				F874D9001DF7676E00B7EC02 /* ObjectEncryptor.m */,
+				F874D9011DF7676E00B7EC02 /* ObjectEncryptorImpl.h */,
+				F874D9021DF7676E00B7EC02 /* ObjectEncryptorV1.h */,
+				F874D9031DF7676E00B7EC02 /* ObjectEncryptorV1.m */,
+				F874D9041DF7676E00B7EC02 /* ObjectEncryptorV2.h */,
+				F874D9051DF7676E00B7EC02 /* ObjectEncryptorV2.m */,
+				F8E1A31E1E3D3FDF00A61EEA /* PackBuilder.h */,
+				F8E1A31F1E3D3FDF00A61EEA /* PackBuilder.m */,
+				F8E1A3201E3D3FDF00A61EEA /* PackBuilderEntry.h */,
+				F8E1A3211E3D3FDF00A61EEA /* PackBuilderEntry.m */,
 				F8F2D9541986BE3C00997A15 /* PackId.h */,
 				F8F2D9551986BE3C00997A15 /* PackId.m */,
 				F8F2D9571986BE4E00997A15 /* PackIndex.h */,
 				F8F2D9581986BE4E00997A15 /* PackIndex.m */,
 				F8F2D9591986BE4E00997A15 /* PackIndexEntry.h */,
 				F8F2D95A1986BE4E00997A15 /* PackIndexEntry.m */,
+				F8E1A3221E3D3FDF00A61EEA /* PackIndexGenerator.h */,
+				F8E1A3231E3D3FDF00A61EEA /* PackIndexGenerator.m */,
 				F8F2D96C1986BF6800997A15 /* PackSet.h */,
 				F8F2D96D1986BF6800997A15 /* PackSet.m */,
+				F874D9061DF7676E00B7EC02 /* PackSetDB.h */,
+				F874D9071DF7676E00B7EC02 /* PackSetDB.m */,
+				F874D9081DF7676E00B7EC02 /* PIELoader.h */,
+				F874D9091DF7676E00B7EC02 /* PIELoader.m */,
+				F874D90A1DF7676E00B7EC02 /* PIELoaderWorker.h */,
+				F874D90B1DF7676E00B7EC02 /* PIELoaderWorker.m */,
 				F8F2D9471986BAD200997A15 /* Repo.h */,
 				F8F2D9481986BAD200997A15 /* Repo.m */,
+				F874D90C1DF7676E00B7EC02 /* S3PIEInputStream.h */,
+				F874D90D1DF7676E00B7EC02 /* S3PIEInputStream.m */,
+				F874D90E1DF7676E00B7EC02 /* SynchronousPackSet.h */,
+				F874D90F1DF7676E00B7EC02 /* SynchronousPackSet.m */,
 				F8F2D95F1986BE6100997A15 /* Tree.h */,
 				F8F2D9601986BE6100997A15 /* Tree.m */,
 				F8F2D9831986D3C400997A15 /* XAttrSet.h */,
@@ -1201,15 +1342,24 @@
 			path = repo;
 			sourceTree = "<group>";
 		};
-		F8F2D9711986D00C00997A15 /* s3restore */ = {
+		F8F2D9711986D00C00997A15 /* standardrestore */ = {
 			isa = PBXGroup;
 			children = (
-				F8F2D9751986D32B00997A15 /* S3Restorer.h */,
-				F8F2D9761986D32B00997A15 /* S3Restorer.m */,
-				F8F2D9791986D36D00997A15 /* S3RestorerDelegate.h */,
-				F8F2D9721986D02D00997A15 /* S3RestorerParamSet.h */,
-				F8F2D9731986D02D00997A15 /* S3RestorerParamSet.m */,
+				F8A18C971E3E14DD00AF9F97 /* StandardRestoreItem.h */,
+				F8A18C981E3E14DD00AF9F97 /* StandardRestoreItem.m */,
+				F8A18C941E3E14CA00AF9F97 /* StandardRestoreWorker.h */,
+				F8A18C951E3E14CA00AF9F97 /* StandardRestoreWorker.m */,
+				F8A18C8A1E3E14A900AF9F97 /* StandardRestorerDelegate.h */,
+				F8A18C8B1E3E14A900AF9F97 /* StandardRestorerDelegateMux.h */,
+				F8A18C8C1E3E14A900AF9F97 /* StandardRestorerDelegateMux.m */,
+				F8A18C8D1E3E14A900AF9F97 /* StandardRestorerError.h */,
+				F8A18C8E1E3E14A900AF9F97 /* StandardRestorerError.m */,
+				F8A18C8F1E3E14A900AF9F97 /* StandardRestorerParamSet.h */,
+				F8A18C901E3E14A900AF9F97 /* StandardRestorerParamSet.m */,
+				F8A18C871E3E146000AF9F97 /* StandardRestorer.h */,
+				F8A18C881E3E146000AF9F97 /* StandardRestorer.m */,
 			);
+			name = standardrestore;
 			path = s3restore;
 			sourceTree = "<group>";
 		};
@@ -1284,7 +1434,7 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0510;
+				LastUpgradeCheck = 0910;
 			};
 			buildConfigurationList = 1DEB927808733DD40010E9CD /* Build configuration list for PBXProject "arq_restore" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -1310,97 +1460,102 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F8F2D8711986B5D900997A15 /* GoogleDriveTargetConnection.m in Sources */,
+				F8E1A3141E3D3EEE00A61EEA /* Item.m in Sources */,
+				F874D9161DF7676E00B7EC02 /* NSData-Compress.m in Sources */,
 				F8F2D9681986BEA300997A15 /* BlobKeyIO.m in Sources */,
-				F8F2D8821986B63400997A15 /* BaseTargetConnection.m in Sources */,
 				F8F2D9931986D4C700997A15 /* RestoreItem.m in Sources */,
 				F8F2D93D1986BA7900997A15 /* UserLibrary.m in Sources */,
+				F874D8EB1DF7618500B7EC02 /* DDDispatchQueueLogFormatter.m in Sources */,
 				F8F2D99F1986DE1800997A15 /* GlacierRequestItem.m in Sources */,
-				F8F2D86E1986B5CC00997A15 /* SFTPTargetConnection.m in Sources */,
-				F829522019868E26001DC91B /* GoogleDrive.m in Sources */,
 				F8F2D9001986B78600997A15 /* BooleanNode.m in Sources */,
-				F8295157198683D5001DC91B /* agent.c in Sources */,
 				F829DBFC19868FCA00D637E0 /* RFC822.m in Sources */,
+				F874D9191DF7676E00B7EC02 /* ObjectEncryptorV2.m in Sources */,
 				F8F2D9131986B80800997A15 /* OpenSSLCryptoKey.m in Sources */,
-				F8F2D94F1986BD1600997A15 /* TargetSchedule.m in Sources */,
 				F8F2D9011986B78600997A15 /* DictNode.m in Sources */,
 				F8F2D9121986B80800997A15 /* CryptoKey.m in Sources */,
 				F8F2D8B91986B6E000997A15 /* ListTopicsResponse.m in Sources */,
+				F8A18CC31E3E18B400AF9F97 /* ItemFSFileDeleterWorker.m in Sources */,
 				F829DC251986924100D637E0 /* FDOutputStream.m in Sources */,
 				F8F2D92E1986BA1400997A15 /* Commit.m in Sources */,
+				F8A18C991E3E14DD00AF9F97 /* StandardRestoreItem.m in Sources */,
+				F8A18CC21E3E18B400AF9F97 /* ItemFSFileDeleter.m in Sources */,
 				F82951EF19868D90001DC91B /* HTTPThrottle.m in Sources */,
-				F829516A198683D5001DC91B /* transport.c in Sources */,
-				F8295169198683D5001DC91B /* sftp.c in Sources */,
 				F829519A198683F9001DC91B /* S3Request.m in Sources */,
 				F8F2D8961986B66000997A15 /* GlacierService.m in Sources */,
 				F8F2D8E31986B75C00997A15 /* Computer.m in Sources */,
 				F829DC311986930300D637E0 /* OpenSSL.m in Sources */,
 				F829524D19868F1E001DC91B /* ChunkedInputStream.m in Sources */,
 				F829512919868394001DC91B /* NSError_extra.m in Sources */,
+				F874D9141DF7676E00B7EC02 /* Fark.m in Sources */,
 				F82951F519868D90001DC91B /* URLConnection.m in Sources */,
 				F8F2D8D81986B70300997A15 /* AWSQueryRequest.m in Sources */,
 				F8F2D96E1986BF6800997A15 /* PackSet.m in Sources */,
 				F8F2D96B1986BF5100997A15 /* GunzipInputStream.m in Sources */,
+				F8E1A33D1E3D474800A61EEA /* S3AuthorizationProviderFactory.m in Sources */,
 				F829523119868E59001DC91B /* NSString+SBJSON.m in Sources */,
 				F82951F119868D90001DC91B /* NSDictionary_HTTP.m in Sources */,
 				F8295194198683F9001DC91B /* S3ErrorResult.m in Sources */,
 				F829525019868F31001DC91B /* InputStreams.m in Sources */,
 				F8F2D9561986BE3C00997A15 /* PackId.m in Sources */,
-				F8295160198683D5001DC91B /* libgcrypt.c in Sources */,
-				F8295162198683D5001DC91B /* misc.c in Sources */,
-				F829515A198683D5001DC91B /* crypt.c in Sources */,
-				F829515B198683D5001DC91B /* global.c in Sources */,
+				F874D9181DF7676E00B7EC02 /* ObjectEncryptorV1.m in Sources */,
 				F829523019868E59001DC91B /* NSObject+SBJSON.m in Sources */,
-				F8295192198683F9001DC91B /* S3AuthorizationProvider.m in Sources */,
 				F8F2D8DD1986B72900997A15 /* GlacierAuthorization.m in Sources */,
 				F829DC13198691CB00D637E0 /* DoubleIO.m in Sources */,
+				F874D8EC1DF7618500B7EC02 /* DDFileLogger.m in Sources */,
+				F874D9221DF767BA00B7EC02 /* CacheOwnership.m in Sources */,
 				F8F2D9451986BA9B00997A15 /* BucketExclude.m in Sources */,
+				F874D8EA1DF7618500B7EC02 /* DDContextFilterLogFormatter.m in Sources */,
 				F829DC10198691CB00D637E0 /* BooleanIO.m in Sources */,
 				F8F2D9491986BAD200997A15 /* Repo.m in Sources */,
-				F829522119868E26001DC91B /* GoogleDriveErrorResult.m in Sources */,
 				F8F2D99C1986DDAD00997A15 /* S3GlacierRestorer.m in Sources */,
 				F8F2D9B11986DF6B00997A15 /* GlacierRestorerParamSet.m in Sources */,
-				F8295167198683D5001DC91B /* scp.c in Sources */,
-				F8F2D9531986BE2A00997A15 /* FarkImpl.m in Sources */,
+				F8A18CA61E3E170F00AF9F97 /* S3SignatureV1AuthorizationProvider.m in Sources */,
+				F874D91C1DF7676E00B7EC02 /* PIELoaderWorker.m in Sources */,
+				F8A18C921E3E14A900AF9F97 /* StandardRestorerError.m in Sources */,
+				F8E1A32C1E3D419E00A61EEA /* FlockFile.m in Sources */,
+				F83D0A8B1E3F87A8009FBE98 /* ExePath.m in Sources */,
 				F829DC241986924100D637E0 /* FDInputStream.m in Sources */,
 				F829DC2D1986927000D637E0 /* FileInputStream.m in Sources */,
+				F8E1A3181E3D3F1A00A61EEA /* TargetItemsDB.m in Sources */,
 				F8F2D8CC1986B6E900997A15 /* SQS.m in Sources */,
 				F8F2D8BA1986B6E000997A15 /* SNS.m in Sources */,
+				F8A18CAA1E3E173200AF9F97 /* HMACSHA256.m in Sources */,
 				F8F2D9371986BA4900997A15 /* NSFileManager_extra.m in Sources */,
+				F874D8ED1DF7618500B7EC02 /* DDLog.m in Sources */,
 				F829512419868345001DC91B /* HSLog.m in Sources */,
-				F829516C198683D5001DC91B /* version.c in Sources */,
+				F8A18C891E3E146000AF9F97 /* StandardRestorer.m in Sources */,
+				F8E1A30A1E3D3E6900A61EEA /* FMDatabase.m in Sources */,
+				F8E1A30D1E3D3E6900A61EEA /* FMDatabaseQueue.m in Sources */,
 				F829518F198683F9001DC91B /* LocalS3Signer.m in Sources */,
 				F8F2D8951986B66000997A15 /* GlacierResponse.m in Sources */,
 				F829524A19868F0F001DC91B /* DataInputStream.m in Sources */,
 				F8F2D8A31986B67500997A15 /* NSError_Glacier.m in Sources */,
-				F829522219868E26001DC91B /* GoogleDriveFactory.m in Sources */,
 				F829524319868ED6001DC91B /* NSData-InputStream.m in Sources */,
 				F8F2D8E01986B74400997A15 /* UserAndComputer.m in Sources */,
 				F829DC12198691CB00D637E0 /* DateIO.m in Sources */,
-				F8F2D9771986D32B00997A15 /* S3Restorer.m in Sources */,
 				F8F2D8931986B66000997A15 /* GlacierJobLister.m in Sources */,
 				F8F2D9031986B78600997A15 /* RealNode.m in Sources */,
 				F8F2D9A71986DE3B00997A15 /* GlacierPackIndex.m in Sources */,
-				F8F2D87C1986B61800997A15 /* GoogleDriveRemoteFS.m in Sources */,
 				F8F2D9981986DCCC00997A15 /* S3GlacierRestorerParamSet.m in Sources */,
 				F829521319868DE6001DC91B /* RegexKitLite.m in Sources */,
 				F8F2D8FD1986B78600997A15 /* ArrayNode.m in Sources */,
-				F8F2D9741986D02D00997A15 /* S3RestorerParamSet.m in Sources */,
+				F874D8E71DF7618500B7EC02 /* DDAbstractDatabaseLogger.m in Sources */,
 				F82951ED19868D90001DC91B /* HTTPConnectionFactory.m in Sources */,
 				F8F2D9251986B98600997A15 /* BlobKey.m in Sources */,
 				F829523319868E59001DC91B /* SBJsonParser.m in Sources */,
 				F8F2D8A51986B67500997A15 /* Vault.m in Sources */,
+				F874D91E1DF7676E00B7EC02 /* SynchronousPackSet.m in Sources */,
 				F8F2D9A61986DE3B00997A15 /* GlacierPack.m in Sources */,
 				F8F2D97F1986D3A100997A15 /* FileAttributes.m in Sources */,
+				F8A18C911E3E14A900AF9F97 /* StandardRestorerDelegateMux.m in Sources */,
 				F829DC15198691CB00D637E0 /* NSErrorIO.m in Sources */,
 				F82951EE19868D90001DC91B /* HTTPInputStream.m in Sources */,
 				F829523419868E59001DC91B /* SBJsonWriter.m in Sources */,
+				F874D9171DF7676E00B7EC02 /* ObjectEncryptor.m in Sources */,
 				F8F2D8CA1986B6E900997A15 /* ListQueuesResponse.m in Sources */,
-				F8295161198683D5001DC91B /* mac.c in Sources */,
-				F8295159198683D5001DC91B /* comp.c in Sources */,
-				F8295163198683D5001DC91B /* openssl.c in Sources */,
+				F874D8EF1DF7618500B7EC02 /* DDTTYLogger.m in Sources */,
 				F8F2D9621986BE6100997A15 /* Tree.m in Sources */,
-				F829515F198683D5001DC91B /* knownhost.c in Sources */,
+				F8E1A3861E3D4B6100A61EEA /* Volume.m in Sources */,
 				F8F2D8C91986B6E900997A15 /* GetQueueAttributesResponse.m in Sources */,
 				F829525319868F3C001DC91B /* BufferedInputStream.m in Sources */,
 				F829DC35198697EB00D637E0 /* Target.m in Sources */,
@@ -1408,57 +1563,74 @@
 				F8F2D8FE1986B78600997A15 /* BinaryPListReader.m in Sources */,
 				F8F2D8C81986B6E900997A15 /* CreateQueueResponse.m in Sources */,
 				F8F2D9061986B78600997A15 /* XMLPListReader.m in Sources */,
-				F8295164198683D5001DC91B /* packet.c in Sources */,
-				F829516B198683D5001DC91B /* userauth.c in Sources */,
+				F8E1A32F1E3D427A00A61EEA /* NSData-LZ4.m in Sources */,
 				F8F2D9921986D4C700997A15 /* CalculateItem.m in Sources */,
-				F829515E198683D5001DC91B /* kex.c in Sources */,
+				F8E1A31D1E3D3F8000A61EEA /* TargetConnection.m in Sources */,
+				F8E1A30C1E3D3E6900A61EEA /* FMDatabasePool.m in Sources */,
 				F8F2D8A61986B67500997A15 /* VaultDeleter.m in Sources */,
 				F8F2D8BB1986B6E000997A15 /* SubscribeResponse.m in Sources */,
-				F829518E198683F9001DC91B /* LifecycleConfiguration.m in Sources */,
-				F8F2D9171986B92100997A15 /* SFTPServer.m in Sources */,
+				F8E1A3291E3D400800A61EEA /* ReflogEntry.m in Sources */,
+				F8A18C931E3E14A900AF9F97 /* StandardRestorerParamSet.m in Sources */,
 				F8F2D8D71986B70300997A15 /* AWSQueryError.m in Sources */,
 				F8295197198683F9001DC91B /* S3ObjectMetadata.m in Sources */,
 				F8F2D95C1986BE4E00997A15 /* PackIndexEntry.m in Sources */,
+				F874D9131DF7676E00B7EC02 /* EncryptionDatFile.m in Sources */,
 				F8F2D8971986B66000997A15 /* LocalGlacierSigner.m in Sources */,
+				F874D91D1DF7676E00B7EC02 /* S3PIEInputStream.m in Sources */,
 				F829523219868E59001DC91B /* SBJsonBase.m in Sources */,
 				F82951F219868D90001DC91B /* RFC2616DateFormatter.m in Sources */,
-				F8295165198683D5001DC91B /* pem.c in Sources */,
+				F8A18CC51E3E18B400AF9F97 /* RemoteFSFileDeleterWorker.m in Sources */,
 				F829DC16198691CB00D637E0 /* StringIO.m in Sources */,
+				F83D0A851E3F5D75009FBE98 /* KeychainItem.m in Sources */,
+				F874D8E81DF7618500B7EC02 /* DDASLLogCapture.m in Sources */,
+				F874D9121DF7676E00B7EC02 /* CommitList.m in Sources */,
+				F8A18CAD1E3E17A200AF9F97 /* HSLogFileManager.m in Sources */,
 				F8F2D8D91986B70300997A15 /* AWSQueryResponse.m in Sources */,
+				F8E1A30E1E3D3E6900A61EEA /* FMResultSet.m in Sources */,
 				F8F2D92A1986B9DF00997A15 /* SHA1Hash.m in Sources */,
+				F874D9151DF7676E00B7EC02 /* KeyValuePair.m in Sources */,
 				F829524019868EC7001DC91B /* NSString_extra.m in Sources */,
+				F8A18CD11E3E195B00AF9F97 /* S3ObjectsListerWorker.m in Sources */,
+				F874D91B1DF7676E00B7EC02 /* PIELoader.m in Sources */,
+				F8A18CCB1E3E194C00AF9F97 /* lz4.c in Sources */,
 				F829523819868E83001DC91B /* AWSRegion.m in Sources */,
 				F8F2D8CD1986B6E900997A15 /* SQSMessage.m in Sources */,
 				F829524719868F02001DC91B /* ISO8601Date.m in Sources */,
-				F829515D198683D5001DC91B /* keepalive.c in Sources */,
+				F8E1A3251E3D3FDF00A61EEA /* PackBuilderEntry.m in Sources */,
+				F83D0A841E3F5D75009FBE98 /* KeychainFactory.m in Sources */,
 				F8F2D8CB1986B6E900997A15 /* ReceiveMessageResponse.m in Sources */,
-				F8295158198683D5001DC91B /* channel.c in Sources */,
+				F8E1A3261E3D3FDF00A61EEA /* PackIndexGenerator.m in Sources */,
 				F8F2D90D1986B7AF00997A15 /* NSObject_extra.m in Sources */,
-				F829522419868E26001DC91B /* GoogleDriveFolderLister.m in Sources */,
 				F829DC11198691CB00D637E0 /* DataIO.m in Sources */,
-				F8295166198683D5001DC91B /* publickey.c in Sources */,
+				F8A18CC81E3E193A00AF9F97 /* LZ4Compressor.m in Sources */,
 				F8F2D8D01986B6FD00997A15 /* SignatureV2Provider.m in Sources */,
 				F829519B198683F9001DC91B /* S3Service.m in Sources */,
 				F8F2D8A71986B67500997A15 /* VaultLister.m in Sources */,
-				F829515C198683D5001DC91B /* hostkey.c in Sources */,
 				F8F2D9041986B78600997A15 /* StringNode.m in Sources */,
+				F8CD47A01DF6FD270061C3D6 /* RemoteFS.m in Sources */,
+				F874D91A1DF7676E00B7EC02 /* PackSetDB.m in Sources */,
 				F8295199198683F9001DC91B /* S3Owner.m in Sources */,
 				F8F2D94C1986BB4900997A15 /* NSString_slashed.m in Sources */,
 				F8F2D9461986BA9B00997A15 /* BucketExcludeSet.m in Sources */,
+				F874D8F21DF766A000B7EC02 /* System.m in Sources */,
+				F8E1A3831E3D4B5600A61EEA /* FSStat.m in Sources */,
 				F8F2D8B81986B6E000997A15 /* CreateTopicResponse.m in Sources */,
 				F829DC1F1986923100D637E0 /* Sysctl.m in Sources */,
 				F8295198198683F9001DC91B /* S3ObjectReceiver.m in Sources */,
 				F8F2D9651986BE7600997A15 /* NSData-GZip.m in Sources */,
+				F8E1A3241E3D3FDF00A61EEA /* PackBuilder.m in Sources */,
 				F8F2D8941986B66000997A15 /* GlacierRequest.m in Sources */,
 				F829DBFF1986901300D637E0 /* Streams.m in Sources */,
 				F8F2D8A41986B67500997A15 /* SHA256TreeHash.m in Sources */,
+				F874D8E91DF7618500B7EC02 /* DDASLLogger.m in Sources */,
 				F8F2D9A81986DE3B00997A15 /* GlacierPackSet.m in Sources */,
+				F874D8EE1DF7618500B7EC02 /* DDMultiFormatter.m in Sources */,
 				F8F2D9071986B78600997A15 /* XMLPListWriter.m in Sources */,
 				F829DC1C1986921E00D637E0 /* MD5Hash.m in Sources */,
 				F8F2D8681986B58000997A15 /* BackupSet.m in Sources */,
-				F8F2D87B1986B61800997A15 /* SFTPRemoteFS.m in Sources */,
 				F829523C19868EA4001DC91B /* NetMonitor.m in Sources */,
-				F8295191198683F9001DC91B /* RemoteS3Signer.m in Sources */,
+				F83D0A831E3F5D75009FBE98 /* BaseKeychain.m in Sources */,
+				F8CD479F1DF6FD270061C3D6 /* LocalItemFS.m in Sources */,
 				F8F2D9851986D3C400997A15 /* XAttrSet.m in Sources */,
 				F8F2D9051986B78600997A15 /* XMLPlistParser.m in Sources */,
 				F8F2D9441986BA9B00997A15 /* Bucket.m in Sources */,
@@ -1466,29 +1638,34 @@
 				F8F2D9611986BE6100997A15 /* Node.m in Sources */,
 				F829DC19198691D900D637E0 /* BufferedOutputStream.m in Sources */,
 				F82951EC19868D90001DC91B /* NSData-Base64Extensions.m in Sources */,
-				F8295193198683F9001DC91B /* S3DeleteReceiver.m in Sources */,
 				F8F2D9311986BA2200997A15 /* CommitFailedFile.m in Sources */,
 				F8F2D97C1986D38900997A15 /* OSStatusDescription.m in Sources */,
+				F8A18CC41E3E18B400AF9F97 /* RemoteFSFileDeleter.m in Sources */,
 				F8F2D8851986B64D00997A15 /* GlacierAuthorizationProvider.m in Sources */,
+				F8A18CA71E3E170F00AF9F97 /* S3SignatureV4AuthorizationProvider.m in Sources */,
 				F83C1AE311CA7C7C0001958F /* arq_restore.m in Sources */,
+				F8A18CD01E3E195B00AF9F97 /* S3ObjectsLister.m in Sources */,
 				F8295190198683F9001DC91B /* PathReceiver.m in Sources */,
 				F829DC281986924E00D637E0 /* DataOutputStream.m in Sources */,
 				F8295196198683F9001DC91B /* S3MultiDeleteResponse.m in Sources */,
 				F8F2D9821986D3B100997A15 /* FileACL.m in Sources */,
 				F8F2D9021986B78600997A15 /* IntegerNode.m in Sources */,
+				F8E1A3151E3D3EEE00A61EEA /* ItemsDB.m in Sources */,
+				F8E1A3631E3D47F300A61EEA /* NSData-Random.m in Sources */,
 				F8F2D8921986B66000997A15 /* GlacierJob.m in Sources */,
 				F8F2D8AD1986B6A300997A15 /* SHA256Hash.m in Sources */,
-				F8295168198683D5001DC91B /* session.c in Sources */,
-				F8F2D86D1986B5CC00997A15 /* S3TargetConnection.m in Sources */,
+				F8E1A30B1E3D3E6900A61EEA /* FMDatabaseAdditions.m in Sources */,
 				F8F2D9AB1986DE4400997A15 /* GlacierRestorer.m in Sources */,
 				F83F9B2D1983303F007CBFB4 /* ArqRestoreCommand.m in Sources */,
 				F8F2D9341986BA2B00997A15 /* ArqSalt.m in Sources */,
 				F829DC14198691CB00D637E0 /* IntegerIO.m in Sources */,
 				F8F2D9AE1986DE8300997A15 /* BinarySHA1.m in Sources */,
+				F8A18C9E1E3E16A400AF9F97 /* sqlite3.c in Sources */,
 				F8F2D8FF1986B78600997A15 /* BinaryPListWriter.m in Sources */,
+				F83D0A881E3F786B009FBE98 /* TargetFactory.m in Sources */,
 				F8F2D95B1986BE4E00997A15 /* PackIndex.m in Sources */,
-				F829522319868E26001DC91B /* GoogleDriveRequest.m in Sources */,
-				F8F2D87A1986B61800997A15 /* S3RemoteFS.m in Sources */,
+				F874D8F51DF766C600B7EC02 /* ByteSize.m in Sources */,
+				F8A18C961E3E14CA00AF9F97 /* StandardRestoreWorker.m in Sources */,
 				F8F2D8AA1986B68800997A15 /* NSXMLNode_extra.m in Sources */,
 				F8F2D93A1986BA6900997A15 /* UserLibrary_Arq.m in Sources */,
 			);
@@ -1514,6 +1691,7 @@
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/libssh2/include",
 					/usr/local/ssl/include,
+					"$(PROJECT_DIR)",
 				);
 				INSTALL_PATH = /usr/local/bin;
 				LIBRARY_SEARCH_PATHS = (
@@ -1522,6 +1700,7 @@
 				);
 				PRODUCT_NAME = arq_restore;
 				SDKROOT = macosx;
+				WARNING_CFLAGS = "-Wno-objc-designated-initializers";
 			};
 			name = Debug;
 		};
@@ -1540,6 +1719,7 @@
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/libssh2/include",
 					/usr/local/ssl/include,
+					"$(PROJECT_DIR)",
 				);
 				INSTALL_PATH = /usr/local/bin;
 				LIBRARY_SEARCH_PATHS = (
@@ -1548,16 +1728,41 @@
 				);
 				PRODUCT_NAME = arq_restore;
 				SDKROOT = macosx;
+				WARNING_CFLAGS = "-Wno-objc-designated-initializers";
 			};
 			name = Release;
 		};
 		1DEB927908733DD40010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)";
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 			};
@@ -1566,9 +1771,32 @@
 		1DEB927A08733DD40010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)";
 				SDKROOT = macosx;
 			};
 			name = Release;

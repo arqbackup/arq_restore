@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,6 +31,7 @@
  */
 
 
+
 @class BufferedInputStream;
 @class BufferedOutputStream;
 @class AWSRegion;
@@ -42,10 +43,10 @@
     Bucket *bucket;
     NSString *encryptionPassword;
     double downloadBytesPerSecond;
+    int glacierRetrievalTier;
     BlobKey *commitBlobKey;
     NSString *rootItemName;
     int treeVersion;
-    BOOL treeIsCompressed;
     BlobKey *treeBlobKey;
     NSString *nodeName;
     uid_t targetUID;
@@ -54,14 +55,15 @@
     NSString *destinationPath;
     int logLevel;
 }
+- (id)initWithBufferedInputStream:(BufferedInputStream *)theIS error:(NSError **)error;
 
 - (id)initWithBucket:(Bucket *)theBucket
   encryptionPassword:(NSString *)theEncryptionPassword
 downloadBytesPerSecond:(double)theDownloadBytesPerSecond
+glacierRetrievalTier:(int)theGlacierRetrievalTier
        commitBlobKey:(BlobKey *)theCommitBlobKey
         rootItemName:(NSString *)theRootItemName
          treeVersion:(int32_t)theTreeVersion
-    treeIsCompressed:(BOOL)theTreeIsCompressed
          treeBlobKey:(BlobKey *)theTreeBlobKey
             nodeName:(NSString *)theNodeName
            targetUID:(uid_t)theTargetUID
@@ -70,9 +72,12 @@ downloadBytesPerSecond:(double)theDownloadBytesPerSecond
      destinationPath:(NSString *)theDestination
             logLevel:(int)theLogLevel;
 
+- (BOOL)writeTo:(BufferedOutputStream *)theBOS error:(NSError **)error;
+
 @property (readonly, retain) Bucket *bucket;
 @property (readonly, retain) NSString *encryptionPassword;
 @property (readonly) double downloadBytesPerSecond;
+@property (readonly) int glacierRetrievalTier;
 @property (readonly, retain) BlobKey *commitBlobKey;
 @property (readonly, retain) NSString *rootItemName;
 @property (readonly, retain) BlobKey *treeBlobKey;

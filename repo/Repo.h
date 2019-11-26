@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,49 +31,57 @@
  */
 
 
+
 @class Bucket;
-@protocol Fark;
-@class BlobKey;
+#import "BlobKey.h"
 @class Commit;
 @class Tree;
-@class CryptoKey;
-@class PackSet;
+@class SynchronousPackSet;
 @class Repo;
-@class TargetObjectSet;
 @class PackId;
 @protocol DataTransferDelegate;
 @protocol TargetConnectionDelegate;
+@class ObjectEncryptor;
+#import "Fark.h"
+#import "PackSet.h"
 
 
 @protocol RepoDelegate <NSObject>
-- (void)repo:(Repo *)theRepo headBlobKeyDidChangeFrom:(BlobKey *)fromBlobKey to:(BlobKey *)toBlobKey rewrite:(BOOL)rewrite;
-- (void)headBlobKeyWasDeletedForRepo:(Repo *)theRepo;
+- (void)headBlobKeyDidChangeForTargetUUID:(NSString *)theTargetUUID computerUUID:(NSString *)theComputerUUID bucketUUID:(NSString *)theBucketUUID from:(BlobKey *)fromBlobKey to:(BlobKey *)toBlobKey rewrite:(BOOL)rewrite;
+- (void)headBlobKeyWasDeletedForTargetUUID:(NSString *)theTargetUUID computerUUID:(NSString *)theComputerUUID bucketUUID:(NSString *)theBucketUUID;
 @end
 
-@interface Repo : NSObject {
+@protocol RepoActivityListener <NSObject>
+- (void)repoActivity:(NSString *)theActivity;
+- (void)repoActivityDidFinish;
+@end
+
+
+@interface Repo : NSObject <PackSetActivityListener> {
     Bucket *bucket;
-    uid_t targetUID;
-    gid_t targetGID;
-    CryptoKey *cryptoKey;
-    CryptoKey *stretchedCryptoKey;
-    id <Fark> fark;
-    PackSet *treesPackSet;
-    PackSet *blobsPackSet;
+    ObjectEncryptor *encryptor;
+    Fark *fark;
+    SynchronousPackSet *treesPackSet;
+    SynchronousPackSet *blobsPackSet;
     id <TargetConnectionDelegate> targetConnectionDelegate;
     id <RepoDelegate> repoDelegate;
+    id <RepoActivityListener> repoActivityListener;
+    NSLock *compressEncryptLock;
 }
+
++ (BlobKeyCompressionType)defaultBlobKeyCompressionType;
 
 - (id)initWithBucket:(Bucket *)theBucket
   encryptionPassword:(NSString *)theEncryptionPassword
-           targetUID:(uid_t)theTargetUID
-           targetGID:(gid_t)theTargetGID
-loadExistingMutablePackFiles:(BOOL)theLoadExistingMutablePackFiles
 targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD
         repoDelegate:(id <RepoDelegate>)theRepoDelegate
+    activityListener:(id <RepoActivityListener>)theActivityListener
                error:(NSError **)error;
 
 - (NSString *)errorDomain;
 
+- (int)objectEncryptorVersion;
+- (id <TargetConnectionDelegate>)targetConnectionDelegate;
 - (Bucket *)bucket;
 - (BlobKey *)headBlobKey:(NSError **)error;
 - (NSArray *)allCommitBlobKeys:(NSError **)error;
@@ -81,17 +89,24 @@ targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD
 - (Commit *)commitForBlobKey:(BlobKey *)treeBlobKey dataSize:(unsigned long long *)dataSize error:(NSError **)error;
 - (Tree *)treeForBlobKey:(BlobKey *)treeBlobKey error:(NSError **)error;
 - (Tree *)treeForBlobKey:(BlobKey *)treeBlobKey dataSize:(unsigned long long *)dataSize error:(NSError **)error;
-- (NSNumber *)containsBlobForBlobKey:(BlobKey *)theBlobKey error:(NSError **)error;
-- (NSNumber *)containsBlobForBlobKey:(BlobKey *)theBlobKey dataSize:(unsigned long long *)dataSize error:(NSError **)error;
-- (NSNumber *)containsBlobForBlobKey:(BlobKey *)theBlobKey dataSize:(unsigned long long *)dataSize forceTargetCheck:(BOOL)forceTargetCheck error:(NSError **)error;
+- (NSNumber *)containsBlobsInCacheForBlobKeys:(NSArray *)theBlobKeys error:(NSError **)error;
+- (NSNumber *)containsBlobInCacheForBlobKey:(BlobKey *)theBlobKey error:(NSError **)error;
+- (NSNumber *)sizeOfBlobInCacheForBlobKey:(BlobKey *)theBlobKey error:(NSError **)error;
 
 - (NSNumber *)isObjectDownloadableForBlobKey:(BlobKey *)theBlobKey error:(NSError **)error;
-- (BOOL)restoreObjectForBlobKey:(BlobKey *)theBlobKey forDays:(NSUInteger)theDays alreadyRestoredOrRestoring:(BOOL *)alreadyRestoredOrRestoring error:(NSError **)error;
+- (BOOL)restoreObjectForBlobKey:(BlobKey *)theBlobKey forDays:(NSUInteger)theDays tier:(int)theGlacierRetrievalTier alreadyRestoredOrRestoring:(BOOL *)alreadyRestoredOrRestoring error:(NSError **)error;
 - (NSData *)dataForBlobKey:(BlobKey *)theBlobKey error:(NSError **)error;
 
-- (NSData *)decryptData:(NSData *)theData error:(NSError **)error;
-- (NSData *)encryptData:(NSData *)theData error:(NSError **)error;
+- (BOOL)setHeadBlobKey:(BlobKey *)theBlobKey rewrite:(BOOL)rewrite error:(NSError **)error;
+- (BOOL)deleteHeadBlobKey:(NSError **)error;
 
-- (BOOL)addSHA1sForCommitBlobKey:(BlobKey *)commitBlobKey toSet:(NSMutableSet *)theSet error:(NSError **)error;
+- (NSData *)encryptV1Data:(NSData *)theData error:(NSError **)error;
+- (BlobKey *)blobKeyForV1Data:(NSData *)theData compressionType:(BlobKeyCompressionType)theCompressionType error:(NSError **)error;
+- (BlobKey *)blobKeyForV2Data:(NSData *)theFileData compressionType:(BlobKeyCompressionType)theCompressionType error:(NSError **)error;
+
+- (NSData *)decryptData:(NSData *)theData error:(NSError **)error;
+
+- (BOOL)deleteBlobForBlobKey:(BlobKey *)theBlobKey error:(NSError **)error;
+
 
 @end

@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,6 +31,7 @@
  */
 
 
+
 @class S3Service;
 @class GlacierService;
 @class PackIndexEntry;
@@ -46,8 +47,6 @@
     NSString *s3BucketName;
     NSString *computerUUID;
     NSString *packSetName;
-    uid_t targetUID;
-    uid_t targetGID;
     BOOL loadedPIEs;
     
     NSMutableDictionary *glacierPackIndexesByPackSHA1;
@@ -63,9 +62,7 @@
            vaultName:(NSString *)theVaultName
         s3BucketName:(NSString *)theS3BucketName
         computerUUID:(NSString *)theComputerUUID
-         packSetName:(NSString *)thePackSetName
-           targetUID:(uid_t)theTargetUID
-           targetGID:(uid_t)theTargetGID;
+         packSetName:(NSString *)thePackSetName;
 
 - (BOOL)containsBlob:(BOOL *)contains forSHA1:(NSString *)sha1 dataSize:(unsigned long long *)dataSize targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
 - (GlacierPackIndex *)glacierPackIndexForObjectSHA1:(NSString *)theObjectSHA1 targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;

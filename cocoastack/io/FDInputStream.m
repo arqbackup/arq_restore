@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -29,6 +29,7 @@
  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 
 
 
@@ -138,6 +139,10 @@ read_again:
 - (NSData *)slurp:(NSError **)error {
     return [InputStreams slurp:self error:error];
 }
+- (BOOL)slurpIntoBuffer:(NSMutableData *)theBuffer error:(NSError **)error {
+    return [InputStreams slurp:self intoBuffer:theBuffer error:error];
+}
+
 
 #pragma mark NSObject protocol
 - (NSString *)description {

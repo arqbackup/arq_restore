@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -30,6 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+
+
 #include <sys/stat.h>
 #import "PListNode.h"
 #import "PListNodeType.h"
@@ -42,11 +44,12 @@
 #import "XMLPListReader.h"
 #import "XMLPListWriter.h"
 #import "BinaryPListWriter.h"
-
 #import "FileInputStream.h"
 #import "DataInputStream.h"
 #import "BinaryPListReader.h"
 #import "BufferedInputStream.h"
+#import "Streams.h"
+
 
 @interface DictNode (internal)
 - (id)initWithDict:(NSMutableDictionary *)theDict orderedKeys:(NSMutableArray *)theOrderedKeys;
@@ -203,7 +206,7 @@
 	XMLPListWriter *writer = [[XMLPListWriter alloc] initWithMutableData:data];
     [writer write:self];
     [writer release];
-    BOOL ret = [data writeToFile:path options:NSAtomicWrite error:error];
+    BOOL ret = [Streams writeData:data atomicallyToFile:path targetUID:theTargetUID targetGID:theTargetGID bytesWritten:NULL error:error];
     [data release];
     if (!ret) {
         return NO;

@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -29,6 +29,7 @@
  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 
 
 #include <sys/stat.h>
@@ -66,16 +67,36 @@
             }
         }
         
-        BOOL dataAreCompressed = NO;
-        BOOL xattrsAreCompressed = NO;
-        BOOL aclIsCompressed = NO;
-        if (treeVersion >= 12) {
+        BlobKeyCompressionType dataCompressionType = BlobKeyCompressionNone;
+        BlobKeyCompressionType xattrsCompressionType = BlobKeyCompressionNone;
+        BlobKeyCompressionType aclCompressionType = BlobKeyCompressionNone;
+        if (treeVersion >= 12 && treeVersion <= 18) {
+            BOOL dataAreCompressed = NO;
+            BOOL xattrsAreCompressed = NO;
+            BOOL aclIsCompressed = NO;
             if (![BooleanIO read:&dataAreCompressed from:is error:error]
                 || ![BooleanIO read:&xattrsAreCompressed from:is error:error]
                 || ![BooleanIO read:&aclIsCompressed from:is error:error]) {
                 [self release];
                 return nil;
             }
+            dataCompressionType = dataAreCompressed ? BlobKeyCompressionGzip : BlobKeyCompressionNone;
+            xattrsCompressionType = xattrsAreCompressed ? BlobKeyCompressionGzip : BlobKeyCompressionNone;
+            aclCompressionType = aclIsCompressed ? BlobKeyCompressionGzip : BlobKeyCompressionNone;
+        }
+        if (treeVersion >= 19) {
+            int32_t theDataCompressionType = 0;
+            int32_t theXattrsCompressionType = 0;
+            int32_t theAclCompressionType = 0;
+            if (![IntegerIO readInt32:&theDataCompressionType from:is error:error]
+                || ![IntegerIO readInt32:&theXattrsCompressionType from:is error:error]
+                || ![IntegerIO readInt32:&theAclCompressionType from:is error:error]) {
+                [self release];
+                return nil;
+            }
+            dataCompressionType = (BlobKeyCompressionType)theDataCompressionType;
+            xattrsCompressionType = (BlobKeyCompressionType)theXattrsCompressionType;
+            aclCompressionType = (BlobKeyCompressionType)theAclCompressionType;
         }
         
         int dataBlobKeysCount;
@@ -85,7 +106,7 @@
         }
         for (int i = 0; i < dataBlobKeysCount; i++) {
             BlobKey *dataBlobKey = nil;
-            if (![BlobKeyIO read:&dataBlobKey from:is treeVersion:treeVersion compressed:dataAreCompressed error:error]) {
+            if (![BlobKeyIO read:&dataBlobKey from:is treeVersion:treeVersion compressionType:dataCompressionType error:error]) {
                 [self release];
                 return nil;
             }
@@ -100,16 +121,16 @@
         if (theTreeVersion < 18) {
             BlobKey *theThumbnailBlobKey = nil;
             BlobKey *thePreviewBlobKey = nil;
-            if (![BlobKeyIO read:&theThumbnailBlobKey from:is treeVersion:treeVersion compressed:NO error:error]
-                || ![BlobKeyIO read:&thePreviewBlobKey from:is treeVersion:treeVersion compressed:NO error:error]) {
+            if (![BlobKeyIO read:&theThumbnailBlobKey from:is treeVersion:treeVersion compressionType:BlobKeyCompressionNone error:error]
+                || ![BlobKeyIO read:&thePreviewBlobKey from:is treeVersion:treeVersion compressionType:BlobKeyCompressionNone error:error]) {
                 [self release];
                 return nil;
             }
         }
         
-        BOOL ret = [BlobKeyIO read:&xattrsBlobKey from:is treeVersion:treeVersion compressed:xattrsAreCompressed error:error]
+        BOOL ret = [BlobKeyIO read:&xattrsBlobKey from:is treeVersion:treeVersion compressionType:xattrsCompressionType error:error]
         && [IntegerIO readUInt64:&xattrsSize from:is error:error]
-        && [BlobKeyIO read:&aclBlobKey from:is treeVersion:treeVersion compressed:aclIsCompressed error:error]
+        && [BlobKeyIO read:&aclBlobKey from:is treeVersion:treeVersion compressionType:aclCompressionType error:error]
         && [IntegerIO readInt32:&uid from:is error:error]
         && [IntegerIO readInt32:&gid from:is error:error]
         && [IntegerIO readInt32:&mode from:is error:error]
@@ -169,22 +190,16 @@
     return dataBlobKeys;
 }
 
-- (BOOL)dataMatchesStat:(struct stat *)st {
-    return st->st_mtimespec.tv_sec == mtime_sec && st->st_mtimespec.tv_nsec == mtime_nsec && st->st_size == uncompressedDataSize;
-}
-- (BOOL)ctimeMatchesStat:(struct stat *)st {
-    return st->st_ctimespec.tv_sec == ctime_sec && st->st_ctimespec.tv_nsec == ctime_nsec;
-}
 - (void)writeToData:(NSMutableData *)data {
     [BooleanIO write:isTree to:data];
     [BooleanIO write:treeContainsMissingItems to:data];
-    BOOL dataAreCompressed = [dataBlobKeys count] == 0 ? NO : [[dataBlobKeys objectAtIndex:0] compressed];
-    [BooleanIO write:dataAreCompressed to:data];
-    [BooleanIO write:[xattrsBlobKey compressed] to:data];
-    [BooleanIO write:[aclBlobKey compressed] to:data];
+    BlobKeyCompressionType dataCompressionType = [dataBlobKeys count] == 0 ? BlobKeyCompressionNone : [[dataBlobKeys objectAtIndex:0] compressionType];
+    [IntegerIO writeInt32:(int32_t)dataCompressionType to:data];
+    [IntegerIO writeInt32:(int32_t)[xattrsBlobKey compressionType] to:data];
+    [IntegerIO writeInt32:(int32_t)[aclBlobKey compressionType] to:data];
     [IntegerIO writeInt32:(int32_t)[dataBlobKeys count] to:data];
     for (BlobKey *dataBlobKey in dataBlobKeys) {
-        NSAssert([dataBlobKey compressed] == dataAreCompressed, @"all dataBlobKeys must have same compressed flag value");
+        NSAssert([dataBlobKey compressionType] == dataCompressionType, @"all dataBlobKeys must have same compression type");
         [BlobKeyIO write:dataBlobKey to:data];
     }
     [IntegerIO writeUInt64:uncompressedDataSize to:data];
@@ -221,33 +236,88 @@
         return NO;
     }
     Node *other = (Node *)object;
-    return treeVersion == [other treeVersion] 
-    && isTree == [other isTree]
-    && uncompressedDataSize == [other uncompressedDataSize]
-    && [dataBlobKeys isEqualToArray:[other dataBlobKeys]]
-    && [NSObject equalObjects:xattrsBlobKey and:[other xattrsBlobKey]]
-    && xattrsSize == [other xattrsSize]
-    && [NSObject equalObjects:aclBlobKey and:[other aclBlobKey]]
-    && uid == [other uid]
-    && gid == [other gid]
-    && mode == [other mode]
-    && mtime_sec == [other mtime_sec]
-    && mtime_nsec == [other mtime_nsec]
-    && flags == [other flags]
-    && finderFlags == [other finderFlags]
-    && extendedFinderFlags == [other extendedFinderFlags]
-    && [NSObject equalObjects:finderFileType and:[other finderFileType]]
-    && [NSObject equalObjects:finderFileCreator and:[other finderFileCreator]]
-    && st_dev == [other st_dev]
-    && st_ino == [other st_ino]
-    && st_nlink == [other st_nlink]
-    && st_rdev == [other st_rdev]
-    && ctime_sec == [other ctime_sec]
-    && ctime_nsec == [other ctime_nsec]
-    && createTime_sec == [other createTime_sec]
-    && createTime_nsec == [other createTime_nsec]
-    && st_blocks == [other st_blocks]
-    && st_blksize == [other st_blksize];
+    if (treeVersion != [other treeVersion]) {
+        return NO;
+    }
+    if (isTree != [other isTree]) {
+        return NO;
+    }
+    if (uncompressedDataSize != [other uncompressedDataSize]) {
+        return NO;
+    }
+    if (![dataBlobKeys isEqualToArray:[other dataBlobKeys]]) {
+        return NO;
+    }
+    if (![NSObject equalObjects:xattrsBlobKey and:[other xattrsBlobKey]]) {
+        return NO;
+    }
+    if (xattrsSize != [other xattrsSize]) {
+        return NO;
+    }
+    if (![NSObject equalObjects:aclBlobKey and:[other aclBlobKey]]) {
+        return NO;
+    }
+    if (uid != [other uid]) {
+        return NO;
+    }
+    if (gid != [other gid]) {
+        return NO;
+    }
+    if (mode != [other mode]) {
+        return NO;
+    }
+    if (mtime_sec != [other mtime_sec]) {
+        return NO;
+    }
+    if (mtime_nsec != [other mtime_nsec]) {
+        return NO;
+    }
+    if (flags != [other flags]) {
+        return NO;
+    }
+    if (finderFlags != [other finderFlags]) {
+        return NO;
+    }
+    if (extendedFinderFlags != [other extendedFinderFlags]) {
+        return NO;
+    }
+    if (![NSObject equalObjects:finderFileType and:[other finderFileType]]) {
+        return NO;
+    }
+    if (![NSObject equalObjects:finderFileCreator and:[other finderFileCreator]]) {
+        return NO;
+    }
+    if (st_dev != [other st_dev]) {
+        return NO;
+    }
+    if (st_ino != [other st_ino]) {
+        return NO;
+    }
+    if (st_nlink != [other st_nlink]) {
+        return NO;
+    }
+    if (st_rdev != [other st_rdev]) {
+        return NO;
+    }
+    if (ctime_sec != [other ctime_sec]) {
+        return NO;
+    }
+    if (ctime_nsec != [other ctime_nsec]) {
+        return NO;
+    }
+    if (createTime_sec != [other createTime_sec]) {
+        return NO;
+    }
+    if (createTime_nsec != [other createTime_nsec]) {
+        return NO;
+    }
+    if (st_blocks != [other st_blocks]) {
+        return NO;
+    }
+    if (st_blksize != [other st_blksize]) {
+        return NO;
+    }
+    return YES;
 }
 - (NSUInteger)hash {
     return (NSUInteger)treeVersion + [dataBlobKeys hash];

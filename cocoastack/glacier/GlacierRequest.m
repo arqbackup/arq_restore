@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -29,6 +29,8 @@
  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+
 
 #import "GlacierRequest.h"
 #import "GlacierAuthorizationProvider.h"
@@ -171,7 +173,7 @@
     id <HTTPConnection> conn = [[[HTTPConnectionFactory theFactory] newHTTPConnectionToURL:url method:method dataTransferDelegate:dataTransferDelegate] autorelease];
     [conn setDate:[NSDate date]];
     [conn setRequestHostHeader];
-    [conn setRequestHeader:[ISO8601Date basicDateTimeStringFromDate:[NSDate date]] forKey:@"x-amz-date"];
+    [conn setRequestHeader:[[ISO8601Date sharedISO8601Date] basicDateTimeStringFromDate:[NSDate date]] forKey:@"x-amz-date"];
     [conn setRequestHeader:@"2012-06-01" forKey:@"x-amz-glacier-version"];
     
     for (NSString *headerKey in [extraHeaders allKeys]) {

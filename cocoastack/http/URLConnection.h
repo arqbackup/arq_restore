@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -32,33 +32,32 @@
 
 
 
+
 #import "HTTPConnection.h"
 
-@class RFC2616DateFormatter;
 @protocol DataTransferDelegate;
-@class NetMonitor;
 @class HTTPInputStream;
 
 
 @interface URLConnection : NSObject <HTTPConnection> {
     NSString *method;
     id <DataTransferDelegate> delegate;
+    NSURL *url;
     NSMutableURLRequest *mutableURLRequest;
     NSURLConnection *urlConnection;
     NSHTTPURLResponse *httpURLResponse;
-    RFC2616DateFormatter *dateFormatter;
-    unsigned long long totalSent;
 
     NSMutableData *responseData;
-    NSUInteger responseOffset;
     BOOL errorOccurred;
     NSError *_error;
     NSTimeInterval createTime;
     NSDate *date;
-    NetMonitor *netMonitor;
+
+    NSUInteger totalBytesSent;
+    NSUInteger totalBytesReceived;
+    
     HTTPInputStream *httpInputStream;
 }
-+ (NSString *)errorDomain;
 
 - (id)initWithURL:(NSURL *)theURL method:(NSString *)theMethod dataTransferDelegate:(id <DataTransferDelegate>)theDelegate;
 @end

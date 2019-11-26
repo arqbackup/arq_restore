@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -32,11 +32,15 @@
 
 
 
+#import "CWLSynthesizeSingleton.h"
 
 
 @interface RFC2616DateFormatter : NSObject {
     NSLocale *usLocale;
     NSDateFormatter *formatter;
+    NSLock *lock;
 }
+CWL_DECLARE_SINGLETON_FOR_CLASS(RFC2616DateFormatter);
+
 - (NSString *)rfc2616StringFromDate:(NSDate *)date;
 @end

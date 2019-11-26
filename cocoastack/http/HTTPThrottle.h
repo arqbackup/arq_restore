@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,6 +31,7 @@
  */
 
 
+
 typedef enum {
     HTTP_THROTTLE_TYPE_NONE = 0,
     HTTP_THROTTLE_TYPE_AUTOMATIC = 1,
@@ -41,11 +42,13 @@ typedef enum {
 @interface HTTPThrottle : NSObject {
     HTTPThrottleType throttleType;
     NSUInteger throttleKBPS;
+    NSUInteger threadCount;
 }
 - (id)init;
 - (id)initWithType:(HTTPThrottleType)theType kbps:(NSUInteger)theKBPS;
 
 - (HTTPThrottleType)throttleType;
 - (NSUInteger)throttleKBPS;
-
+- (void)setThreadCount:(NSUInteger)theThreadCount;
+- (NSUInteger)threadCount;
 @end

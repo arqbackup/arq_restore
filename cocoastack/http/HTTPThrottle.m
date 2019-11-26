@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -38,6 +38,7 @@
 - (id)init {
     if (self = [super init]) {
         throttleType = HTTP_THROTTLE_TYPE_NONE;
+        threadCount = 1;
     }
     return self;
 }
@@ -45,6 +46,7 @@
     if (self = [super init]) {
         throttleType = theType;
         throttleKBPS = theKBPS;
+        threadCount = 1;
     }
     return self;
 }
@@ -54,5 +56,11 @@
 }
 - (NSUInteger)throttleKBPS {
     return throttleKBPS;
+}
+- (void)setThreadCount:(NSUInteger)theThreadCount {
+    threadCount = theThreadCount;
+}
+- (NSUInteger)threadCount {
+    return threadCount;
 }
 @end

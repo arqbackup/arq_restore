@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,12 +31,13 @@
  */
 
 
+
 #import "S3ErrorResult.h"
 #import "S3Service.h"
 
 
 @implementation S3ErrorResult
-- (id)initWithAction:(NSString *)theAction data:(NSData *)theData httpErrorCode:(int)theHTTPStatusCode {
+- (id)initWithAction:(NSString *)theAction data:(NSData *)theData httpErrorCode:(int)theHTTPStatusCode stringToSign:(NSString *)theStringToSign canonicalRequest:(NSString *)theCanonicalRequest {
     if (self = [super init]) {
         values = [[NSMutableDictionary alloc] init];
         NSXMLParser *parser = [[NSXMLParser alloc] initWithData:theData];
@@ -50,7 +51,7 @@
                 NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithInt:500], @"HTTPStatusCode", @"InternalError", @"AmazonCode", nil];
                 amazonError = [[NSError errorWithDomain:[S3Service errorDomain] code:S3SERVICE_ERROR_AMAZON_ERROR userInfo:userInfo] retain];
             } else {
-                amazonError = [[NSError errorWithDomain:[S3Service errorDomain] code:S3SERVICE_ERROR_AMAZON_ERROR description:[NSString stringWithFormat:@"%@: AWS error", theAction]] retain];
+                amazonError = [[NSError alloc] initWithDomain:[S3Service errorDomain] code:S3SERVICE_ERROR_AMAZON_ERROR description:[NSString stringWithFormat:@"%@: AWS error", theAction]];
             }
         } else {
             NSMutableDictionary *userInfo = [NSMutableDictionary dictionary];
@@ -67,6 +68,14 @@
                 msg = [NSString stringWithFormat:@"%@: %@", theAction, [values objectForKey:@"Message"]];
             }
             [userInfo setObject:msg forKey:NSLocalizedDescriptionKey];
+            if ([[userInfo objectForKey:@"AmazonCode"] isEqualToString:@"SignatureDoesNotMatch"]) {
+                if (theStringToSign != nil) {
+                    [userInfo setObject:theStringToSign forKey:@"ArqStringToSign"];
+                }
+                if (theCanonicalRequest != nil) {
+                    [userInfo setObject:theCanonicalRequest forKey:@"ArqCanonicalRequest"];
+                }
+            }
             amazonError = [[NSError errorWithDomain:[S3Service errorDomain] code:S3SERVICE_ERROR_AMAZON_ERROR userInfo:userInfo] retain];
         }
     }

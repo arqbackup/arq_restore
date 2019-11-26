@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -13,7 +13,7 @@
  notice, this list of conditions and the following disclaimer in the
  documentation and/or other materials provided with the distribution.
  
- * Neither the names of PhotoMinds LLC or Haystack Software, nor the names of 
+ * Neither the names of PhotoMinds LLC or Haystack Software, nor the names of
  their contributors may be used to endorse or promote products derived from
  this software without specific prior written permission.
  
@@ -28,7 +28,8 @@
  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */ 
+ */
+
 
 
 
@@ -38,5 +39,5 @@
 }
 + (NSString *)name;
 + (NSString *)serialNumber;
-+ (NSString *)machineType;
+//+ (NSString *)machineType;
 @end

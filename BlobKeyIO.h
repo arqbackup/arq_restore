@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,9 +31,10 @@
  */
 
 
+
 @class BufferedInputStream;
 @class BufferedOutputStream;
-@class BlobKey;
+#import "BlobKey.h"
 
 
 @interface BlobKeyIO : NSObject {
@@ -41,5 +42,5 @@
 }
 + (void)write:(BlobKey *)theBlobKey to:(NSMutableData *)data;
 + (BOOL)write:(BlobKey *)theBlobKey to:(BufferedOutputStream *)os error:(NSError **)error;
-+ (BOOL)read:(BlobKey **)theBlobKey from:(BufferedInputStream *)is treeVersion:(int)theTreeVersion compressed:(BOOL)isCompressed error:(NSError **)error;
++ (BOOL)read:(BlobKey **)theBlobKey from:(BufferedInputStream *)is treeVersion:(int)theTreeVersion compressionType:(BlobKeyCompressionType)theCompressionType error:(NSError **)error;
 @end

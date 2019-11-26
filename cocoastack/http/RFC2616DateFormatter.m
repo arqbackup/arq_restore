@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,10 +31,13 @@
  */
 
 
+
 #import "RFC2616DateFormatter.h"
 
 
 @implementation RFC2616DateFormatter
+CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(RFC2616DateFormatter)
+
 - (id)init {
     if (self = [super init]) {
         formatter = [[NSDateFormatter alloc] init];
@@ -46,6 +49,7 @@
         } else {
             HSLogWarn(@"no en_US locale installed");
         }
+        lock = [[NSLock alloc] init];
     }
     return self;
 }
@@ -54,10 +58,15 @@
     [usLocale release];
     [super dealloc];
 }
+
 - (NSString *)rfc2616StringFromDate:(NSDate *)date {
     //FIXME: If US locale isn't available, put the English words into the date yourself, according to http://www.ietf.org/rfc/rfc2616.txt
     
     // We append " GMT" here instead of using a "z" in the format string because on 10.9 the "z" produces "GMT", but on 10.7 it produces "GMT+00:00" which makes Google Cloud Storage return a "MalformedHeaderValue" error.
-    return [[formatter stringFromDate:date] stringByAppendingString:@" GMT"];
+    [lock lock];
+    NSString *ret = [[formatter stringFromDate:date] stringByAppendingString:@" GMT"];
+    [lock unlock];
+    return ret;
 }
+
 @end

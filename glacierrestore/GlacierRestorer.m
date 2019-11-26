@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -30,12 +30,13 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+
+
 #import "GlacierRestorer.h"
 #import "GlacierRestorerParamSet.h"
 #import "GlacierRestorerDelegate.h"
 #import "S3AuthorizationProvider.h"
 #import "S3Service.h"
-#import "ArqSalt.h"
 #import "Repo.h"
 #import "Commit.h"
 #import "Tree.h"
@@ -45,7 +46,6 @@
 #import "FileOutputStream.h"
 #import "NSFileManager_extra.h"
 #import "BlobKey.h"
-#import "NSData-GZip.h"
 #import "FileAttributes.h"
 #import "BufferedOutputStream.h"
 #import "OSStatusDescription.h"
@@ -191,16 +191,16 @@
         return [NSNumber numberWithUnsignedLongLong:[theBlobKey archiveSize]];
     }
     
-    unsigned long long dataSize = 0;
-    NSNumber *contains = [repo containsBlobForBlobKey:theBlobKey dataSize:&dataSize error:error];
-    if (contains == nil) {
-        return NO;
+    NSError *myError = nil;
+    NSNumber *ret = [repo sizeOfBlobInCacheForBlobKey:theBlobKey error:&myError];
+    if (ret == nil) {
+        if ([myError code] == ERROR_NOT_FOUND) {
+            // We'll report this to the user as an error during the download phase.
+            HSLogError(@"repo does not contain %@!", theBlobKey);
+            ret = [NSNumber numberWithInteger:0];
+        }
     }
-    if (![contains boolValue]) {
-        // We'll report this to the user as an error during the download phase.
-        HSLogError(@"repo does not contain %@!", theBlobKey);
-    }
-    return [NSNumber numberWithUnsignedLongLong:dataSize];
+    return ret;
 }
 - (BOOL)requestBlobKey:(BlobKey *)theBlobKey error:(NSError **)error {
     if (theBlobKey == nil) {
@@ -214,21 +214,24 @@
     }
     
     if ([theBlobKey storageType] == StorageTypeS3Glacier) {
-        unsigned long long dataSize = 0;
-        NSNumber *contains = [repo containsBlobForBlobKey:theBlobKey dataSize:&dataSize error:error];
-        if (contains == nil) {
+        NSError *myError = nil;
+        NSNumber *theSize = [repo sizeOfBlobInCacheForBlobKey:theBlobKey error:&myError];
+        if (theSize == nil) {
+            if ([myError code] != ERROR_NOT_FOUND) {
+                SETERRORFROMMYERROR;
+                return NO;
+            }
+            HSLogDebug(@"%@", [myError localizedDescription]);
+        }
+        
+        // Try restoring the object whether or not it was found in the cache.
+        BOOL alreadyRestoredOrRestoring = NO;
+        if (![repo restoreObjectForBlobKey:theBlobKey forDays:RESTORE_DAYS tier:paramSet.glacierRetrievalTier alreadyRestoredOrRestoring:&alreadyRestoredOrRestoring error:error]) {
             return NO;
         }
         
-        if (![contains boolValue]) {
-            // We'll report this to the user as an error during the download phase.
-            HSLogError(@"repo does not contain %@!", theBlobKey);
-        } else {
-            BOOL alreadyRestoredOrRestoring = NO;
-            if (![repo restoreObjectForBlobKey:theBlobKey forDays:RESTORE_DAYS alreadyRestoredOrRestoring:&alreadyRestoredOrRestoring error:error]) {
-                return NO;
-            }
-            if (![self addToBytesRequested:dataSize error:error]) {
+        if (theSize != nil) {
+            if (![self addToBytesRequested:[theSize unsignedLongLongValue] error:error]) {
                 return NO;
             }
         }
@@ -240,6 +243,7 @@
         if (![requestedArchiveIds containsObject:[theBlobKey archiveId]]) {
             if (![glacier initiateRetrievalJobForVaultName:[[paramSet bucket] vaultName]
                                                  archiveId:[theBlobKey archiveId]
+                                                      tier:paramSet.glacierRetrievalTier
                                                snsTopicArn:topicArn
                                                      error:error]) {
                 return NO;
@@ -347,7 +351,12 @@
     }
 
     
-    if ([delegate glacierRestorerMessageDidChange:[NSString stringWithFormat:@"Restoring %@ from %@ to %@", paramSet.rootItemName, commitDescription, paramSet.destinationPath]]) {
+//    if ([delegate glacierRestorerMessageDidChange:[NSString stringWithFormat:@"Restoring %@ from %@ to %@", paramSet.rootItemName, commitDescription, paramSet.destinationPath]]) {
+//        SETNSERROR([self errorDomain], ERROR_ABORT_REQUESTED, @"cancel requested");
+//        return NO;
+//    }
+
+    if ([delegate glacierRestorerMessageDidChange:@"Assembling list of needed pack files"]) {
         SETNSERROR([self errorDomain], ERROR_ABORT_REQUESTED, @"cancel requested");
         return NO;
     }
@@ -356,9 +365,14 @@
     }
     
     // Just request all the Glacier packs right away. It probably won't amount to more than 4 hours' worth of downloads.
+    if ([delegate glacierRestorerMessageDidChange:@"Requesting pack files be made downloadable"]) {
+        SETNSERROR([self errorDomain], ERROR_ABORT_REQUESTED, @"cancel requested");
+        return NO;
+    }
     for (GlacierPack *glacierPack in [requestedGlacierPacksByPackSHA1 allValues]) {
         if (![glacier initiateRetrievalJobForVaultName:[[paramSet bucket] vaultName]
                                              archiveId:[glacierPack archiveId]
+                                                  tier:paramSet.glacierRetrievalTier
                                            snsTopicArn:topicArn
                                                  error:error]) {
             return NO;
@@ -394,6 +408,12 @@
             && ([[NSDate date] earlierDate:dateToResumeRequesting] == dateToResumeRequesting)) {
             
             // Request more Glacier items.
+            if ([glacierRequestItems count] > 0) {
+                if ([delegate glacierRestorerMessageDidChange:@"Requesting items be made downloadable"]) {
+                    SETNSERROR([self errorDomain], ERROR_ABORT_REQUESTED, @"cancel requested");
+                    return NO;
+                }
+            }
             if (![self requestMoreGlacierItems:error]) {
                 ret = NO;
                 break;
@@ -436,6 +456,10 @@
                 restoredAnItem = NO;
             } else {
                 HSLogDebug(@"downloading %@", glacierPack);
+                if ([delegate glacierRestorerMessageDidChange:@"Downloading pack file"]) {
+                    SETNSERROR([self errorDomain], ERROR_ABORT_REQUESTED, @"cancel requested");
+                    return NO;
+                }
                 NSData *packData = [glacier dataForVaultName:[[paramSet bucket] vaultName] jobId:completedJobId retries:MAX_GLACIER_RETRIES error:error];
                 if (packData == nil) {
                     ret = NO;
@@ -460,6 +484,10 @@
             RestoreItem *restoreItem = [restoreItems objectAtIndex:0];
             restoredAnItem = YES;
             HSLogDebug(@"attempting to restore %@", restoreItem);
+            if ([delegate glacierRestorerMessageDidChange:[NSString stringWithFormat:@"Restoring %@", [restoreItem path]]]) {
+                SETNSERROR([self errorDomain], ERROR_ABORT_REQUESTED, @"cancel requested");
+                return NO;
+            }
             if (![restoreItem restoreWithHardlinks:hardlinks restorer:self error:&restoreError]) {
                 if ([restoreError code] == ERROR_GLACIER_OBJECT_NOT_AVAILABLE) {
                     HSLogDebug(@"glacier object not available yet");
@@ -488,6 +516,11 @@
         }
         
         if (!restoredAnItem) {
+            if ([delegate glacierRestorerMessageDidChange:@"Waiting for objects to become downloadable"]) {
+                SETNSERROR([self errorDomain], ERROR_ABORT_REQUESTED, @"cancel requested");
+                return NO;
+            }
+
             HSLogDebug(@"sleeping");
             for (NSUInteger i = 0; i < SLEEP_CYCLES; i++) {
                 if (![self addToBytesTransferred:0 error:error]) {
@@ -535,21 +568,12 @@
                                                   vaultName:[[paramSet bucket] vaultName]
                                                s3BucketName:[[[[[paramSet bucket] target] endpoint] path] lastPathComponent]
                                                computerUUID:[[paramSet bucket] computerUUID]
-                                                packSetName:[[[paramSet bucket] bucketUUID] stringByAppendingString:@"-glacierblobs"]
-                                                  targetUID:paramSet.targetUID
-                                                  targetGID:paramSet.targetGID];
-    ArqSalt *arqSalt = [[[ArqSalt alloc] initWithTarget:[[paramSet bucket] target] targetUID:[paramSet targetUID] targetGID:[paramSet targetGID] computerUUID:[[paramSet bucket] computerUUID]] autorelease];
-    NSData *salt = [arqSalt saltWithTargetConnectionDelegate:self error:error];
-    if (salt == nil) {
-        return NO;
-    }
+                                                packSetName:[[[paramSet bucket] bucketUUID] stringByAppendingString:@"-glacierblobs"]];
     repo = [[Repo alloc] initWithBucket:[paramSet bucket]
-                     encryptionPassword:[paramSet encryptionPassword]
-                              targetUID:[paramSet targetUID]
-                              targetGID:[paramSet targetGID]
-           loadExistingMutablePackFiles:NO
+                     encryptionPassword:paramSet.encryptionPassword
                targetConnectionDelegate:self
                            repoDelegate:nil
+                       activityListener:nil
                                   error:error];
     if (repo == nil) {
         return NO;
@@ -788,9 +812,7 @@
                                                                  bucketUUID:[[paramSet bucket] bucketUUID]
                                                                    packSHA1:[[glacierPackIndex packId] packSHA1]
                                                                   archiveId:archiveId
-                                                                   packSize:packSize
-                                                                  targetUID:[paramSet targetUID]
-                                                                  targetGID:[paramSet targetGID]] autorelease];
+                                                                   packSize:packSize] autorelease];
             [requestedGlacierPacksByPackSHA1 setObject:glacierPack forKey:[[glacierPackIndex packId] packSHA1]];
         }
     }
@@ -811,6 +833,11 @@
         HSLogDebug(@"got %lu messages from queue", (unsigned long)[[response messages] count]);
         if ([[response messages] count] == 0) {
             break;
+        }
+        
+        if ([delegate glacierRestorerMessageDidChange:@"Processing message queue"]) {
+            SETNSERROR([self errorDomain], ERROR_ABORT_REQUESTED, @"cancel requested");
+            return NO;
         }
         for (SQSMessage *msg in [response messages]) {
             if (![self processMessage:msg error:error]) {
@@ -863,6 +890,7 @@
 }
 - (BOOL)requestMoreGlacierItems:(NSError **)error {
     BOOL ret = YES;
+    
     NSAutoreleasePool *pool = nil;
     while (bytesRequestedThisRound < bytesToRequestPerRound && [glacierRequestItems count] > 0) {
         [pool drain];
@@ -894,12 +922,12 @@
     if ([[NSFileManager defaultManager] fileExistsAtPath:statusPath]) {
         NSDictionary *attribs = [[NSFileManager defaultManager] attributesOfItemAtPath:statusPath error:error];
         if (attribs == nil) {
-            return NO;
+            return nil;
         }
         if ([[attribs objectForKey:NSFileSize] unsignedLongLongValue] > 0) {
             NSData *jobIdData = [NSData dataWithContentsOfFile:statusPath options:NSUncachedRead error:error];
             if (jobIdData == nil) {
-                return NO;
+                return nil;
             }
             ret = [[[NSString alloc] initWithData:jobIdData encoding:NSUTF8StringEncoding] autorelease];
         }

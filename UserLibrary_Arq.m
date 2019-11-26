@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,14 +31,16 @@
  */
 
 
+
+
 #import "UserLibrary_Arq.h"
 
 
 @implementation UserLibrary (Arq)
 + (NSString *)arqUserLibraryPath {
-    return [[NSHomeDirectory() stringByAppendingPathComponent:@"Library"] stringByAppendingPathComponent:@"Arq"];
+    return [[NSHomeDirectory() stringByAppendingPathComponent:@"Library"] stringByAppendingPathComponent:@"arq_restore"];
 }
 + (NSString *)arqCachePath {
-    return [NSString stringWithFormat:@"%@/Cache.noindex", [UserLibrary arqUserLibraryPath]];
+    return [NSString stringWithFormat:@"%@/Library/Caches/arq_restore", NSHomeDirectory()];
 }
 @end

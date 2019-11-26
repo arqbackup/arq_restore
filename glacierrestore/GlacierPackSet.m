@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,6 +31,7 @@
  */
 
 
+
 #import "GlacierPackSet.h"
 #import "PackIndexEntry.h"
 #import "GlacierPackIndex.h"
@@ -58,9 +59,7 @@ static unsigned long long DEFAULT_MAX_PACK_ITEM_SIZE_BYTES = 65536;
            vaultName:(NSString *)theVaultName
         s3BucketName:(NSString *)theS3BucketName
         computerUUID:(NSString *)theComputerUUID
-         packSetName:(NSString *)thePackSetName
-           targetUID:(uid_t)theTargetUID
-           targetGID:(uid_t)theTargetGID {
+         packSetName:(NSString *)thePackSetName {
     if (self = [super init]) {
         target = [theTarget retain];
         s3 = [theS3 retain];
@@ -68,8 +67,6 @@ static unsigned long long DEFAULT_MAX_PACK_ITEM_SIZE_BYTES = 65536;
         s3BucketName = [theS3BucketName retain];
         computerUUID = [theComputerUUID retain];
         packSetName = [thePackSetName retain];
-        targetUID = theTargetUID;
-        targetGID = theTargetGID;
         glacierPackIndexesByPackSHA1 = [[NSMutableDictionary alloc] init];
         packIndexEntriesByObjectSHA1 = [[NSMutableDictionary alloc] init];
     }
@@ -105,7 +102,7 @@ static unsigned long long DEFAULT_MAX_PACK_ITEM_SIZE_BYTES = 65536;
 }
 - (PackIndexEntry *)packIndexEntryForObjectSHA1:(NSString *)theSHA1 targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error {
     if (!loadedPIEs && ![self loadPackIndexEntriesWithTargetConnectionDelegate:theTCD error:error]) {
-        return NO;
+        return nil;
     }
     PackIndexEntry *ret = [packIndexEntriesByObjectSHA1 objectForKey:theSHA1];
     if (ret == nil) {
@@ -126,7 +123,7 @@ static unsigned long long DEFAULT_MAX_PACK_ITEM_SIZE_BYTES = 65536;
     return YES;
 }
 - (NSDictionary *)packIndexEntriesBySHA1WithTargetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD :(NSError **)error {
-    NSArray *glacierPackIndexes = [GlacierPackIndex glacierPackIndexesForTarget:target s3Service:s3 s3BucketName:s3BucketName computerUUID:computerUUID packSetName:packSetName targetConnectionDelegate:theTCD targetUID:targetUID targetGID:targetGID error:error];
+    NSArray *glacierPackIndexes = [GlacierPackIndex glacierPackIndexesForTarget:target s3Service:s3 s3BucketName:s3BucketName computerUUID:computerUUID packSetName:packSetName targetConnectionDelegate:theTCD error:error];
     if (glacierPackIndexes == nil) {
         return nil;
     }

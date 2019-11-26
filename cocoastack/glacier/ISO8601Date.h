@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,11 +31,19 @@
  */
 
 
+
+#import "CWLSynthesizeSingleton.h"
+
+
 @interface ISO8601Date : NSObject {
-    
+    NSDateFormatter *dateFormatter;
+    NSDateFormatter *dateTimeFormatter;
+    NSLock *lock;
 }
-+ (NSString *)errorDomain;
-+ (NSDate *)dateFromString:(NSString *)str error:(NSError **)error;
-+ (NSString *)basicDateTimeStringFromDate:(NSDate *)theDate;
-+ (NSString *)basicDateStringFromDate:(NSDate *)theDate;
+CWL_DECLARE_SINGLETON_FOR_CLASS(ISO8601Date)
+
+- (NSString *)errorDomain;
+- (NSDate *)dateFromString:(NSString *)str error:(NSError **)error;
+- (NSString *)basicDateTimeStringFromDate:(NSDate *)theDate;
+- (NSString *)basicDateStringFromDate:(NSDate *)theDate;
 @end

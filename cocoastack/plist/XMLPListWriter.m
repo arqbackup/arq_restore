@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -29,6 +29,8 @@
  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+
 
 #import "ArrayNode.h"
 #import "BooleanNode.h"
@@ -108,7 +110,7 @@
 	for (NSString *key in orderedKeys) {
         id <PListNode> childNode = [node nodeForKey:key];
         if ([childNode type] == PLN_STRING && [(StringNode*)childNode stringValue ] == nil) {
-            HSLogTrace(@"skipping nil string dict entry '%@'", key);
+//            HSLogDebug(@"skipping nil string dict entry '%@'", key);
         } else {
             NSXMLElement *keyElem = [[NSXMLElement alloc] initWithName:@"key"];
             [keyElem setStringValue:key];

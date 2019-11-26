@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,6 +31,7 @@
  */
 
 
+
 #include <libgen.h>
 #import <Foundation/Foundation.h>
 #import "ArqRestoreCommand.h"
@@ -38,17 +39,20 @@
 
 static void printUsage(const char *exeName) {
 	fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "\t%s [-l log_level] listcomputers <target_type> <target_params>\n", exeName);
-    fprintf(stderr, "\t%s [-l log_level] listfolders <computer_uuid> <encryption_password> <target_type> <target_params>\n", exeName);
-    fprintf(stderr, "\t%s [-l log_level] restore <computer_uuid> <encryption_password> <folder_uuid> <bytes_per_second> <target_type> <target_params>\n", exeName);
-    fprintf(stderr, "\t\ntarget_params by target type:\n");
-    fprintf(stderr, "\taws:                 access_key secret_key bucket_name\n");
-    fprintf(stderr, "\tsftp:                hostname port path username password_or_keyfile [keyfile_passphrase]\n");
-    fprintf(stderr, "\tgreenqloud:          access_key secret_key bucket_name\n");
-    fprintf(stderr, "\tdreamobjects:        public_key secret_key bucket_name\n");
-    fprintf(stderr, "\tgooglecloudstorage:  public_key secret_key bucket_name\n");
-    fprintf(stderr, "\ts3compatible:        service_url access_key secret_key bucket_name\n");
-    fprintf(stderr, "\tgoogledrive:         refresh_token path\n");
+    fprintf(stderr, "\t%s [-l loglevel] listtargets\n", exeName);
+    fprintf(stderr, "\t%s [-l loglevel] addtarget <nickname> aws <access_key>\n", exeName);
+    fprintf(stderr, "\t%s [-l loglevel] addtarget <nickname> local <path>\n", exeName);
+    fprintf(stderr, "\t%s [-l loglevel] deletetarget <nickname>\n", exeName);
+    fprintf(stderr, "\n");
+    fprintf(stderr, "\t%s [-l loglevel] listcomputers <target_nickname>\n", exeName);
+    fprintf(stderr, "\t%s [-l loglevel] listfolders <target_nickname> <computer_uuid>\n", exeName);
+    fprintf(stderr, "\t%s [-l loglevel] printplist <target_nickname> <computer_uuid> <folder_uuid>\n", exeName);
+    fprintf(stderr, "\t%s [-l loglevel] listtree <target_nickname> <computer_uuid> <folder_uuid>\n", exeName);
+    fprintf(stderr, "\t%s [-l loglevel] restore <target_nickname> <computer_uuid> <folder_uuid> [relative_path]\n", exeName);
+    fprintf(stderr, "\t%s [-l loglevel] clearcache <target_nickname>\n", exeName);
+    fprintf(stderr, "\n");
+    fprintf(stderr, "log levels: none, error, warn, info, and debug\n");
+    fprintf(stderr, "log output: ~/Library/Logs/arq_restorer\n");
 }
 int main (int argc, const char **argv) {
     char *exePath = strdup(argv[0]);

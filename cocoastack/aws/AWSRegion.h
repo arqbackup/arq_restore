@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,6 +31,8 @@
  */
 
 
+
+
 @interface AWSRegion : NSObject {
     NSString *regionName;
     NSArray *s3LocationConstraints;
@@ -54,12 +56,16 @@
 + (AWSRegion *)regionWithLocation:(NSString *)theLocation;
 + (AWSRegion *)regionWithS3Endpoint:(NSURL *)theEndpoint;
 + (AWSRegion *)usEast1;
++ (AWSRegion *)usEast2;
 + (AWSRegion *)usWest1;
 + (AWSRegion *)usWest2;
 + (AWSRegion *)euWest1;
++ (AWSRegion *)euCentral1;
 + (AWSRegion *)apSoutheast1;
 + (AWSRegion *)apSoutheast2;
 + (AWSRegion *)apNortheast1;
++ (AWSRegion *)apNortheast2;
++ (AWSRegion *)apSouth1;
 + (AWSRegion *)saEast1;
 
 - (NSString *)regionName;

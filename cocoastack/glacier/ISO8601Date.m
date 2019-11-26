@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -30,20 +30,44 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+
+
 #import "ISO8601Date.h"
 #import "RegexKitLite.h"
 
 
 #define FMT822 (@"^(\\d{4})-(\\d{2})-(\\d{2})T(\\d{2}):(\\d{2}):(\\d{2})\\.(\\d+)Z$")
 
-
 @implementation ISO8601Date
-+ (NSString *)errorDomain {
+CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(ISO8601Date)
+
+- (id)init {
+    if (self = [super init]) {
+        dateFormatter = [self newDateFormatterWithFormat:@"yyyyMMdd"];
+        dateTimeFormatter = [self newDateFormatterWithFormat:@"yyyyMMdd'T'HHmmss'Z'"];
+        lock = [[NSLock alloc] init];
+    }
+    return self;
+}
+- (void)dealloc {
+    [dateFormatter release];
+    [dateTimeFormatter release];
+    [lock release];
+    [super dealloc];
+}
+
+- (NSString *)errorDomain {
     return @"ISO8601DateErrorDomain";
 }
-+ (NSDate *)dateFromString:(NSString *)str error:(NSError **)error {
+- (NSDate *)dateFromString:(NSString *)str error:(NSError **)error {
+    [lock lock];
+    NSDate *ret = [self lockedDateFromString:str error:error];
+    [lock unlock];
+    return ret;
+}
+- (NSDate *)lockedDateFromString:(NSString *)str error:(NSError **)error {
     if ([str rangeOfRegex:FMT822].location == NSNotFound) {
-        SETNSERROR([ISO8601Date errorDomain], -1, @"invalid ISO8601 date '%@'", str);
+        SETNSERROR([self errorDomain], -1, @"invalid ISO8601 date '%@'", str);
         return nil;
     }
     return [NSCalendarDate dateWithYear:[[str stringByMatching:FMT822 capture:1] intValue]
@@ -56,20 +80,41 @@
     
     
 }
-+ (NSString *)basicDateTimeStringFromDate:(NSDate *)theDate {
-    NSDateFormatter *formatter = [[[NSDateFormatter alloc] init] autorelease];
-    [formatter setDateFormat:@"yyyyMMdd'T'HHmmss'Z'"];
-    [formatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
-    NSCalendar *gregorianCalendar = [[[NSCalendar alloc] initWithCalendarIdentifier:NSGregorianCalendar] autorelease];
-    [formatter setCalendar:gregorianCalendar];
-    return [formatter stringFromDate:theDate];
+- (NSString *)basicDateTimeStringFromDate:(NSDate *)theDate {
+    [lock lock];
+    NSString *ret = [self lockedBasicDateTimeStringFromDate:theDate];
+    [lock unlock];
+    return ret;
 }
-+ (NSString *)basicDateStringFromDate:(NSDate *)theDate {
-    NSDateFormatter *formatter = [[[NSDateFormatter alloc] init] autorelease];
-    [formatter setDateFormat:@"yyyyMMdd"];
-    [formatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
+- (NSString *)lockedBasicDateTimeStringFromDate:(NSDate *)theDate {
+    return [dateTimeFormatter stringFromDate:theDate];
+}
+
+- (NSString *)basicDateStringFromDate:(NSDate *)theDate {
+    [lock lock];
+    NSString *ret = [self lockedBasicDateStringFromDate:theDate];
+    [lock unlock];
+    return ret;
+}
+- (NSString *)lockedBasicDateStringFromDate:(NSDate *)theDate {
+    return [dateFormatter stringFromDate:theDate];
+}
+
+
+#pragma mark internal
+- (NSDateFormatter *)newDateFormatterWithFormat:(NSString *)theFormat {
+    NSDateFormatter *ret = [[NSDateFormatter alloc] init];
+    [ret setDateFormat:theFormat];
+    
+    NSLocale *usLocale = [[[NSLocale alloc] initWithLocaleIdentifier:@"en_US"] autorelease];
+    if (usLocale != nil) {
+        [ret setLocale:usLocale];
+    } else {
+        HSLogWarn(@"no en_US locale installed");
+    }
+    [ret setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
     NSCalendar *gregorianCalendar = [[[NSCalendar alloc] initWithCalendarIdentifier:NSGregorianCalendar] autorelease];
-    [formatter setCalendar:gregorianCalendar];
-    return [formatter stringFromDate:theDate];
+    [ret setCalendar:gregorianCalendar];
+    return ret;
 }
 @end

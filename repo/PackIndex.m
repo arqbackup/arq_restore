@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -29,6 +29,7 @@
  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 
 
 #include <libkern/OSByteOrder.h>
@@ -73,6 +74,11 @@ typedef struct pack_index {
 
 - (NSArray *)packIndexEntries:(NSError **)error {
     NSMutableArray *ret = [NSMutableArray array];
+    
+    if ([indexData length] == 0) {
+        HSLogWarn(@"encounted a 0-length pack index file for %@; ignoring", packId);
+        return ret;
+    }
     
     if ([indexData length] < sizeof(pack_index)) {
         SETNSERROR([self errorDomain], -1, @"pack index data length %ld is smaller than size of pack_index", (unsigned long)[indexData length]);

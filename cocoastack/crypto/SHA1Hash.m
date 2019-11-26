@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -29,6 +29,8 @@
  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+
 
 #import <CommonCrypto/CommonDigest.h>
 #include <sys/stat.h>
@@ -66,7 +68,7 @@
         int errnum = errno;
         HSLogError(@"lstat(%@) error %d: %s", path, errnum, strerror(errnum));
         SETNSERROR(@"UnixErrorDomain", errnum, @"%@: %s", path, strerror(errnum));
-        return NO;
+        return nil;
     }
     unsigned long long length = (unsigned long long)st.st_size;
     FileInputStream *fis = [[FileInputStream alloc] initWithPath:path offset:0 length:length];

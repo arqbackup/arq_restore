@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -32,13 +32,16 @@
 
 
 
+
 @protocol HTTPConnection <NSObject>
 - (NSString *)errorDomain;
 
+- (NSURL *)URL;
 - (void)setRequestHeader:(NSString *)value forKey:(NSString *)key;
 - (void)setRequestHostHeader;
 - (void)setRequestContentDispositionHeader:(NSString *)downloadName;
 - (void)setRFC822DateRequestHeader;
+- (void)setRFC822DateRequestHeader:(NSDate *)theDate;
 - (void)setDate:(NSDate *)theDate;
 - (NSDate *)date;
 - (NSString *)requestMethod;

@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,6 +31,7 @@
  */
 
 
+
 #import "NSError_Glacier.h"
 #import "NSXMLNode_extra.h"
 #import "NSError_extra.h"
@@ -58,6 +59,6 @@
         [userInfo setObject:@"Your AWS account is not signed up for all services. Please visit http://aws.amazon.com and sign up for S3, Glacier, SNS and SQS." forKey:NSLocalizedDescriptionKey];
     }
     [userInfo setObject:[NSNumber numberWithInt:theHTTPStatusCode] forKey:@"HTTPStatusCode"];
-    return [NSError errorWithDomain:theDomain code:GLACIER_ERROR_AMAZON_ERROR userInfo:userInfo];
+    return [[[NSError alloc] initWithDomain:theDomain code:GLACIER_ERROR_AMAZON_ERROR userInfo:userInfo] autorelease];
 }
 @end

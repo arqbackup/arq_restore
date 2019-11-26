@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,21 +31,20 @@
  */
 
 
+
 #include <sys/stat.h>
 
 @class BufferedInputStream;
 @class Node;
 @class BlobKey;
 
-#define CURRENT_TREE_VERSION 18
+#define CURRENT_TREE_VERSION 22
 #define TREE_HEADER_LENGTH (8)
 
 @interface Tree : NSObject {
     int treeVersion;
-    BOOL xattrsAreCompressed;
     BlobKey *xattrsBlobKey;
     unsigned long long xattrsSize;
-    BOOL aclIsCompressed;
     BlobKey *aclBlobKey;
     int uid;
     int gid;
@@ -80,12 +79,9 @@
 - (void)removeMissingChildNodeWithName:(NSString *)name;
 - (NSDictionary *)missingNodes;
 - (NSData *)toData;
-- (BOOL)ctimeMatchesStat:(struct stat *)st;
 
-@property(readonly) BOOL xattrsAreCompressed;
 @property(readonly,copy) BlobKey *xattrsBlobKey;
 @property(readonly) unsigned long long xattrsSize;
-@property(readonly) BOOL aclIsCompressed;
 @property(readonly,copy) BlobKey *aclBlobKey;
 @property(readonly) int uid;
 @property(readonly) int gid;

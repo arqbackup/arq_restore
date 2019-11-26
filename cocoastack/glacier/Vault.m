@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,6 +31,7 @@
  */
 
 
+
 #import "Vault.h"
 #import "ISO8601Date.h"
 
@@ -42,7 +43,7 @@
         NSString *theCreationDate = [theDict objectForKey:@"CreationDate"];
         if (theCreationDate != nil && ![theCreationDate isKindOfClass:[NSNull class]]) {
             NSError *myError = nil;
-            creationDate = [[ISO8601Date dateFromString:theCreationDate error:&myError] retain];
+            creationDate = [[[ISO8601Date sharedISO8601Date] dateFromString:theCreationDate error:&myError] retain];
             if (creationDate == nil) {
                 HSLogError(@"%@", myError);
             }
@@ -51,7 +52,7 @@
         NSString *theLastInventoryDate = [theDict objectForKey:@"LastInventoryDate"];
         if (theLastInventoryDate != nil && ![theLastInventoryDate isKindOfClass:[NSNull class]]) {
             NSError *myError = nil;
-            lastInventoryDate = [[ISO8601Date dateFromString:theLastInventoryDate error:&myError] retain];
+            lastInventoryDate = [[[ISO8601Date sharedISO8601Date] dateFromString:theLastInventoryDate error:&myError] retain];
             if (lastInventoryDate == nil) {
                 HSLogError(@"%@", myError);
             }

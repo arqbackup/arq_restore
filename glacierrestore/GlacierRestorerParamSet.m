@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,6 +31,7 @@
  */
 
 
+
 #import "GlacierRestorerParamSet.h"
 #import "AWSRegion.h"
 #import "BlobKey.h"
@@ -44,10 +45,16 @@
 #import "Bucket.h"
 
 
+@interface GlacierRestorerParamSet ()
+- (BOOL)readFromStream:(BufferedInputStream *)theIS error:(NSError **)error;
+@end
+
+
 @implementation GlacierRestorerParamSet
 @synthesize bucket;
 @synthesize encryptionPassword;
 @synthesize downloadBytesPerSecond;
+@synthesize glacierRetrievalTier;
 @synthesize commitBlobKey;
 @synthesize rootItemName;
 @synthesize treeBlobKey;
@@ -59,13 +66,22 @@
 @synthesize logLevel;
 
 
+- (id)initWithBufferedInputStream:(BufferedInputStream *)theIS error:(NSError **)error {
+    if (self = [super init]) {
+        if (![self readFromStream:theIS error:error]) {
+            [self release];
+            return nil;
+        }
+    }
+    return self;
+}
 - (id)initWithBucket:(Bucket *)theBucket
   encryptionPassword:(NSString *)theEncryptionPassword
 downloadBytesPerSecond:(double)theDownloadBytesPerSecond
+glacierRetrievalTier:(int)theGlacierRetrievalTier
        commitBlobKey:(BlobKey *)theCommitBlobKey
         rootItemName:(NSString *)theRootItemName
          treeVersion:(int32_t)theTreeVersion
-    treeIsCompressed:(BOOL)theTreeIsCompressed
          treeBlobKey:(BlobKey *)theTreeBlobKey
             nodeName:(NSString *)theNodeName
            targetUID:(uid_t)theTargetUID
@@ -77,10 +93,10 @@ downloadBytesPerSecond:(double)theDownloadBytesPerSecond
         bucket = [theBucket retain];
         encryptionPassword = [theEncryptionPassword retain];
         downloadBytesPerSecond = theDownloadBytesPerSecond;
+        glacierRetrievalTier = theGlacierRetrievalTier;
         commitBlobKey = [theCommitBlobKey retain];
         rootItemName = [theRootItemName retain];
         treeVersion = theTreeVersion;
-        treeIsCompressed = theTreeIsCompressed;
         treeBlobKey = [theTreeBlobKey retain];
         nodeName = [theNodeName retain];
         targetUID = theTargetUID;
@@ -100,5 +116,94 @@ downloadBytesPerSecond:(double)theDownloadBytesPerSecond
     [nodeName release];
     [destinationPath release];
     [super dealloc];
+}
+
+- (BOOL)writeTo:(BufferedOutputStream *)theBOS error:(NSError **)error {
+    return [bucket writeTo:theBOS error:error]
+    && [StringIO write:encryptionPassword to:theBOS error:error]
+    && [DoubleIO write:downloadBytesPerSecond to:theBOS error:error]
+    && [IntegerIO writeInt32:glacierRetrievalTier to:theBOS error:error]
+    && [BlobKeyIO write:commitBlobKey to:theBOS error:error]
+    && [StringIO write:rootItemName to:theBOS error:error]
+    && [IntegerIO writeInt32:treeVersion to:theBOS error:error]
+    && [IntegerIO writeInt32:(int32_t)[treeBlobKey compressionType] to:theBOS error:error]
+    && [BlobKeyIO write:treeBlobKey to:theBOS error:error]
+    && [StringIO write:nodeName to:theBOS error:error]
+    && [IntegerIO writeInt64:(int64_t)targetUID to:theBOS error:error]
+    && [IntegerIO writeInt64:(int64_t)targetGID to:theBOS error:error]
+    && [BooleanIO write:useTargetUIDAndGID to:theBOS error:error]
+    && [StringIO write:destinationPath to:theBOS error:error]
+    && [IntegerIO writeUInt32:(uint32_t)logLevel to:theBOS error:error];
+}
+
+
+#pragma mark internal
+- (BOOL)readFromStream:(BufferedInputStream *)theIS error:(NSError **)error {
+    bucket = [[Bucket alloc] initWithBufferedInputStream:theIS error:error];
+    if (bucket == nil) {
+        return NO;
+    }
+    
+    if (![StringIO read:&encryptionPassword from:theIS error:error]) {
+        return NO;
+    }
+    [encryptionPassword retain];
+    
+    if (![DoubleIO read:&downloadBytesPerSecond from:theIS error:error]) {
+        return NO;
+    }
+    
+    int32_t theTier = 0;
+    if (![IntegerIO readInt32:&theTier from:theIS error:error]) {
+        return NO;
+    }
+    glacierRetrievalTier = theTier;
+    
+    if (![BlobKeyIO read:&commitBlobKey from:theIS treeVersion:CURRENT_TREE_VERSION compressionType:BlobKeyCompressionNone error:error]) {
+        return NO;
+    }
+    [commitBlobKey retain];
+    if (![StringIO read:&rootItemName from:theIS error:error]) {
+        return NO;
+    }
+    [rootItemName retain];
+    if (![IntegerIO readInt32:&treeVersion from:theIS error:error]) {
+        return NO;
+    }
+    int32_t treeBlobKeyCompressionType = BlobKeyCompressionNone;
+    if (![IntegerIO readInt32:&treeBlobKeyCompressionType from:theIS error:error]) {
+        return NO;
+    }
+    if (![BlobKeyIO read:&treeBlobKey from:theIS treeVersion:treeVersion compressionType:(BlobKeyCompressionType)treeBlobKeyCompressionType error:error]) {
+        return NO;
+    }
+    [treeBlobKey retain];
+    if (![StringIO read:&nodeName from:theIS error:error]) {
+        return NO;
+    }
+    [nodeName retain];
+    int64_t theTargetUID = 0;
+    if (![IntegerIO readInt64:&theTargetUID from:theIS error:error]) {
+        return NO;
+    }
+    targetUID = (uid_t)theTargetUID;
+    int64_t theTargetGID = 0;
+    if (![IntegerIO readInt64:&theTargetGID from:theIS error:error]) {
+        return NO;
+    }
+    targetGID = (gid_t)theTargetGID;
+    if (![BooleanIO read:&useTargetUIDAndGID from:theIS error:error]) {
+        return NO;
+    }
+    if (![StringIO read:&destinationPath from:theIS error:error]) {
+        return NO;
+    }
+    [destinationPath retain];
+    uint32_t theLogLevel;
+    if (![IntegerIO readUInt32:&theLogLevel from:theIS error:error]) {
+        return NO;
+    }
+    logLevel = theLogLevel;
+    return YES;
 }
 @end

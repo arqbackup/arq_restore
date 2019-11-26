@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,6 +31,7 @@
  */
 
 
+
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <libkern/OSByteOrder.h>
@@ -52,6 +53,8 @@
 #import "IntegerIO.h"
 #import "PackId.h"
 #import "Target.h"
+#import "CacheOwnership.h"
+#import "Item.h"
 
 
 typedef struct index_object {
@@ -82,27 +85,24 @@ typedef struct pack_index {
                             computerUUID:(NSString *)theComputerUUID
                              packSetName:(NSString *)thePackSetName
                 targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD
-                               targetUID:(uid_t)theTargetUID
-                               targetGID:(gid_t)theTargetGID
                                    error:(NSError **)error {
     NSMutableArray *diskPackIndexes = [NSMutableArray array];
-    NSString *packSetsPrefix = [NSString stringWithFormat:@"/%@/%@/packsets/%@/", theS3BucketName, theComputerUUID, thePackSetName];
-    NSArray *paths = [theS3 pathsWithPrefix:packSetsPrefix targetConnectionDelegate:theTCD error:error];
-    if (paths == nil) {
+    NSString *packSetsDir = [NSString stringWithFormat:@"/%@/%@/packsets/%@", theS3BucketName, theComputerUUID, thePackSetName];
+    BOOL duplicatesWereMerged = NO;
+    NSDictionary *itemsByName = [theS3 itemsByNameInDirectoryItem:nil path:packSetsDir targetConnectionDelegate:theTCD duplicatesWereMerged:&duplicatesWereMerged error:error];
+    if (itemsByName == nil) {
         return nil;
     }
-    for (NSString *thePath in paths) {
-        NSRange sha1Range = [thePath rangeOfRegex:@"/(\\w+)\\.index$" capture:1];
+    for (Item *item in [itemsByName allValues]) {
+        NSRange sha1Range = [item.name rangeOfRegex:@"^(\\w+)\\.index$" capture:1];
         if (sha1Range.location != NSNotFound) {
-            NSString *thePackSHA1 = [thePath substringWithRange:sha1Range];
+            NSString *thePackSHA1 = [item.name substringWithRange:sha1Range];
             PackId *packId = [[[PackId alloc] initWithPackSetName:thePackSetName packSHA1:thePackSHA1] autorelease];
             GlacierPackIndex *index = [[GlacierPackIndex alloc] initWithTarget:theTarget
                                                                      s3Service:theS3
                                                                   s3BucketName:theS3BucketName
                                                                   computerUUID:theComputerUUID
-                                                                        packId:packId
-                                                                     targetUID:theTargetUID
-                                                                     targetGID:theTargetGID];
+                                                                        packId:packId];
             [diskPackIndexes addObject:index];
             [index release];
         }
@@ -115,9 +115,7 @@ typedef struct pack_index {
            s3Service:(S3Service *)theS3
         s3BucketName:(NSString *)theS3BucketName
         computerUUID:(NSString *)theComputerUUID
-              packId:(PackId *)thePackId
-           targetUID:(uid_t)theTargetUID
-           targetGID:(gid_t)theTargetGID {
+              packId:(PackId *)thePackId {
     if (self = [super init]) {
         s3 = [theS3 retain];
         s3BucketName = [theS3BucketName retain];
@@ -125,8 +123,6 @@ typedef struct pack_index {
         packId = [thePackId retain];
         s3Path = [[GlacierPackIndex s3PathWithS3BucketName:s3BucketName computerUUID:computerUUID packId:packId] retain];
         localPath = [[GlacierPackIndex localPathWithTarget:theTarget computerUUID:computerUUID packId:packId] retain];
-        targetUID = theTargetUID;
-        targetGID = theTargetGID;
     }
     return self;
 }
@@ -148,7 +144,7 @@ typedef struct pack_index {
         for (;;) {
             HSLogDebug(@"packset %@: making pack index %@ local", packId, packId);
             NSError *myError = nil;
-            NSData *data = [s3 dataAtPath:s3Path targetConnectionDelegate:theTCD error:&myError];
+            NSData *data = [s3 contentsOfRange:NSMakeRange(NSNotFound, 0) ofFileItem:nil itemPath:s3Path dataTransferDelegate:nil targetConnectionDelegate:theTCD error:&myError];
             if (data != nil) {
                 ret = [self savePackIndex:data error:error];
                 break;
@@ -292,13 +288,13 @@ typedef struct pack_index {
     return YES;
 }
 - (BOOL)savePackIndex:(NSData *)theData error:(NSError **)error {
-    if (![[NSFileManager defaultManager] ensureParentPathExistsForPath:localPath targetUID:targetUID targetGID:targetGID error:error]) {
+    if (![[NSFileManager defaultManager] ensureParentPathExistsForPath:localPath targetUID:[[CacheOwnership sharedCacheOwnership] uid] targetGID:[[CacheOwnership sharedCacheOwnership] gid] error:error]) {
         return NO;
     }
     id <InputStream> is = [[[DataInputStream alloc] initWithData:theData description:[self description]] autorelease];
     NSError *myError = nil;
     unsigned long long written = 0;
-    BOOL ret = [Streams transferFrom:is atomicallyToFile:localPath targetUID:targetUID targetGID:targetGID bytesWritten:&written error:&myError];
+    BOOL ret = [Streams transferFrom:is atomicallyToFile:localPath targetUID:[[CacheOwnership sharedCacheOwnership] uid] targetGID:[[CacheOwnership sharedCacheOwnership] gid] bytesWritten:&written error:&myError];
     if (ret) {
         HSLogDebug(@"wrote %qu bytes to %@", written, localPath);
     } else {
@@ -315,7 +311,6 @@ typedef struct pack_index {
         return nil;
     }
     unsigned char *sha1Bytes = (unsigned char *)[sha1Hex bytes];
-    HSLogTrace(@"looking for sha1 %@ in packindex %@", sha1, packId);
     int fd = open([localPath fileSystemRepresentation], O_RDONLY);
     if (fd == -1) {
         int errnum = errno;
@@ -332,7 +327,7 @@ typedef struct pack_index {
     close(fd);
     if (endIndex == 0) {
         SETNSERROR(@"PacksErrorDomain", ERROR_NOT_FOUND, @"sha1 %@ not found in pack", sha1);
-        return NO;
+        return nil;
     }
     fd = open([localPath fileSystemRepresentation], O_RDONLY);
     if (fd == -1) {
@@ -343,9 +338,6 @@ typedef struct pack_index {
     }
     PackIndexEntry *ret = [self findEntryForSHA1:sha1 fd:fd betweenStartIndex:startIndex andEndIndex:endIndex error:error];
     close(fd);
-    if (ret != nil) {
-        HSLogTrace(@"found sha1 %@ in packindex %@", sha1, packId);
-    }
     return ret;
 }
 - (PackIndexEntry *)findEntryForSHA1:(NSString *)sha1 fd:(int)fd betweenStartIndex:(uint32_t)startIndex andEndIndex:(uint32_t)endIndex error:(NSError **)error {
@@ -360,7 +352,7 @@ typedef struct pack_index {
         int errnum = errno;
         HSLogError(@"mmap(%@) error %d: %s", localPath, errnum, strerror(errnum));
         SETNSERROR(@"UnixErrorDomain", errnum, @"error mapping %@ to memory: %s", localPath, strerror(errnum));
-        return NO;
+        return nil;
     }
     int64_t left = startIndex;
     int64_t right = endIndex - 1;

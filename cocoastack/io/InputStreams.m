@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -32,6 +32,7 @@
 
 
 
+
 #import "InputStreams.h"
 
 
@@ -42,6 +43,14 @@
 @implementation InputStreams
 + (NSData *)slurp:(id <InputStream>)is error:(NSError **)error {
     NSMutableData *data = [[[NSMutableData alloc] init] autorelease];
+    if (![InputStreams slurp:is intoBuffer:data error:error]) {
+        return nil;
+    }
+    return data;
+}
++ (BOOL)slurp:(id <InputStream>)is intoBuffer:(NSMutableData *)theBuffer error:(NSError **)error {
+    [theBuffer setLength:0];
+    
     unsigned char *buf = (unsigned char *)malloc(MY_BUF_SIZE);
     NSInteger ret = 0;
     for (;;) {
@@ -49,12 +58,13 @@
         if (ret <= 0) {
             break;
         }
-        [data appendBytes:buf length:ret];
+        [theBuffer appendBytes:buf length:ret];
     }
     free(buf);
     if (ret == -1) {
-        return nil;
+        return NO;
     }
-    return data;
+    return YES;
 }
+
 @end

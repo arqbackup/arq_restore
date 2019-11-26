@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -29,6 +29,7 @@
  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 
 
 #import "SQS.h"
@@ -65,9 +66,7 @@
 }
 
 - (NSURL *)createQueueWithName:(NSString *)theName error:(NSError **)error {
-    NSDateFormatter *formatter = [[[NSDateFormatter alloc] init] autorelease];
-    [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss'Z'"];
-    [formatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
+    NSDateFormatter *formatter = [self dateFormatter];
     
     NSMutableString *str = [NSMutableString stringWithFormat:@"%@/?", [awsRegion sqsEndpointWithSSL:NO]];
     [str appendFormat:@"AWSAccessKeyId=%@", [accessKey stringByEscapingURLCharacters]];
@@ -97,9 +96,7 @@
     return ret;
 }
 - (NSString *)queueArnForQueueURL:(NSURL *)theURL error:(NSError **)error {
-    NSDateFormatter *formatter = [[[NSDateFormatter alloc] init] autorelease];
-    [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss'Z'"];
-    [formatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
+    NSDateFormatter *formatter = [self dateFormatter];
     
     NSMutableString *str = [NSMutableString stringWithFormat:@"%@?", [theURL description]];
     [str appendFormat:@"AWSAccessKeyId=%@", [accessKey stringByEscapingURLCharacters]];
@@ -135,9 +132,7 @@
     HSLogDebug(@"policy = %@", policy);
     NSString *escapedPolicy = [(NSString *)CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, (CFStringRef)policy, NULL, CFSTR("?=&+?:,*"), kCFStringEncodingUTF8) autorelease];
 
-    NSDateFormatter *formatter = [[[NSDateFormatter alloc] init] autorelease];
-    [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss'Z'"];
-    [formatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
+    NSDateFormatter *formatter = [self dateFormatter];
     
     NSMutableString *str = [NSMutableString stringWithFormat:@"%@?", [theQueueURL description]];
     [str appendFormat:@"AWSAccessKeyId=%@", [accessKey stringByEscapingURLCharacters]];
@@ -166,9 +161,7 @@
         // SQS only accepts a value between 1 and 10.
         theMaxMessages = 10;
     }
-    NSDateFormatter *formatter = [[[NSDateFormatter alloc] init] autorelease];
-    [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss'Z'"];
-    [formatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
+    NSDateFormatter *formatter = [self dateFormatter];
     
     NSMutableString *str = [NSMutableString stringWithFormat:@"%@?", [theURL description]];
     [str appendFormat:@"AWSAccessKeyId=%@", [accessKey stringByEscapingURLCharacters]];
@@ -194,9 +187,7 @@
     return msg;
 }
 - (BOOL)deleteMessageWithQueueURL:(NSURL *)theURL receiptHandle:(NSString *)theReceiptHandle error:(NSError **)error {
-    NSDateFormatter *formatter = [[[NSDateFormatter alloc] init] autorelease];
-    [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss'Z'"];
-    [formatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
+    NSDateFormatter *formatter = [self dateFormatter];
     
     NSMutableString *str = [NSMutableString stringWithFormat:@"%@?", [theURL description]];
     [str appendFormat:@"AWSAccessKeyId=%@", [accessKey stringByEscapingURLCharacters]];
@@ -222,9 +213,7 @@
 - (NSArray *)queueURLs:(NSError **)error {
     //FIXME: This only returns up to 1000 queues.
     
-    NSDateFormatter *formatter = [[[NSDateFormatter alloc] init] autorelease];
-    [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss'Z'"];
-    [formatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
+    NSDateFormatter *formatter = [self dateFormatter];
     
     NSMutableString *str = [NSMutableString stringWithFormat:@"%@/?", [awsRegion sqsEndpointWithSSL:NO]];
     [str appendFormat:@"AWSAccessKeyId=%@", [accessKey stringByEscapingURLCharacters]];
@@ -248,9 +237,7 @@
     return [msg queueURLs];
 }
 - (BOOL)deleteQueue:(NSURL *)theQueueURL error:(NSError **)error {
-    NSDateFormatter *formatter = [[[NSDateFormatter alloc] init] autorelease];
-    [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss'Z'"];
-    [formatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
+    NSDateFormatter *formatter = [self dateFormatter];
     
     NSMutableString *str = [NSMutableString stringWithFormat:@"%@?", [theQueueURL description]];
     [str appendFormat:@"AWSAccessKeyId=%@", [accessKey stringByEscapingURLCharacters]];
@@ -271,5 +258,19 @@
         return NO;
     }
     return YES;
+}
+
+
+- (NSDateFormatter*)dateFormatter {
+    NSDateFormatter *formatter = [[[NSDateFormatter alloc] init] autorelease];
+    [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss'Z'"];
+    [formatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
+    NSLocale *usLocale = [[[NSLocale alloc] initWithLocaleIdentifier:@"en_US"] autorelease];
+    if (usLocale != nil) {
+        [formatter setLocale:usLocale];
+    } else {
+        HSLogWarn(@"no en_US locale installed");
+    }
+    return formatter;
 }
 @end

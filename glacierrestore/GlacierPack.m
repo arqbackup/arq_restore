@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,6 +31,7 @@
  */
 
 
+
 #import "GlacierPack.h"
 #import "UserLibrary_Arq.h"
 #import "NSFileManager_extra.h"
@@ -40,6 +41,7 @@
 #import "IntegerIO.h"
 #import "Streams.h"
 #import "Target.h"
+#import "CacheOwnership.h"
 
 
 @implementation GlacierPack
@@ -49,9 +51,7 @@
           bucketUUID:(NSString *)theBucketUUID
             packSHA1:(NSString *)thePackSHA1
            archiveId:(NSString *)theArchiveId
-            packSize:(unsigned long long)thePackSize
-           targetUID:(uid_t)theTargetUID
-           targetGID:(gid_t)theTargetGID {
+            packSize:(unsigned long long)thePackSize {
     if (self = [super init]) {
         s3BucketName = [theS3BucketName retain];
         computerUUID = [theComputerUUID retain];
@@ -60,8 +60,6 @@
         packSHA1 = [thePackSHA1 retain];
         archiveId = [theArchiveId retain];
         packSize = thePackSize;
-        uid = theTargetUID;
-        gid = theTargetGID;
         localPath = [[NSString alloc] initWithFormat:@"%@/%@/%@/glacier_packsets/%@/%@/%@.pack",
                      [UserLibrary arqCachePath], [theTarget targetUUID], computerUUID, packSetName, [packSHA1 substringToIndex:2], [packSHA1 substringFromIndex:2]];
     }
@@ -88,10 +86,10 @@
     return packSize;
 }
 - (BOOL)cachePackDataToDisk:(NSData *)thePackData error:(NSError **)error {
-    if (![[NSFileManager defaultManager] ensureParentPathExistsForPath:localPath targetUID:uid targetGID:gid error:error]) {
+    if (![[NSFileManager defaultManager] ensureParentPathExistsForPath:localPath targetUID:[[CacheOwnership sharedCacheOwnership] uid] targetGID:[[CacheOwnership sharedCacheOwnership] gid] error:error]) {
         return NO;
     }
-    return [Streams writeData:thePackData atomicallyToFile:localPath targetUID:uid targetGID:gid bytesWritten:NULL error:error];
+    return [Streams writeData:thePackData atomicallyToFile:localPath targetUID:[[CacheOwnership sharedCacheOwnership] uid] targetGID:[[CacheOwnership sharedCacheOwnership] gid] bytesWritten:NULL error:error];
 }
 - (NSData *)cachedDataForObjectAtOffset:(unsigned long long)offset error:(NSError **)error {
     int fd = open([localPath fileSystemRepresentation], O_RDONLY);

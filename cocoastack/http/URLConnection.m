@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,6 +31,7 @@
  */
 
 
+
 #import "URLConnection.h"
 #import "RFC2616DateFormatter.h"
 #import "InputStream.h"
@@ -44,57 +45,58 @@
 #import "NSError_extra.h"
 #import "Streams.h"
 #import "DataTransferDelegate.h"
-#import "NetMonitor.h"
 #import "RegexKitLite.h"
+#import "System.h"
 #import "HTTPInputStream.h"
 
 
 static NSString *RUN_LOOP_MODE = @"HTTPConnectionRunLoopMode";
-#define DEFAULT_TIMEOUT_SECONDS (30)
+#define DEFAULT_TIMEOUT_SECONDS (90)
 
 
 @implementation URLConnection
-+ (NSString *)errorDomain {
-    return @"URLConnectionErrorDomain";
-}
 
 - (id)initWithURL:(NSURL *)theURL method:(NSString *)theMethod dataTransferDelegate:(id<DataTransferDelegate>)theDelegate {
     if (self = [super init]) {
         // Don't retain the delegate.
         delegate = theDelegate;
         method = [theMethod retain];
+        url = [theURL retain];
         mutableURLRequest = [[NSMutableURLRequest alloc] initWithURL:theURL];
         [mutableURLRequest setHTTPMethod:theMethod];
+        [mutableURLRequest setCachePolicy:NSURLRequestReloadIgnoringCacheData];
         
-        dateFormatter = [[RFC2616DateFormatter alloc] init];
-        HSLogTrace(@"%@ %@", theMethod, theURL);
+        NSAssert(theURL != nil, @"theURL may not be nil");
+        
+        HSLogDebug(@"%@ %@", theMethod, theURL);
         responseData = [[NSMutableData alloc] init];
         createTime = [NSDate timeIntervalSinceReferenceDate];
-        netMonitor = [[NetMonitor alloc] init];
     }
     return self;
 }
 - (void)dealloc {
     [method release];
+    [url release];
     [urlConnection unscheduleFromRunLoop:[NSRunLoop currentRunLoop] forMode:RUN_LOOP_MODE];
     [mutableURLRequest release];
     [urlConnection release];
     [httpURLResponse release];
-    [dateFormatter release];
     [responseData release];
     [_error release];
     [date release];
-    [netMonitor release];
-    [httpInputStream release];
     [super dealloc];
 }
 
+
+#pragma mark HTTPConnection
 - (NSString *)errorDomain {
     return @"HTTPConnectionErrorDomain";
 }
+- (NSURL *)URL {
+    return url;
+}
 
 - (void)setRequestHeader:(NSString *)value forKey:(NSString *)key {
-    HSLogTrace(@"request header %@ = %@", key, value);
     [mutableURLRequest setValue:value forHTTPHeaderField:key];
 }
 - (void)setRequestHostHeader {
@@ -109,7 +111,10 @@ static NSString *RUN_LOOP_MODE = @"HTTPConnectionRunLoopMode";
     }
 }
 - (void)setRFC822DateRequestHeader {
-    [self setRequestHeader:[dateFormatter rfc2616StringFromDate:[NSDate date]] forKey:@"Date"];
+    [self setRFC822DateRequestHeader:[NSDate date]];
+}
+- (void)setRFC822DateRequestHeader:(NSDate *)theDate {
+    [self setRequestHeader:[[RFC2616DateFormatter sharedRFC2616DateFormatter] rfc2616StringFromDate:theDate] forKey:@"Date"];
 }
 - (void)setDate:(NSDate *)theDate {
     [theDate retain];
@@ -147,15 +152,15 @@ static NSString *RUN_LOOP_MODE = @"HTTPConnectionRunLoopMode";
 }
 - (NSData *)executeRequestWithBody:(NSData *)theBody error:(NSError **)error {
     if ([theBody length] > 0) {
-        httpInputStream = [[HTTPInputStream alloc] initWithHTTPConnection:self data:theBody];
+        httpInputStream = [[HTTPInputStream alloc] initWithHTTPConnection:self data:theBody]; // Don't retain this?!
         [mutableURLRequest setHTTPBodyStream:(NSInputStream *)httpInputStream];
+        [httpInputStream release];
     } else if (theBody != nil) {
         // For 0-byte body, HTTPInputStream seems to hang, so just give it an empty NSData:
         [mutableURLRequest setHTTPBody:theBody];
     }
-    totalSent = 0;
+    
     [responseData setLength:0];
-    responseOffset = 0;
     urlConnection = [[NSURLConnection alloc] initWithRequest:mutableURLRequest delegate:self startImmediately:NO];
     [urlConnection scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:RUN_LOOP_MODE];
     [urlConnection start];
@@ -165,13 +170,14 @@ static NSString *RUN_LOOP_MODE = @"HTTPConnectionRunLoopMode";
     } else {
         HSLogDebug(@"NSURLConnection started with no request body");
     }
-    HSLogTrace(@"%@", [mutableURLRequest allHTTPHeaderFields]);
     
     [[NSUserDefaults standardUserDefaults] synchronize];
     NSTimeInterval timeoutInterval = (NSTimeInterval)[[NSUserDefaults standardUserDefaults] doubleForKey:@"HTTPTimeoutSeconds"];
     if (timeoutInterval == 0) {
         timeoutInterval = DEFAULT_TIMEOUT_SECONDS;
     }
+    [mutableURLRequest setTimeoutInterval:timeoutInterval];
+    
 //    HSLogDebug(@"HTTPTimeoutSeconds=%0.3f", timeoutInterval);
 
     // Loop to read in the whole damn response body because the streaming approach doesn't work reliably with Apple's stupid URL loading system.
@@ -185,7 +191,7 @@ static NSString *RUN_LOOP_MODE = @"HTTPConnectionRunLoopMode";
             // HSLogDebug(@"elapsed: %0.3f seconds", (current - runToInterval + timeoutInterval)); //FIXME: remove this
             if ((current - runToInterval) > 0) {
                 HSLogWarn(@"exceeded timeout of %0.3f seconds during %@ %@", timeoutInterval, method, [mutableURLRequest URL]);
-                _error = [[NSError errorWithDomain:[self errorDomain] code:ERROR_TIMEOUT description:[NSString stringWithFormat:@"timeout during %@ %@", method, [mutableURLRequest URL]]] retain];
+                _error = [[NSError alloc] initWithDomain:[self errorDomain] code:ERROR_TIMEOUT description:[NSString stringWithFormat:@"timeout during %@ %@", method, [mutableURLRequest URL]]];
                 errorOccurred = YES;
                 [urlConnection cancel];
                 [urlConnection release];
@@ -203,7 +209,6 @@ static NSString *RUN_LOOP_MODE = @"HTTPConnectionRunLoopMode";
     
     NSData *ret = nil;
     if ([method isEqualToString:@"HEAD"]) {
-        HSLogTrace(@"%@: empty response body", self);
         ret = [NSData data];
     } else {
         NSAssert(httpURLResponse != nil, @"httpURLResponse can't be nil");
@@ -212,7 +217,6 @@ static NSString *RUN_LOOP_MODE = @"HTTPConnectionRunLoopMode";
         HSLogDebug(@"response: status = %d, Content-Length = %@, Transfer-Encoding = %@", [self responseCode], contentLength, transferEncoding);
         if (transferEncoding != nil && ![transferEncoding isEqualToString:@"Identity"]) {
             if ([[transferEncoding lowercaseString] isEqualToString:@"chunked"]) {
-                HSLogTrace(@"chunked response body");
                 id <InputStream> dis = [[[DataInputStream alloc] initWithData:responseData description:@"http response"] autorelease];
                 BufferedInputStream *bis = [[[BufferedInputStream alloc] initWithUnderlyingStream:dis] autorelease];
                 ChunkedInputStream *cis = [[[ChunkedInputStream alloc] initWithUnderlyingStream:bis] autorelease];
@@ -230,21 +234,21 @@ static NSString *RUN_LOOP_MODE = @"HTTPConnectionRunLoopMode";
             ret = responseData;
         }
         
-        // If the response had "Content-Encoding: gzip" header, then NSURLConnection gunzipped it for us already and the responseData length won't match the Content-Length!
-        if (contentLength != nil && [contentLength integerValue] != [responseData length] && ![[self responseHeaderForKey:@"Content-Encoding"] isEqualToString:@"gzip"]) {
-            NSString *errorMessage = [NSString stringWithFormat:@"Actual response length %ld does not match Content-Length %@ for %@", (unsigned long)[responseData length], contentLength, [mutableURLRequest URL]];
-            HSLogError(@"%@", errorMessage);
-            if (global_hslog_level >= HSLOG_LEVEL_DEBUG) {
-                NSDictionary *headers = [self responseHeaders];
-                for (NSString *key in [headers allKeys]) {
-                    HSLogDebug(@"response header: %@ = %@", key, [headers objectForKey:key]);
-                }
-                NSString *responseString = [[[NSString alloc] initWithData:responseData encoding:NSUTF8StringEncoding] autorelease];
-                HSLogDebug(@"response string: %@", responseString);
-            }
-            SETNSERROR([URLConnection errorDomain], -1, @"%@", errorMessage);
-            return nil;
-        }
+//        // If the response had "Content-Encoding: gzip" header, then NSURLConnection gunzipped it for us already and the responseData length won't match the Content-Length!
+//        if (contentLength != nil && [contentLength integerValue] != [responseData length] && ![[self responseHeaderForKey:@"Content-Encoding"] isEqualToString:@"gzip"] && ![[self responseHeaderForKey:@"Content-Encoding"] isEqualToString:@"deflate"]) {
+//            NSString *errorMessage = [NSString stringWithFormat:@"Actual response length %ld does not match Content-Length %@ for %@", (unsigned long)[responseData length], contentLength, [mutableURLRequest URL]];
+//            HSLogError(@"%@", errorMessage);
+//            if ([[HSLog sharedHSLog] hsLogLevel] >= HSLOG_LEVEL_DEBUG) {
+//                NSDictionary *headers = [self responseHeaders];
+//                for (NSString *key in [headers allKeys]) {
+//                    HSLogDebug(@"response header: %@ = %@", key, [headers objectForKey:key]);
+//                }
+//                NSString *responseString = [[[NSString alloc] initWithData:responseData encoding:NSUTF8StringEncoding] autorelease];
+//                HSLogDebug(@"response string: %@", responseString);
+//            }
+//            SETNSERROR([self errorDomain], -1, @"%@", errorMessage);
+//            return nil;
+//        }
     }
     NSAssert(ret != nil, @"ret may not be nil");
     return ret;
@@ -300,7 +304,6 @@ static NSString *RUN_LOOP_MODE = @"HTTPConnectionRunLoopMode";
         // Docs state "Each time the delegate receives the connection:didReceiveResponse: message, it should reset any progress indication and discard all previously received data.".
 //        HSLogDebug(@"didReceiveResponse; resetting responseData");
         [responseData setLength:0];
-        responseOffset = 0;
     }
 }
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)myError {
@@ -313,36 +316,40 @@ static NSString *RUN_LOOP_MODE = @"HTTPConnectionRunLoopMode";
 }
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
     if ([data length] > 0) {
-        HSLogTrace(@"received %lu bytes", (unsigned long)[data length]);
         [responseData appendData:data];
-        HTTPThrottle *httpThrottle = nil;
-        if ([delegate respondsToSelector:@selector(httpConnectionDidDownloadBytes:httpThrottle:error:)]) {
-            if (![delegate dataTransferDidDownloadBytes:[data length] httpThrottle:&httpThrottle error:&_error]) {
+        if ([delegate respondsToSelector:@selector(dataTransferDidDownloadBytes:httpThrottle:error:)]) {
+            NSUInteger bytesReceivedThisTime = [data length];
+            HTTPThrottle *httpThrottle = nil;
+            if (![delegate dataTransferDidDownloadBytes:bytesReceivedThisTime httpThrottle:&httpThrottle error:&_error]) {
                 [_error retain];
                 errorOccurred = YES;
                 [urlConnection cancel];
                 [urlConnection release];
                 urlConnection = nil;
-            } else {
+            }
+            if (httpThrottle != nil) {
                 [httpInputStream setHTTPThrottle:httpThrottle];
             }
         }
     }
 }
-- (void)connection:(NSURLConnection *)connection didSendBodyData:(NSInteger)bytesWritten totalBytesWritten:(NSInteger)totalBytesWritten totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite {
-    HTTPThrottle *httpThrottle = nil;
+- (void)connection:(NSURLConnection *)connection didSendBodyData:(NSInteger)bytesWritten totalBytesWritten:(NSInteger)theTotalBytesWritten totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite {
+//    HSLogDebug(@"did send %ld bytes", bytesWritten);
     if ([delegate respondsToSelector:@selector(dataTransferDidUploadBytes:httpThrottle:error:)]) {
-        if (![delegate dataTransferDidUploadBytes:bytesWritten httpThrottle:&httpThrottle error:&_error]) {
+        NSUInteger bytesSentThisTime = bytesWritten;
+        HTTPThrottle *httpThrottle = nil;
+        if (![delegate dataTransferDidUploadBytes:bytesSentThisTime httpThrottle:&httpThrottle error:&_error]) {
             [_error retain];
             errorOccurred = YES;
             [urlConnection cancel];
             [urlConnection release];
             urlConnection = nil;
-            return;
-        } else {
+        }
+        if (httpThrottle != nil) {
             [httpInputStream setHTTPThrottle:httpThrottle];
         }
     }
+    totalBytesSent = theTotalBytesWritten;
 }
 - (NSCachedURLResponse *)connection:(NSURLConnection *)connection willCacheResponse:(NSCachedURLResponse *)cachedResponse {
     return nil;

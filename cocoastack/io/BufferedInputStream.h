@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -32,6 +32,7 @@
 
 
 
+
 #import "InputStream.h"
 
 @interface BufferedInputStream : NSObject <InputStream> {
@@ -45,6 +46,7 @@
 - (id)initWithUnderlyingStream:(id <InputStream>)theUnderlyingStream;
 - (int)readByte:(NSError **)error;
 - (NSData *)readExactly:(NSUInteger)exactLength error:(NSError **)error;
+- (BOOL)readExactly:(NSUInteger)exactLength intoBuffer:(NSMutableData *)theOutBuffer error:(NSError **)error;
 - (BOOL)readExactly:(NSUInteger)exactLength into:(unsigned char *)buf error:(NSError **)error;
 - (NSString *)readLineWithCRLFWithMaxLength:(NSUInteger)maxLength error:(NSError **)error;
 - (NSString *)readLine:(NSError **)error;

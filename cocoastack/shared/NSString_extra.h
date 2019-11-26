@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -33,6 +33,7 @@
 
 
 
+
 @interface NSString (extra)
 + (NSString *)hexStringWithData:(NSData *)data;
 + (NSString *)hexStringWithBytes:(const unsigned char *)bytes length:(unsigned int)length;
@@ -43,4 +44,7 @@
 - (NSComparisonResult)compareByLength:(NSString *)value;
 - (NSString *)stringByEscapingURLCharacters;
 - (NSString *)stringByDeletingTrailingSlash;
+- (NSString *)stringByAppendingTrailingSlash;
++ (NSString *)stringWithRandomCharacters:(NSUInteger)length;
+- (BOOL)isValidEmailAddress;
 @end

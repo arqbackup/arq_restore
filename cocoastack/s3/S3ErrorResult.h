@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,13 +31,15 @@
  */
 
 
+
+
 @interface S3ErrorResult : NSObject <NSXMLParserDelegate> {
     NSMutableDictionary *values;
     NSMutableString *currentStringBuffer;
     BOOL errorOccurred;
     NSError *amazonError;
 }
-- (id)initWithAction:(NSString *)theAction data:(NSData *)theData httpErrorCode:(int)theHTTPStatusCode;
+- (id)initWithAction:(NSString *)theAction data:(NSData *)theData httpErrorCode:(int)theHTTPStatusCode stringToSign:(NSString *)theStringToSign canonicalRequest:(NSString *)theCanonicalRequest;
 
 - (NSError *)error;
 @end

@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -30,13 +30,14 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+
+
 #import "NSError_extra.h"
 
 
 #define SETNSERROR(domain, theCode, format, args...) \
 if (error != NULL) {\
-    *error = [NSError errorWithDomain:(domain) code:(theCode) description:[NSString stringWithFormat:format, ##args]];\
-    HSLogTrace(@"%@", [*error localizedDescription]);\
+    *error = [[[NSError alloc] initWithDomain:(domain) code:(theCode) userInfo:[NSDictionary dictionaryWithObjectsAndKeys:[NSString stringWithFormat:format, ##args], NSLocalizedDescriptionKey, nil]] autorelease];\
 }
 
 #define SETERRORFROMMYERROR \

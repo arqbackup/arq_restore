@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -30,6 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+
 #include <sys/stat.h>
 
 
@@ -41,14 +42,6 @@
 @end
 
 @implementation FileOutputStream
-- (id)initWithPath:(NSString *)thePath append:(BOOL)isAppend {
-    if (self = [super init]) {
-        path = [thePath copy];
-        append = isAppend;
-        fd = -1;
-    }
-    return self;
-}
 - (id)initWithPath:(NSString *)thePath targetUID:(uid_t)theTargetUID targetGID:(gid_t)theTargetGID append:(BOOL)isAppend {
     if (self = [super init]) {
         path = [thePath copy];
@@ -138,8 +131,8 @@ write_again:
         if (fchown(fd, [targetUID unsignedIntValue], [targetGID unsignedIntValue]) == -1) {
             int errnum = errno;
             HSLogError(@"fchown(%@) error %d: %s", path, errnum, strerror(errnum));
-            SETNSERROR(@"UnixErrorDomain", errnum, @"failed to change ownership of %@: %s", path, strerror(errnum));
-            return NO;
+//            SETNSERROR(@"UnixErrorDomain", errnum, @"failed to change ownership of %@: %s", path, strerror(errnum));
+//            return NO;
         }
     }
     return YES;

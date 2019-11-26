@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -29,6 +29,8 @@
  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+
 
 #import "GlacierAuthorization.h"
 #import "HTTPConnection.h"
@@ -121,20 +123,16 @@
     [canonicalRequest appendString:[NSString hexStringWithData:[SHA256Hash hashData:payload]]];
 
 
-    NSString *dateStamp = [ISO8601Date basicDateStringFromDate:[conn date]];
-    NSString *dateTime = [ISO8601Date basicDateTimeStringFromDate:[conn date]];
+    NSString *dateStamp = [[ISO8601Date sharedISO8601Date] basicDateStringFromDate:[conn date]];
+    NSString *dateTime = [[ISO8601Date sharedISO8601Date] basicDateTimeStringFromDate:[conn date]];
     
     NSString *scope = [NSString stringWithFormat:@"%@/%@/glacier/aws4_request", dateStamp, [awsRegion regionName]];
     NSString *signingCredentials = [NSString stringWithFormat:@"%@/%@", accessKey, scope];
-    
-    HSLogTrace(@"canonical string = %@", canonicalRequest);
     
     NSData *canonicalRequestData = [canonicalRequest dataUsingEncoding:NSUTF8StringEncoding];
     NSString *canonicalRequestHashHex = [NSString hexStringWithData:[SHA256Hash hashData:canonicalRequestData]];
     
     NSString *stringToSign = [NSString stringWithFormat:@"AWS4-HMAC-SHA256\n%@\n%@\n%@", dateTime, scope, canonicalRequestHashHex];
-    
-    HSLogTrace(@"stringToSign = %@", stringToSign);
     
     //FIXME: Extract the service name from the hostname (see AwsHostNameUtils.parseServiceName() method in Java AWS SDK).
     NSString *signature = [signer signString:stringToSign withDateStamp:dateStamp regionName:[awsRegion regionName] serviceName:@"glacier"];

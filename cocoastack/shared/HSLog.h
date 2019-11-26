@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,14 +31,13 @@
  */
 
 
+
 #include <pthread.h>
+#import "CocoaLumberjack/CocoaLumberjack.h"
+#import "CWLSynthesizeSingleton.h"
+@class HSLogFileManager;
 
-extern unsigned int global_hslog_level;
 
-extern void setHSLogLevel(int level);
-extern int hsLogLevelForName(NSString *levelName);
-extern NSString *nameForHSLogLevel(int level);
-#define HSLOG_LEVEL_TRACE (6)
 #define HSLOG_LEVEL_DEBUG (5)
 #define HSLOG_LEVEL_DETAIL (4)
 #define HSLOG_LEVEL_INFO (3)
@@ -46,11 +45,23 @@ extern NSString *nameForHSLogLevel(int level);
 #define HSLOG_LEVEL_ERROR (1)
 #define HSLOG_LEVEL_NONE (0)
 
-#define HSLogTrace( s, ... ) { if (global_hslog_level >= HSLOG_LEVEL_TRACE) { NSLog(@"TRACE [thread %x] %p %@:%d %@", pthread_mach_thread_np(pthread_self()), self, [@__FILE__ lastPathComponent], __LINE__, [NSString stringWithFormat:(s), ##__VA_ARGS__]); } }
-#define HSLogDebug( s, ... ) { if (global_hslog_level >= HSLOG_LEVEL_DEBUG) { NSLog(@"DEBUG [thread %x] %p %@:%d %@", pthread_mach_thread_np(pthread_self()), self, [@__FILE__ lastPathComponent], __LINE__, [NSString stringWithFormat:(s), ##__VA_ARGS__]); } }
-#define HSLogDebugStatic( s, ... ) { if (global_hslog_level >= HSLOG_LEVEL_DEBUG) { NSLog(@"DEBUG [thread %x] %@:%d %@", pthread_mach_thread_np(pthread_self()), [@__FILE__ lastPathComponent], __LINE__, [NSString stringWithFormat:(s), ##__VA_ARGS__]); } }
-#define HSLogDetail( s, ... ) { if (global_hslog_level >= HSLOG_LEVEL_DETAIL) { NSLog(@"DETAIL [thread %x]  %@", pthread_mach_thread_np(pthread_self()), [NSString stringWithFormat:(s), ##__VA_ARGS__]); } }
-#define HSLogInfo( s, ... ) { if (global_hslog_level >= HSLOG_LEVEL_INFO) { NSLog(@"INFO [thread %x]  %@", pthread_mach_thread_np(pthread_self()), [NSString stringWithFormat:(s), ##__VA_ARGS__]); } }
-#define HSLogWarn( s, ... ) { if (global_hslog_level >= HSLOG_LEVEL_WARN) { NSLog(@"WARN [thread %x]  %@", pthread_mach_thread_np(pthread_self()), [NSString stringWithFormat:(s), ##__VA_ARGS__]); } }
-#define HSLogError( s, ... ) { if (global_hslog_level >= HSLOG_LEVEL_ERROR) { NSLog(@"ERROR [thread %x] %@", pthread_mach_thread_np(pthread_self()), [NSString stringWithFormat:(s), ##__VA_ARGS__]); } }
-#define HSLog( s, ... )  NSLog(@"%@", [NSString stringWithFormat:(s), ##__VA_ARGS__])
+#define HSLogDebug( s, ... ) DDLogVerbose(@"DEBUG [thread %x] %p %@:%d %@", pthread_mach_thread_np(pthread_self()), self, [@__FILE__ lastPathComponent], __LINE__, [NSString stringWithFormat:(s), ##__VA_ARGS__]);
+#define HSLogDetail( s, ... ) DDLogDebug(@"DETAIL [thread %x] %@", pthread_mach_thread_np(pthread_self()), [NSString stringWithFormat:(s), ##__VA_ARGS__]);
+#define HSLogInfo( s, ... ) DDLogInfo(@"INFO [thread %x] %@", pthread_mach_thread_np(pthread_self()), [NSString stringWithFormat:(s), ##__VA_ARGS__]);
+#define HSLogWarn( s, ... ) DDLogWarn(@"WARN [thread %x] %@", pthread_mach_thread_np(pthread_self()), [NSString stringWithFormat:(s), ##__VA_ARGS__]);
+#define HSLogError( s, ... ) DDLogError(@"ERROR [thread %x] %@", pthread_mach_thread_np(pthread_self()), [NSString stringWithFormat:(s), ##__VA_ARGS__]);
+
+
+extern DDLogLevel ddLogLevel;
+
+@interface HSLog : NSObject {
+    HSLogFileManager *logFileManager;
+    DDFileLogger *fileLogger;
+}
+CWL_DECLARE_SINGLETON_FOR_CLASS(HSLog)
+
++ (int)hsLogLevelForName:(NSString *)theName;
++ (NSString *)nameForHSLogLevel:(int)theLevel;
+- (void)setHSLogLevel:(int)theLevel;
+- (int)hsLogLevel;
+@end

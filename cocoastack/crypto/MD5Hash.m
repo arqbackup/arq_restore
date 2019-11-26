@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -30,6 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+
+
 #import <CommonCrypto/CommonDigest.h>
 #import "MD5Hash.h"
 #import "NSString_extra.h"
@@ -45,5 +47,13 @@
     }
     NSData *digestData = [NSData dataWithBytes:digest length:CC_MD5_DIGEST_LENGTH];
     return [digestData encodeBase64];
+}
++ (NSString *)hashData:(NSData *)data {
+    unsigned char digest[CC_MD5_DIGEST_LENGTH];
+    memset(digest, 0, CC_MD5_DIGEST_LENGTH);
+    if (CC_MD5([data bytes], (CC_LONG)[data length], digest) == NULL) {
+        HSLogError(@"CC_MD5 failed!");
+    }
+    return [NSString hexStringWithBytes:digest length:CC_MD5_DIGEST_LENGTH];
 }
 @end

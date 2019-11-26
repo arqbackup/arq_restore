@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -30,6 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+
+
 #import "CommitFailedFile.h"
 #import "StringIO.h"
 #import "BufferedInputStream.h"
@@ -44,13 +46,13 @@
 }
 - (id)initWithInputStream:(BufferedInputStream *)is error:(NSError **)error {
     if (self = [super init]) {
-        if (![StringIO read:&path from:is error:error]
-            || ![StringIO read:&errorMessage from:is error:error]) {
+        BOOL ret = [StringIO read:&path from:is error:error] && [StringIO read:&errorMessage from:is error:error];
+        [path retain];
+        [errorMessage retain];
+        if (!ret) {
             [self release];
             return nil;
         }
-        [path retain];
-        [errorMessage retain];
     }
     return self;
 }

@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,41 +31,62 @@
  */
 
 
+
 #import "StorageType.h"
-@protocol Fark;
+#import "PIELoader.h"
+@class Fark;
 @class PackBuilder;
 @class PackId;
+@class PackSetDB;
+@class PackIndexEntry;
 
 
-@interface PackSet : NSObject {
-    id <Fark> fark;
+@protocol PackSetActivityListener <NSObject>
+- (void)packSetActivity:(NSString *)theActivity;
+- (void)packSetActivityDidFinish;
+@end
+
+
+@interface PackSet : NSObject <PIELoaderDelegate> {
+    Fark *fark;
     StorageType storageType;
     NSString *packSetName;
-    BOOL savePacksToCache;
-    uid_t targetUID;
-    gid_t targetGID;
-    BOOL loadExistingMutablePackFiles;
-    NSMutableDictionary *packIndexEntriesByObjectSHA1;
+    BOOL cachePackFilesToDisk;
+    id <PackSetActivityListener> activityListener;
+    
+    BOOL cacheIsLoaded;
+    NSMutableData *packBuilderBuffer;
+    PackBuilder *packBuilder;
+    PackSetDB *packSetDB;
 }
 
 
 + (unsigned long long)maxPackFileSizeMB;
 + (unsigned long long)maxPackItemSizeBytes;
 
-- (id)initWithFark:(id <Fark>)theFark
+- (id)initWithFark:(Fark *)theFark
        storageType:(StorageType)theStorageType
        packSetName:(NSString *)thePackSetName
-  savePacksToCache:(BOOL)theSavePacksToCache
-         targetUID:(uid_t)theTargetUID
-         targetGID:(gid_t)theTargetGID
-loadExistingMutablePackFiles:(BOOL)theLoadExistingMutablePackFiles;
+cachePackFilesToDisk:(BOOL)theCachePackFilesToDisk
+  activityListener:(id <PackSetActivityListener>)theActivityListener
+             error:(NSError **)error;
 
 - (NSString *)errorDomain;
 
 - (NSString *)packSetName;
-- (NSNumber *)containsBlobForSHA1:(NSString *)sha1 dataSize:(unsigned long long *)dataSize error:(NSError **)error;
+- (StorageType)storageType;
+- (NSNumber *)sizeOfBlobInCacheForSHA1:(NSString *)sha1 error:(NSError **)error;
+- (NSNumber *)containsBlobInCacheForSHA1:(NSString *)sha1 error:(NSError **)error;
 - (PackId *)packIdForSHA1:(NSString *)theSHA1 error:(NSError **)error;
 - (NSData *)dataForSHA1:(NSString *)sha1 withRetry:(BOOL)retry error:(NSError **)error;
-- (BOOL)restorePackForBlobWithSHA1:(NSString *)theSHA1 forDays:(NSUInteger)theDays alreadyRestoredOrRestoring:(BOOL *)alreadyRestoredOrRestoring error:(NSError **)error;
+- (BOOL)putData:(NSData *)theData sha1:(NSString *)sha1 error:(NSError **)error;
+- (BOOL)commit:(NSError **)error;
+- (BOOL)restorePackForBlobWithSHA1:(NSString *)theSHA1 forDays:(NSUInteger)theDays tier:(int)theGlacierRetrievalTier alreadyRestoredOrRestoring:(BOOL *)alreadyRestoredOrRestoring error:(NSError **)error;
 - (NSNumber *)isObjectDownloadableForSHA1:(NSString *)theSHA1 error:(NSError **)error;
+- (PackIndexEntry *)packIndexEntryForSHA1:(NSString *)theSHA1 error:(NSError **)error;
+- (BOOL)consolidate:(NSError **)error;
+- (BOOL)clearCache:(NSError **)error;
+- (void)reloadCache;
+
+- (BOOL)deleteBlobForSHA1:(NSString *)theSHA1 error:(NSError **)error;
 @end

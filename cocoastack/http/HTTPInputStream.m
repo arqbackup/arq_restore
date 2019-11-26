@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -53,6 +53,7 @@
     [inputStream release];
     [httpThrottleLock release];
     [netMonitor release];
+    HSLogDebug(@"deallocing HTTPInputStream %p", self);
     [super dealloc];
 }
 

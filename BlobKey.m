@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2014, Stefan Reitshamer http://www.haystacksoftware.com
+ Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
  
  All rights reserved.
  
@@ -31,6 +31,7 @@
  */
 
 
+
 #import "BlobKey.h"
 #import "BufferedInputStream.h"
 #import "StringIO.h"
@@ -42,7 +43,7 @@
 
 
 @implementation BlobKey
-- (id)initWithSHA1:(NSString *)theSHA1 archiveId:(NSString *)theArchiveId archiveSize:(uint64_t)theArchiveSize archiveUploadedDate:(NSDate *)theArchiveUploadedDate compressed:(BOOL)isCompressed error:(NSError **)error {
+- (id)initWithSHA1:(NSString *)theSHA1 archiveId:(NSString *)theArchiveId archiveSize:(uint64_t)theArchiveSize archiveUploadedDate:(NSDate *)theArchiveUploadedDate compressionType:(BlobKeyCompressionType)theCompressionType error:(NSError **)error {
     if (self = [super init]) {
         storageType = StorageTypeGlacier;
         
@@ -52,7 +53,7 @@
             return nil;
         }
         if ([sha1Data length] != 20) {
-            SETNSERROR(@"BlobKeyErrorDomain", -1, @"invalid sha1 %@ for BlobKey (must be 20 bytes)", theSHA1);
+            SETNSERROR(@"BlobKeyErrorDomain", -1, @"invalid sha1 '%@' for BlobKey (must be 20 bytes)", theSHA1);
             [self release];
             return nil;
         }
@@ -62,11 +63,11 @@
         archiveId = [theArchiveId retain];
         archiveSize = theArchiveSize;
         archiveUploadedDate = [theArchiveUploadedDate retain];
-        compressed = isCompressed;
+        compressionType = theCompressionType;
     }
     return self;
 }
-- (id)initWithSHA1:(NSString *)theSHA1 storageType:(StorageType)theStorageType stretchEncryptionKey:(BOOL)isStretchedKey compressed:(BOOL)isCompressed error:(NSError **)error {
+- (id)initWithSHA1:(NSString *)theSHA1 storageType:(StorageType)theStorageType stretchEncryptionKey:(BOOL)isStretchedKey compressionType:(BlobKeyCompressionType)theCompressionType error:(NSError **)error {
     if (self = [super init]) {
         storageType = theStorageType;
         
@@ -76,7 +77,7 @@
             return nil;
         }
         if ([sha1Data length] != 20) {
-            SETNSERROR(@"BlobKeyErrorDomain", -1, @"invalid sha1 %@ for BlobKey (must be 20 bytes)", theSHA1);
+            SETNSERROR(@"BlobKeyErrorDomain", -1, @"invalid sha1 '%@' for BlobKey (must be 20 bytes)", theSHA1);
             [self release];
             return nil;
         }
@@ -84,11 +85,11 @@
         memcpy(sha1Bytes, [sha1Data bytes], 20);
         
         stretchEncryptionKey = isStretchedKey;
-        compressed = isCompressed;
+        compressionType = theCompressionType;
     }
     return self;
 }
-- (id)initWithStorageType:(StorageType)theStorageType archiveId:(NSString *)theArchiveId archiveSize:(uint64_t)theArchiveSize archiveUploadedDate:(NSDate *)theArchiveUploadedDate sha1:(NSString *)theSHA1 stretchEncryptionKey:(BOOL)isStretchedKey compressed:(BOOL)isCompressed error:(NSError **)error {
+- (id)initWithStorageType:(StorageType)theStorageType archiveId:(NSString *)theArchiveId archiveSize:(uint64_t)theArchiveSize archiveUploadedDate:(NSDate *)theArchiveUploadedDate sha1:(NSString *)theSHA1 stretchEncryptionKey:(BOOL)isStretchedKey compressionType:(BlobKeyCompressionType)theCompressionType error:(NSError **)error {
     if (self = [super init]) {
         storageType = theStorageType;
         archiveId = [theArchiveId retain];
@@ -101,7 +102,7 @@
             return nil;
         }
         if ([sha1Data length] != 20) {
-            SETNSERROR(@"BlobKeyErrorDomain", -1, @"invalid sha1 %@ for BlobKey (must be 20 bytes)", theSHA1);
+            SETNSERROR(@"BlobKeyErrorDomain", -1, @"invalid sha1 '%@' for BlobKey (must be 20 bytes)", theSHA1);
             [self release];
             return nil;
         }
@@ -109,7 +110,7 @@
         memcpy(sha1Bytes, [sha1Data bytes], 20);
         
         stretchEncryptionKey = isStretchedKey;
-        compressed = isCompressed;
+        compressionType = theCompressionType;
     }
     return self;
 }
@@ -120,7 +121,7 @@
                             archiveUploadedDate:[theBlobKey archiveUploadedDate]
                                       sha1Bytes:[theBlobKey sha1Bytes]
                            stretchEncryptionKey:[theBlobKey stretchEncryptionKey]
-                                     compressed:[theBlobKey compressed]];
+                                compressionType:[theBlobKey compressionType]];
 }
 - (void)dealloc {
     [archiveId release];
@@ -150,8 +151,8 @@
 - (BOOL)stretchEncryptionKey {
     return stretchEncryptionKey;
 }
-- (BOOL)compressed {
-    return compressed;
+- (BlobKeyCompressionType)compressionType {
+    return compressionType;
 }
 - (BOOL)isEqualToBlobKey:(BlobKey *)other {
     if (memcmp(sha1Bytes, [other sha1Bytes], 20) != 0) {
@@ -166,17 +167,17 @@
 
 #pragma mark NSCopying
 - (id)copyWithZone:(NSZone *)zone {
-    return [[BlobKey alloc] initWithStorageType:storageType archiveId:archiveId archiveSize:archiveSize archiveUploadedDate:archiveUploadedDate sha1Bytes:sha1Bytes stretchEncryptionKey:stretchEncryptionKey compressed:compressed];
+    return [[BlobKey alloc] initWithStorageType:storageType archiveId:archiveId archiveSize:archiveSize archiveUploadedDate:archiveUploadedDate sha1Bytes:sha1Bytes stretchEncryptionKey:stretchEncryptionKey compressionType:compressionType];
 }
 
 
 #pragma mark NSObject
 - (NSString *)description {
     if (storageType == StorageTypeS3 || storageType == StorageTypeS3Glacier) {
-        NSString *type = storageType == StorageTypeS3 ? @"S3" : @"S3Glacier";
-        return [NSString stringWithFormat:@"<BlobKey sha1=%@,type=%@,stretchedkey=%@,compressed=%@>", [self sha1], type, (stretchEncryptionKey ? @"YES" : @"NO"), (compressed ? @"YES" : @"NO")];
+        NSString *type = storageType == StorageTypeS3 ? @"Standard" : @"S3Glacier";
+        return [NSString stringWithFormat:@"<BlobKey sha1=%@,type=%@,stretchedkey=%@,compression=%d>", [self sha1], type, (stretchEncryptionKey ? @"YES" : @"NO"), compressionType];
     }
-    return [NSString stringWithFormat:@"<BlobKey sha1=%@,type=Glacier,archiveId=%@,archiveSize=%qu,archiveUploadedDate=%@,stretchedkey=%@,compressed=%@>", [self sha1], archiveId, archiveSize, [self archiveUploadedDate], (stretchEncryptionKey ? @"YES" : @"NO"), (compressed ? @"YES" : @"NO")];
+    return [NSString stringWithFormat:@"<BlobKey sha1=%@,type=Glacier,archiveId=%@,archiveSize=%qu,archiveUploadedDate=%@,stretchedkey=%@,compression=%d>", [self sha1], archiveId, archiveSize, [self archiveUploadedDate], (stretchEncryptionKey ? @"YES" : @"NO"), compressionType];
 }
 - (BOOL)isEqual:(id)anObject {
     if (![anObject isKindOfClass:[BlobKey class]]) {
@@ -190,7 +191,7 @@
     && [NSObject equalObjects:archiveId and:[other archiveId]]
     && archiveSize == [other archiveSize]
     && [NSObject equalObjects:archiveUploadedDate and:[other archiveUploadedDate]]
-    && compressed == [other compressed];
+    && compressionType == [other compressionType];
 }
 - (NSUInteger)hash {
     return (NSUInteger)(*sha1Bytes);
@@ -198,7 +199,7 @@
 
 
 #pragma mark internal
-- (id)initWithStorageType:(StorageType)theStorageType archiveId:(NSString *)theArchiveId archiveSize:(uint64_t)theArchiveSize archiveUploadedDate:(NSDate *)theArchiveUploadedDate sha1Bytes:(unsigned char *)theSHA1Bytes stretchEncryptionKey:(BOOL)isStretchedKey compressed:(BOOL)isCompressed {
+- (id)initWithStorageType:(StorageType)theStorageType archiveId:(NSString *)theArchiveId archiveSize:(uint64_t)theArchiveSize archiveUploadedDate:(NSDate *)theArchiveUploadedDate sha1Bytes:(unsigned char *)theSHA1Bytes stretchEncryptionKey:(BOOL)isStretchedKey compressionType:(BlobKeyCompressionType)theCompressionType {
     if (self = [super init]) {
         storageType = theStorageType;
         archiveId = [theArchiveId retain];
@@ -210,7 +211,7 @@
         memcpy(sha1Bytes, theSHA1Bytes, 20);
         
         stretchEncryptionKey = isStretchedKey;
-        compressed = isCompressed;
+        compressionType = theCompressionType;
     }
     return self;
 }
