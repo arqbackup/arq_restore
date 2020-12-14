@@ -697,6 +697,10 @@
                 HSLogError(@"failed to get location of %@: %@", s3BucketName, myError);
             } else {
                 AWSRegion *awsRegion = [AWSRegion regionWithLocation:location];
+                if (awsRegion == nil) {
+                    SETNSERROR([self errorDomain], -1, @"unknown location: %@", location);
+                    return nil;
+                }
                 HSLogDebug(@"awsRegion for s3BucketName %@: %@", s3BucketName, location);
                 
                 NSURL *s3Endpoint = [awsRegion s3EndpointWithSSL:YES];
