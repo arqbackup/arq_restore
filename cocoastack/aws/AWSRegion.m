@@ -44,7 +44,12 @@
             [AWSRegion usEast2],
             [AWSRegion usWest1],
             [AWSRegion usWest2],
+            [AWSRegion caCentral1],
             [AWSRegion euWest1],
+            [AWSRegion euWest2],
+            [AWSRegion euWest3],
+            [AWSRegion euNorth1],
+            [AWSRegion euSouth1],
             [AWSRegion euCentral1],
             [AWSRegion apSoutheast1],
             [AWSRegion apSoutheast2],
@@ -52,6 +57,8 @@
             [AWSRegion apNortheast2],
             [AWSRegion apSouth1],
             [AWSRegion saEast1],
+            [AWSRegion afSouth1],
+            [AWSRegion meSouth1],
             nil];
 }
 + (NSArray *)s3Regions {
@@ -164,6 +171,21 @@
                glacierDataTransferOutDollarsPerGB:.09
                                   supportsGlacier:YES] autorelease];
 }
++ (AWSRegion *)caCentral1 {
+    return [[[AWSRegion alloc] initWithRegionName:@"ca-central-1"
+                            s3LocationConstraints:[NSArray arrayWithObject:@"ca-central-1"]
+                                       s3Hostname:@"s3-ca-central-1.amazonaws.com"
+                                      displayName:@"Canada (Central)"
+                                 shortDisplayName:@"Canada"
+               s3StorageDollarsPerGBMonthStandard:.025
+                    s3StorageDollarsPerGBMonthRRS:.0138
+                             s3UploadDollarsPerGB:.005
+                    s3DataTransferOutDollarsPerGB:.09
+                  glacierStorageDollarsPerGBMonth:.0045
+                        glacierUploadDollarsPerGB:.05
+               glacierDataTransferOutDollarsPerGB:.09
+                                  supportsGlacier:YES] autorelease];
+}
 + (AWSRegion *)euWest1 {
     return [[[AWSRegion alloc] initWithRegionName:@"eu-west-1"
                             s3LocationConstraints:[NSArray arrayWithObjects:@"EU", @"eu-west-1", nil]
@@ -176,6 +198,66 @@
                     s3DataTransferOutDollarsPerGB:.09
                   glacierStorageDollarsPerGBMonth:.004
                         glacierUploadDollarsPerGB:.055
+               glacierDataTransferOutDollarsPerGB:.09
+                                  supportsGlacier:YES] autorelease];
+}
++ (AWSRegion *)euWest2 {
+    return [[[AWSRegion alloc] initWithRegionName:@"eu-west-2"
+                            s3LocationConstraints:[NSArray arrayWithObjects:@"EU", @"eu-west-2", nil]
+                                       s3Hostname:@"s3-eu-west-2.amazonaws.com"
+                                      displayName:@"EU (London)"
+                                 shortDisplayName:@"London"
+               s3StorageDollarsPerGBMonthStandard:.024
+                    s3StorageDollarsPerGBMonthRRS:.0131
+                             s3UploadDollarsPerGB:.005
+                    s3DataTransferOutDollarsPerGB:.09
+                  glacierStorageDollarsPerGBMonth:.0045
+                        glacierUploadDollarsPerGB:.055
+               glacierDataTransferOutDollarsPerGB:.09
+                                  supportsGlacier:YES] autorelease];
+}
++ (AWSRegion *)euWest3 {
+    return [[[AWSRegion alloc] initWithRegionName:@"eu-west-3"
+                            s3LocationConstraints:[NSArray arrayWithObjects:@"EU", @"eu-west-3", nil]
+                                       s3Hostname:@"s3-eu-west-3.amazonaws.com"
+                                      displayName:@"EU (Paris)"
+                                 shortDisplayName:@"Paris"
+               s3StorageDollarsPerGBMonthStandard:.024
+                    s3StorageDollarsPerGBMonthRRS:.0131
+                             s3UploadDollarsPerGB:.005
+                    s3DataTransferOutDollarsPerGB:.09
+                  glacierStorageDollarsPerGBMonth:.0045
+                        glacierUploadDollarsPerGB:.055
+               glacierDataTransferOutDollarsPerGB:.09
+                                  supportsGlacier:YES] autorelease];
+}
++ (AWSRegion *)euNorth1 {
+    return [[[AWSRegion alloc] initWithRegionName:@"eu-north-1"
+                            s3LocationConstraints:[NSArray arrayWithObjects:@"eu-north-1", nil]
+                                       s3Hostname:@"s3-eu-north-1.amazonaws.com"
+                                      displayName:@"EU (Stockholm)"
+                                 shortDisplayName:@"Stockholm"
+               s3StorageDollarsPerGBMonthStandard:.023
+                    s3StorageDollarsPerGBMonthRRS:.0125
+                             s3UploadDollarsPerGB:.005
+                    s3DataTransferOutDollarsPerGB:.09
+                  glacierStorageDollarsPerGBMonth:.004
+                        glacierUploadDollarsPerGB:.055
+               glacierDataTransferOutDollarsPerGB:.09
+                                  supportsGlacier:YES] autorelease];
+}
++ (AWSRegion *)euSouth1 {
+    return [[[AWSRegion alloc] initWithRegionName:@"eu-south-1"
+                            s3LocationConstraints:[NSArray arrayWithObjects:@"eu-south-1", nil]
+                                       s3Hostname:@"s3.eu-south-1.amazonaws.com"
+                                      displayName:@"EU (Milan)"
+                                 shortDisplayName:@"Milan"
+               s3StorageDollarsPerGBMonthStandard:.024
+                    s3StorageDollarsPerGBMonthRRS:.0131
+                             s3UploadDollarsPerGB:.005
+                    s3DataTransferOutDollarsPerGB:.09
+                  glacierStorageDollarsPerGBMonth:.0045
+                        glacierUploadDollarsPerGB:.06
                glacierDataTransferOutDollarsPerGB:.09
                                   supportsGlacier:YES] autorelease];
 }
@@ -283,6 +365,36 @@
                         glacierUploadDollarsPerGB:0
                glacierDataTransferOutDollarsPerGB:0
                                   supportsGlacier:NO] autorelease];
+}
++ (AWSRegion *)afSouth1 {
+    return [[[AWSRegion alloc] initWithRegionName:@"af-south-1"
+                            s3LocationConstraints:[NSArray arrayWithObject:@"af-south-1"]
+                                       s3Hostname:@"s3.af-south-1.amazonaws.com"
+                                      displayName:@"Africa (Cape Town)"
+                                 shortDisplayName:@"Cape Town"
+               s3StorageDollarsPerGBMonthStandard:.0274
+                    s3StorageDollarsPerGBMonthRRS:.0149
+                             s3UploadDollarsPerGB:.007
+                    s3DataTransferOutDollarsPerGB:.154
+                  glacierStorageDollarsPerGBMonth:.0045
+                        glacierUploadDollarsPerGB:.06
+               glacierDataTransferOutDollarsPerGB:.154
+                                  supportsGlacier:YES] autorelease];
+}
++ (AWSRegion *)meSouth1 {
+    return [[[AWSRegion alloc] initWithRegionName:@"me-south-1"
+                            s3LocationConstraints:[NSArray arrayWithObject:@"me-south-1"]
+                                       s3Hostname:@"s3-me-south-1.amazonaws.com"
+                                      displayName:@"Middle East (Bahrain)"
+                                 shortDisplayName:@"Bahrain"
+               s3StorageDollarsPerGBMonthStandard:.025
+                    s3StorageDollarsPerGBMonthRRS:.0138
+                             s3UploadDollarsPerGB:.007
+                    s3DataTransferOutDollarsPerGB:.117
+                  glacierStorageDollarsPerGBMonth:.0045
+                        glacierUploadDollarsPerGB:.0605
+               glacierDataTransferOutDollarsPerGB:.117
+                                  supportsGlacier:YES] autorelease];
 }
 
 

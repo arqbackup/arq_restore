@@ -59,7 +59,12 @@
 + (AWSRegion *)usEast2;
 + (AWSRegion *)usWest1;
 + (AWSRegion *)usWest2;
++ (AWSRegion *)caCentral1;
 + (AWSRegion *)euWest1;
++ (AWSRegion *)euWest2;
++ (AWSRegion *)euWest3;
++ (AWSRegion *)euNorth1;
++ (AWSRegion *)euSouth1;
 + (AWSRegion *)euCentral1;
 + (AWSRegion *)apSoutheast1;
 + (AWSRegion *)apSoutheast2;
@@ -67,6 +72,9 @@
 + (AWSRegion *)apNortheast2;
 + (AWSRegion *)apSouth1;
 + (AWSRegion *)saEast1;
++ (AWSRegion *)afSouth1;
++ (AWSRegion *)meSouth1;
+
 
 - (NSString *)regionName;
 - (NSString *)displayName;
