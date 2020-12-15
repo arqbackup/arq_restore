@@ -242,7 +242,7 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(TargetFactory);
         return nil;
     }
     NSString *targetType = [[plist stringNodeForKey:@"targetType"] stringValue];
-    if ([targetType isEqualToString:@"s3"]) {
+    if ([targetType isEqualToString:@"s3"] || [targetType isEqualToString:@"wasabi"]) {
         return [[[Target alloc] initWithPlist:plist] autorelease];
     }
     SETNSERROR([self errorDomain], -1, @"unknown target type '%@'", targetType);

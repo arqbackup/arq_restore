@@ -519,7 +519,7 @@
             return nil;
         }
         
-    } else if (targetType == kTargetAWS) {
+    } else if (targetType == kTargetAWS || targetType == kTargetWasabi) {
         AWSRegion *region = [AWSRegion regionWithS3Endpoint:[target endpoint]];
         if (region == nil) {
             region = [AWSRegion usEast1];
