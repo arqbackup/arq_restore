@@ -141,32 +141,32 @@
         return YES;
     }
     
-    EVP_CIPHER_CTX cipherContext;
-    EVP_CIPHER_CTX_init(&cipherContext);
-    if (!EVP_EncryptInit(&cipherContext, cipher, evpKey, iv)) {
+    EVP_CIPHER_CTX *cipherContext = EVP_CIPHER_CTX_new();
+    EVP_CIPHER_CTX_init(cipherContext);
+    if (!EVP_EncryptInit(cipherContext, cipher, evpKey, iv)) {
         SETNSERROR([CryptoKey errorDomain], -1, @"EVP_EncryptInit: %@", [OpenSSL errorMessage]);
-        EVP_CIPHER_CTX_cleanup(&cipherContext);
+        EVP_CIPHER_CTX_cleanup(cipherContext);
         return NO;
     }
     
     // Need room for data + cipher block size - 1.
-    [theOutBuffer setLength:([plainData length] + EVP_CIPHER_CTX_block_size(&cipherContext))];
+    [theOutBuffer setLength:([plainData length] + EVP_CIPHER_CTX_block_size(cipherContext))];
     unsigned char *outbuf = (unsigned char *)[theOutBuffer mutableBytes];
     
     int outlen = 0;
-    if (!EVP_EncryptUpdate(&cipherContext, outbuf, &outlen, [plainData bytes], (int)[plainData length])) {
+    if (!EVP_EncryptUpdate(cipherContext, outbuf, &outlen, [plainData bytes], (int)[plainData length])) {
         SETNSERROR([CryptoKey errorDomain], -1, @"EVP_EncryptUpdate: %@",  [OpenSSL errorMessage]);
-        EVP_CIPHER_CTX_cleanup(&cipherContext);
+        EVP_CIPHER_CTX_free(cipherContext);
         return NO;
     }
     
     int extralen = 0;
-    if (!EVP_EncryptFinal(&cipherContext, outbuf + outlen, &extralen)) {
+    if (!EVP_EncryptFinal(cipherContext, outbuf + outlen, &extralen)) {
         SETNSERROR([CryptoKey errorDomain], -1, @"EVP_EncryptFinal: %@",  [OpenSSL errorMessage]);
-        EVP_CIPHER_CTX_cleanup(&cipherContext);
+        EVP_CIPHER_CTX_free(cipherContext);
         return NO;
     }
-    EVP_CIPHER_CTX_cleanup(&cipherContext);
+    EVP_CIPHER_CTX_free(cipherContext);
     
     [theOutBuffer setLength:(outlen + extralen)];
     return YES;
@@ -191,31 +191,31 @@
     int inlen = (int)[encrypted length];
     unsigned char *input = (unsigned char *)[encrypted bytes];
     
-    EVP_CIPHER_CTX cipherContext;
-    EVP_CIPHER_CTX_init(&cipherContext);
-    if (!EVP_DecryptInit(&cipherContext, cipher, evpKey, iv)) {
+    EVP_CIPHER_CTX *cipherContext = EVP_CIPHER_CTX_new();
+    EVP_CIPHER_CTX_init(cipherContext);
+    if (!EVP_DecryptInit(cipherContext, cipher, evpKey, iv)) {
         SETNSERROR([CryptoKey errorDomain], -1, @"EVP_DecryptInit: %@", [OpenSSL errorMessage]);
-        EVP_CIPHER_CTX_cleanup(&cipherContext);
+        EVP_CIPHER_CTX_free(cipherContext);
         return NO;
     }
     
-    [theOutBuffer setLength:(inlen + EVP_CIPHER_CTX_block_size(&cipherContext))];
+    [theOutBuffer setLength:(inlen + EVP_CIPHER_CTX_block_size(cipherContext))];
     unsigned char *outbuf = (unsigned char *)[theOutBuffer mutableBytes];
     int outlen = 0;
-    if (!EVP_DecryptUpdate(&cipherContext, outbuf, &outlen, input, inlen)) {
+    if (!EVP_DecryptUpdate(cipherContext, outbuf, &outlen, input, inlen)) {
         SETNSERROR([CryptoKey errorDomain], -1, @"EVP_DecryptUpdate: %@", [OpenSSL errorMessage]);
-        EVP_CIPHER_CTX_cleanup(&cipherContext);
+        EVP_CIPHER_CTX_free(cipherContext);
         return NO;
     }
     
     int extralen = 0;
-    if (!EVP_DecryptFinal(&cipherContext, outbuf + outlen, &extralen)) {
+    if (!EVP_DecryptFinal(cipherContext, outbuf + outlen, &extralen)) {
         SETNSERROR([CryptoKey errorDomain], -1, @"EVP_DecryptFinal: %@", [OpenSSL errorMessage]);
-        EVP_CIPHER_CTX_cleanup(&cipherContext);
+        EVP_CIPHER_CTX_free(cipherContext);
         return NO;
     }
     
-    EVP_CIPHER_CTX_cleanup(&cipherContext);
+    EVP_CIPHER_CTX_free(cipherContext);
     [theOutBuffer setLength:(outlen + extralen)];
     return YES;
 }
