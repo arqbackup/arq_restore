@@ -31,21 +31,48 @@
  */
 
 
+#ifndef ARQ_HTTP_H
+#define ARQ_HTTP_H
 
-
+#ifndef HTTP_1_1
 #define HTTP_1_1 @"1.1"
+#endif
+#ifndef HTTP_OK
 #define HTTP_OK (200)
+#endif
+#ifndef HTTP_NO_CONTENT
 #define HTTP_NO_CONTENT (204)
+#endif
 #define HTTP_INTERNAL_SERVER_ERROR (500)
+#ifndef HTTP_FORBIDDEN
 #define HTTP_FORBIDDEN (403)
+#endif
+#ifndef HTTP_BAD_REQUEST
 #define HTTP_BAD_REQUEST (400)
+#endif
+#ifndef HTTP_METHOD_NOT_ALLOWED
 #define HTTP_METHOD_NOT_ALLOWED (405)
+#endif
+#ifndef HTTP_REQUEST_TIMEOUT
 #define HTTP_REQUEST_TIMEOUT (408)
+#endif
+#ifndef HTTP_CONFLICT
 #define HTTP_CONFLICT (409)
+#endif
 #define HTTP_REQUESTED_RANGE_NOT_SATISFIABLE (416)
+#ifndef HTTP_LENGTH_REQUIRED
 #define HTTP_LENGTH_REQUIRED (411)
+#endif
+#ifndef HTTP_NOT_FOUND
 #define HTTP_NOT_FOUND (404)
+#endif
+#ifndef HTTP_MOVED_PERMANENTLY
 #define HTTP_MOVED_PERMANENTLY (301)
+#endif
+#ifndef HTTP_MOVED_TEMPORARILY
 #define HTTP_MOVED_TEMPORARILY (307)
+#endif
 #define HTTP_SERVICE_NOT_AVAILABLE (503)
 #define HTTP_VERSION_NOT_SUPPORTED (505)
+
+#endif /* ARQ_HTTP_H */
