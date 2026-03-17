@@ -1,0 +1,44 @@
+Building:
+- see https://cutecoder.org/programming/compile-open-ssl-apple-silicon/
+
+- tar xf openssl-1.1.1h.tgz into openssl-1.1.1h-x86_x64
+- cd into openssl-1.1.1h-x86_x64/
+    $ export MACOSX_DEPLOYMENT_TARGET=10.10
+    $ ./Configure darwin64-x86_64-cc shared
+    $ caffeinate make
+
+- tar xf openssl-1.1.1h.tgz into openssl-1.1.1h-arm64
+- cd into openssl-1.1.1h-arm64/
+- edit Configurations/10.main.conf to add around line 1560, right under the entry for "darwin64-x86_64-cc":
+    "darwin64-arm64-cc" => {
+        inherit_from     => [ "darwin-common", asm("aarch64_asm") ],
+        CFLAGS           => add("-Wall"),
+        cflags           => add("-arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk"),
+        lib_cppflags     => add("-DL_ENDIAN"),
+        bn_ops           => "SIXTY_FOUR_BIT_LONG",
+        perlasm_scheme   => "macosx",
+    },
+- build:
+    $ export MACOSX_DEPLOYMENT_TARGET=10.10
+    $ ./Configure darwin64-arm64-cc no-asm
+    $ caffeinate make
+- combine:
+    $ mkdir openssl-mac
+    $ lipo -create openssl-1.1.1h-arm64/libcrypto.1.1.dylib openssl-1.1.1h-x86_64/libcrypto.1.1.dylib -output openssl-mac/libcrypto.1.1.1.dylib
+    $ lipo -create openssl-1.1.1h-arm64/libssl.1.1.dylib openssl-1.1.1h-x86_x64/libssl.1.1.dylib -output openssl-mac/libssl.1.1.dylib
+    $ lipo -create openssl-1.1.1h-arm64/libcrypto.a openssl-1.1.1h-x86_x64/libcrypto.a -output openssl-mac/libcrypto.1.1.1.a
+    $ lipo -create openssl-1.1.1h-arm64/libssl.a openssl-1.1.1h-x86_x64/libssl.a -output openssl-mac/libssl.1.1.a
+    
+    $ file libcrypto.a
+        -> should show unniversal binary with x86_64 and arm64 architectures
+- set rpaths:
+    $ cd openssl-mac
+    $ install_name_tool -id '@rpath/libcrypto.1.1.1.dylib' libcrypto.1.1.1.dylib
+    $ install_name_tool -id '@rpath/libssl.1.1.dylib' libssl.1.1.dylib
+
+- test rpaths:
+    $ otool -D libssl.1.1.dylib
+        should output:
+            libssl.1.1.dylib:
+            @rpath/libssl.1.1.dylib
+

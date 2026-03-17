@@ -7,9 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		F805B8891160EB39007EC01E /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F805B8881160EB39007EC01E /* libcrypto.dylib */; };
+		F805B8891160EB39007EC01E /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F805B8881160EB39007EC01E /* libcrypto.a */; };
 		F805B88B1160EB3A007EC01E /* libicucore.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F805B88A1160EB39007EC01E /* libicucore.dylib */; };
-		F805B88F1160EB45007EC01E /* libssl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F805B88E1160EB45007EC01E /* libssl.dylib */; };
+		F805B88F1160EB45007EC01E /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F805B88E1160EB45007EC01E /* libssl.a */; };
 		F805B8931160EB4E007EC01E /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F805B8921160EB4E007EC01E /* SystemConfiguration.framework */; };
 		F805B8A11160EBAA007EC01E /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F805B8A01160EBAA007EC01E /* CoreFoundation.framework */; };
 		F805B8C21160EC41007EC01E /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F805B8C11160EC41007EC01E /* Security.framework */; };
@@ -244,9 +244,9 @@
 		08FB779EFE84155DC02AAC07 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		32A70AAB03705E1F00C91783 /* arq_restore_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = arq_restore_Prefix.pch; sourceTree = "<group>"; };
 		8DD76FA10486AA7600D96B5E /* arq_restore */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = arq_restore; sourceTree = BUILT_PRODUCTS_DIR; };
-		F805B8881160EB39007EC01E /* libcrypto.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.dylib; path = usr/lib/libcrypto.dylib; sourceTree = SDKROOT; };
+		F805B8881160EB39007EC01E /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcrypto.a; path = 3rdparty/openssl-1.1.1h/lib/libcrypto.a; sourceTree = "<group>"; };
 		F805B88A1160EB39007EC01E /* libicucore.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libicucore.dylib; path = usr/lib/libicucore.dylib; sourceTree = SDKROOT; };
-		F805B88E1160EB45007EC01E /* libssl.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libssl.dylib; path = usr/lib/libssl.dylib; sourceTree = SDKROOT; };
+		F805B88E1160EB45007EC01E /* libssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libssl.a; path = 3rdparty/openssl-1.1.1h/lib/libssl.a; sourceTree = "<group>"; };
 		F805B8921160EB4E007EC01E /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 		F805B8981160EB71007EC01E /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		F805B8A01160EBAA007EC01E /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
@@ -710,9 +710,9 @@
 				F8A18CA11E3E16C400AF9F97 /* libz.tbd in Frameworks */,
 				F8A18C9A1E3E165F00AF9F97 /* Cocoa.framework in Frameworks */,
 				F8F2D9701986C09300997A15 /* IOKit.framework in Frameworks */,
-				F805B8891160EB39007EC01E /* libcrypto.dylib in Frameworks */,
+				F805B8891160EB39007EC01E /* libcrypto.a in Frameworks */,
 				F805B88B1160EB3A007EC01E /* libicucore.dylib in Frameworks */,
-				F805B88F1160EB45007EC01E /* libssl.dylib in Frameworks */,
+				F805B88F1160EB45007EC01E /* libssl.a in Frameworks */,
 				F805B8931160EB4E007EC01E /* SystemConfiguration.framework in Frameworks */,
 				F805B8A11160EBAA007EC01E /* CoreFoundation.framework in Frameworks */,
 				F805B8C21160EC41007EC01E /* Security.framework in Frameworks */,
@@ -799,9 +799,9 @@
 				F805B8C11160EC41007EC01E /* Security.framework */,
 				F805B8C51160EC4E007EC01E /* Cocoa.framework */,
 				F805B8CD1160ECD7007EC01E /* CoreServices.framework */,
-				F805B8881160EB39007EC01E /* libcrypto.dylib */,
+				F805B8881160EB39007EC01E /* libcrypto.a */,
 				F805B88A1160EB39007EC01E /* libicucore.dylib */,
-				F805B88E1160EB45007EC01E /* libssl.dylib */,
+				F805B88E1160EB45007EC01E /* libssl.a */,
 			);
 			name = "External Frameworks and Libraries";
 			sourceTree = "<group>";
@@ -1690,12 +1690,12 @@
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/libssh2/include",
-					/usr/local/ssl/include,
+					"$(PROJECT_DIR)/3rdparty/openssl-1.1.1h/include",
 					"$(PROJECT_DIR)",
 				);
 				INSTALL_PATH = /usr/local/bin;
 				LIBRARY_SEARCH_PATHS = (
-					/usr/local/ssl/lib,
+					"$(PROJECT_DIR)/3rdparty/openssl-1.1.1h/lib",
 					"$(inherited)",
 				);
 				PRODUCT_NAME = arq_restore;
@@ -1718,12 +1718,12 @@
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/libssh2/include",
-					/usr/local/ssl/include,
+					"$(PROJECT_DIR)/3rdparty/openssl-1.1.1h/include",
 					"$(PROJECT_DIR)",
 				);
 				INSTALL_PATH = /usr/local/bin;
 				LIBRARY_SEARCH_PATHS = (
-					/usr/local/ssl/lib,
+					"$(PROJECT_DIR)/3rdparty/openssl-1.1.1h/lib",
 					"$(inherited)",
 				);
 				PRODUCT_NAME = arq_restore;
