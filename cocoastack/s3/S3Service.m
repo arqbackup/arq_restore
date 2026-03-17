@@ -414,7 +414,7 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
     NSData *response = [s3r dataWithTargetConnectionDelegate:theDelegate error:&myError];
     if (response == nil) {
         if ([myError code] == S3SERVICE_ERROR_AMAZON_ERROR
-            && [[[myError userInfo] objectForKey:@"HTTPStatusCode"] intValue] == HTTP_CONFLICT) {
+            && [[[myError userInfo] objectForKey:@"HTTPStatusCode"] intValue] == ARQ_HTTP_CONFLICT) {
             // AWS returns 409 conflict if it's already in the process of being restored.
             if (alreadyRestoredOrRestoring != NULL) {
                 *alreadyRestoredOrRestoring = YES;
@@ -422,7 +422,7 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
             return YES;
         }
         if ([myError code] == S3SERVICE_ERROR_AMAZON_ERROR
-            && [[[myError userInfo] objectForKey:@"HTTPStatusCode"] intValue] == HTTP_FORBIDDEN
+            && [[[myError userInfo] objectForKey:@"HTTPStatusCode"] intValue] == ARQ_HTTP_FORBIDDEN
             && [[[myError userInfo] objectForKey:@"AmazonCode"] isEqualToString:@"InvalidObjectState"]) {
             // AWS returns 403 and "InvalidObjectState" if the object's storage class isn't Glacier.
             // If the object is new and hasn't been shifted to Glacier yet, AWS will return this error,
@@ -438,7 +438,7 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
     
     // If the bucket does not have a restored copy of the object, Amazon S3 returns the following 202 Accepted response.
     // If a copy of the object is already restored, Amazon S3 returns a 200 OK response, only updating the restored copy's expiry time.
-    if ([s3r httpResponseCode] == HTTP_OK) {
+    if ([s3r httpResponseCode] == ARQ_HTTP_OK) {
         if (alreadyRestoredOrRestoring != NULL) {
             *alreadyRestoredOrRestoring = YES;
         }

@@ -86,11 +86,11 @@
         }
         if ([myError isErrorWithDomain:[self errorDomain] code:ERROR_NOT_FOUND]) {
             break;
-        } else if ([[[myError userInfo] objectForKey:@"HTTPStatusCode"] intValue] == HTTP_INTERNAL_SERVER_ERROR) {
+        } else if ([[[myError userInfo] objectForKey:@"HTTPStatusCode"] intValue] == ARQ_HTTP_INTERNAL_SERVER_ERROR) {
             transientError = YES;
         } else if ([myError isConnectionResetError]) {
             transientError = YES;
-        } else if (retryOnTransientError && [myError isErrorWithDomain:[self errorDomain] code:HTTP_SERVICE_NOT_AVAILABLE]) {
+        } else if (retryOnTransientError && [myError isErrorWithDomain:[self errorDomain] code:ARQ_HTTP_SERVICE_NOT_AVAILABLE]) {
             // Sometimes SQS returns a 503 error, and we're supposed to retry in that case.
             transientError = YES;
             needSleep = YES;
@@ -142,12 +142,12 @@
         return response;
     }
     
-    if (code == HTTP_NOT_FOUND) {
+    if (code == ARQ_HTTP_NOT_FOUND) {
         SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"%@ not found", url);
         HSLogDebug(@"returning not-found error");
         return nil;
     }
-    if (code == HTTP_METHOD_NOT_ALLOWED) {
+    if (code == ARQ_HTTP_METHOD_NOT_ALLOWED) {
         HSLogError(@"%@ 405 error", url);
         SETNSERROR([self errorDomain], ERROR_RRS_NOT_FOUND, @"%@ 405 error", url);
     }

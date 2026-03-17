@@ -114,7 +114,7 @@
             
             if (retryOnTransientError && [amazonCode isEqualToString:@"RequestTimeoutException"]) {
                 transientError = YES;
-            } else if (retryOnTransientError && httpStatusCode == HTTP_REQUEST_TIMEOUT) { // Maybe the Glacier response body wasn't there, but we still got a 408, so we retry.
+            } else if (retryOnTransientError && httpStatusCode == ARQ_HTTP_REQUEST_TIMEOUT) { // Maybe the Glacier response body wasn't there, but we still got a 408, so we retry.
                 transientError = YES;
             } else if (retryOnTransientError && [[[myError userInfo] objectForKey:@"AmazonMessage"] hasPrefix:@"The request signature we calculated does not match the signature you provided."]) {
                 // AWS seems to randomly return this error for some people.
@@ -123,14 +123,14 @@
             } else if (retryOnTransientError && [amazonCode isEqualToString:@"ThrottlingException"]) {
                 transientError = YES;
                 needSleep = YES;
-            } else if (httpStatusCode == HTTP_INTERNAL_SERVER_ERROR) {
+            } else if (httpStatusCode == ARQ_HTTP_INTERNAL_SERVER_ERROR) {
                 transientError = YES;
                 needSleep = YES;
                 
-            } else if (retryOnTransientError && httpStatusCode == HTTP_SERVICE_NOT_AVAILABLE) {
+            } else if (retryOnTransientError && httpStatusCode == ARQ_HTTP_SERVICE_NOT_AVAILABLE) {
                 transientError = YES;
                 needSleep = YES;
-            } else if (retryOnTransientError && httpStatusCode == HTTP_VERSION_NOT_SUPPORTED) {
+            } else if (retryOnTransientError && httpStatusCode == ARQ_HTTP_VERSION_NOT_SUPPORTED) {
                 transientError = YES;
                 needSleep = YES;
             } else {
@@ -192,12 +192,12 @@
         return response;
     }
     
-    if (code == HTTP_NOT_FOUND) {
+    if (code == ARQ_HTTP_NOT_FOUND) {
         SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"%@ not found", url);
         HSLogDebug(@"returning not-found error");
         return nil;
     }
-    if (code == HTTP_METHOD_NOT_ALLOWED) {
+    if (code == ARQ_HTTP_METHOD_NOT_ALLOWED) {
         HSLogError(@"%@ 405 error", url);
         SETNSERROR([self errorDomain], ERROR_RRS_NOT_FOUND, @"%@ 405 error", url);
     }

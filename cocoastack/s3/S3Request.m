@@ -149,14 +149,14 @@
             
             if ([amazonCode isEqualToString:@"RequestTimeout"] || [amazonCode isEqualToString:@"RequestTimeoutException"]) {
                 needRetry = YES;
-            } else if (httpStatusCode == HTTP_INTERNAL_SERVER_ERROR) {
+            } else if (httpStatusCode == ARQ_HTTP_INTERNAL_SERVER_ERROR) {
                 needRetry = YES;
                 needSleep = YES;
                 is500Error = YES;
-            } else if (httpStatusCode == HTTP_SERVICE_NOT_AVAILABLE) {
+            } else if (httpStatusCode == ARQ_HTTP_SERVICE_NOT_AVAILABLE) {
                 needRetry = YES;
                 needSleep = YES;
-            } else if (httpStatusCode == HTTP_CONFLICT && [amazonCode isEqualToString:@"OperationAborted"]) {
+            } else if (httpStatusCode == ARQ_HTTP_CONFLICT && [amazonCode isEqualToString:@"OperationAborted"]) {
                 // "A conflicting conditional operation is currently in progress against this resource. Please try again."
                 // Happens sometimes when putting bucket lifecycle policy.
                 needRetry = YES;
@@ -254,7 +254,7 @@
     NSString *responseString = [[[NSString alloc] initWithBytes:[response bytes] length:[response length] encoding:NSUTF8StringEncoding] autorelease];
     responseString = [responseString stringByReplacingOccurrencesOfString:@"\n" withString:@""];
     HSLogDebug(@"http response body: %@", responseString);
-    if (httpResponseCode == HTTP_NOT_FOUND) {
+    if (httpResponseCode == ARQ_HTTP_NOT_FOUND) {
         S3ErrorResult *errorResult = [[[S3ErrorResult alloc] initWithAction:[NSString stringWithFormat:@"%@ %@", method, [url description]]
                                                                        data:response
                                                               httpErrorCode:httpResponseCode
@@ -268,11 +268,11 @@
         SETERRORFROMMYERROR;
         return nil;
     }
-    if (httpResponseCode == HTTP_METHOD_NOT_ALLOWED) {
+    if (httpResponseCode == ARQ_HTTP_METHOD_NOT_ALLOWED) {
         HSLogError(@"%@ 405 error", url);
         SETNSERROR([S3Service errorDomain], ERROR_RRS_NOT_FOUND, @"%@ 405 error", url);
     }
-    if (httpResponseCode == HTTP_MOVED_TEMPORARILY) {
+    if (httpResponseCode == ARQ_HTTP_MOVED_TEMPORARILY) {
         NSString *location = [conn responseHeaderForKey:@"Location"];
         NSDictionary *userInfo = [NSDictionary dictionaryWithObject:location forKey:@"location"];
         NSError *myError = [NSError errorWithDomain:[S3Service errorDomain] code:ERROR_TEMPORARY_REDIRECT userInfo:userInfo];
