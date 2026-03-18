@@ -30,12 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 @protocol HTTPConnection;
 @protocol S3Signer;
-
 
 @protocol S3AuthorizationProvider <NSObject>
 - (int)signatureVersion;

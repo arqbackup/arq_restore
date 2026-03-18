@@ -30,13 +30,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @class BlobKey;
 @class Target;
 @protocol TargetConnectionDelegate;
 @protocol ObjectEncryptorImpl;
-
 
 @interface ObjectEncryptor : NSObject {
     Target *target;
@@ -48,7 +45,6 @@
 }
 
 + (NSString *)errorDomain;
-
 
 - (id)initWithTarget:(Target *)theTarget
         computerUUID:(NSString *)theComputerUUID

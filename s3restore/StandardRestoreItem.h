@@ -30,12 +30,9 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @class StandardRestorer;
 @class Tree;
 @class Node;
-
 
 @interface StandardRestoreItem : NSObject {
     StandardRestorer *standardRestorer;

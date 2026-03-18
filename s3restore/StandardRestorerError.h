@@ -30,13 +30,11 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @interface StandardRestorerError : NSObject {
     NSString *errorMessage;
     NSString *path;
 }
 - (id)initWithErrorMessage:(NSString *)theErrorMessage path:(NSString *)thePath;
-@property (readonly, retain) NSString *errorMessage;
-@property (readonly, retain) NSString *path;
+@property(readonly, strong) NSString *errorMessage;
+@property(readonly, strong) NSString *path;
 @end

@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #include <sys/stat.h>
 #import "Node.h"
 #import "BooleanIO.h"
@@ -43,12 +41,10 @@
 #import "Tree.h"
 #import "BlobKeyIO.h"
 
-
 @implementation Node
 @synthesize isTree, treeContainsMissingItems, uncompressedDataSize, xattrsBlobKey, xattrsSize, aclBlobKey, uid, gid, mode, mtime_sec, mtime_nsec, flags, finderFlags, extendedFinderFlags, finderFileType, finderFileCreator, isFileExtensionHidden, st_dev, treeVersion, st_rdev;
 @synthesize ctime_sec, ctime_nsec, createTime_sec, createTime_nsec, st_nlink, st_ino, st_blocks, st_blksize;
 @dynamic treeBlobKey, dataBlobKeys;
-
 
 - (id)initWithInputStream:(BufferedInputStream *)is treeVersion:(int)theTreeVersion error:(NSError **)error {
     if (self = [super init]) {
@@ -56,13 +52,13 @@
         dataBlobKeys = [[NSMutableArray alloc] init];
 
         if (![BooleanIO read:&isTree from:is error:error]) {
-            [self release];
+            
             return nil;
         }
         
         if (theTreeVersion >= 18) {
             if (![BooleanIO read:&treeContainsMissingItems from:is error:error]) {
-                [self release];
+                
                 return nil;
             }
         }
@@ -77,7 +73,7 @@
             if (![BooleanIO read:&dataAreCompressed from:is error:error]
                 || ![BooleanIO read:&xattrsAreCompressed from:is error:error]
                 || ![BooleanIO read:&aclIsCompressed from:is error:error]) {
-                [self release];
+                
                 return nil;
             }
             dataCompressionType = dataAreCompressed ? BlobKeyCompressionGzip : BlobKeyCompressionNone;
@@ -91,7 +87,7 @@
             if (![IntegerIO readInt32:&theDataCompressionType from:is error:error]
                 || ![IntegerIO readInt32:&theXattrsCompressionType from:is error:error]
                 || ![IntegerIO readInt32:&theAclCompressionType from:is error:error]) {
-                [self release];
+                
                 return nil;
             }
             dataCompressionType = (BlobKeyCompressionType)theDataCompressionType;
@@ -101,19 +97,19 @@
         
         int dataBlobKeysCount;
         if (![IntegerIO readInt32:&dataBlobKeysCount from:is error:error]) {
-            [self release];
+            
             return nil;
         }
         for (int i = 0; i < dataBlobKeysCount; i++) {
             BlobKey *dataBlobKey = nil;
             if (![BlobKeyIO read:&dataBlobKey from:is treeVersion:treeVersion compressionType:dataCompressionType error:error]) {
-                [self release];
+                
                 return nil;
             }
             [dataBlobKeys addObject:dataBlobKey];
         }
         if (![IntegerIO readUInt64:&uncompressedDataSize from:is error:error]) {
-            [self release];
+            
             return nil;
         }
         
@@ -123,14 +119,18 @@
             BlobKey *thePreviewBlobKey = nil;
             if (![BlobKeyIO read:&theThumbnailBlobKey from:is treeVersion:treeVersion compressionType:BlobKeyCompressionNone error:error]
                 || ![BlobKeyIO read:&thePreviewBlobKey from:is treeVersion:treeVersion compressionType:BlobKeyCompressionNone error:error]) {
-                [self release];
+                
                 return nil;
             }
         }
         
-        BOOL ret = [BlobKeyIO read:&xattrsBlobKey from:is treeVersion:treeVersion compressionType:xattrsCompressionType error:error]
+        BlobKey *theXattrsBlobKey = nil;
+        BlobKey *theAclBlobKey = nil;
+        NSString *theFinderFileType = nil;
+        NSString *theFinderFileCreator = nil;
+        BOOL ret = [BlobKeyIO read:&theXattrsBlobKey from:is treeVersion:treeVersion compressionType:xattrsCompressionType error:error]
         && [IntegerIO readUInt64:&xattrsSize from:is error:error]
-        && [BlobKeyIO read:&aclBlobKey from:is treeVersion:treeVersion compressionType:aclCompressionType error:error]
+        && [BlobKeyIO read:&theAclBlobKey from:is treeVersion:treeVersion compressionType:aclCompressionType error:error]
         && [IntegerIO readInt32:&uid from:is error:error]
         && [IntegerIO readInt32:&gid from:is error:error]
         && [IntegerIO readInt32:&mode from:is error:error]
@@ -139,8 +139,8 @@
         && [IntegerIO readInt64:&flags from:is error:error]
         && [IntegerIO readInt32:&finderFlags from:is error:error]
         && [IntegerIO readInt32:&extendedFinderFlags from:is error:error]
-        && [StringIO read:&finderFileType from:is error:error]
-        && [StringIO read:&finderFileCreator from:is error:error]
+        && [StringIO read:&theFinderFileType from:is error:error]
+        && [StringIO read:&theFinderFileCreator from:is error:error]
         && [BooleanIO read:&isFileExtensionHidden from:is error:error]
         && [IntegerIO readInt32:&st_dev from:is error:error]
         && [IntegerIO readInt32:&st_ino from:is error:error]
@@ -152,35 +152,27 @@
         && [IntegerIO readInt64:&createTime_nsec from:is error:error]
         && [IntegerIO readInt64:&st_blocks from:is error:error]
         && [IntegerIO readUInt32:&st_blksize from:is error:error];
-        [xattrsBlobKey retain];
-        [aclBlobKey retain];
-        [finderFileType retain];
-        [finderFileCreator retain];
+        
+        
+        
+        
         if (!ret) {
-            [self release];
             return nil;
         }
-        
+        xattrsBlobKey = theXattrsBlobKey;
+        aclBlobKey = theAclBlobKey;
+        finderFileType = theFinderFileType;
+        finderFileCreator = theFinderFileCreator;
+
         // If any BlobKey has a nil sha1, drop it.
-        
         if ([xattrsBlobKey sha1] == nil) {
-            [xattrsBlobKey release];
             xattrsBlobKey = nil;
         }
         if ([aclBlobKey sha1] == nil) {
-            [aclBlobKey release];
             aclBlobKey = nil;
         }
     }
     return self;
-}
-- (void)dealloc {
-	[dataBlobKeys release];
-	[xattrsBlobKey release];
-	[aclBlobKey release];
-	[finderFileType release];
-	[finderFileCreator release];
-	[super dealloc];
 }
 - (BlobKey *)treeBlobKey {
     NSAssert(isTree, @"must be a Tree");
@@ -228,7 +220,6 @@
     [IntegerIO writeInt64:st_blocks to:data];
     [IntegerIO writeUInt32:st_blksize to:data];
 }
-
 
 #pragma mark NSObject
 - (BOOL)isEqual:(id)object {

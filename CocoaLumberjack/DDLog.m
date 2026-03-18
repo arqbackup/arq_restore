@@ -30,7 +30,6 @@
     #import <UIKit/UIDevice.h>
 #endif
 
-
 #if !__has_feature(objc_arc)
 #error This file must be compiled with ARC. Use -fobjc-arc flag (or convert project to ARC).
 #endif
@@ -87,7 +86,6 @@ static void *const GlobalLoggingQueueIdentityKey = (void *)&GlobalLoggingQueueId
                            level:(DDLogLevel)level;
 
 @end
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
@@ -152,7 +150,6 @@ static NSUInteger _numProcessors;
         _numProcessors = MAX(result, one);
 
         NSLogDebug(@"DDLog: numProcessors = %@", @(_numProcessors));
-
 
 #if TARGET_OS_IPHONE
         NSString *notificationName = @"UIApplicationWillTerminateNotification";
@@ -277,7 +274,6 @@ static NSUInteger _numProcessors;
     // Our aforementioned thread is blocked attempting to queue log message F.
     // Now assume we have another separate thread that attempts to issue log message G.
     // It should block until log messages A and B have been unqueued.
-
 
     // We are using a counting semaphore provided by GCD.
     // The semaphore is initialized with our LOG_MAX_QUEUE_SIZE value.
@@ -992,7 +988,6 @@ NSString * DDExtractFileNameWithoutExtension(const char *filePath, BOOL copy) {
 }
 
 @end
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark -

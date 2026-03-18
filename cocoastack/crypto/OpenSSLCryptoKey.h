@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #ifdef USE_OPENSSL
 
 #include <openssl/evp.h>

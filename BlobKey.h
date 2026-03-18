@@ -30,18 +30,14 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "StorageType.h"
 @class BufferedInputStream;
-
 
 typedef enum {
     BlobKeyCompressionNone = 0,
     BlobKeyCompressionGzip = 1,
     BlobKeyCompressionLZ4 = 2
 } BlobKeyCompressionType;
-
 
 @interface BlobKey : NSObject <NSCopying> {
     StorageType storageType;

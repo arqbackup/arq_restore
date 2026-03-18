@@ -30,15 +30,11 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 #import "Item.h"
 #import "StringIO.h"
 #import "IntegerIO.h"
 #import "BooleanIO.h"
 #import "DateIO.h"
-
 
 @implementation Item
 @synthesize itemId;
@@ -50,19 +46,6 @@
 @synthesize storageClass;
 @synthesize checksum;
 @synthesize createdDate;
-
-
-- (void)dealloc {
-    [itemId release];
-    [parentId release];
-    [name release];
-    [fileLastModified release];
-    [createdDate release];
-    [storageClass release];
-    [checksum release];
-    [super dealloc];
-}
-
 
 #pragma mark NSCopying
 - (id)copyWithZone:(NSZone *)zone {
@@ -79,7 +62,6 @@
     
     return ret;
 }
-
 
 #pragma mark NSObject
 - (NSString *)description {

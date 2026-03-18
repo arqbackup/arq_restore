@@ -30,17 +30,16 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #import "NSDictionary_HTTP.h"
-
 
 @implementation NSDictionary (HTTP)
 - (NSString *)wwwFormURLEncodedString {
     NSMutableString *ret = [NSMutableString string];
-    for (NSString *key in [self allKeys]) {
+    for (NSString *originalKey in [self allKeys]) {
         if ([ret length] > 0) {
             [ret appendString:@"&"];
         }
+        NSString *key = originalKey;
         if ([key isKindOfClass:[NSNumber class]]) {
             key = [(NSNumber *)key stringValue];
         }
@@ -48,13 +47,13 @@
         if ([value isKindOfClass:[NSNumber class]]) {
             value = [(NSNumber *)value stringValue];
         }
-        NSString *encodedKey = (NSString *)CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, (CFStringRef)key, NULL, CFSTR("?=&+"), kCFStringEncodingUTF8);
-        NSString *encodedValue = (NSString *)CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, (CFStringRef)value, NULL, CFSTR("?=&+"), kCFStringEncodingUTF8);
+        NSString *encodedKey = (__bridge_transfer NSString *)CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, (__bridge CFStringRef)key, NULL, CFSTR("?=&+"), kCFStringEncodingUTF8);
+        NSString *encodedValue = (__bridge_transfer NSString *)CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, (__bridge CFStringRef)value, NULL, CFSTR("?=&+"), kCFStringEncodingUTF8);
         [ret appendString:encodedKey];
         [ret appendString:@"="];
         [ret appendString:encodedValue];
-        [encodedKey release];
-        [encodedValue release];
+        
+        
     }
     return ret;
 }

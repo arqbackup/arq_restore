@@ -30,10 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
-
 @interface S3Owner : NSObject {
 	NSString *displayName;
 	NSString *idString;

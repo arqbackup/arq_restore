@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "GlacierResponse.h"
 
 @implementation GlacierResponse
@@ -42,17 +40,10 @@
         for (NSString *key in [theHeaders allKeys]) {
             [headers setObject:[theHeaders objectForKey:key] forKey:[key lowercaseString]];
         }
-        body = [theBody retain];
+        body = theBody;
     }
     return self;
 }
-- (void)dealloc {
-    [headers release];
-    [body release];
-    [super dealloc];
-}
-
-
 - (int)code {
     return code;
 }

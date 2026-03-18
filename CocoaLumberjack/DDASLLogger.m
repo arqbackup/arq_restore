@@ -32,7 +32,6 @@ static DDASLLogger *sharedInstance;
 
 @end
 
-
 @implementation DDASLLogger
 
 + (instancetype)sharedInstance {

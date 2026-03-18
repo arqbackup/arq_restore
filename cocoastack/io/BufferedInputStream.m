@@ -30,13 +30,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "BufferedInputStream.h"
 #import "InputStream.h"
 
 #import "InputStreams.h"
-
 
 #define MY_BUF_SIZE (4096)
 
@@ -46,7 +43,7 @@
 }
 - (id)initWithUnderlyingStream:(id <InputStream>)theUnderlyingStream {
     if (self = [super init]) {
-        underlyingStream = [theUnderlyingStream retain];
+        underlyingStream = theUnderlyingStream;
         buf = (unsigned char *)malloc(MY_BUF_SIZE);
         pos = 0;
         len = 0;
@@ -54,9 +51,8 @@
     return self;
 }
 - (void)dealloc {
-    [underlyingStream release];
+    
     free(buf);
-    [super dealloc];
 }
 - (int)readByte:(NSError **)error {
     if ((len - pos) == 0) {
@@ -128,7 +124,7 @@
             break;
         }
     }
-    NSString *ret = [[[NSString alloc] initWithBytes:lineBuf length:received encoding:NSUTF8StringEncoding] autorelease];
+    NSString *ret = [[NSString alloc] initWithBytes:lineBuf length:received encoding:NSUTF8StringEncoding];
     free(lineBuf);
     return ret;
 }
@@ -146,7 +142,7 @@
         [data appendBytes:charBuf length:1];
         received++;
     }
-    NSString *ret = [[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] autorelease];
+    NSString *ret = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
     return ret;
 }
 - (uint64_t)bytesReceived {
@@ -192,7 +188,6 @@
 - (BOOL)slurpIntoBuffer:(NSMutableData *)theBuffer error:(NSError **)error {
     return [InputStreams slurp:self intoBuffer:theBuffer error:error];
 }
-
 
 #pragma mark NSObject
 - (NSString *)description {

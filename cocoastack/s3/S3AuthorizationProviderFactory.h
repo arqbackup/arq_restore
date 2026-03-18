@@ -30,12 +30,9 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "CWLSynthesizeSingleton.h"
 #import "S3AuthorizationProvider.h"
 @class AWSRegion;
-
 
 @interface S3AuthorizationProviderFactory : NSObject {
     

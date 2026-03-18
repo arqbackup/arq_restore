@@ -30,26 +30,17 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "LocalS3Signer.h"
 #include <CommonCrypto/CommonHMAC.h>
 #import "NSData-Base64Extensions.h"
 
-
 @implementation LocalS3Signer
 - (id)initWithSecretKey:(NSString *)theSecretKey {
     if (self = [super init]) {
-        secretKey = [theSecretKey retain];
+        secretKey = theSecretKey;
     }
     return self;
 }
-- (void)dealloc {
-    [secretKey release];
-    [super dealloc];
-}
-
-
 #pragma mark S3Signer
 - (NSString *)sign:(NSString *)theString error:(NSError **)error {
     NSData *clearTextData = [theString dataUsingEncoding:NSUTF8StringEncoding];
@@ -58,10 +49,9 @@
 	CCHmac(kCCHmacAlgSHA1, [secretKeyData bytes], [secretKeyData length], [clearTextData bytes], [clearTextData length], digest);
 	NSData *hmacSHA1 = [[NSData alloc] initWithBytes:digest length:CC_SHA1_DIGEST_LENGTH];
 	NSString *base64 = [hmacSHA1 encodeBase64];
-	[hmacSHA1 release];
+	
 	return base64;
 }
-
 
 #pragma mark NSCopying
 - (id)copyWithZone:(NSZone *)zone {

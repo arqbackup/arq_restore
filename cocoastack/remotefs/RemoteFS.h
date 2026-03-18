@@ -30,14 +30,11 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "ItemFS.h"
 @protocol DataTransferDelegate;
 @protocol TargetConnectionDelegate;
 @class Item;
 @protocol DeleteDelegate;
-
 
 @interface RemoteFS : NSObject {
     NSString *lockFilePath;

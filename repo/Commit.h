@@ -30,10 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
-
 #import "BufferedInputStream.h"
 @class BlobKey;
 
@@ -75,15 +71,15 @@
 @property(readonly,copy) NSString *author;
 @property(readonly,copy) NSString *comment;
 @property(readonly,copy) BlobKey *treeBlobKey;
-@property(readonly,retain) BlobKey *parentCommitBlobKey;
+@property(readonly,strong) BlobKey *parentCommitBlobKey;
 @property(readonly,copy) NSString *location;
 @property(readonly,copy) NSString *computer;
-@property(readonly,retain) NSDate *creationDate;
-@property(readonly,retain) NSArray *commitFailedFiles;
+@property(readonly,strong) NSDate *creationDate;
+@property(readonly,strong) NSArray *commitFailedFiles;
 @property(readonly) BOOL hasMissingNodes;
 @property(readonly) BOOL isComplete;
-@property(readonly, retain) NSData *bucketXMLData;
-@property(readonly, retain) NSString *arqVersion;
+@property(readonly, strong) NSData *bucketXMLData;
+@property(readonly, strong) NSString *arqVersion;
 
 - (NSString *)displayDescription;
 - (NSData *)toData;

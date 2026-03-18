@@ -30,10 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "UserLibrary.h"
-
 
 @implementation UserLibrary
 - (id)initWithPath:(NSString *)thePath {
@@ -41,10 +38,6 @@
         path = [thePath copy];
     }
     return self;
-}
-- (void)dealloc {
-    [path release];
-    [super dealloc];
 }
 - (NSString *)path {
     return path;

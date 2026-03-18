@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #include <sys/stat.h>
 #import "PListNode.h"
 #import "PListNodeType.h"
@@ -50,7 +48,6 @@
 #import "BufferedInputStream.h"
 #import "Streams.h"
 
-
 @interface DictNode (internal)
 - (id)initWithDict:(NSMutableDictionary *)theDict orderedKeys:(NSMutableArray *)theOrderedKeys;
 - (NSDictionary *)dict;
@@ -64,7 +61,7 @@
     }
     NSError *myError = nil;
     DictNode *dn = [DictNode dictNodeWithXMLData:data error:&myError];
-    [data release];
+    
     if (dn == nil) {
         SETNSERROR(@"DictNodeErrorDomain", -1, @"error parsing %@: %@", path, [myError localizedDescription]);
     }
@@ -73,7 +70,7 @@
 + (DictNode *)dictNodeWithXMLData:(NSData *)data error:(NSError **)error {
     XMLPListReader *reader = [[XMLPListReader alloc] initWithData:data];
 	DictNode *dn = [reader read:error];
-    [reader release];
+    
 	return dn;
 }
 + (DictNode *)dictNodeWithContentsOfBinaryFile:(NSString *)path error:(NSError **)error {
@@ -88,19 +85,19 @@
     BufferedInputStream *bis = [[BufferedInputStream alloc] initWithUnderlyingStream:fis];
     BinaryPListReader *reader = [[BinaryPListReader alloc] initWithStream:bis];
     DictNode *ret = [reader read:error];
-    [reader release];
-    [bis release];
-    [fis release];
+    
+    
+    
     return ret;
 }
 + (DictNode *)dictNodeWithBinaryData:(NSData *)data error:(NSError **)error {
     DataInputStream *dis = [[DataInputStream alloc] initWithData:data description:@"DictNode"];
     BufferedInputStream *bis = [[BufferedInputStream alloc] initWithUnderlyingStream:dis];
     BinaryPListReader *reader = [[BinaryPListReader alloc] initWithStream:bis];
-    [bis release];
+    
     DictNode *ret = [reader read:error];
-    [reader release];
-    [dis release];
+    
+    
     return ret;
 }
 
@@ -110,11 +107,6 @@
 		orderedKeys = [[NSMutableArray alloc] init];
 	}
 	return self;
-}
-- (void)dealloc {
-	[dict release];
-	[orderedKeys release];
-	[super dealloc];
 }
 - (int)size {
 	return (int)[dict count];
@@ -159,27 +151,27 @@
 - (void)putString:(NSString *)value forKey:(NSString *)key {
 	StringNode *sn = [[StringNode alloc] initWithString:value];
 	[self put:sn forKey:key];
-	[sn release];
+	
 }
 - (void)putInt:(int)value forKey:(NSString *)key {
 	IntegerNode *in = [[IntegerNode alloc] initWithInt:value];
     [self put:in forKey:key];
-	[in release];
+	
 }
 - (void)putLongLong:(long long)value forKey:(NSString *)key {
 	IntegerNode *in = [[IntegerNode alloc] initWithLongLong:value];
     [self put:in forKey:key];
-	[in release];
+	
 }
 - (void)putBoolean:(BOOL)value forKey:(NSString *)key {
 	BooleanNode *bn = [[BooleanNode alloc] initWithBoolean:value];
     [self put:bn forKey:key];
-	[bn release];
+	
 }
 - (void)putDouble:(double)value forKey:(NSString *)key {
     RealNode *rn = [[RealNode alloc] initWithDouble:value];
     [self put:rn forKey:key];
-    [rn release];
+    
 }
 - (void)put:(id <PListNode>)value forKey:(NSString *)key {
 	[dict setObject:value forKey:key];
@@ -205,9 +197,9 @@
     NSMutableData *data = [[NSMutableData alloc] init];
 	XMLPListWriter *writer = [[XMLPListWriter alloc] initWithMutableData:data];
     [writer write:self];
-    [writer release];
+    
     BOOL ret = [Streams writeData:data atomicallyToFile:path targetUID:theTargetUID targetGID:theTargetGID bytesWritten:NULL error:error];
-    [data release];
+    
     if (!ret) {
         return NO;
     }
@@ -222,7 +214,7 @@
     NSMutableData *data = [NSMutableData data];
 	XMLPListWriter *writer = [[XMLPListWriter alloc] initWithMutableData:data];
     [writer write:self];
-    [writer release];
+    
     return data;
 }
 - (BOOL)isEqualToDictNode:(DictNode *)dictNode {
@@ -249,8 +241,8 @@
     NSMutableDictionary *dictCopy = [[NSMutableDictionary alloc] initWithDictionary:dict copyItems:YES];
     NSMutableArray *orderedKeysCopy = [[NSMutableArray alloc] initWithArray:orderedKeys copyItems:YES];
     DictNode *dictNodeCopy = [[DictNode alloc] initWithDict:dictCopy orderedKeys:orderedKeysCopy];
-    [dictCopy release];
-    [orderedKeysCopy release];
+    
+    
     return dictNodeCopy;
 }
 
@@ -279,8 +271,8 @@
 @implementation DictNode (internal)
 - (id)initWithDict:(NSMutableDictionary *)theDict orderedKeys:(NSMutableArray *)theOrderedKeys {
     if (self = [super init]) {
-        dict = [theDict retain];
-        orderedKeys = [theOrderedKeys retain];
+        dict = theDict;
+        orderedKeys = theOrderedKeys;
     }
     return self;
 }

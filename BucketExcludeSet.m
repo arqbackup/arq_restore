@@ -30,13 +30,12 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 #import "BucketExcludeSet.h"
 #import "BucketExclude.h"
 #import "DictNode.h"
 #import "ArrayNode.h"
+#import "StringNode.h"
+#import "IntegerNode.h"
 
 @interface BucketExcludeSet (internal)
 - (id)initWithBucketExcludes:(NSMutableArray *)theBucketExcludes;
@@ -49,11 +48,6 @@
     }
     return self;
 }
-- (void)dealloc {
-    [bucketExcludes release];
-    [super dealloc];
-}
-
 - (void)loadFromPlist:(DictNode *)thePlist localPath:(NSString *)theLocalPath {
     [bucketExcludes removeAllObjects];
     if ([thePlist containsKey:@"Conditions"]) {
@@ -107,20 +101,20 @@
                 excludeType = kBucketExcludeTypePathMatchesRegex;
                 matchText = regex;
             }
-            BucketExclude *be = [[[BucketExclude alloc] initWithType:excludeType text:matchText] autorelease];
+            BucketExclude *be = [[BucketExclude alloc] initWithType:excludeType text:matchText];
             [bucketExcludes addObject:be];
         }
     } else {
         ArrayNode *excludes = [thePlist arrayNodeForKey:@"excludes"];
         for (NSUInteger index = 0; index < [excludes size]; index++) {
-            BucketExclude *bce = [[[BucketExclude alloc] initWithPlist:[excludes dictNodeAtIndex:(int)index]] autorelease];
+            BucketExclude *bce = [[BucketExclude alloc] initWithPlist:[excludes dictNodeAtIndex:(int)index]];
             [bucketExcludes addObject:bce];
         }
     }
 }
 - (DictNode *)toPlist {
-    DictNode *plist = [[[DictNode alloc] init] autorelease];
-    ArrayNode *array = [[[ArrayNode alloc] init] autorelease];
+    DictNode *plist = [[DictNode alloc] init];
+    ArrayNode *array = [[ArrayNode alloc] init];
     [plist put:array forKey:@"excludes"];
     for (BucketExclude *bce in bucketExcludes) {
         [array add:[bce toPlist]];
@@ -140,7 +134,7 @@
 }
 - (void)addExcludeWithType:(BucketExcludeType)theType text:(NSString *)theText {
     if (![self containsExcludeWithType:theType text:theText]) {
-        BucketExclude *bce = [[[BucketExclude alloc] initWithType:theType text:theText] autorelease];
+        BucketExclude *bce = [[BucketExclude alloc] initWithType:theType text:theText];
         [bucketExcludes addObject:bce];
     }
 }
@@ -181,12 +175,11 @@
     [bucketExcludes removeAllObjects];
 }
 
-
 #pragma mark NSCopying
 - (id)copyWithZone:(NSZone *)zone {
     NSMutableArray *excludesCopy = [[NSMutableArray alloc] initWithArray:bucketExcludes copyItems:YES];
     BucketExcludeSet *ret = [[BucketExcludeSet alloc] initWithBucketExcludes:excludesCopy];
-    [excludesCopy release];
+    
     return ret;
 }
 @end
@@ -194,7 +187,7 @@
 @implementation BucketExcludeSet (internal)
 - (id)initWithBucketExcludes:(NSMutableArray *)theBucketExcludes {
     if (self = [super init]) {
-        bucketExcludes = [theBucketExcludes retain];
+        bucketExcludes = theBucketExcludes;
     }
     return self;
 }

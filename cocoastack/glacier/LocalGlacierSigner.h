@@ -30,10 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "GlacierSigner.h"
-
 
 @interface LocalGlacierSigner : NSObject <GlacierSigner> {
     NSString *secretKey;

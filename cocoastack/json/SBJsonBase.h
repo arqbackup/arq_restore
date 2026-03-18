@@ -27,9 +27,7 @@
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 extern NSString * SBJSONErrorDomain;
-
 
 enum {
     EUNSUPPORTED = 1,

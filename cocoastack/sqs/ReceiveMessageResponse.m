@@ -30,31 +30,20 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "ReceiveMessageResponse.h"
 #import "SQSMessage.h"
-
 
 @implementation ReceiveMessageResponse
 - (id)initWithQueueURL:(NSURL *)theQueueURL data:(NSData *)theData {
     if (self = [super init]) {
-        queueURL = [theQueueURL retain];
+        queueURL = theQueueURL;
         messages = [[NSMutableArray alloc] init];
         NSXMLParser *parser = [[NSXMLParser alloc] initWithData:theData];
         [parser setDelegate:self];
         [parser parse];
-        [parser release];
+        
     }
     return self;
-}
-- (void)dealloc {
-    [queueURL release];
-    [messages release];
-    [currentStringBuffer release];
-    [body release];
-    [receiptHandle release];
-    [super dealloc];
 }
 - (NSArray *)messages {
     return messages;
@@ -65,7 +54,7 @@
   namespaceURI:(NSString *)namespaceURI
  qualifiedName:(NSString *)qualifiedName
     attributes:(NSDictionary *)attributeDict {
-    [currentStringBuffer release];
+    
     currentStringBuffer = nil;
     if ([elementName isEqualToString:@"Message"]) {
         inMessage = YES;
@@ -79,14 +68,14 @@
 }
 - (void)parser:(NSXMLParser *)parser didEndElement:(NSString *)elementName namespaceURI:(NSString *)namespaceURI qualifiedName:(NSString *)qName {
     if ([elementName isEqualToString:@"Body"]) {
-        [body release];
+        
         body = [currentStringBuffer copy];
     } else if ([elementName isEqualToString:@"ReceiptHandle"]) {
-        [receiptHandle release];
+        
         receiptHandle = [currentStringBuffer copy];
     } else if ([elementName isEqualToString:@"Message"]) {
         inMessage = NO;
-        SQSMessage *msg = [[[SQSMessage alloc] initWithQueueURL:queueURL body:body receiptHandle:receiptHandle] autorelease];
+        SQSMessage *msg = [[SQSMessage alloc] initWithQueueURL:queueURL body:body receiptHandle:receiptHandle];
         [messages addObject:msg];
     }
 }

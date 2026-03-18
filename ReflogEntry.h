@@ -30,11 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @class DictNode;
 @class BlobKey;
-
 
 @interface ReflogEntry : NSObject {
     NSDate *createdDate;

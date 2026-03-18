@@ -9,7 +9,6 @@
 #import <Foundation/Foundation.h>
 #import "FMDatabase.h"
 
-
 /** Category of additions for `<FMDatabase>` class.
  
  ### See also
@@ -107,11 +106,9 @@
 
 - (NSDate*)dateForQuery:(NSString*)query, ...;
 
-
 // Notice that there's no dataNoCopyForQuery:.
 // That would be a bad idea, because we close out the result set, and then what
 // happens to the data that we just didn't copy?  Who knows, not I.
-
 
 ///--------------------------------
 /// @name Schema related operations
@@ -193,7 +190,6 @@
 
 - (BOOL)columnExists:(NSString*)tableName columnName:(NSString*)columnName __attribute__ ((deprecated));
 
-
 /** Validate SQL statement
  
  This validates SQL statement by performing `sqlite3_prepare_v2`, but not returning the results, but instead immediately calling `sqlite3_finalize`.
@@ -207,7 +203,6 @@
  */
 
 - (BOOL)validateSQL:(NSString*)sql error:(NSError**)error;
-
 
 #if SQLITE_VERSION_NUMBER >= 3007017
 
@@ -240,7 +235,6 @@
 
  @see setApplicationIDString:
  */
-
 
 - (NSString*)applicationIDString;
 

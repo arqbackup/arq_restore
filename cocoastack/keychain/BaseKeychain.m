@@ -30,17 +30,15 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #import "BaseKeychain.h"
 #import "KeychainItem.h"
-
 
 @implementation BaseKeychain
 - (NSString *)errorDomain {
     return @"KeychainErrorDomain";
 }
 - (NSArray *)existingAccountNamesWithLabel:(NSString *)theLabel error:(NSError **)error {
-    NSMutableDictionary *query = [[[NSMutableDictionary alloc] init] autorelease];
+    NSMutableDictionary *query = [[NSMutableDictionary alloc] init];
     [query setObject:(id)kSecClassGenericPassword forKey:(id)kSecClass];
     [query setObject:theLabel forKey:(id)kSecAttrLabel];
     [query setObject:(id)kCFBooleanTrue forKey:(id)kSecReturnAttributes];
@@ -55,7 +53,7 @@
         return nil;
     }
     NSMutableArray *ret = [NSMutableArray array];
-    for (NSDictionary *attrs in (NSArray *)arrayRef) {
+    for (NSDictionary *attrs in (__bridge NSArray *)arrayRef) {
         NSString *acct = [attrs objectForKey:(id)kSecAttrAccount];
         if (acct != nil) {
             [ret addObject:acct];
@@ -83,8 +81,8 @@
         }
         return nil;
     }
-    NSData *thePasswordData = (NSData *)result;
-    KeychainItem *ret = [[[KeychainItem alloc] initWithLabel:theLabel account:theAccount passwordData:thePasswordData] autorelease];
+    NSData *thePasswordData = (__bridge NSData *)result;
+    KeychainItem *ret = [[KeychainItem alloc] initWithLabel:theLabel account:theAccount passwordData:thePasswordData];
     CFRelease(result);
     return ret;
 }
@@ -135,7 +133,7 @@
             if (access == NULL) {
                 return nil;
             }
-            [attrs setObject:(id)access forKey:(NSString *)kSecAttrAccess];
+            [attrs setObject:(__bridge id)access forKey:(NSString *)kSecAttrAccess];
             CFRelease(access);
         }
         
@@ -150,7 +148,7 @@
         SETNSERROR([self errorDomain], oss, @"%@", [self descriptionForOSStatus:oss]);
         return nil;
     }
-    return [[[KeychainItem alloc] initWithLabel:theLabel account:theAccount passwordData:thePasswordData] autorelease];
+    return [[KeychainItem alloc] initWithLabel:theLabel account:theAccount passwordData:thePasswordData];
 }
 - (BOOL)destroyItemForLabel:(NSString *)theLabel account:(NSString *)theAccount error:(NSError **)error {
     if ([theLabel length] == 0) {
@@ -176,23 +174,22 @@
     return YES;
 }
 
-
 - (SecAccessRef)createAccessForAppPaths:(NSArray *)theAppPaths error:(NSError **)error {
     NSMutableArray *trustedApps = [NSMutableArray array];
     for (NSString *appPath in theAppPaths) {
         SecTrustedApplicationRef appRef = NULL;
         OSStatus oss = SecTrustedApplicationCreateFromPath([appPath fileSystemRepresentation], &appRef);
         if (oss) {
-            NSString *msg = [(NSString *)SecCopyErrorMessageString(oss, NULL) autorelease];
+            NSString *msg = (__bridge_transfer NSString *)SecCopyErrorMessageString(oss, NULL);
             SETNSERROR([self errorDomain], oss, @"SecTrustedApplicationCreateFromPath(%@): %@", appPath, msg);
             return nil;
         }
-        [trustedApps addObject:(id)appRef];
+        [trustedApps addObject:(__bridge_transfer id)appRef];
     }
     SecAccessRef access = NULL;
-    OSStatus oss = SecAccessCreate((CFStringRef)@"arq_restore", (CFArrayRef)trustedApps, &access);
+    OSStatus oss = SecAccessCreate((__bridge CFStringRef)@"arq_restore", (__bridge CFArrayRef)trustedApps, &access);
     if (oss) {
-        NSString *msg = [(NSString *)SecCopyErrorMessageString(oss, NULL) autorelease];
+        NSString *msg = (__bridge_transfer NSString *)SecCopyErrorMessageString(oss, NULL);
         SETNSERROR([self errorDomain], oss, @"SecAccessCreate: %@", msg);
         return nil;
     }

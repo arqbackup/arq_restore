@@ -30,20 +30,16 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @class Vault;
 @class GlacierAuthorizationProvider;
 @class AWSRegion;
 @protocol DataTransferDelegate;
-
 
 enum {
     GLACIER_ERROR_UNEXPECTED_RESPONSE = -51001,
     GLACIER_ERROR_AMAZON_ERROR = -51002,
     GLACIER_INVALID_PARAMETERS = -51003
 };
-
 
 @interface GlacierService : NSObject {
     GlacierAuthorizationProvider *gap;

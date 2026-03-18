@@ -45,7 +45,7 @@
 
 /** Database path */
 
-@property (atomic, retain) NSString *path;
+@property(atomic, strong) NSString *path;
 
 /** Delegate object */
 
@@ -58,7 +58,6 @@
 /** Open flags */
 
 @property (atomic, readonly) int openFlags;
-
 
 ///---------------------
 /// @name Initialization
@@ -171,7 +170,6 @@
 #endif
 
 @end
-
 
 /** FMDatabasePool delegate category
  

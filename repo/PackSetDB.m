@@ -30,9 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #import "PackSetDB.h"
@@ -44,7 +41,6 @@
 #import "FlockFile.h"
 #import "CacheOwnership.h"
 
-
 @implementation PackSetDB
 + (NSString *)errorDomain {
     return @"PackSetDBErrorDomain";
@@ -53,14 +49,14 @@
 - (id)initWithTargetUUID:(NSString *)theTargetUUID computerUUID:(NSString *)theComputerUUID packSetName:(NSString *)thePackSetName error:(NSError **)error {
     if (self = [super init]) {
         dbPath = [[NSString alloc] initWithFormat:@"%@/%@/%@/packsets/%@.db", [UserLibrary arqCachePath], theTargetUUID, theComputerUUID, thePackSetName];
-        lockFilePath = [[dbPath stringByAppendingString:@".lock"] retain];
+        lockFilePath = [dbPath stringByAppendingString:@".lock"];
         if (![[NSFileManager defaultManager] ensureParentPathExistsForPath:dbPath targetUID:[[CacheOwnership sharedCacheOwnership] uid] targetGID:[[CacheOwnership sharedCacheOwnership] gid] error:error]) {
-            [self release];
+            
             return nil;
         }
         
         NSError *myError = nil;
-        fmdbq = [[self initDB:&myError] retain];
+        fmdbq = [self setupDB:&myError];
         if (fmdbq == nil) {
             HSLogError(@"failed to open packset cache database %@: %@", dbPath, myError);
             if ([myError isErrorWithDomain:[PackSetDB errorDomain] code:SQLITE_CORRUPT]) {
@@ -69,12 +65,12 @@
                 if (![[NSFileManager defaultManager] removeItemAtPath:dbPath error:&myError]) {
                     HSLogError(@"failed to delete corrupt sqlite database %@: %@", dbPath, myError);
                 }
-                fmdbq = [[self initDB:&myError] retain];
+                fmdbq = [self setupDB:&myError];
             }
         }
         if (fmdbq == nil) {
             SETERRORFROMMYERROR;
-            [self release];
+            
             return nil;
         }
     }
@@ -82,69 +78,80 @@
 }
 - (void)dealloc {
     [fmdbq close];
-    [fmdbq release];
-    [dbPath release];
-    [lockFilePath release];
-    [super dealloc];
+    
+    
+    
 }
 
 - (NSSet *)packIds:(NSError **)error {
-    FlockFile *ff = [[[FlockFile alloc] initWithPath:lockFilePath] autorelease];
+    FlockFile *ff = [[FlockFile alloc] initWithPath:lockFilePath];
     __block NSSet *ret = nil;
-    if (![ff lockAndExecute:^void() { ret = [self lockedPackIds:error]; } error:error]) {
+    __block NSError *blockError = nil;
+    if (![ff lockAndExecute:^void() { ret = [self lockedPackIds:&blockError]; } error:error]) {
         ret = nil;
     }
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (PackId *)firstPackIdWithPackSizeBelow:(NSUInteger)theMaxSize error:(NSError **)error {
-    FlockFile *ff = [[[FlockFile alloc] initWithPath:lockFilePath] autorelease];
+    FlockFile *ff = [[FlockFile alloc] initWithPath:lockFilePath];
     __block PackId *ret = nil;
-    if (![ff lockAndExecute:^void() { ret = [self lockedFirstPackIdWithPackSizeBelow:theMaxSize error:error]; } error:error]) {
+    __block NSError *blockError = nil;
+    if (![ff lockAndExecute:^void() { ret = [self lockedFirstPackIdWithPackSizeBelow:theMaxSize error:&blockError]; } error:error]) {
         ret = nil;
     }
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (NSNumber *)containsPackId:(PackId *)thePackId error:(NSError **)error {
-    FlockFile *ff = [[[FlockFile alloc] initWithPath:lockFilePath] autorelease];
+    FlockFile *ff = [[FlockFile alloc] initWithPath:lockFilePath];
     __block NSNumber *ret = nil;
-    if (![ff lockAndExecute:^void() { ret = [self lockedIsStoredForPackId:thePackId error:error]; } error:error]) {
+    __block NSError *blockError = nil;
+    if (![ff lockAndExecute:^void() { ret = [self lockedIsStoredForPackId:thePackId error:&blockError]; } error:error]) {
         ret = nil;
     }
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (BOOL)insertPackId:(PackId *)thePackId packIndexEntries:(NSArray *)thePIES error:(NSError **)error {
     HSLogDetail(@"inserting %@ entries into cache db (%ld entries)", thePackId, (unsigned long)[thePIES count]);
-    FlockFile *ff = [[[FlockFile alloc] initWithPath:lockFilePath] autorelease];
+    FlockFile *ff = [[FlockFile alloc] initWithPath:lockFilePath];
     __block BOOL ret = NO;
-    if (![ff lockAndExecute:^void() { ret = [self lockedInsertPackId:thePackId packIndexEntries:thePIES error:error]; } error:error]) {
+    __block NSError *blockError = nil;
+    if (![ff lockAndExecute:^void() { ret = [self lockedInsertPackId:thePackId packIndexEntries:thePIES error:&blockError]; } error:error]) {
         ret = NO;
     }
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (BOOL)deletePackId:(PackId *)thePackId error:(NSError **)error {
     HSLogDetail(@"deleting entries from cache db for %@", thePackId);
-    FlockFile *ff = [[[FlockFile alloc] initWithPath:lockFilePath] autorelease];
+    FlockFile *ff = [[FlockFile alloc] initWithPath:lockFilePath];
     __block BOOL ret = NO;
-    if (![ff lockAndExecute:^void() { ret = [self lockedDeletePackId:thePackId error:error]; } error:error]) {
+    __block NSError *blockError = nil;
+    if (![ff lockAndExecute:^void() { ret = [self lockedDeletePackId:thePackId error:&blockError]; } error:error]) {
         ret = NO;
     }
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (PackIndexEntry *)packIndexEntryForSHA1:(NSString *)theSHA1 error:(NSError **)error {
-    FlockFile *ff = [[[FlockFile alloc] initWithPath:lockFilePath] autorelease];
+    FlockFile *ff = [[FlockFile alloc] initWithPath:lockFilePath];
     __block PackIndexEntry *ret = nil;
-    if (![ff lockAndExecute:^void() { ret = [self lockedPackIndexEntryForSHA1:theSHA1 error:error]; } error:error]) {
+    __block NSError *blockError = nil;
+    if (![ff lockAndExecute:^void() { ret = [self lockedPackIndexEntryForSHA1:theSHA1 error:&blockError]; } error:error]) {
         ret = nil;
     }
+    if (error != NULL) *error = blockError;
     return ret;
 }
-
 
 #pragma mark internal
 - (NSSet *)lockedPackIds:(NSError **)error {
     __block NSMutableSet *ret = nil;
-    
+    __block NSError *blockError = nil;
     [fmdbq inDatabase:^(FMDatabase *db) {
+        NSError * __strong *error = &blockError;
 //        HSLogDebug(@"querying for pack ids");
 //        NSTimeInterval theTime = [NSDate timeIntervalSinceReferenceDate];
         FMResultSet *rs = [db executeQuery:@"SELECT pack_set_name, pack_sha1 FROM packs"];
@@ -157,17 +164,18 @@
         while ([rs next]) {
             NSString *packSetName = [rs stringForColumnIndex:0];
             NSString *packSHA1 = [rs stringForColumnIndex:1];
-            [ret addObject:[[[PackId alloc] initWithPackSetName:packSetName packSHA1:packSHA1] autorelease]];
+            [ret addObject:[[PackId alloc] initWithPackSetName:packSetName packSHA1:packSHA1]];
         }
         [rs close];
     }];
-    
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (PackId *)lockedFirstPackIdWithPackSizeBelow:(NSUInteger)theMaxSize error:(NSError **)error {
     __block PackId *ret = nil;
-    
+    __block NSError *blockError = nil;
     [fmdbq inDatabase:^(FMDatabase *db) {
+        NSError * __strong *error = &blockError;
 //        HSLogDebug(@"querying for pack ids by size");
 //        NSTimeInterval theTime = [NSDate timeIntervalSinceReferenceDate];
         FMResultSet *rs = [db executeQuery:@"SELECT MAX(offset+length) size, pack_sha1 FROM pack_index_entries GROUP BY pack_sha1 ORDER BY size"];
@@ -206,9 +214,9 @@
         }
         NSString *packSetName = [rs stringForColumnIndex:0];
         [rs close];
-        ret = [[[PackId alloc] initWithPackSetName:packSetName packSHA1:packSHA1] autorelease];
+        ret = [[PackId alloc] initWithPackSetName:packSetName packSHA1:packSHA1];
     }];
-
+    if (error != NULL) *error = blockError;
     if (ret != nil) {
         HSLogDebug(@"found pack smaller than %ld bytes: %@", theMaxSize, ret);
     }
@@ -216,8 +224,9 @@
 }
 - (NSNumber *)lockedIsStoredForPackId:(PackId *)thePackId error:(NSError **)error {
     __block NSNumber *ret = nil;
-    
+    __block NSError *blockError = nil;
     [fmdbq inDatabase:^(FMDatabase *db) {
+        NSError * __strong *error = &blockError;
 //        HSLogDebug(@"querying for pack %@", [thePackId packSHA1]);
 //        NSTimeInterval theTime = [NSDate timeIntervalSinceReferenceDate];
         FMResultSet *rs = [db executeQuery:@"SELECT pack_set_name, pack_sha1 FROM packs WHERE pack_sha1 = ?" withArgumentsInArray:[NSArray arrayWithObject:[thePackId packSHA1]]];
@@ -230,13 +239,14 @@
         ret = [NSNumber numberWithBool:[rs next]];
         [rs close];
     }];
-
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (BOOL)lockedInsertPackId:(PackId *)thePackId packIndexEntries:(NSArray *)thePIEs error:(NSError **)error {
     __block BOOL ret = NO;
-    
+    __block NSError *blockError = nil;
     [fmdbq inDatabase:^(FMDatabase *db) {
+        NSError * __strong *error = &blockError;
         db.logsErrors = YES;
         if (![db open]) {
             SETNSERROR([PackSetDB errorDomain], [db lastErrorCode], @"open db(%@): error=%@, db=%@", dbPath, [db lastErrorMessage], dbPath);
@@ -248,8 +258,8 @@
             return;
         }
         
-        ret = [self doLockedInsertPackId:thePackId packIndexEntries:thePIEs database:db error:error];
-        
+        ret = [self doLockedInsertPackId:thePackId packIndexEntries:thePIEs database:db error:&blockError];
+
         // Commit.
         if (ret) {
             if (![db commit]) {
@@ -261,7 +271,7 @@
             [db rollback];
         }
     }];
-    
+    if (error != NULL) *error = blockError;
     return ret;
 }
 
@@ -312,8 +322,9 @@
     }
     
     __block PackIndexEntry *ret = nil;
-    
+    __block NSError *blockError = nil;
     [fmdbq inDatabase:^(FMDatabase *db) {
+        NSError * __strong *error = &blockError;
 //        HSLogDebug(@"querying for pack index entry for %@", theSHA1);
 //        NSTimeInterval theTime = [NSDate timeIntervalSinceReferenceDate];
         FMResultSet *rs = [db executeQuery:@"SELECT pie.object_sha1 object_sha1, pie.pack_sha1 pack_sha1, pie.offset offset, pie.length length, p.pack_set_name pack_set_name FROM pack_index_entries pie, packs p WHERE pie.pack_sha1 = p.pack_sha1 and pie.object_sha1 = ?" withArgumentsInArray:[NSArray arrayWithObject:theSHA1]];
@@ -335,23 +346,24 @@
         NSString *packSetName = [rs stringForColumnIndex:4];
         [rs close];
         
-        PackId *packId = [[[PackId alloc] initWithPackSetName:packSetName packSHA1:packSHA1] autorelease];
-        ret = [[[PackIndexEntry alloc] initWithPackId:packId offset:offset dataLength:length objectSHA1:objectSHA1] autorelease];
+        PackId *packId = [[PackId alloc] initWithPackSetName:packSetName packSHA1:packSHA1];
+        ret = [[PackIndexEntry alloc] initWithPackId:packId offset:offset dataLength:length objectSHA1:objectSHA1];
     }];
-
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (BOOL)lockedDeletePackId:(PackId *)thePackId error:(NSError **)error {
     __block BOOL ret = YES;
-    
+    __block NSError *blockError = nil;
     [fmdbq inDatabase:^(FMDatabase *db) {
+        NSError * __strong *error = &blockError;
         if (![db beginTransaction]) {
             ret = NO;
             SETNSERROR([PackSetDB errorDomain], [db lastErrorCode], @"begin transaction in replacePackIndexEntries failed: %@", [db lastErrorMessage]);
             return;
         }
-        ret = [self doLockedDeletePackId:thePackId db:db error:error];
-        
+        ret = [self doLockedDeletePackId:thePackId db:db error:&blockError];
+
         // Commit.
         if (ret) {
             if (![db commit]) {
@@ -363,7 +375,7 @@
             [db rollback];
         }
     }];
-
+    if (error != NULL) *error = blockError;
     return ret;
 }
 
@@ -383,23 +395,26 @@
     return YES;
 }
 
-- (FMDatabaseQueue *)initDB:(NSError **)error {
-    FlockFile *ff = [[[FlockFile alloc] initWithPath:lockFilePath] autorelease];
+- (FMDatabaseQueue *)setupDB:(NSError **)error {
+    FlockFile *ff = [[FlockFile alloc] initWithPath:lockFilePath];
     __block FMDatabaseQueue *ret = nil;
-    if (![ff lockAndExecute:^void() { ret = [self lockedInitDB:error]; } error:error]) {
+    __block NSError *blockError = nil;
+    if (![ff lockAndExecute:^void() { ret = [self lockedSetupDB:&blockError]; } error:error]) {
         ret = nil;
     }
+    if (error != NULL) *error = blockError;
     return ret;
 }
-- (FMDatabaseQueue *)lockedInitDB:(NSError **)error {
+- (FMDatabaseQueue *)lockedSetupDB:(NSError **)error {
     if (![[NSFileManager defaultManager] ensureParentPathExistsForPath:dbPath targetUID:[[CacheOwnership sharedCacheOwnership] uid] targetGID:[[CacheOwnership sharedCacheOwnership] gid] error:error]) {
         return nil;
     }
     
     __block BOOL ret = NO;
-    
+    __block NSError *blockError = nil;
     FMDatabaseQueue *dbq = [FMDatabaseQueue databaseQueueWithPath:dbPath];
     [dbq inDatabase:^(FMDatabase *db) {
+        NSError * __strong *error = &blockError;
         db.logsErrors = YES;
         if (![db open]) {
             SETNSERROR([PackSetDB errorDomain], [db lastErrorCode], @"open db(%@): error=%@, db=%@", dbPath, [db lastErrorMessage], dbPath);
@@ -414,30 +429,31 @@
             SETNSERROR(@"UnixErrorDomain", errnum, @"chown(%@, %d, %d): %s", dbPath, [[CacheOwnership sharedCacheOwnership] uid], [[CacheOwnership sharedCacheOwnership] gid], strerror(errnum));
             return;
         }
-        
+
         if (![db executeUpdate:@"CREATE TABLE IF NOT EXISTS packs (pack_sha1 TEXT NOT NULL PRIMARY KEY, pack_set_name TEXT NOT NULL)"]
             || ![db executeUpdate:@"CREATE TABLE IF NOT EXISTS pack_index_entries (object_sha1 TEXT NOT NULL PRIMARY KEY, pack_sha1 TEXT NOT NULL, offset INTEGER NOT NULL, length INTEGER NOT NULL)"]) {
             SETNSERROR([PackSetDB errorDomain], [db lastErrorCode], @"db create table: %@", [db lastErrorMessage]);
             return;
         }
         [db setShouldCacheStatements:YES];
-        
+
         if ([self schemaVersion] == 0) {
             if (![db executeUpdate:@"CREATE INDEX pack_index_entries_pack_sha1 ON pack_index_entries (pack_sha1)"]) {
                 SETNSERROR([PackSetDB errorDomain], [db lastErrorCode], @"db create index pack_index_entries_pack_sha1: error=%@, db=%@", [db lastErrorMessage], dbPath);
                 return;
             }
-            if (![self setSchemaVersion:1 error:error]) {
+            if (![self setSchemaVersion:1 error:&blockError]) {
                 return;
             }
         }
-        
+
         ret = YES;
     }];
+    if (error != NULL) *error = blockError;
     if (!ret) {
         return nil;
     }
-    
+
     return dbq;
 }
 
@@ -475,18 +491,19 @@
     HSLogDebug(@"updating packset_schema version from %d to %d", currentVersion, theSchemaVersion);
     
     __block BOOL ret = NO;
+    __block NSError *blockError = nil;
     FMDatabaseQueue *dbq = [FMDatabaseQueue databaseQueueWithPath:dbPath];
     [dbq inDatabase:^(FMDatabase *db) {
+        NSError * __strong *error = &blockError;
         if (![db executeUpdate:@"UPDATE packset_schema SET version = ?" withArgumentsInArray:[NSArray arrayWithObject:[NSNumber numberWithInt:theSchemaVersion]]]) {
             SETNSERROR([PackSetDB errorDomain], [db lastErrorCode], @"db update packset_schema: error=%@, db=%@", [db lastErrorMessage], dbPath);
             return;
         }
         ret = YES;
     }];
-    
+    if (error != NULL) *error = blockError;
     return ret;
 }
-
 
 #pragma mark NSObject
 - (NSString *)description {

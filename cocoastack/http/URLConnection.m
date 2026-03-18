@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "URLConnection.h"
 #import "RFC2616DateFormatter.h"
 #import "InputStream.h"
@@ -49,10 +47,8 @@
 #import "System.h"
 #import "HTTPInputStream.h"
 
-
 static NSString *RUN_LOOP_MODE = @"HTTPConnectionRunLoopMode";
 #define DEFAULT_TIMEOUT_SECONDS (90)
-
 
 @implementation URLConnection
 
@@ -60,8 +56,8 @@ static NSString *RUN_LOOP_MODE = @"HTTPConnectionRunLoopMode";
     if (self = [super init]) {
         // Don't retain the delegate.
         delegate = theDelegate;
-        method = [theMethod retain];
-        url = [theURL retain];
+        method = theMethod;
+        url = theURL;
         mutableURLRequest = [[NSMutableURLRequest alloc] initWithURL:theURL];
         [mutableURLRequest setHTTPMethod:theMethod];
         [mutableURLRequest setCachePolicy:NSURLRequestReloadIgnoringCacheData];
@@ -75,18 +71,16 @@ static NSString *RUN_LOOP_MODE = @"HTTPConnectionRunLoopMode";
     return self;
 }
 - (void)dealloc {
-    [method release];
-    [url release];
+    
+    
     [urlConnection unscheduleFromRunLoop:[NSRunLoop currentRunLoop] forMode:RUN_LOOP_MODE];
-    [mutableURLRequest release];
-    [urlConnection release];
-    [httpURLResponse release];
-    [responseData release];
-    [_error release];
-    [date release];
-    [super dealloc];
+    
+    
+    
+    
+    
+    
 }
-
 
 #pragma mark HTTPConnection
 - (NSString *)errorDomain {
@@ -117,8 +111,7 @@ static NSString *RUN_LOOP_MODE = @"HTTPConnectionRunLoopMode";
     [self setRequestHeader:[[RFC2616DateFormatter sharedRFC2616DateFormatter] rfc2616StringFromDate:theDate] forKey:@"Date"];
 }
 - (void)setDate:(NSDate *)theDate {
-    [theDate retain];
-    [date release];
+    
     date = theDate;
 }
 - (NSDate *)date {
@@ -154,7 +147,7 @@ static NSString *RUN_LOOP_MODE = @"HTTPConnectionRunLoopMode";
     if ([theBody length] > 0) {
         httpInputStream = [[HTTPInputStream alloc] initWithHTTPConnection:self data:theBody]; // Don't retain this?!
         [mutableURLRequest setHTTPBodyStream:(NSInputStream *)httpInputStream];
-        [httpInputStream release];
+        
     } else if (theBody != nil) {
         // For 0-byte body, HTTPInputStream seems to hang, so just give it an empty NSData:
         [mutableURLRequest setHTTPBody:theBody];
@@ -194,7 +187,7 @@ static NSString *RUN_LOOP_MODE = @"HTTPConnectionRunLoopMode";
                 _error = [[NSError alloc] initWithDomain:[self errorDomain] code:ERROR_TIMEOUT description:[NSString stringWithFormat:@"timeout during %@ %@", method, [mutableURLRequest URL]]];
                 errorOccurred = YES;
                 [urlConnection cancel];
-                [urlConnection release];
+                
                 urlConnection = nil;
             }
         }
@@ -202,7 +195,7 @@ static NSString *RUN_LOOP_MODE = @"HTTPConnectionRunLoopMode";
     if (errorOccurred) {
         [delegate dataTransferDidFail];
         if (error != NULL) {
-            *error = [[_error retain] autorelease];
+            *error = _error;
         }
         return nil;
     }
@@ -217,9 +210,9 @@ static NSString *RUN_LOOP_MODE = @"HTTPConnectionRunLoopMode";
         HSLogDebug(@"response: status = %d, Content-Length = %@, Transfer-Encoding = %@", [self responseCode], contentLength, transferEncoding);
         if (transferEncoding != nil && ![transferEncoding isEqualToString:@"Identity"]) {
             if ([[transferEncoding lowercaseString] isEqualToString:@"chunked"]) {
-                id <InputStream> dis = [[[DataInputStream alloc] initWithData:responseData description:@"http response"] autorelease];
-                BufferedInputStream *bis = [[[BufferedInputStream alloc] initWithUnderlyingStream:dis] autorelease];
-                ChunkedInputStream *cis = [[[ChunkedInputStream alloc] initWithUnderlyingStream:bis] autorelease];
+                id <InputStream> dis = [[DataInputStream alloc] initWithData:responseData description:@"http response"];
+                BufferedInputStream *bis = [[BufferedInputStream alloc] initWithUnderlyingStream:dis];
+                ChunkedInputStream *cis = [[ChunkedInputStream alloc] initWithUnderlyingStream:bis];
                 ret = [cis slurp:error];
             } else {
                 SETNSERROR(@"StreamErrorDomain", -1, @"unknown Transfer-Encoding '%@'", transferEncoding);
@@ -243,7 +236,7 @@ static NSString *RUN_LOOP_MODE = @"HTTPConnectionRunLoopMode";
 //                for (NSString *key in [headers allKeys]) {
 //                    HSLogDebug(@"response header: %@ = %@", key, [headers objectForKey:key]);
 //                }
-//                NSString *responseString = [[[NSString alloc] initWithData:responseData encoding:NSUTF8StringEncoding] autorelease];
+//                NSString *responseString = [[NSString alloc] initWithData:responseData encoding:NSUTF8StringEncoding];
 //                HSLogDebug(@"response string: %@", responseString);
 //            }
 //            SETNSERROR([self errorDomain], -1, @"%@", errorMessage);
@@ -284,7 +277,6 @@ static NSString *RUN_LOOP_MODE = @"HTTPConnectionRunLoopMode";
     return createTime;
 }
 
-
 #pragma mark NSURLConnection delegate
 - (BOOL)connection:(NSURLConnection *)connection canAuthenticateAgainstProtectionSpace:(NSURLProtectionSpace *)protectionSpace {
     return [protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust];
@@ -299,8 +291,8 @@ static NSString *RUN_LOOP_MODE = @"HTTPConnectionRunLoopMode";
 }
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
     if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
-        [httpURLResponse release];
-        httpURLResponse = (NSHTTPURLResponse *)[response retain];
+        
+        httpURLResponse = (NSHTTPURLResponse *)response;
         // Docs state "Each time the delegate receives the connection:didReceiveResponse: message, it should reset any progress indication and discard all previously received data.".
 //        HSLogDebug(@"didReceiveResponse; resetting responseData");
         [responseData setLength:0];
@@ -309,9 +301,9 @@ static NSString *RUN_LOOP_MODE = @"HTTPConnectionRunLoopMode";
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)myError {
     HSLogDebug(@"connection didFailWithError: %@", myError);
     errorOccurred = YES;
-    [_error release];
-    _error = [myError retain];
-    [urlConnection release];
+    
+    _error = myError;
+    
     urlConnection = nil;
 }
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
@@ -320,11 +312,12 @@ static NSString *RUN_LOOP_MODE = @"HTTPConnectionRunLoopMode";
         if ([delegate respondsToSelector:@selector(dataTransferDidDownloadBytes:httpThrottle:error:)]) {
             NSUInteger bytesReceivedThisTime = [data length];
             HTTPThrottle *httpThrottle = nil;
-            if (![delegate dataTransferDidDownloadBytes:bytesReceivedThisTime httpThrottle:&httpThrottle error:&_error]) {
-                [_error retain];
+            NSError *localError = nil;
+            if (![delegate dataTransferDidDownloadBytes:bytesReceivedThisTime httpThrottle:&httpThrottle error:&localError]) {
+                _error = localError;
                 errorOccurred = YES;
                 [urlConnection cancel];
-                [urlConnection release];
+                
                 urlConnection = nil;
             }
             if (httpThrottle != nil) {
@@ -338,11 +331,13 @@ static NSString *RUN_LOOP_MODE = @"HTTPConnectionRunLoopMode";
     if ([delegate respondsToSelector:@selector(dataTransferDidUploadBytes:httpThrottle:error:)]) {
         NSUInteger bytesSentThisTime = bytesWritten;
         HTTPThrottle *httpThrottle = nil;
-        if (![delegate dataTransferDidUploadBytes:bytesSentThisTime httpThrottle:&httpThrottle error:&_error]) {
-            [_error retain];
+        NSError *localError = nil;
+        if (![delegate dataTransferDidUploadBytes:bytesSentThisTime httpThrottle:&httpThrottle error:&localError]) {
+            _error = localError;
+            
             errorOccurred = YES;
             [urlConnection cancel];
-            [urlConnection release];
+            
             urlConnection = nil;
         }
         if (httpThrottle != nil) {
@@ -359,10 +354,9 @@ static NSString *RUN_LOOP_MODE = @"HTTPConnectionRunLoopMode";
 }
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
 //    HSLogDebug(@"connectionDidFinishLoading");
-    [urlConnection release];
+    
     urlConnection = nil;
 }
-
 
 #pragma mark NSObject
 - (NSString *)description {

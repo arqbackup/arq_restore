@@ -30,10 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "CWLSynthesizeSingleton.h"
-
 
 @interface ISO8601Date : NSObject {
     NSDateFormatter *dateFormatter;

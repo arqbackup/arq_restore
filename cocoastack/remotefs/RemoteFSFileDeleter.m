@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "RemoteFSFileDeleter.h"
 #import "RemoteFS.h"
 #import "TargetConnection.h"
@@ -40,16 +38,14 @@
 #import "DeleteDelegate.h"
 #import "ItemsDB.h"
 
-
 #define NUM_WORKER_THREADS (5)
-
 
 @implementation RemoteFSFileDeleter
 - (id)initWithRemoteFS:(RemoteFS *)theRemoteFS filePaths:(NSArray *)theFilePaths cacheUUID:(NSString *)theCacheUUID deleteDelegate:(id <DeleteDelegate>)theDD targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD {
     if (self = [super init]) {
-        remoteFS = [theRemoteFS retain];
-        filePaths = [theFilePaths retain];
-        cacheUUID = [theCacheUUID retain];
+        remoteFS = theRemoteFS;
+        filePaths = theFilePaths;
+        cacheUUID = theCacheUUID;
         deleteDelegate = theDD;
         targetConnectionDelegate = theTCD;
         workerThreadSemaphore = dispatch_semaphore_create(0);
@@ -61,20 +57,15 @@
         
         HSLogDebug(@"creating %d worker threads", NUM_WORKER_THREADS);
         for (NSUInteger i = 0; i < NUM_WORKER_THREADS; i++) {
-            [[[RemoteFSFileDeleterWorker alloc] initWithRemoteFSFileDeleter:self remoteFS:theRemoteFS targetConnectionDelegate:theTCD] autorelease];
+            (void)[[RemoteFSFileDeleterWorker alloc] initWithRemoteFSFileDeleter:self remoteFS:theRemoteFS targetConnectionDelegate:theTCD];
         }
     }
     return self;
 }
 - (void)dealloc {
-    [remoteFS release];
-    [filePaths release];
-    [cacheUUID release];
-    if (workerThreadSemaphore) {
-        dispatch_release(workerThreadSemaphore);
-    }
-    [lock release];
-    [super dealloc];
+    
+    
+    
 }
 
 - (void)waitForCompletion {

@@ -30,10 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
-
 @protocol VaultDeleterDelegate <NSObject>
 - (void)vaultDeleterStatusDidChange:(NSString *)theMessage;
 - (BOOL)vaultDeleterAbortRequestedForVaultName:(NSString *)theVaultName;

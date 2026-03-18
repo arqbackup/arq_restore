@@ -30,12 +30,9 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include <sys/stat.h>
 
-
 #import "FileOutputStream.h"
-
 
 @interface FileOutputStream (internal)
 - (BOOL)open:(NSError **)error;
@@ -56,10 +53,9 @@
     if (fd != -1) {
         close(fd);
     }
-    [targetUID release];
-    [targetGID release];
-    [path release];
-    [super dealloc];
+    
+    
+    
 }
 - (void)close {
     if (fd != -1) {

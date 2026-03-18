@@ -30,17 +30,13 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "GlacierPackSet.h"
 #import "PackIndexEntry.h"
 #import "GlacierPackIndex.h"
 #import "PackId.h"
 
-
 static unsigned long long DEFAULT_MAX_PACK_FILE_SIZE_MB = 5;
 static unsigned long long DEFAULT_MAX_PACK_ITEM_SIZE_BYTES = 65536;
-
 
 @implementation GlacierPackSet
 + (NSString *)errorDomain {
@@ -61,29 +57,17 @@ static unsigned long long DEFAULT_MAX_PACK_ITEM_SIZE_BYTES = 65536;
         computerUUID:(NSString *)theComputerUUID
          packSetName:(NSString *)thePackSetName {
     if (self = [super init]) {
-        target = [theTarget retain];
-        s3 = [theS3 retain];
-        glacier = [theGlacier retain];
-        s3BucketName = [theS3BucketName retain];
-        computerUUID = [theComputerUUID retain];
-        packSetName = [thePackSetName retain];
+        target = theTarget;
+        s3 = theS3;
+        glacier = theGlacier;
+        s3BucketName = theS3BucketName;
+        computerUUID = theComputerUUID;
+        packSetName = thePackSetName;
         glacierPackIndexesByPackSHA1 = [[NSMutableDictionary alloc] init];
         packIndexEntriesByObjectSHA1 = [[NSMutableDictionary alloc] init];
     }
     return self;
 }
-- (void)dealloc {
-    [target release];
-    [s3 release];
-    [glacier release];
-    [s3BucketName release];
-    [computerUUID release];
-    [packSetName release];
-    [glacierPackIndexesByPackSHA1 release];
-    [packIndexEntriesByObjectSHA1 release];
-    [super dealloc];
-}
-
 - (BOOL)containsBlob:(BOOL *)contains forSHA1:(NSString *)sha1 dataSize:(unsigned long long *)dataSize targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error {
     if (!loadedPIEs && ![self loadPackIndexEntriesWithTargetConnectionDelegate:theTCD error:error]) {
         return NO;
@@ -110,7 +94,6 @@ static unsigned long long DEFAULT_MAX_PACK_ITEM_SIZE_BYTES = 65536;
     }
     return ret;
 }
-
 
 #pragma mark internal
 - (BOOL)loadPackIndexEntriesWithTargetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error {

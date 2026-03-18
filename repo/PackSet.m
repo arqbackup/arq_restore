@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "PackSet.h"
 #import "Target.h"
 #import "S3Service.h"
@@ -48,13 +46,11 @@
 #import "PackSetDB.h"
 #import "PIELoader.h"
 
-
 #define MAX_RETRIES (10)
 
 static unsigned long long DEFAULT_MAX_PACK_FILE_SIZE_MB = 5;
 static unsigned long long DEFAULT_MAX_PACK_ITEM_SIZE_BYTES = 65536;
 //static double DEFAULT_MAX_REUSABLE_PACK_FILE_SIZE_FRACTION = 0.6;
-
 
 @implementation PackSet
 
@@ -72,9 +68,9 @@ cachePackFilesToDisk:(BOOL)theCachePackFilesToDisk
   activityListener:(id <PackSetActivityListener>)theActivityListener
              error:(NSError **)error {
     if (self = [super init]) {
-        fark = [theFark retain];
+        fark = theFark;
         storageType = theStorageType;
-        packSetName = [thePackSetName retain];
+        packSetName = thePackSetName;
         cachePackFilesToDisk = theCachePackFilesToDisk;
         activityListener = theActivityListener;
         
@@ -83,22 +79,13 @@ cachePackFilesToDisk:(BOOL)theCachePackFilesToDisk
                                               packSetName:thePackSetName
                                                     error:error];
         if (packSetDB == nil) {
-            [self release];
+            
             return nil;
         }
         packBuilderBuffer = [[NSMutableData alloc] init];
     }
     return self;
 }
-- (void)dealloc {
-    [fark release];
-    [packSetName release];
-    [packBuilder release];
-    [packSetDB release];
-    [packBuilderBuffer release];
-    [super dealloc];
-}
-
 - (NSString *)errorDomain {
     return @"PackSetErrorDomain";
 }
@@ -150,10 +137,7 @@ cachePackFilesToDisk:(BOOL)theCachePackFilesToDisk
     NSData *ret = nil;
     NSUInteger i = 0;
     NSUInteger maxRetries = retry ? MAX_RETRIES : 1;
-    NSAutoreleasePool *pool = nil;
     for (i = 0; i < maxRetries; i++) {
-        [pool drain];
-        pool = [[NSAutoreleasePool alloc] init];
         NSError *myError = nil;
         ret = [self doDataForSHA1:sha1 error:&myError];
         if (ret != nil) {
@@ -174,7 +158,7 @@ cachePackFilesToDisk:(BOOL)theCachePackFilesToDisk
             
             HSLogError(@"invalid pack index entry (recreating index): %@", myError);
             
-            PackIndexEntry *pie = [[[self packIndexEntryForSHA1:sha1 error:error] retain] autorelease];
+            PackIndexEntry *pie = [self packIndexEntryForSHA1:sha1 error:error];
             if (pie == nil) {
                 // This should never happen.
                 break;
@@ -208,7 +192,7 @@ cachePackFilesToDisk:(BOOL)theCachePackFilesToDisk
             if (packData == nil) {
                 return nil;
             }
-            PackIndexGenerator *pig = [[[PackIndexGenerator alloc] initWithPackId:[pie packId] packData:packData] autorelease];
+            PackIndexGenerator *pig = [[PackIndexGenerator alloc] initWithPackId:[pie packId] packData:packData];
             NSData *indexData = [pig indexData:error];
             HSLogInfo(@"storing fixed index for %@", [pie packId]);
             if (![fark putIndexData:indexData forPackId:[pie packId] error:error]) {
@@ -218,15 +202,6 @@ cachePackFilesToDisk:(BOOL)theCachePackFilesToDisk
             SETERRORFROMMYERROR;
             break;
         }
-    }
-    [ret retain];
-    if (ret == nil && error != NULL) {
-        [*error retain];
-    }
-    [pool drain];
-    [ret autorelease];
-    if (ret == nil && error != NULL) {
-        [*error autorelease];
     }
     
     return ret;
@@ -266,7 +241,7 @@ cachePackFilesToDisk:(BOOL)theCachePackFilesToDisk
         }
         HSLogDebug(@"committed new pack %@", newPackId);
         
-        [packBuilder release];
+        
         packBuilder = nil;
 
         PackIndex *newPackIndex = [self packIndexForPackId:newPackId error:error];
@@ -372,7 +347,6 @@ cachePackFilesToDisk:(BOOL)theCachePackFilesToDisk
     return YES;
 }
 
-
 - (PackIndexEntry *)packIndexEntryForSHA1:(NSString *)theSHA1 error:(NSError **)error {
     if (![self loadCache:error]) {
         return nil;
@@ -432,14 +406,9 @@ cachePackFilesToDisk:(BOOL)theCachePackFilesToDisk
 }
 - (BOOL)loadCache:(NSError **)error {
     if (!cacheIsLoaded) {
-        NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-        BOOL ret = [self doLoadCache:error];
-        if (!ret && error != NULL) {
-            [*error retain];
-        }
-        [pool drain];
-        if (!ret && error != NULL) {
-            [*error autorelease];
+        BOOL ret;
+        @autoreleasepool {
+            ret = [self doLoadCache:error];
         }
         if (!ret) {
             return NO;
@@ -469,7 +438,7 @@ cachePackFilesToDisk:(BOOL)theCachePackFilesToDisk
     [packIdsNotInDB minusSet:packIdsInDB];
     NSArray *packIdsArray = [packIdsNotInDB allObjects];
     if ([packIdsArray count] > 0) {
-        PIELoader *pieLoader = [[[PIELoader alloc] initWithDelegate:self packIds:packIdsArray fark:fark storageType:storageType] autorelease];
+        PIELoader *pieLoader = [[PIELoader alloc] initWithDelegate:self packIds:packIdsArray fark:fark storageType:storageType];
         if (![pieLoader waitForCompletion:error]) {
             return NO;
         }
@@ -488,7 +457,6 @@ cachePackFilesToDisk:(BOOL)theCachePackFilesToDisk
     return YES;
 }
 
-
 - (PackIndex *)packIndexForPackId:(PackId *)thePackId error:(NSError **)error {
     NSError *myError = nil;
     NSData *indexData = [fark indexDataForPackId:thePackId error:&myError];
@@ -503,7 +471,7 @@ cachePackFilesToDisk:(BOOL)theCachePackFilesToDisk
             if (packData == nil) {
                 return nil;
             }
-            PackIndexGenerator *pig = [[[PackIndexGenerator alloc] initWithPackId:thePackId packData:packData] autorelease];
+            PackIndexGenerator *pig = [[PackIndexGenerator alloc] initWithPackId:thePackId packData:packData];
             indexData = [pig indexData:error];
             if (indexData == nil) {
                 // Failed to read the pack. Delete the pack.
@@ -519,7 +487,7 @@ cachePackFilesToDisk:(BOOL)theCachePackFilesToDisk
             return nil;
         }
     }
-    return [[[PackIndex alloc] initWithPackId:thePackId indexData:indexData] autorelease];
+    return [[PackIndex alloc] initWithPackId:thePackId indexData:indexData];
 }
 
 #pragma mark PIELoaderDelegate

@@ -30,12 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
-
-
-
 @interface UserAndComputer : NSObject {
     NSString *userName;
     NSString *computerName;

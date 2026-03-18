@@ -30,9 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 #import "BufferedInputStream.h"
 
 @interface XAttrSet : NSObject {

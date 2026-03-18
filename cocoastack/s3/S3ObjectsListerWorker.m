@@ -30,13 +30,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "S3ObjectsListerWorker.h"
 #import "S3ObjectsLister.h"
 #import "S3AuthorizationProvider.h"
 #import "S3Lister.h"
-
 
 @implementation S3ObjectsListerWorker
 - (id)initWithS3AuthorizationProvider:(id <S3AuthorizationProvider>)theSAP
@@ -44,35 +41,25 @@
              targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD
                       s3ObjectsLister:(S3ObjectsLister *)theS3ObjectsLister {
     if (self = [super init]) {
-        sap = [theSAP retain];
-        endpoint = [theEndpoint retain];
+        sap = theSAP;
+        endpoint = theEndpoint;
         targetConnectionDelegate = theTCD;
-        s3ObjectsLister = [theS3ObjectsLister retain];
+        s3ObjectsLister = theS3ObjectsLister;
         
-        [self retain];
         
         [NSThread detachNewThreadSelector:@selector(run) toTarget:self withObject:nil];
     }
     return self;
 }
-- (void)dealloc {
-    [sap release];
-    [endpoint release];
-    [s3ObjectsLister release];
-    [super dealloc];
-}
-
-
 - (void)run {
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-    
+    @autoreleasepool {
     for (;;) {
         NSString *prefix = [s3ObjectsLister nextPrefix];
         if (prefix == nil) {
             break;
         }
         NSError *myError = nil;
-        S3Lister *lister = [[[S3Lister alloc] initWithS3AuthorizationProvider:sap endpoint:endpoint path:prefix delimiter:nil targetConnectionDelegate:targetConnectionDelegate] autorelease];
+        S3Lister *lister = [[S3Lister alloc] initWithS3AuthorizationProvider:sap endpoint:endpoint path:prefix delimiter:nil targetConnectionDelegate:targetConnectionDelegate];
         NSDictionary *itemsByName = [lister itemsByName:&myError];
         if (itemsByName == nil) {
             [s3ObjectsLister workerDidFail:myError];
@@ -82,7 +69,7 @@
         }
     }
     [s3ObjectsLister workerDidFinish];
-    [pool drain];
+    }
 }
 
 @end

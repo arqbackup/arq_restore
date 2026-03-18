@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #include <sys/stat.h>
 #include <sys/xattr.h>
 #import "XAttrSet.h"
@@ -42,7 +40,6 @@
 #import "Streams.h"
 #import "NSError_extra.h"
 #import "BufferedInputStream.h"
-
 
 #define HEADER_LENGTH (12)
 
@@ -63,11 +60,11 @@
                 if (error != NULL) {
                     *error = myError;
                 }
-                [self release];
+                
                 return nil;
             }
         }
-        path = [thePath retain];
+        path = thePath;
     }
     return self;
 }
@@ -75,23 +72,17 @@
     if (self = [super init]) {
         xattrs = [[NSMutableDictionary alloc] init];
         if (![self loadFromInputStream:is error:error]) {
-            [self release];
+            
             self = nil;
         }
     }
     return self;
 }
-- (void)dealloc {
-    [xattrs release];
-    [path release];
-    [super dealloc];
-}
-
 - (NSString *)errorDomain {
     return @"XAttrSetErrorDomain";
 }
 - (NSData *)toData {
-    NSMutableData *mutableData = [[[NSMutableData alloc] init] autorelease];
+    NSMutableData *mutableData = [[NSMutableData alloc] init];
     [self toBuffer:mutableData];
     return mutableData;
 }
@@ -121,7 +112,7 @@
     return [xattrs allKeys];
 }
 - (BOOL)applyToFile:(NSString *)thePath error:(NSError **)error {
-    XAttrSet *current = [[[XAttrSet alloc] initWithPath:thePath error:error] autorelease];
+    XAttrSet *current = [[XAttrSet alloc] initWithPath:thePath error:error];
     if (!current) {
         return NO;
     }

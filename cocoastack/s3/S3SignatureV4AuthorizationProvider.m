@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "S3SignatureV4AuthorizationProvider.h"
 #import "HMACSHA256.h"
 #import "AWSRegion.h"
@@ -42,13 +40,12 @@
 
 static NSDateFormatter *g_dateFormatter = nil;
 
-
 @implementation S3SignatureV4AuthorizationProvider
 - (id)initWithAccessKey:(NSString *)access secretKey:(NSString *)secret awsRegion:(AWSRegion *)theAWSRegion {
     if (self = [super init]) {
-        accessKey = [access retain];
-        secretKey = [secret retain];
-        awsRegion = [theAWSRegion retain];
+        accessKey = access;
+        secretKey = secret;
+        awsRegion = theAWSRegion;
         signingKeysByDateString = [[NSMutableDictionary alloc] init];
         if (g_dateFormatter == nil) {
             g_dateFormatter = [[NSDateFormatter alloc] init];
@@ -58,16 +55,6 @@ static NSDateFormatter *g_dateFormatter = nil;
     }
     return self;
 }
-- (void)dealloc {
-    [accessKey release];
-    [secretKey release];
-    [awsRegion release];
-    [signingKeysByDateString release];
-    [signingKeysLock release];
-    [super dealloc];
-}
-
-
 #pragma mark S3AuthorizationProvider
 - (int)signatureVersion {
     return 4;
@@ -104,7 +91,6 @@ static NSDateFormatter *g_dateFormatter = nil;
     return YES;
 }
 
-
 #pragma mark internal
 - (NSData *)makeSigningKeyForDateString:(NSString *)theDateString {
     NSString *secret = [@"AWS4" stringByAppendingString:secretKey];
@@ -122,7 +108,7 @@ static NSDateFormatter *g_dateFormatter = nil;
 - (NSString *)stringToSignForConnection:(id<HTTPConnection>)theConnection canonicalRequest:(NSString *)canonicalRequest contentSHA256:(NSString *)theContentSHA256 now:(NSDate *)now {
     
     // Scope
-    NSMutableString *scope = [[[NSMutableString alloc] init] autorelease];
+    NSMutableString *scope = [[NSMutableString alloc] init];
     [signingKeysLock lock];
     // Lock before using g_dateFormatter because it's not thread-safe!
     [scope appendString:[g_dateFormatter stringFromDate:now]];
@@ -133,7 +119,7 @@ static NSDateFormatter *g_dateFormatter = nil;
     [scope appendString:@"/s3/aws4_request"];
     
     // String to sign
-    NSMutableString *ret = [[[NSMutableString alloc] init] autorelease];
+    NSMutableString *ret = [[NSMutableString alloc] init];
     [ret appendString:@"AWS4-HMAC-SHA256\n"];
     [ret appendString:[[ISO8601Date sharedISO8601Date] basicDateTimeStringFromDate:now]];
     [ret appendString:@"\n"];
@@ -164,7 +150,7 @@ static NSDateFormatter *g_dateFormatter = nil;
      <HashedPayload>
      */
     
-    NSMutableString *buf = [[[NSMutableString alloc] init] autorelease];
+    NSMutableString *buf = [[NSMutableString alloc] init];
     
     // HTTPMethod
     [buf appendString:[theConnection requestMethod]];
@@ -223,7 +209,7 @@ static NSDateFormatter *g_dateFormatter = nil;
     [buf appendString:@"\n"];
     
     // SignedHeaders
-    NSMutableString *headerNameString = [[[NSMutableString alloc] init] autorelease];
+    NSMutableString *headerNameString = [[NSMutableString alloc] init];
     BOOL needSemicolon = NO;
     for (NSString *lcHeaderName in sortedLCHeaderNames) {
         if (!needSemicolon) {

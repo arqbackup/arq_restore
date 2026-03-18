@@ -30,12 +30,9 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "S3Receiver.h"
 @protocol S3AuthorizationProvider;
 @protocol TargetConnectionDelegate;
-
 
 @interface S3Lister : NSObject {
     id <S3AuthorizationProvider>sap;

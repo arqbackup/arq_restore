@@ -6,7 +6,6 @@
 - (void)resultSetDidClose:(FMResultSet *)resultSet;
 @end
 
-
 @implementation FMResultSet
 @synthesize query=_query;
 @synthesize statement=_statement;
@@ -39,7 +38,6 @@
     _columnNameToIndexMap = nil;
     
 #if ! __has_feature(objc_arc)
-    [super dealloc];
 #endif
 }
 
@@ -143,9 +141,6 @@
     return nil;
 }
 
-
-
-
 - (BOOL)next {
     return [self nextWithError:nil];
 }
@@ -219,8 +214,6 @@
     
     return -1;
 }
-
-
 
 - (int)intForColumn:(NSString*)columnName {
     return [self intForColumnIndex:[self columnIndexForName:columnName]];
@@ -303,7 +296,6 @@
     return [_parentDB hasDateFormatter] ? [_parentDB dateFromString:[self stringForColumnIndex:columnIdx]] : [NSDate dateWithTimeIntervalSince1970:[self doubleForColumnIndex:columnIdx]];
 }
 
-
 - (NSData*)dataForColumn:(NSString*)columnName {
     return [self dataForColumnIndex:[self columnIndexForName:columnName]];
 }
@@ -324,7 +316,6 @@
     return [NSData dataWithBytes:(const void *)dataBuffer length:(NSUInteger)dataSize];
 }
 
-
 - (NSData*)dataNoCopyForColumn:(NSString*)columnName {
     return [self dataNoCopyForColumnIndex:[self columnIndexForName:columnName]];
 }
@@ -342,7 +333,6 @@
     
     return data;
 }
-
 
 - (BOOL)columnIndexIsNull:(int)columnIdx {
     return sqlite3_column_type([_statement statement], columnIdx) == SQLITE_NULL;
@@ -411,6 +401,5 @@
 - (id)objectForKeyedSubscript:(NSString *)columnName {
     return [self objectForColumnName:columnName];
 }
-
 
 @end

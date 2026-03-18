@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import <CommonCrypto/CommonDigest.h>
 #import <CommonCrypto/CommonHMAC.h>
 #import <CommonCrypto/CommonCryptor.h>
@@ -43,7 +41,6 @@
 #import "SHA1Hash.h"
 #import "NSString_extra.h"
 
-
 #define HEADER "ARQO"
 #define HEADER_LEN (4)
 #define IV_LEN kCCBlockSizeAES128
@@ -54,7 +51,6 @@
 #define V3_MASTER_KEYS_LEN (kCCKeySizeAES256 * 3)
 #define V2_MASTER_KEYS_LEN (kCCKeySizeAES256 * 2)
 
-
 @implementation ObjectEncryptorV2
 - (id)initWithTarget:(Target *)theTarget
         computerUUID:(NSString *)theComputerUUID
@@ -62,12 +58,12 @@
   encryptionPassword:(NSString *)theEncryptionPassword
                error:(NSError **)error {
     if (self = [super init]) {
-        target = [theTarget retain];
-        computerUUID = [theComputerUUID retain];
+        target = theTarget;
+        computerUUID = theComputerUUID;
         
         symmetricKey = (unsigned char *)malloc(SYMMETRIC_KEY_LEN);
         
-        masterKeys = [[theEDF masterKeys] retain];
+        masterKeys = [theEDF masterKeys];
         masterKey = [masterKeys bytes];
         hmacKey = (unsigned char *)masterKey + kCCKeySizeAES256;
         
@@ -76,20 +72,20 @@
         if ([theEDF encryptionVersion] == 3) {
             if ([masterKeys length] != V3_MASTER_KEYS_LEN) {
                 SETNSERROR([ObjectEncryptor errorDomain], -1, @"master keys data is not %d bytes", V3_MASTER_KEYS_LEN);
-                [self release];
+                
                 return nil;
             }
             blobKeySaltData = [[NSData alloc] initWithBytes:(hmacKey + kCCKeySizeAES256) length:kCCKeySizeAES256];
         } else if ([theEDF encryptionVersion] == 2) {
             if ([masterKeys length] != V2_MASTER_KEYS_LEN) {
                 SETNSERROR([ObjectEncryptor errorDomain], -1, @"master keys data is not %d bytes", V2_MASTER_KEYS_LEN);
-                [self release];
+                
                 return nil;
             }
-            blobKeySaltData = [[computerUUID dataUsingEncoding:NSUTF8StringEncoding] retain];
+            blobKeySaltData = [computerUUID dataUsingEncoding:NSUTF8StringEncoding];
         } else {
             SETNSERROR([ObjectEncryptor errorDomain], -1, @"unexpected encryption version: %d", [theEDF encryptionVersion]);
-            [self release];
+            
             return nil;
         }
 
@@ -101,27 +97,25 @@
 }
 
 - (void)dealloc {
-    [target release];
-    [computerUUID release];
-    [blobKeySaltData release];
-    [masterKeys release];
+    
+    
+    
+    
     free(symmetricKey);
-    [symmetricKeyLock release];
-    [super dealloc];
+    
 }
-
 
 #pragma ObjectEncryptorImpl
 - (BOOL)ensureDatFileExistsAtTargetWithEncryptionPassword:(NSString *)theEncryptionPassword targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD error:(NSError **)error {
     NSError *myError = nil;
-    EncryptionDatFile *encryptionDatFile = [[[EncryptionDatFile alloc] initFromTargetWithEncryptionPassword:theEncryptionPassword target:target computerUUID:computerUUID encryptionVersion:encryptionVersion targetConnectionDelegate:theTCD error:&myError] autorelease];
+    EncryptionDatFile *encryptionDatFile = [[EncryptionDatFile alloc] initFromTargetWithEncryptionPassword:theEncryptionPassword target:target computerUUID:computerUUID encryptionVersion:encryptionVersion targetConnectionDelegate:theTCD error:&myError];
     if (encryptionDatFile == nil) {
         if ([myError code] != ERROR_NOT_FOUND) {
             SETERRORFROMMYERROR;
             return NO;
         }
         
-        encryptionDatFile = [[[EncryptionDatFile alloc] initFromLocalCacheWithEncryptionPassword:theEncryptionPassword target:target computerUUID:computerUUID encryptionVersion:encryptionVersion error:error] autorelease];
+        encryptionDatFile = [[EncryptionDatFile alloc] initFromLocalCacheWithEncryptionPassword:theEncryptionPassword target:target computerUUID:computerUUID encryptionVersion:encryptionVersion error:error];
         if (encryptionDatFile == nil) {
             SETERRORFROMMYERROR;
             return NO;
@@ -397,7 +391,6 @@
     }
     return YES;
 }
-
 
 #pragma mark internal
 - (void)resetSymmetricKey {

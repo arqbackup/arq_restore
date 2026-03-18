@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "ArqSalt.h"
 #import "NSFileManager_extra.h"
 #import "UserLibrary_Arq.h"
@@ -40,9 +38,7 @@
 #import "Streams.h"
 #import "CacheOwnership.h"
 
-
 #define SALT_LENGTH (8)
-
 
 @implementation ArqSalt
 - (id)initWithTarget:(Target *)theTarget
@@ -54,17 +50,11 @@
     }
     
     if (self = [super init]) {
-        target = [theTarget retain];
-        computerUUID = [theComputerUUID retain];
+        target = theTarget;
+        computerUUID = theComputerUUID;
     }
     return self;
 }
-- (void)dealloc {
-    [target release];
-    [computerUUID release];
-    [super dealloc];
-}
-
 - (NSString *)errorDomain {
     return @"ArqSaltErrorDomain";
 }
@@ -75,7 +65,7 @@
         return NO;
     }
     BOOL ret = [self ensureSaltExistsAtTargetWithTargetConnection:targetConnection targetConnectionDelegate:theDelegate error:error];
-    [targetConnection release];
+    
     return ret;
 }
 - (BOOL)ensureSaltExistsAtTargetWithTargetConnection:(TargetConnection *)targetConnection targetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error {
@@ -114,14 +104,13 @@
     return ret;
 }
 
-
 #pragma mark internal
 - (NSData *)createRandomSalt {
     unsigned char buf[SALT_LENGTH];
     for (NSUInteger i = 0; i < SALT_LENGTH; i++) {
         buf[i] = (unsigned char)arc4random_uniform(256);
     }
-    return [[[NSData alloc] initWithBytes:buf length:SALT_LENGTH] autorelease];
+    return [[NSData alloc] initWithBytes:buf length:SALT_LENGTH];
 }
 - (NSString *)localPath {
     return [NSString stringWithFormat:@"%@/%@/%@/salt.dat", [UserLibrary arqCachePath], [target targetUUID], computerUUID];
@@ -140,7 +129,7 @@
             HSLogError(@"error caching salt data to %@: %@", [self localPath], myError);
         }
     }
-    [targetConnection release];
+    
     return ret;
 }
 @end

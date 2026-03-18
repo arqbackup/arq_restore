@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "BackupSet.h"
 #import "S3AuthorizationProvider.h"
 #import "S3Service.h"
@@ -51,7 +49,6 @@
 #import "UserLibrary_Arq.h"
 #import "NSString+SBJSON.h"
 
-
 @implementation BackupSet
 + (NSArray *)allBackupSetsForTarget:(Target *)theTarget targetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate activityListener:(id<BackupSetActivityListener>)theActivityListener error:(NSError **)error {
     TargetConnection *targetConnection = [theTarget newConnection:error];
@@ -59,7 +56,7 @@
         return nil;
     }
     NSArray *ret = [BackupSet allBackupSetsForTarget:theTarget targetConnection:targetConnection targetConnectionDelegate:theDelegate activityListener:theActivityListener error:error];
-    [targetConnection release];
+    
     return ret;
 }
 + (NSArray *)allBackupSetsForTarget:(Target *)theTarget targetConnection:(TargetConnection *)targetConnection targetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate activityListener:(id<BackupSetActivityListener>)theActivityListener error:(NSError **)error {
@@ -79,17 +76,17 @@
         if (uacData == nil) {
             HSLogWarn(@"unable to read %@ (skipping): %@", theComputerUUID, [uacError localizedDescription]);
         } else {
-            uac = [[[UserAndComputer alloc] initWithXMLData:uacData error:&uacError] autorelease];
+            uac = [[UserAndComputer alloc] initWithXMLData:uacData error:&uacError];
             if (uac == nil) {
                 HSLogError(@"error parsing UserAndComputer data %@: %@", theComputerUUID, uacError);
             }
         }
-        BackupSet *backupSet = [[[BackupSet alloc] initWithTarget:theTarget
+        BackupSet *backupSet = [[BackupSet alloc] initWithTarget:theTarget
                                                      computerUUID:theComputerUUID
-                                                  userAndComputer:uac] autorelease];
+                                                  userAndComputer:uac];
         [ret addObject:backupSet];
     }
-    NSSortDescriptor *descriptor = [[[NSSortDescriptor alloc] initWithKey:@"description" ascending:YES] autorelease];
+    NSSortDescriptor *descriptor = [[NSSortDescriptor alloc] initWithKey:@"description" ascending:YES];
     [ret sortUsingDescriptors:[NSArray arrayWithObject:descriptor]];
     return ret;
 }
@@ -98,17 +95,11 @@
         computerUUID:(NSString *)theComputerUUID
      userAndComputer:(UserAndComputer *)theUAC {
     if (self = [super init]) {
-        target = [theTarget retain];
-        computerUUID = [theComputerUUID retain];
-        uac = [theUAC retain];
+        target = theTarget;
+        computerUUID = theComputerUUID;
+        uac = theUAC;
     }
     return self;
-}
-- (void)dealloc {
-    [target release];
-    [computerUUID release];
-    [uac release];
-    [super dealloc];
 }
 - (NSString *)errorDomain {
     return @"BackupSetErrorDomain";
@@ -122,7 +113,6 @@
 - (UserAndComputer *)userAndComputer {
     return uac;
 }
-
 
 #pragma mark NSObject
 - (NSString *)description {

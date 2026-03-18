@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @interface PackId : NSObject {
     NSString *packSetName;
     NSString *packSHA1;

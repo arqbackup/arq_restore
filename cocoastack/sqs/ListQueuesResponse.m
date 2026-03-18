@@ -30,26 +30,19 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "ListQueuesResponse.h"
 
 @implementation ListQueuesResponse
 - (id)initWithData:(NSData *)theData {
     if (self = [super init]) {
         queueURLs = [[NSMutableArray alloc] init];
-        HSLogDebug(@"listqueuesresponse: %@", [[[NSString alloc] initWithData:theData encoding:NSUTF8StringEncoding] autorelease]);
+        HSLogDebug(@"listqueuesresponse: %@", [[NSString alloc] initWithData:theData encoding:NSUTF8StringEncoding]);
         NSXMLParser *parser = [[NSXMLParser alloc] initWithData:theData];
         [parser setDelegate:self];
         [parser parse];
-        [parser release];
+        
     }
     return self;
-}
-- (void)dealloc {
-    [queueURLs release];
-    [currentStringBuffer release];
-    [super dealloc];
 }
 - (NSArray *)queueURLs {
     return queueURLs;
@@ -60,7 +53,7 @@
   namespaceURI:(NSString *)namespaceURI
  qualifiedName:(NSString *)qualifiedName
     attributes:(NSDictionary *)attributeDict {
-    [currentStringBuffer release];
+    
     currentStringBuffer = nil;
 }
 - (void)parser:(NSXMLParser *)parser foundCharacters:(NSString *)string {
@@ -72,7 +65,7 @@
 - (void)parser:(NSXMLParser *)parser didEndElement:(NSString *)elementName namespaceURI:(NSString *)namespaceURI qualifiedName:(NSString *)qName {
     if (currentStringBuffer != nil) {
         if ([elementName isEqualToString:@"QueueUrl"]) {
-            NSString *currentString = [[currentStringBuffer copy] autorelease];
+            NSString *currentString = [currentStringBuffer copy];
             NSURL *theURL = [NSURL URLWithString:currentString];
             if (theURL == nil) {
                 HSLogError(@"QueueUrl is invalid: %@", currentString);

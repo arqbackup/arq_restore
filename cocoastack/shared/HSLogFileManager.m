@@ -30,14 +30,11 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #include <sys/stat.h>
 #import "HSLogFileManager.h"
 #import "CacheOwnership.h"
 
 #define LOG_FILE_MODE (0666)
-
 
 @implementation HSLogFileManager
 

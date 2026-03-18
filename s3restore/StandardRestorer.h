@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "StorageType.h"
 #import "Restorer.h"
 #import "TargetConnection.h"
@@ -45,7 +43,6 @@
 @class Node;
 @class StandardRestoreItem;
 @class StandardRestorerDelegateMux;
-
 
 @interface StandardRestorer : NSObject <TargetConnectionDelegate, RepoActivityListener> {
     StandardRestorerParamSet *paramSet;
@@ -73,7 +70,6 @@
 }
 - (id)initWithParamSet:(StandardRestorerParamSet *)theParamSet
               delegate:(id <StandardRestorerDelegate>)theDelegate;
-
 
 - (NSString *)errorDomain;
 

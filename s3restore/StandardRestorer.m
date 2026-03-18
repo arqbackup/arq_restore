@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "StandardRestorer.h"
 #import "StandardRestorerDelegate.h"
 #import "Repo.h"
@@ -60,14 +58,12 @@
 #import "StandardRestorerDelegateMux.h"
 #import "StandardRestoreItem.h"
 
-
 #define DEFAULT_NUM_WORKER_THREADS (4)
-
 
 @implementation StandardRestorer
 - (id)initWithParamSet:(StandardRestorerParamSet *)theParamSet delegate:(id<StandardRestorerDelegate>)theDelegate {
     if (self = [super init]) {
-        paramSet = [theParamSet retain];
+        paramSet = theParamSet;
         srdMux = [[StandardRestorerDelegateMux alloc] initWithStandardRestorerDelegate:theDelegate];
         
         hardlinkPathsByInode = [[NSMutableDictionary alloc] init];
@@ -83,23 +79,16 @@
     return self;
 }
 - (void)dealloc {
-    [paramSet release];
-    [srdMux release];
     
-    [hardlinkPathsByInode release];
     
-    [repo release];
-    [commit release];
-    [commitDescription release];
-    [rootTree release];
-    [nodeToRestore release];
     
-    [standardRestoreItems release];
     
-    dispatch_release(workerThreadSemaphore);
-    [lock release];
     
-    [super dealloc];
+    
+    
+    
+    
+    
 }
 
 - (NSString *)errorDomain {
@@ -110,7 +99,7 @@
     [lock lock];
     StandardRestoreItem *ret = nil;
     if (!cancelRequested && [standardRestoreItems count] > 0) {
-        ret = [[[standardRestoreItems lastObject] retain] autorelease];
+        ret = [standardRestoreItems lastObject];
         [standardRestoreItems removeLastObject];
         
         NSError *myError = nil;
@@ -129,7 +118,7 @@
 }
 - (NSString *)hardlinkedPathForInode:(int)theInode {
     [lock lock];
-    NSString *ret = [[[hardlinkPathsByInode objectForKey:[NSNumber numberWithInt:theInode]] copy] autorelease];
+    NSString *ret = [[hardlinkPathsByInode objectForKey:[NSNumber numberWithInt:theInode]] copy];
     [lock unlock];
     return ret;
 }
@@ -163,7 +152,6 @@
     dispatch_semaphore_signal(workerThreadSemaphore);
 }
 
-
 #pragma mark thread main
 - (void)run {
     NSError *myError = nil;
@@ -174,7 +162,6 @@
     }
 }
 
-
 #pragma mark TargetConnectionDelegate
 - (BOOL)targetConnectionShouldRetryOnTransientError:(NSError **)error {
     if (cancelRequested) {
@@ -183,7 +170,6 @@
     }
     return YES;
 }
-
 
 #pragma mark RepoActivityListener
 - (void)repoActivity:(NSString *)theActivity {
@@ -200,7 +186,6 @@
         cancelRequested = YES;
     }
 }
-
 
 #pragma mark internal
 - (BOOL)run:(NSError **)error {
@@ -231,16 +216,16 @@
     // Create initial StandardRestoreItem:
     StandardRestoreItem *firstItem = nil;
     if (nodeToRestore != nil) {
-        firstItem = [[[StandardRestoreItem alloc] initWithStandardRestorer:self path:paramSet.destinationPath tree:rootTree node:nodeToRestore] autorelease];
+        firstItem = [[StandardRestoreItem alloc] initWithStandardRestorer:self path:paramSet.destinationPath tree:rootTree node:nodeToRestore];
     } else {
-        firstItem = [[[StandardRestoreItem alloc] initWithStandardRestorer:self path:paramSet.destinationPath tree:rootTree] autorelease];
+        firstItem = [[StandardRestoreItem alloc] initWithStandardRestorer:self path:paramSet.destinationPath tree:rootTree];
     }
     [standardRestoreItems addObject:firstItem];
     
     NSUInteger numWorkerThreads = DEFAULT_NUM_WORKER_THREADS;
     // Create threads.
     for (NSUInteger i = 0; i < numWorkerThreads; i++) {
-        [[[StandardRestoreWorker alloc] initWithStandardRestorer:self standardRestorerDelegate:srdMux] autorelease];
+        (void)[[StandardRestoreWorker alloc] initWithStandardRestorer:self standardRestorerDelegate:srdMux];
     }
     
     // Wait for restoring to finish.
@@ -265,19 +250,19 @@
         return NO;
     }
     // Ask for an object, which forces RemoteFS to cache the list of objects, which could take several minutes.
-    BlobKey *fakeBlobKey = [[[BlobKey alloc] initWithSHA1:@"0000000000000000000000000000000000000000" storageType:StorageTypeS3 stretchEncryptionKey:YES compressionType:BlobKeyCompressionNone error:NULL] autorelease];
+    BlobKey *fakeBlobKey = [[BlobKey alloc] initWithSHA1:@"0000000000000000000000000000000000000000" storageType:StorageTypeS3 stretchEncryptionKey:YES compressionType:BlobKeyCompressionNone error:NULL];
     [repo dataForBlobKey:fakeBlobKey error:error];
     
-    commit = [[repo commitForBlobKey:paramSet.commitBlobKey error:error] retain];
+    commit = [repo commitForBlobKey:paramSet.commitBlobKey error:error];
     if (commit == nil) {
         return NO;
     }
-    NSDateFormatter *dateFormatter = [[[NSDateFormatter alloc] init] autorelease];
+    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
     [dateFormatter setDateStyle:NSDateFormatterMediumStyle];
     [dateFormatter setTimeStyle:NSDateFormatterShortStyle];
-    commitDescription = [[dateFormatter stringFromDate:[commit creationDate]] retain];
+    commitDescription = [dateFormatter stringFromDate:[commit creationDate]];
     
-    rootTree = [[repo treeForBlobKey:paramSet.treeBlobKey error:error] retain];
+    rootTree = [repo treeForBlobKey:paramSet.treeBlobKey error:error];
     if (rootTree == nil) {
         return NO;
     }
@@ -292,7 +277,7 @@
         }
         NSAssert(node != nil, @"node may not be nil");
         total = [node uncompressedDataSize];
-        nodeToRestore = [node retain];
+        nodeToRestore = node;
     } else {
         // Tree.
         total = [rootTree aggregateUncompressedDataSize];
@@ -319,11 +304,8 @@
     if (![self createDirectory:theDir tree:theTree error:error]) {
         return NO;
     }
-    NSAutoreleasePool *pool = nil;
     BOOL ret = YES;
     for (NSString *childName in [theTree childNodeNames]) {
-        [pool drain];
-        pool = [[NSAutoreleasePool alloc] init];
         Node *childNode = [theTree childNodeWithName:childName];
         if ([childNode isTree]) {
             NSString *childPath = [theDir stringByAppendingPathComponent:childName];
@@ -337,13 +319,6 @@
                 break;
             }
         }
-    }
-    if (!ret && error != NULL) {
-        [*error retain];
-    }
-    [pool drain];
-    if (!ret && error != NULL) {
-        [*error autorelease];
     }
     return YES;
 }

@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "BinaryPListReader.h"
 #import "PListNode.h"
 #import "ArrayNode.h"
@@ -62,19 +60,14 @@
 @implementation BinaryPListReader
 - (id)initWithStream:(BufferedInputStream *)theIS {
 	if (self = [super init]) {
-		is = [theIS retain];
+		is = theIS;
         if (!is) {
-            [self release];
+            
             self = nil;
         }
 	}
 	return self;
 }
-- (void)dealloc {
-	[is release];
-	[super dealloc];
-}
-
 - (DictNode *)read:(NSError **)error {
 	return [self readDict:error];
 }
@@ -90,13 +83,13 @@
 	for (uint32_t i = 0; i < size; i++) {
         id <PListNode> node = [self readPListNode:error];
         if (!node) {
-            [arr release];
+            
             return nil;
         }
 		[arr addObject:node];
 	}
-	ArrayNode *an = [[[ArrayNode alloc] initWithArray:arr] autorelease];
-	[arr release];
+	ArrayNode *an = [[ArrayNode alloc] initWithArray:arr];
+	
 	return an;
 }
 - (BooleanNode *)readBoolean:(NSError **)error {
@@ -104,14 +97,14 @@
     if (![BooleanIO read:&value from:is error:error]) {
         return nil;
     }
-	return [[[BooleanNode alloc] initWithBoolean:value] autorelease];
+	return [[BooleanNode alloc] initWithBoolean:value];
 }
 - (DictNode *)readDict:(NSError **)error {
 	uint32_t size;
     if (![IntegerIO readUInt32:&size from:is error:error]) {
         return nil;
     }
-	DictNode *dn = [[[DictNode alloc] init] autorelease];
+	DictNode *dn = [[DictNode alloc] init];
 	for (uint32_t i = 0; i < size; i++) {
 		NSString *key;
         if (![StringIO read:&key from:is error:error]) {
@@ -130,21 +123,21 @@
     if (![IntegerIO readInt64:&value from:is error:error]) {
         return nil;
     }
-	return [[[IntegerNode alloc] initWithLongLong:value] autorelease];
+	return [[IntegerNode alloc] initWithLongLong:value];
 }
 - (RealNode *)readReal:(NSError **)error {
     double value;
     if (![DoubleIO read:&value from:is error:error]) {
         return nil;
     }
-	return [[[RealNode alloc] initWithDouble:value] autorelease];
+	return [[RealNode alloc] initWithDouble:value];
 }
 - (StringNode *)readString:(NSError **)error {
     NSString *value;
     if (![StringIO read:&value from:is error:error]) {
         return nil;
     }
-	return [[[StringNode alloc] initWithString:value] autorelease];
+	return [[StringNode alloc] initWithString:value];
 }
 - (id <PListNode>)readPListNode:(NSError **)error {
 	int nodeType;

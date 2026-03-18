@@ -30,9 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 @interface SignatureV2Provider : NSObject {
     NSData *secretKeyData;
 }

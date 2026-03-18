@@ -30,31 +30,22 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "PackId.h"
 
 @implementation PackId
 - (id)initWithPackSetName:(NSString *)thePackSetName packSHA1:(NSString *)thePackSHA1 {
     if (self = [super init]) {
-        packSetName = [thePackSetName retain];
-        packSHA1 = [thePackSHA1 retain];
+        packSetName = thePackSetName;
+        packSHA1 = thePackSHA1;
     }
     return self;
 }
-- (void)dealloc {
-    [packSetName release];
-    [packSHA1 release];
-    [super dealloc];
-}
-
 - (NSString *)packSetName {
     return packSetName;
 }
 - (NSString *)packSHA1 {
     return packSHA1;
 }
-
 
 #pragma mark NSObject
 - (NSString *)description {

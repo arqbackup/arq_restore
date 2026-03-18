@@ -30,10 +30,9 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "Target.h"
 #import "DictNode.h"
+#import "StringNode.h"
 #import "StringIO.h"
 #import "DoubleIO.h"
 #import "BooleanIO.h"
@@ -54,16 +53,15 @@ static NSString *ARQ_RESTORE_TARGET_KEYCHAIN_LABEL = @"arq_restore target";
 static NSString *ARQ_RESTORE_PASSPHRASE_KEYCHAIN_LABEL = @"arq_restore passphrase";
 static NSString *ARQ_RESTORE_OAUTH2_CLIENT_SECRET_KEYCHAIN_LABEL = @"arq_restore oauth2 client secret";
 
-
 @implementation Target
 - (id)initWithUUID:(NSString *)theUUID
           nickname:(NSString *)theNickname
           endpoint:(NSURL *)theEndpoint
 awsRequestSignatureVersion:(int32_t)theAWSRequestSignatureVersion {
     if (self = [super init]) {
-        uuid = [theUUID retain];
-        nickname = [theNickname retain];
-        endpoint = [theEndpoint retain];
+        uuid = theUUID;
+        nickname = theNickname;
+        endpoint = theEndpoint;
         awsRequestSignatureVersion = theAWSRequestSignatureVersion;
         targetType = [self targetTypeForEndpoint];
         NSAssert(endpoint != nil, @"endpoint may not be nil");
@@ -81,7 +79,7 @@ awsRequestSignatureVersion:(int32_t)theAWSRequestSignatureVersion {
             NSString *prefix = [endpointDescription substringToIndex:[endpointDescription length] - [path length]];
             NSString *fixedPath = [[endpoint path] substringFromIndex:1];
             NSString *fixedEndpointDescription = [prefix stringByAppendingString:fixedPath];
-            [endpoint release];
+            
             endpoint = [[NSURL URLWithString:fixedEndpointDescription] copy];
         }
         if ([thePlist containsKey:@"awsRequestSignatureVersion"]) {
@@ -103,39 +101,43 @@ awsRequestSignatureVersion:(int32_t)theAWSRequestSignatureVersion {
 }
 - (id)initWithBufferedInputStream:(BufferedInputStream *)theBIS error:(NSError **)error {
     if (self = [super init]) {
-        if (![StringIO read:&uuid from:theBIS error:error]) {
-            [self release];
+        NSString *theUUID = nil;
+        if (![StringIO read:&theUUID from:theBIS error:error]) {
+
             return nil;
         }
-        [uuid retain];
-        
-        if (![StringIO read:&nickname from:theBIS error:error]) {
-            [self release];
+        uuid = theUUID;
+
+        NSString *theNickname = nil;
+        if (![StringIO read:&theNickname from:theBIS error:error]) {
+
             return nil;
         }
-        [nickname retain];
+        nickname = theNickname;
 
         NSString *theEndpointDescription = nil;
         if (![StringIO read:&theEndpointDescription from:theBIS error:error]) {
-            [self release];
+
             return nil;
         }
         if (!![IntegerIO readInt32:&awsRequestSignatureVersion from:theBIS error:error]) {
-            [self release];
+
             return nil;
         }
 
-        if (![StringIO read:&oAuth2ClientId from:theBIS error:error]) {
-            [self release];
+        NSString *theOAuth2ClientId = nil;
+        if (![StringIO read:&theOAuth2ClientId from:theBIS error:error]) {
+
             return nil;
         }
-        [oAuth2ClientId retain];
-        
-        if (![StringIO read:&oAuth2RedirectURI from:theBIS error:error]) {
-            [self release];
+        oAuth2ClientId = theOAuth2ClientId;
+
+        NSString *theOAuth2RedirectURI = nil;
+        if (![StringIO read:&theOAuth2RedirectURI from:theBIS error:error]) {
+
             return nil;
         }
-        [oAuth2RedirectURI retain];
+        oAuth2RedirectURI = theOAuth2RedirectURI;
         
         endpoint = [[NSURL URLWithString:theEndpointDescription] copy];
         targetType = [self targetTypeForEndpoint];
@@ -143,15 +145,6 @@ awsRequestSignatureVersion:(int32_t)theAWSRequestSignatureVersion {
     }
     return self;
 }
-- (void)dealloc {
-    [uuid release];
-    [nickname release];
-    [endpoint release];
-    [oAuth2ClientId release];
-    [oAuth2RedirectURI release];
-    [super dealloc];
-}
-
 - (NSString *)errorDomain {
     return @"TargetErrorDomain";
 }
@@ -182,7 +175,7 @@ awsRequestSignatureVersion:(int32_t)theAWSRequestSignatureVersion {
         }
         return nil;
     }
-    return [[[NSString alloc] initWithData:[item passwordData] encoding:NSUTF8StringEncoding] autorelease];
+    return [[NSString alloc] initWithData:[item passwordData] encoding:NSUTF8StringEncoding];
 }
 - (BOOL)setSecret:(NSString *)theSecret trustedAppPaths:(NSArray *)theTrustedAppPaths error:(NSError **)error {
     NSString *label = ARQ_RESTORE_TARGET_KEYCHAIN_LABEL;
@@ -199,7 +192,7 @@ awsRequestSignatureVersion:(int32_t)theAWSRequestSignatureVersion {
     if (item == nil) {
         return nil;
     }
-    return [[[NSString alloc] initWithData:[item passwordData] encoding:NSUTF8StringEncoding] autorelease];
+    return [[NSString alloc] initWithData:[item passwordData] encoding:NSUTF8StringEncoding];
 }
 - (BOOL)setPassphrase:(NSString *)theSecret trustedAppPaths:(NSArray *)theTrustedAppPaths error:(NSError **)error {
     NSString *label = ARQ_RESTORE_PASSPHRASE_KEYCHAIN_LABEL;
@@ -215,8 +208,7 @@ awsRequestSignatureVersion:(int32_t)theAWSRequestSignatureVersion {
     return oAuth2ClientId;
 }
 - (void)setOAuth2ClientId:(NSString *)value {
-    [value retain];
-    [oAuth2ClientId release];
+    
     oAuth2ClientId = value;
 }
 
@@ -224,8 +216,7 @@ awsRequestSignatureVersion:(int32_t)theAWSRequestSignatureVersion {
     return oAuth2RedirectURI;
 }
 - (void)setOAuth2RedirectURI:(NSString *)value {
-    [value retain];
-    [oAuth2RedirectURI release];
+    
     oAuth2RedirectURI = value;
 }
 
@@ -239,7 +230,7 @@ awsRequestSignatureVersion:(int32_t)theAWSRequestSignatureVersion {
         }
         return nil;
     }
-    return [[[NSString alloc] initWithData:[item passwordData] encoding:NSUTF8StringEncoding] autorelease];
+    return [[NSString alloc] initWithData:[item passwordData] encoding:NSUTF8StringEncoding];
 }
 - (BOOL)setOAuth2ClientSecret:(NSString *)theSecret trustedAppPaths:(NSArray *)theTrustedAppPaths error:(NSError **)error {
     NSString *label = ARQ_RESTORE_OAUTH2_CLIENT_SECRET_KEYCHAIN_LABEL;
@@ -251,9 +242,8 @@ awsRequestSignatureVersion:(int32_t)theAWSRequestSignatureVersion {
     return [[KeychainFactory keychain] destroyItemForLabel:ARQ_RESTORE_OAUTH2_CLIENT_SECRET_KEYCHAIN_LABEL account:uuid error:error];
 }
 
-
 - (DictNode *)toPlist {
-    DictNode *ret = [[[DictNode alloc] init] autorelease];
+    DictNode *ret = [[DictNode alloc] init];
     [ret putString:@"s3" forKey:@"targetType"]; // Used by TargetFactory
     [ret putString:nickname forKey:@"nickname"];
     [ret putString:uuid forKey:@"uuid"];
@@ -306,7 +296,7 @@ awsRequestSignatureVersion:(int32_t)theAWSRequestSignatureVersion {
         portString = [NSString stringWithFormat:@":%d", [[endpoint port] intValue]];
     }
     NSURL *s3Endpoint = [NSURL URLWithString:[NSString stringWithFormat:@"%@://%@%@", [endpoint scheme], [endpoint host], portString]];
-    return [[[S3Service alloc] initWithS3AuthorizationProvider:sap endpoint:s3Endpoint] autorelease];
+    return [[S3Service alloc] initWithS3AuthorizationProvider:sap endpoint:s3Endpoint];
 }
 
 - (TargetConnection *)newConnection:(NSError **)error {
@@ -318,7 +308,6 @@ awsRequestSignatureVersion:(int32_t)theAWSRequestSignatureVersion {
 - (BOOL)canAccessFilesByPath {
     return YES;
 }
-
 
 #pragma mark NSObject
 - (BOOL)isEqual:(id)other {
@@ -339,7 +328,6 @@ awsRequestSignatureVersion:(int32_t)theAWSRequestSignatureVersion {
 - (NSString *)description {
     return [NSString stringWithFormat:@"%@:%@", [endpoint host], [endpoint path]];
 }
-
 
 #pragma mark internal
 - (TargetType)targetTypeForEndpoint {

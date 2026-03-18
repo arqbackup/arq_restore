@@ -30,9 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 @interface SHA256TreeHash : NSObject
 + (NSData *)treeHashOfData:(NSData *)data;
 @end

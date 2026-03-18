@@ -30,13 +30,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @class RemoteFS;
 @protocol TargetConnectionDelegate;
 @protocol RemoteFSDeleteListener;
 @protocol DeleteDelegate;
-
 
 @interface RemoteFSFileDeleter : NSObject {
     RemoteFS *remoteFS;

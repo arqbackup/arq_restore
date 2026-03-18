@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @interface ListQueuesResponse : NSObject <NSXMLParserDelegate> {
     NSMutableArray *queueURLs;
     NSMutableString *currentStringBuffer;

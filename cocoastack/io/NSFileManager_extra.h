@@ -30,9 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 @interface NSFileManager (extra)
 - (BOOL)ensureParentPathExistsForPath:(NSString *)path
                             targetUID:(uid_t)theTargetUID 

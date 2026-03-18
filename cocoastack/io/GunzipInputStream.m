@@ -30,16 +30,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 #import "GunzipInputStream.h"
 #import "InputStreams.h"
 
-
-
 #define MY_BUF_SIZE (4096)
-
 
 @implementation GunzipInputStream
 + (NSString *)errorDomain {
@@ -47,7 +41,7 @@
 }
 - (id)initWithUnderlyingStream:(id <InputStream>)theUnderlyingStream {
     if (self = [super init]) {
-        underlyingStream = [theUnderlyingStream retain];
+        underlyingStream = theUnderlyingStream;
         stream.avail_in = 0;
         stream.avail_out = 0;
         stream.total_out = 0;
@@ -63,9 +57,8 @@
     if (initialized) {
         inflateEnd(&stream);
     }
-    [underlyingStream release];
+    
     free(inBuf);
-    [super dealloc];
 }
 
 #pragma mark InputStream
@@ -112,7 +105,6 @@
 - (BOOL)slurpIntoBuffer:(NSMutableData *)theBuffer error:(NSError **)error {
     return [InputStreams slurp:self intoBuffer:theBuffer error:error];
 }
-
 
 #pragma mark NSObject 
 - (NSString *)description {

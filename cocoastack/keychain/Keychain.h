@@ -30,7 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 @class KeychainItem;
 
 @protocol Keychain <NSObject>

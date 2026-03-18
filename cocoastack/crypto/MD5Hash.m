@@ -30,13 +30,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import <CommonCrypto/CommonDigest.h>
 #import "MD5Hash.h"
 #import "NSString_extra.h"
 #import "NSData-Base64Extensions.h"
-
 
 @implementation MD5Hash
 + (NSString *)hashDataBase64Encode:(NSData *)data {

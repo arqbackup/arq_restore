@@ -41,7 +41,6 @@
 #define NSLogDebug(frmt, ...)    do{ if(DD_NSLOG_LEVEL >= 4) NSLog((frmt), ##__VA_ARGS__); } while(0)
 #define NSLogVerbose(frmt, ...)  do{ if(DD_NSLOG_LEVEL >= 5) NSLog((frmt), ##__VA_ARGS__); } while(0)
 
-
 #if TARGET_OS_IPHONE
 BOOL doesAppRunInBackground(void);
 #endif
@@ -73,7 +72,6 @@ unsigned long long const kDDDefaultLogFilesDiskQuota   = 20 * 1024 * 1024; // 20
 
 @synthesize maximumNumberOfLogFiles = _maximumNumberOfLogFiles;
 @synthesize logFilesDiskQuota = _logFilesDiskQuota;
-
 
 - (instancetype)init {
     return [self initWithLogsDirectory:nil];
@@ -1101,7 +1099,6 @@ static int exception_count = 0;
 
 @end
 
-
 @implementation DDLogFileInfo
 
 @synthesize filePath;
@@ -1114,7 +1111,6 @@ static int exception_count = 0;
 @dynamic age;
 
 @dynamic isArchived;
-
 
 #pragma mark Lifecycle
 

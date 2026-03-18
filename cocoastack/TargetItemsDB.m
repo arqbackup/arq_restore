@@ -1,22 +1,22 @@
 /*
  Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
- 
+
  All rights reserved.
- 
+
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
- 
+
  * Redistributions of source code must retain the above copyright
  notice, this list of conditions and the following disclaimer.
- 
+
  * Redistributions in binary form must reproduce the above copyright
  notice, this list of conditions and the following disclaimer in the
  documentation and/or other materials provided with the distribution.
- 
+
  * Neither the names of PhotoMinds LLC or Haystack Software, nor the names of
  their contributors may be used to endorse or promote products derived from
  this software without specific prior written permission.
- 
+
  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -29,8 +29,6 @@
  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -47,19 +45,18 @@
 #import "FMDatabaseAdditions.h"
 #import "NSString_slashed.h"
 
-
 @implementation TargetItemsDB
 - (id)initWithTargetUUID:(NSString *)theTargetUUID error:(NSError **)error {
     if (self = [super init]) {
-        dbPath = [[[[UserLibrary arqCachePath] stringByAppendingPathComponent:theTargetUUID] stringByAppendingPathComponent:@"items.db"] retain];
-        lockFilePath = [[dbPath stringByAppendingString:@".lock"] retain];
+        dbPath = [[[UserLibrary arqCachePath] stringByAppendingPathComponent:theTargetUUID] stringByAppendingPathComponent:@"items.db"];
+        lockFilePath = [dbPath stringByAppendingString:@".lock"];
         if (![[NSFileManager defaultManager] ensureParentPathExistsForPath:dbPath targetUID:[[CacheOwnership sharedCacheOwnership] uid] targetGID:[[CacheOwnership sharedCacheOwnership] gid] error:error]) {
-            [self release];
+
             return nil;
         }
-        
+
         NSError *myError = nil;
-        fmdbq = [[self initDB:&myError] retain];
+        fmdbq = [self setupDB:&myError];
         if (fmdbq == nil) {
             HSLogError(@"failed to open items cache database %@: %@", dbPath, myError);
             if ([myError isErrorWithDomain:[ItemsDB errorDomain] code:SQLITE_CORRUPT]) {
@@ -68,12 +65,12 @@
                 if (![[NSFileManager defaultManager] removeItemAtPath:dbPath error:&myError]) {
                     HSLogError(@"failed to delete corrupt sqlite database %@: %@", dbPath, myError);
                 }
-                fmdbq = [[self initDB:&myError] retain];
+                fmdbq = [self setupDB:&myError];
             }
         }
         if (fmdbq == nil) {
             SETERRORFROMMYERROR;
-            [self release];
+
             return nil;
         }
     }
@@ -81,136 +78,164 @@
 }
 - (void)dealloc {
     [fmdbq close];
-    [fmdbq release];
-    [dbPath release];
-    [lockFilePath release];
-    [super dealloc];
+
+
+
 }
 
 - (Item *)itemAtPath:(NSString *)thePath error:(NSError **)error {
-    FlockFile *ff = [[[FlockFile alloc] initWithPath:lockFilePath] autorelease];
+    FlockFile *ff = [[FlockFile alloc] initWithPath:lockFilePath];
     __block Item *ret = nil;
-    if (![ff lockAndExecute:^void() { ret = [self lockedItemAtPath:thePath error:error]; } error:error]) {
+    __block NSError *blockError = nil;
+    if (![ff lockAndExecute:^void() { ret = [self lockedItemAtPath:thePath error:&blockError]; } error:error]) {
         ret = nil;
     }
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (NSNumber *)cacheIsLoadedForDirectory:(NSString *)theDirectory error:(NSError **)error {
     // Don't get a flockfile first for performance reasons.
-    
+
     __block NSNumber *ret = nil;
+    __block NSError *blockError = nil;
 
     [fmdbq inDatabase:^(FMDatabase *db) {
-        ret = [self isLoadedForDirectory:theDirectory db:db error:error];
+        ret = [self isLoadedForDirectory:theDirectory db:db error:&blockError];
     }];
 
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (NSMutableDictionary *)itemsByNameInDirectory:(NSString *)theDirectory error:(NSError **)error {
-    FlockFile *ff = [[[FlockFile alloc] initWithPath:lockFilePath] autorelease];
+    FlockFile *ff = [[FlockFile alloc] initWithPath:lockFilePath];
     __block NSMutableDictionary *ret = nil;
-    if (![ff lockAndExecute:^void() { ret = [self lockedItemsByNameInDirectory:theDirectory error:error]; } error:error]) {
+    __block NSError *blockError = nil;
+    if (![ff lockAndExecute:^void() { ret = [self lockedItemsByNameInDirectory:theDirectory error:&blockError]; } error:error]) {
         ret = nil;
     }
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (BOOL)setItemsByName:(NSDictionary *)theItemsByName inDirectory:(NSString *)theDirectory error:(NSError **)error {
-    FlockFile *ff = [[[FlockFile alloc] initWithPath:lockFilePath] autorelease];
+    FlockFile *ff = [[FlockFile alloc] initWithPath:lockFilePath];
     __block BOOL ret = NO;
-    if (![ff lockAndExecute:^void() { ret = [self lockedSetItemsByName:theItemsByName inDirectory:theDirectory error:error]; } error:error]) {
+    __block NSError *blockError = nil;
+    if (![ff lockAndExecute:^void() { ret = [self lockedSetItemsByName:theItemsByName inDirectory:theDirectory error:&blockError]; } error:error]) {
         ret = NO;
     }
+    if (error != NULL) *error = blockError;
     return ret;
 }
 
 - (BOOL)clearItemsByNameInDirectory:(NSString *)theDirectory error:(NSError **)error {
-    FlockFile *ff = [[[FlockFile alloc] initWithPath:lockFilePath] autorelease];
+    FlockFile *ff = [[FlockFile alloc] initWithPath:lockFilePath];
     __block BOOL ret = NO;
-    if (![ff lockAndExecute:^void() { ret = [self lockedClearItemsByNameInDirectory:theDirectory error:error]; } error:error]) {
+    __block NSError *blockError = nil;
+    if (![ff lockAndExecute:^void() { ret = [self lockedClearItemsByNameInDirectory:theDirectory error:&blockError]; } error:error]) {
         ret = NO;
     }
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (BOOL)destroy:(NSError **)error {
-    FlockFile *ff = [[[FlockFile alloc] initWithPath:lockFilePath] autorelease];
+    FlockFile *ff = [[FlockFile alloc] initWithPath:lockFilePath];
     __block BOOL ret = NO;
-    if (![ff lockAndExecute:^void() { ret = [self lockedDestroy:error]; } error:error]) {
+    __block NSError *blockError = nil;
+    if (![ff lockAndExecute:^void() { ret = [self lockedDestroy:&blockError]; } error:error]) {
         ret = NO;
     }
+    if (error != NULL) *error = blockError;
     return ret;
 }
 
 - (BOOL)addItem:(Item *)theItem inDirectory:(NSString *)theDirectory error:(NSError **)error {
-    FlockFile *ff = [[[FlockFile alloc] initWithPath:lockFilePath] autorelease];
+    FlockFile *ff = [[FlockFile alloc] initWithPath:lockFilePath];
     __block BOOL ret = NO;
-    if (![ff lockAndExecute:^void() { ret = [self lockedAddItem:theItem inDirectory:theDirectory error:error]; } error:error]) {
+    __block NSError *blockError = nil;
+    if (![ff lockAndExecute:^void() { ret = [self lockedAddItem:theItem inDirectory:theDirectory error:&blockError]; } error:error]) {
         ret = NO;
     }
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (BOOL)addOrReplaceItem:(Item *)theItem inDirectory:(NSString *)theDirectory error:(NSError **)error {
-    FlockFile *ff = [[[FlockFile alloc] initWithPath:lockFilePath] autorelease];
+    FlockFile *ff = [[FlockFile alloc] initWithPath:lockFilePath];
     __block BOOL ret = NO;
-    if (![ff lockAndExecute:^void() { ret = [self lockedAddOrReplaceItem:theItem inDirectory:theDirectory error:error]; } error:error]) {
+    __block NSError *blockError = nil;
+    if (![ff lockAndExecute:^void() { ret = [self lockedAddOrReplaceItem:theItem inDirectory:theDirectory error:&blockError]; } error:error]) {
         ret = NO;
     }
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (BOOL)removeItemWithName:(NSString *)theItemName inDirectory:(NSString *)theDirectory error:(NSError **)error {
-    FlockFile *ff = [[[FlockFile alloc] initWithPath:lockFilePath] autorelease];
+    FlockFile *ff = [[FlockFile alloc] initWithPath:lockFilePath];
     __block BOOL ret = NO;
-    if (![ff lockAndExecute:^void() { ret = [self lockedRemoveItemWithName:theItemName inDirectory:theDirectory error:error]; } error:error]) {
+    __block NSError *blockError = nil;
+    if (![ff lockAndExecute:^void() { ret = [self lockedRemoveItemWithName:theItemName inDirectory:theDirectory error:&blockError]; } error:error]) {
         ret = NO;
     }
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (BOOL)moveItem:(Item *)theItem fromDirectory:(NSString *)theFromDirectory toDirectory:(NSString *)theToDirectory error:(NSError **)error {
-    FlockFile *ff = [[[FlockFile alloc] initWithPath:lockFilePath] autorelease];
+    FlockFile *ff = [[FlockFile alloc] initWithPath:lockFilePath];
     __block BOOL ret = NO;
-    if (![ff lockAndExecute:^void() { ret = [self lockedMoveItem:theItem fromDirectory:theFromDirectory toDirectory:theToDirectory error:error]; } error:error]) {
+    __block NSError *blockError = nil;
+    if (![ff lockAndExecute:^void() { ret = [self lockedMoveItem:theItem fromDirectory:theFromDirectory toDirectory:theToDirectory error:&blockError]; } error:error]) {
         ret = NO;
     }
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (BOOL)clearReferenceCounts:(NSError **)error {
-    FlockFile *ff = [[[FlockFile alloc] initWithPath:lockFilePath] autorelease];
+    FlockFile *ff = [[FlockFile alloc] initWithPath:lockFilePath];
     __block BOOL ret = NO;
-    if (![ff lockAndExecute:^void() { ret = [self lockedClearReferenceCounts:error]; } error:error]) {
+    __block NSError *blockError = nil;
+    if (![ff lockAndExecute:^void() { ret = [self lockedClearReferenceCounts:&blockError]; } error:error]) {
         ret = NO;
     }
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (BOOL)setReferenceCountOfFileAtPath:(NSString *)thePath error:(NSError **)error {
-    FlockFile *ff = [[[FlockFile alloc] initWithPath:lockFilePath] autorelease];
+    FlockFile *ff = [[FlockFile alloc] initWithPath:lockFilePath];
     __block BOOL ret = NO;
-    if (![ff lockAndExecute:^void() { ret = [self lockedSetReferenceCountOfFileAtPath:thePath error:error]; } error:error]) {
+    __block NSError *blockError = nil;
+    if (![ff lockAndExecute:^void() { ret = [self lockedSetReferenceCountOfFileAtPath:thePath error:&blockError]; } error:error]) {
         ret = NO;
     }
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (NSNumber *)totalSizeOfReferencedFilesInDirectory:(NSString *)theDir error:(NSError **)error {
-    FlockFile *ff = [[[FlockFile alloc] initWithPath:lockFilePath] autorelease];
+    FlockFile *ff = [[FlockFile alloc] initWithPath:lockFilePath];
     __block NSNumber *ret = nil;
-    if (![ff lockAndExecute:^void() { ret = [self lockedTotalSizeOfReferencedFilesInDirectory:theDir error:error]; } error:error]) {
+    __block NSError *blockError = nil;
+    if (![ff lockAndExecute:^void() { ret = [self lockedTotalSizeOfReferencedFilesInDirectory:theDir error:&blockError]; } error:error]) {
         ret = nil;
     }
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (NSArray *)pathsOfUnreferencedFilesInDirectory:(NSString *)theDir error:(NSError **)error {
-    FlockFile *ff = [[[FlockFile alloc] initWithPath:lockFilePath] autorelease];
+    FlockFile *ff = [[FlockFile alloc] initWithPath:lockFilePath];
     __block NSArray *ret = nil;
-    if (![ff lockAndExecute:^void() { ret = [self lockedPathsOfUnreferencedFilesInDirectory:theDir error:error]; } error:error]) {
+    __block NSError *blockError = nil;
+    if (![ff lockAndExecute:^void() { ret = [self lockedPathsOfUnreferencedFilesInDirectory:theDir error:&blockError]; } error:error]) {
         ret = nil;
     }
+    if (error != NULL) *error = blockError;
     return ret;
 }
-
 
 #pragma mark internal
 - (BOOL)lockedSetReferenceCountOfFileAtPath:(NSString *)thePath error:(NSError **)error {
     __block BOOL ret = NO;
-    
+    __block NSError *blockError = nil;
+
     [fmdbq inDatabase:^(FMDatabase *db) {
+        NSError * __strong *error = &blockError;
         if (![db executeUpdate:@"UPDATE items SET refcount = 1 WHERE path = ?" withArgumentsInArray:[NSArray arrayWithObject:thePath]]) {
             SETNSERROR([ItemsDB errorDomain], [db lastErrorCode], @"db update refcount: error=%@, db=%@", [db lastErrorMessage], dbPath);
             return;
@@ -220,13 +245,16 @@
 //        }
         ret = YES;
     }];
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (NSNumber *)lockedTotalSizeOfReferencedFilesInDirectory:(NSString *)theDir error:(NSError **)error {
     __block NSNumber *ret = nil;
-    
+    __block NSError *blockError = nil;
+
     theDir = [theDir slashed];
     [fmdbq inDatabase:^(FMDatabase *db) {
+        NSError * __strong *error = &blockError;
         NSString *theLikeParam = [theDir stringByAppendingString:@"%"];
         FMResultSet *rs = [db executeQuery:@"SELECT SUM(file_size) FROM items WHERE refcount > 0 AND slashed_directory LIKE ?" withArgumentsInArray:[NSArray arrayWithObject:theLikeParam]];
         if (rs == nil) {
@@ -238,14 +266,16 @@
         ret = [NSNumber numberWithUnsignedLongLong:total];
         [rs close];
     }];
-    
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (NSArray *)lockedPathsOfUnreferencedFilesInDirectory:(NSString *)theDir error:(NSError **)error {
     __block NSMutableArray *ret = nil;
-    
+    __block NSError *blockError = nil;
+
     theDir = [theDir slashed];
     [fmdbq inDatabase:^(FMDatabase *db) {
+        NSError * __strong *error = &blockError;
         NSString *theLikeParam = [theDir stringByAppendingString:@"%"];
         FMResultSet *rs = [db executeQuery:@"SELECT path FROM items WHERE refcount = 0 AND is_directory = 0 AND slashed_directory LIKE ?" withArgumentsInArray:[NSArray arrayWithObject:theLikeParam]];
         if (rs == nil) {
@@ -258,16 +288,18 @@
         }
         [rs close];
     }];
-    
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (Item *)lockedItemAtPath:(NSString *)thePath error:(NSError **)error {
     NSString *theDirectory = [thePath stringByDeletingLastPathComponent];
-    
+
     __block Item *ret = nil;
-    
+    __block NSError *blockError = nil;
+
     [fmdbq inDatabase:^(FMDatabase *db) {
-        NSNumber *loaded = [self isLoadedForDirectory:theDirectory db:db error:error];
+        NSError * __strong *error = &blockError;
+        NSNumber *loaded = [self isLoadedForDirectory:theDirectory db:db error:&blockError];
         if (loaded == nil) {
             return;
         }
@@ -275,7 +307,7 @@
             SETNSERROR([ItemsDB errorDomain], ERROR_CACHE_NOT_LOADED, @"itemAtPath: cache not loaded for directory %@", theDirectory);
             return;
         }
-        
+
 //        HSLogDebug(@"querying for item at path %@", thePath);
 //        NSTimeInterval theTime = [NSDate timeIntervalSinceReferenceDate];
         FMResultSet *rs = [db executeQuery:@"SELECT name, item_id, parent_id, is_directory, file_size, file_last_modified, storage_class, checksum FROM items WHERE path = ?" withArgumentsInArray:[NSArray arrayWithObject:thePath]];
@@ -288,7 +320,7 @@
             SETNSERROR([ItemsDB errorDomain], ERROR_NOT_FOUND, @"%@ not found", thePath);
             HSLogDebug(@"%@ not found in cached list of items", thePath);
         } else {
-            ret = [[[Item alloc] init] autorelease];
+            ret = [[Item alloc] init];
             ret.name = [rs stringForColumnIndex:0];
             ret.itemId = [rs stringForColumnIndex:1];
             ret.parentId = [rs stringForColumnIndex:2];
@@ -300,14 +332,17 @@
         }
         [rs close];
     }];
-    
+
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (NSMutableDictionary *)lockedItemsByNameInDirectory:(NSString *)theDirectory error:(NSError **)error {
     __block NSMutableDictionary *ret = nil;
-    
+    __block NSError *blockError = nil;
+
     [fmdbq inDatabase:^(FMDatabase *db) {
-        NSNumber *loaded = [self isLoadedForDirectory:theDirectory db:db error:error];
+        NSError * __strong *error = &blockError;
+        NSNumber *loaded = [self isLoadedForDirectory:theDirectory db:db error:&blockError];
         if (loaded == nil) {
             return;
         }
@@ -315,9 +350,9 @@
             SETNSERROR([ItemsDB errorDomain], ERROR_CACHE_NOT_LOADED, @"itemsByNameInDirectory: cache not loaded for directory %@", theDirectory);
             return;
         }
-        
+
         NSString *slashedDirectory = [theDirectory stringByAppendingTrailingSlash];
-        
+
 //        HSLogDebug(@"query for items in directory %@", theDirectory);
 //        NSTimeInterval theTime = [NSDate timeIntervalSinceReferenceDate];
         FMResultSet *rs = [db executeQuery:@"SELECT name, item_id, parent_id, is_directory, file_size, file_last_modified, storage_class, checksum FROM items WHERE slashed_directory = ?" withArgumentsInArray:[NSArray arrayWithObject:slashedDirectory]];
@@ -328,7 +363,7 @@
         }
         ret = [NSMutableDictionary dictionary];
         while ([rs next]) {
-            Item *item = [[[Item alloc] init] autorelease];
+            Item *item = [[Item alloc] init];
             item.name = [rs stringForColumnIndex:0];
             item.itemId = [rs stringForColumnIndex:1];
             item.parentId = [rs stringForColumnIndex:2];
@@ -337,23 +372,26 @@
             item.fileLastModified = [rs dateForColumnIndex:5];
             item.storageClass = [rs stringForColumnIndex:6];
             item.checksum = [rs stringForColumnIndex:7];
-            
+
             [ret setObject:item forKey:item.name];
         }
         [rs close];
     }];
-    
+
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (BOOL)lockedSetItemsByName:(NSDictionary *)theItemsByName inDirectory:(NSString *)theDirectory error:(NSError **)error {
     __block BOOL ret = NO;
-    
+    __block NSError *blockError = nil;
+
     [fmdbq inDatabase:^(FMDatabase *db) {
+        NSError * __strong *error = &blockError;
         if (![db beginTransaction]) {
             SETNSERROR([ItemsDB errorDomain], [db lastErrorCode], @"begin transaction in setItemsByName failed: error=%@, db=%@", [db lastErrorMessage], dbPath);
             return;
         }
-        ret = [self doSetItemsByName:theItemsByName inDirectory:theDirectory database:db error:error];
+        ret = [self doSetItemsByName:theItemsByName inDirectory:theDirectory database:db error:&blockError];
         if (ret) {
             if (![db commit]) {
                 SETNSERROR([ItemsDB errorDomain], [db lastErrorCode], @"commit in setItemsByName failed: error=%@, db=%@", [db lastErrorMessage], dbPath);
@@ -364,12 +402,12 @@
             [db rollback];
         }
     }];
-    
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (BOOL)doSetItemsByName:(NSDictionary *)theItemsByName inDirectory:(NSString *)theDirectory database:(FMDatabase *)db error:(NSError **)error {
     NSString *slashedDirectory = [theDirectory stringByAppendingTrailingSlash];
-    
+
     NSNumber *loaded = [self isLoadedForDirectory:theDirectory db:db error:error];
     if (loaded == nil) {
         return NO;
@@ -391,33 +429,35 @@
         }
     }
     HSLogDebug(@"inserted %ld rows into the cache db for %@", [theItemsByName count], theDirectory);
-    
+
     return YES;
 }
 - (BOOL)lockedClearItemsByNameInDirectory:(NSString *)theDirectory error:(NSError **)error {
     HSLogDebug(@"deleting cached data for %@ and all subdirectories", theDirectory);
-    
+
     NSString *slashedDirectory = [theDirectory stringByAppendingTrailingSlash];
-    
+
     __block BOOL ret = NO;
-    
+    __block NSError *blockError = nil;
+
     [fmdbq inDatabase:^(FMDatabase *db) {
+        NSError * __strong *error = &blockError;
         // Delete loaded_directories.
         NSArray *args = [NSArray arrayWithObjects:theDirectory, [slashedDirectory stringByAppendingString:@"%"], nil];
         if (![db executeUpdate:@"DELETE FROM loaded_directories WHERE path = ? OR path LIKE ?" withArgumentsInArray:args]) {
             SETNSERROR([ItemsDB errorDomain], [db lastErrorCode], @"delete from loaded_directories for %@: error=%@, db=%@", theDirectory, [db lastErrorMessage], dbPath);
             return;
         }
-        
+
         // Delete items.
         if (![db executeUpdate:@"DELETE FROM items WHERE slashed_directory LIKE ?" withArgumentsInArray:[NSArray arrayWithObject:[slashedDirectory stringByAppendingString:@"%"]]]) {
             SETNSERROR([ItemsDB errorDomain], [db lastErrorCode], @"delete from items for %@: error=%@, db=%@", theDirectory, [db lastErrorMessage], dbPath);
             return;
         }
-        
+
         ret = YES;
     }];
-    
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (BOOL)lockedDestroy:(NSError **)error {
@@ -430,9 +470,11 @@
 }
 - (BOOL)lockedAddItem:(Item *)theItem inDirectory:(NSString *)theDirectory error:(NSError **)error {
     __block BOOL ret = NO;
-    
+    __block NSError *blockError = nil;
+
     [fmdbq inDatabase:^(FMDatabase *db) {
-        NSNumber *loaded = [self isLoadedForDirectory:theDirectory db:db error:error];
+        NSError * __strong *error = &blockError;
+        NSNumber *loaded = [self isLoadedForDirectory:theDirectory db:db error:&blockError];
         if (loaded == nil) {
             return;
         }
@@ -440,12 +482,12 @@
             SETNSERROR([ItemsDB errorDomain], ERROR_CACHE_NOT_LOADED, @"addItem: cache not loaded for directory %@", theDirectory);
             return;
         }
-        
+
         if (![db beginTransaction]) {
             SETNSERROR([ItemsDB errorDomain], [db lastErrorCode], @"begin transaction in addItem failed: error=%@, db=%@", [db lastErrorMessage], dbPath);
             return;
         }
-        ret = [self insertItem:theItem inDirectory:theDirectory db:db error:error];
+        ret = [self insertItem:theItem inDirectory:theDirectory db:db error:&blockError];
         if (ret) {
             if (![db commit]) {
                 SETNSERROR([ItemsDB errorDomain], [db lastErrorCode], @"commit in addItem failed: error=%@, db=%@", [db lastErrorMessage], dbPath);
@@ -456,14 +498,17 @@
             [db rollback];
         }
     }];
-    
+
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (BOOL)lockedAddOrReplaceItem:(Item *)theItem inDirectory:(NSString *)theDirectory error:(NSError **)error {
     __block BOOL ret = NO;
-    
+    __block NSError *blockError = nil;
+
     [fmdbq inDatabase:^(FMDatabase *db) {
-        NSNumber *loaded = [self isLoadedForDirectory:theDirectory db:db error:error];
+        NSError * __strong *error = &blockError;
+        NSNumber *loaded = [self isLoadedForDirectory:theDirectory db:db error:&blockError];
         if (loaded == nil) {
             return;
         }
@@ -471,12 +516,12 @@
             SETNSERROR([ItemsDB errorDomain], ERROR_CACHE_NOT_LOADED, @"addOrReplaceItem: cache not loaded for directory %@", theDirectory);
             return;
         }
-        
+
         if (![db beginTransaction]) {
             SETNSERROR([ItemsDB errorDomain], [db lastErrorCode], @"begin transaction in addOrReplaceItem failed: error=%@, db=%@", [db lastErrorMessage], dbPath);
             return;
         }
-        ret = [self deleteAndInsertItem:theItem inDirectory:theDirectory db:db error:error];
+        ret = [self deleteAndInsertItem:theItem inDirectory:theDirectory db:db error:&blockError];
         if (ret) {
             if (![db commit]) {
                 SETNSERROR([ItemsDB errorDomain], [db lastErrorCode], @"commit in addOrReplaceItem failed: error=%@, db=%@", [db lastErrorMessage], dbPath);
@@ -487,14 +532,17 @@
             [db rollback];
         }
     }];
-    
+
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (BOOL)lockedRemoveItemWithName:(NSString *)theItemName inDirectory:(NSString *)theDirectory error:(NSError **)error {
     __block BOOL ret = NO;
-    
+    __block NSError *blockError = nil;
+
     [fmdbq inDatabase:^(FMDatabase *db) {
-        NSNumber *loaded = [self isLoadedForDirectory:theDirectory db:db error:error];
+        NSError * __strong *error = &blockError;
+        NSNumber *loaded = [self isLoadedForDirectory:theDirectory db:db error:&blockError];
         if (loaded == nil) {
             return;
         }
@@ -502,27 +550,30 @@
             SETNSERROR([ItemsDB errorDomain], ERROR_CACHE_NOT_LOADED, @"removeItemWithName: cache not loaded for directory %@", theDirectory);
             return;
         }
-        
+
         NSString *slashedDirectory = [theDirectory stringByAppendingTrailingSlash];
         if (![db executeUpdate:@"DELETE FROM items WHERE name = ? AND slashed_directory = ?" withArgumentsInArray:[NSArray arrayWithObjects:theItemName, slashedDirectory, nil]]) {
             SETNSERROR([ItemsDB errorDomain], [db lastErrorCode], @"delete from items for %@ in %@: error=%@, db=%@", theItemName, theDirectory, [db lastErrorMessage], dbPath);
             return;
         }
-        
+
         ret = YES;
     }];
-    
+
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (BOOL)lockedMoveItem:(Item *)theItem fromDirectory:(NSString *)theFromDirectory toDirectory:(NSString *)theToDirectory error:(NSError **)error {
     __block BOOL ret = NO;
-    
+    __block NSError *blockError = nil;
+
     [fmdbq inDatabase:^(FMDatabase *db) {
+        NSError * __strong *error = &blockError;
         if (![db beginTransaction]) {
             SETNSERROR([ItemsDB errorDomain], [db lastErrorCode], @"begin transaction in setItemsByName failed: error=%@, db=%@", [db lastErrorMessage], dbPath);
             return;
         }
-        ret = [self doLockedMoveItem:theItem fromDirectory:theFromDirectory toDirectory:theToDirectory error:error];
+        ret = [self doLockedMoveItem:theItem fromDirectory:theFromDirectory toDirectory:theToDirectory error:&blockError];
         if (ret) {
             if (![db commit]) {
                 SETNSERROR([ItemsDB errorDomain], [db lastErrorCode], @"commit in setItemsByName failed: error=%@, db=%@", [db lastErrorMessage], dbPath);
@@ -533,13 +584,16 @@
             [db rollback];
         }
     }];
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (BOOL)doLockedMoveItem:(Item *)theItem fromDirectory:(NSString *)theFromDirectory toDirectory:(NSString *)theToDirectory error:(NSError **)error {
     __block BOOL ret = NO;
-    
+    __block NSError *blockError = nil;
+
     [fmdbq inDatabase:^(FMDatabase *db) {
-        NSNumber *loaded = [self isLoadedForDirectory:theFromDirectory db:db error:error];
+        NSError * __strong *error = &blockError;
+        NSNumber *loaded = [self isLoadedForDirectory:theFromDirectory db:db error:&blockError];
         if (loaded == nil) {
             return;
         }
@@ -547,7 +601,7 @@
             SETNSERROR([ItemsDB errorDomain], ERROR_CACHE_NOT_LOADED, @"removeItemWithName: cache not loaded for directory %@", theFromDirectory);
             return;
         }
-        loaded = [self isLoadedForDirectory:theToDirectory db:db error:error];
+        loaded = [self isLoadedForDirectory:theToDirectory db:db error:&blockError];
         if (loaded == nil) {
             return;
         }
@@ -555,25 +609,28 @@
             SETNSERROR([ItemsDB errorDomain], ERROR_CACHE_NOT_LOADED, @"removeItemWithName: cache not loaded for directory %@", theToDirectory);
             return;
         }
-        
+
         NSString *slashedFromDirectory = [theFromDirectory stringByAppendingTrailingSlash];
         if (![db executeUpdate:@"DELETE FROM items WHERE name = ? AND slashed_directory = ?" withArgumentsInArray:[NSArray arrayWithObjects:theItem.name, slashedFromDirectory, nil]]) {
             SETNSERROR([ItemsDB errorDomain], [db lastErrorCode], @"delete from items for %@ in %@: error=%@, db=%@", theItem.name, theFromDirectory, [db lastErrorMessage], dbPath);
             return;
         }
-        
-        if (![self insertItem:theItem inDirectory:theToDirectory db:db error:error]) {
+
+        if (![self insertItem:theItem inDirectory:theToDirectory db:db error:&blockError]) {
             return;
         }
         ret = YES;
     }];
-    
+
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (BOOL)lockedClearReferenceCounts:(NSError **)error {
     __block BOOL ret = NO;
-    
+    __block NSError *blockError = nil;
+
     [fmdbq inDatabase:^(FMDatabase *db) {
+        NSError * __strong *error = &blockError;
         if (![db executeUpdate:@"UPDATE items SET refcount = 0"]) {
             SETNSERROR([ItemsDB errorDomain], [db lastErrorCode], @"update refcount to 0 error: %@, db=%@", [db lastErrorMessage], dbPath);
             return;
@@ -582,12 +639,12 @@
         HSLogDebug(@"set refcount to 0 on %d rows", rowsChanged);
         ret = YES;
     }];
-    
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (BOOL)insertItem:(Item *)theItem inDirectory:(NSString *)theDirectory db:(FMDatabase *)db error:(NSError **)error {
     NSAssert([db inTransaction], @"must be in a transaction");
-    
+
     NSString *thePath = [theDirectory stringByAppendingPathComponent:theItem.name];
     FMResultSet *rs = [db executeQuery:@"SELECT name, item_id, parent_id, is_directory, file_size, file_last_modified, storage_class, checksum FROM items WHERE path = ?" withArgumentsInArray:[NSArray arrayWithObject:thePath]];
     if (rs == nil) {
@@ -596,7 +653,7 @@
     }
     Item *existing = nil;
     if ([rs next]) {
-        existing = [[[Item alloc] init] autorelease];
+        existing = [[Item alloc] init];
         existing.name = [rs stringForColumnIndex:0];
         existing.itemId = [rs stringForColumnIndex:1];
         existing.parentId = [rs stringForColumnIndex:2];
@@ -611,7 +668,7 @@
         NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:
                                   @"item exists", NSLocalizedDescriptionKey,
                                   existing, @"previouslyExistingItem", nil];
-        NSError *myError = [[[NSError alloc] initWithDomain:[ItemsDB errorDomain] code:ERROR_ITEM_EXISTS userInfo:userInfo] autorelease];
+        NSError *myError = [[NSError alloc] initWithDomain:[ItemsDB errorDomain] code:ERROR_ITEM_EXISTS userInfo:userInfo];
         HSLogDebug(@"insertItem: %@", myError);
         SETERRORFROMMYERROR;
         return NO;
@@ -647,13 +704,13 @@
 }
 - (BOOL)deleteAndInsertItem:(Item *)theItem inDirectory:(NSString *)theDirectory db:(FMDatabase *)db error:(NSError **)error {
     NSAssert([db inTransaction], @"must be in a transaction");
-    
+
     NSString *thePath = [theDirectory stringByAppendingPathComponent:theItem.name];
     if (![db executeUpdate:@"DELETE FROM items WHERE path = ?" withArgumentsInArray:[NSArray arrayWithObjects:thePath, nil]]) {
         SETNSERROR([ItemsDB errorDomain], [db lastErrorCode], @"delete error: error=%@, db=%@", [db lastErrorMessage], dbPath);
         return NO;
     }
-    
+
     /* columns:
      path
      slashed_directory
@@ -684,7 +741,7 @@
 }
 - (NSNumber *)isLoadedForDirectory:(NSString *)theDirectory db:(FMDatabase *)db error:(NSError **)error {
     NSNumber *ret = nil;
-    
+
 //    HSLogDebug(@"query for count of loaded_directories for %@", theDirectory);
 //    NSTimeInterval theTime = [NSDate timeIntervalSinceReferenceDate];
     FMResultSet *rs = [db executeQuery:@"SELECT COUNT(*) AS COUNT FROM loaded_directories WHERE path = ?" withArgumentsInArray:[NSArray arrayWithObject:theDirectory]];
@@ -700,19 +757,21 @@
         ret = [NSNumber numberWithBool:(count > 0)];
     }
     [rs close];
-    
+
     return ret;
 }
 
-- (FMDatabaseQueue *)initDB:(NSError **)error {
+- (FMDatabaseQueue *)setupDB:(NSError **)error {
     if (![[NSFileManager defaultManager] ensureParentPathExistsForPath:dbPath targetUID:[[CacheOwnership sharedCacheOwnership] uid] targetGID:[[CacheOwnership sharedCacheOwnership] gid] error:error]) {
         return nil;
     }
-    
+
     __block BOOL ret = NO;
-    
+    __block NSError *blockError = nil;
+
     FMDatabaseQueue *dbq = [FMDatabaseQueue databaseQueueWithPath:dbPath];
     [dbq inDatabase:^(FMDatabase *db) {
+        NSError * __strong *error = &blockError;
         if (chmod([dbPath fileSystemRepresentation], S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH) < 0) {
             int errnum = errno;
             HSLogError(@"chmod(%@) error %d: %s", dbPath, errnum, strerror(errnum));
@@ -731,7 +790,7 @@
             return;
         }
         [db setShouldCacheStatements:YES];
-        
+
         if (![db columnExists:@"checksum" inTableWithName:@"items"]) {
             // Update database schema and delete the data.
             if (![db executeUpdate:@"ALTER TABLE items ADD COLUMN checksum TEXT"]) {
@@ -742,9 +801,9 @@
                 SETNSERROR([ItemsDB errorDomain], [db lastErrorCode], @"db begin transaction: error=%@, db=%@", [db lastErrorMessage], dbPath);
                 return;
             }
-            BOOL ret = [db executeUpdate:@"DELETE FROM items"]
+            BOOL innerRet = [db executeUpdate:@"DELETE FROM items"]
             && [db executeUpdate:@"DELETE FROM loaded_directories"];
-            if (ret) {
+            if (innerRet) {
                 [db commit];
             } else {
                 SETNSERROR([ItemsDB errorDomain], [db lastErrorCode], @"db delete: error=%@, db=%@", [db lastErrorMessage], dbPath);
@@ -752,14 +811,14 @@
                 return;
             }
         }
-        
+
         if (![db columnExists:@"refcount" inTableWithName:@"items"]) {
             if (![db executeUpdate:@"ALTER TABLE items ADD COLUMN refcount INTEGER NOT NULL DEFAULT 0"]) {
                 SETNSERROR([ItemsDB errorDomain], [db lastErrorCode], @"db alter table: error=%@, db=%@", [db lastErrorMessage], dbPath);
                 return;
             }
         }
-        
+
         if ([self schemaVersion] == 0) {
             if (![db executeUpdate:@"CREATE INDEX items_slashed_directory ON items (slashed_directory)"]) {
                 NSString *msg = [db lastErrorMessage];
@@ -770,7 +829,7 @@
                     HSLogDebug(@"db create index items_slashed_directory: %@", msg);
                 }
             }
-            if (![self setSchemaVersion:1 error:error]) {
+            if (![self setSchemaVersion:1 error:&blockError]) {
                 return;
             }
         }
@@ -779,7 +838,7 @@
                 SETNSERROR([ItemsDB errorDomain], [db lastErrorCode], @"db create index items_is_directory: error=%@, db=%@", [db lastErrorMessage], dbPath);
                 return;
             }
-            if (![self setSchemaVersion:2 error:error]) {
+            if (![self setSchemaVersion:2 error:&blockError]) {
                 return;
             }
         }
@@ -788,13 +847,14 @@
                 SETNSERROR([ItemsDB errorDomain], [db lastErrorCode], @"db create index items_refcount: error=%@, db=%@", [db lastErrorMessage], dbPath);
                 return;
             }
-            if (![self setSchemaVersion:3 error:error]) {
+            if (![self setSchemaVersion:3 error:&blockError]) {
                 return;
             }
         }
         ret = YES;
     }];
     if (!ret) {
+        if (error != NULL) *error = blockError;
         return nil;
     }
     return dbq;
@@ -802,7 +862,7 @@
 
 - (int)schemaVersion {
     __block int ret = 0;
-    
+
     FMDatabaseQueue *dbq = [FMDatabaseQueue databaseQueueWithPath:dbPath];
     [dbq inDatabase:^(FMDatabase *db) {
         if (![db tableExists:@"items_schema"]) {
@@ -811,7 +871,7 @@
                 return;
             }
         }
-        
+
         FMResultSet *rs = [db executeQuery:@"SELECT version FROM items_schema" withArgumentsInArray:[NSArray array]];
         if (rs == nil) {
             HSLogError(@"db select version: error=%@, db=%@", [db lastErrorMessage], dbPath);
@@ -832,17 +892,19 @@
 - (BOOL)setSchemaVersion:(int)theSchemaVersion error:(NSError **)error {
     int currentVersion = [self schemaVersion]; // This creates the table too, if necessary.
     HSLogDebug(@"updating items schema version from %d to %d", currentVersion, theSchemaVersion);
-    
+
     __block BOOL ret = NO;
+    __block NSError *blockError = nil;
     FMDatabaseQueue *dbq = [FMDatabaseQueue databaseQueueWithPath:dbPath];
     [dbq inDatabase:^(FMDatabase *db) {
+        NSError * __strong *error = &blockError;
         if (![db executeUpdate:@"UPDATE items_schema SET version = ?" withArgumentsInArray:[NSArray arrayWithObject:[NSNumber numberWithInt:theSchemaVersion]]]) {
             SETNSERROR([ItemsDB errorDomain], [db lastErrorCode], @"db update items_schema: error=%@, db=%@", [db lastErrorMessage], dbPath);
             return;
         }
         ret = YES;
     }];
-    
+    if (error != NULL) *error = blockError;
     return ret;
 }
 @end

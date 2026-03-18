@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "DoubleIO.h"
 #import "StringIO.h"
 
@@ -39,7 +37,6 @@
 #import "BufferedOutputStream.h"
 
 //FIXME: Delete this class? It's not used anywhere.
-
 
 @implementation DoubleIO
 + (void)write:(double)d to:(NSMutableData *)data {
@@ -64,7 +61,7 @@
         return NO;
     }
     *value = strtod([str UTF8String], NULL);
-    [str release];
+    
     return YES;
 }
 @end

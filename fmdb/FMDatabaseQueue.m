@@ -11,7 +11,7 @@
 
 /*
  
- Note: we call [self retain]; before using dispatch_sync, just incase 
+ Note: we call self; before using dispatch_sync, just incase 
  FMDatabaseQueue is released on another thread and we're in the middle of doing
  something in dispatch_sync
  
@@ -106,7 +106,6 @@ static const void * const kDispatchQueueSpecificKey = &kDispatchQueueSpecificKey
         _queue = 0x00;
     }
 #if ! __has_feature(objc_arc)
-    [super dealloc];
 #endif
 }
 
@@ -168,7 +167,6 @@ static const void * const kDispatchQueueSpecificKey = &kDispatchQueueSpecificKey
     
     FMDBRelease(self);
 }
-
 
 - (void)beginTransaction:(BOOL)useDeferred withBlock:(void (^)(FMDatabase *db, BOOL *rollback))block {
     FMDBRetain(self);

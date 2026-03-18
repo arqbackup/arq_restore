@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "RFC2616DateFormatter.h"
 #import "S3AuthorizationProvider.h"
 #import "S3Lister.h"
@@ -42,7 +40,6 @@
 #import "RFC822.h"
 #import "TargetConnection.h"
 
-
 @implementation S3Lister
 - (id)initWithS3AuthorizationProvider:(id <S3AuthorizationProvider>)theSAP
                              endpoint:(NSURL *)theEndpoint
@@ -50,10 +47,10 @@
                             delimiter:(NSString *)theDelimiter
              targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD {
     if (self = [super init]) {
-        sap = [theSAP retain];
-        endpoint = [theEndpoint retain];
-		path = [thePath retain];
-        delimiter = [theDelimiter retain];
+        sap = theSAP;
+        endpoint = theEndpoint;
+		path = thePath;
+        delimiter = theDelimiter;
         targetConnectionDelegate = theTCD;
 
         numberFormatter = [[NSNumberFormatter alloc] init];
@@ -61,18 +58,6 @@
 		isTruncated = YES;
     }
     return self;
-}
-- (void)dealloc {
-    [endpoint release];
-	[sap release];
-    [path release];
-    [delimiter release];
-    [numberFormatter release];
-    [s3BucketName release];
-    [s3Path release];
-    [escapedS3ObjectPathPrefix release];
-    [marker release];
-	[super dealloc];
 }
 - (NSDictionary *)itemsByName:(NSError **)error {
     if (![path hasPrefix:@"/"]) {
@@ -85,17 +70,13 @@
         SETNSERROR([S3Service errorDomain], -1, @"path must contain S3 bucket name plus object path");
         return nil;
     }
-    s3BucketName = [[strippedPrefix substringToIndex:range.location] retain];
+    s3BucketName = [strippedPrefix substringToIndex:range.location];
     s3Path = [[NSString alloc] initWithFormat:@"/%@/", s3BucketName];
-    escapedS3ObjectPathPrefix = [[[strippedPrefix substringFromIndex:(range.location + 1)] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding] retain];
+    escapedS3ObjectPathPrefix = [[strippedPrefix substringFromIndex:(range.location + 1)] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
     
     
     NSMutableDictionary *ret = [NSMutableDictionary dictionary];
-    
-    NSAutoreleasePool *pool = nil;
 	while (isTruncated) {
-        [pool drain];
-        pool = [[NSAutoreleasePool alloc] init];
         NSArray *items = [self nextPage:error];
         if (items == nil) {
             ret = nil;
@@ -106,16 +87,8 @@
         }
     }
     
-    if (ret == nil && error != NULL) {
-        [*error retain];
-    }
-    [pool drain];
-    if (ret == nil && error != NULL) {
-        [*error autorelease];
-    }
     return ret;
 }
-
 
 #pragma mark internal
 - (NSArray *)nextPage:(NSError **)error {
@@ -133,7 +106,7 @@
         [queryString appendFormat:@"&marker=%@", [suffix stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
     }
     [queryString appendString:@"&max-keys=500"];
-    S3Request *s3r = [[[S3Request alloc] initWithMethod:@"GET" endpoint:endpoint path:[NSString stringWithFormat:@"/%@/", s3BucketName] queryString:queryString authorizationProvider:sap error:error] autorelease];
+    S3Request *s3r = [[S3Request alloc] initWithMethod:@"GET" endpoint:endpoint path:[NSString stringWithFormat:@"/%@/", s3BucketName] queryString:queryString authorizationProvider:sap error:error];
     if (s3r == nil) {
         return nil;
     }
@@ -156,9 +129,9 @@
     }
     if (listBucketResultContents == nil) {
         if (myError == nil) {
-            myError = [[[NSError alloc] initWithDomain:[S3Service errorDomain] code:-1 description:@"Failed to parse ListBucketResult XML response"] autorelease];
+            myError = [[NSError alloc] initWithDomain:[S3Service errorDomain] code:-1 description:@"Failed to parse ListBucketResult XML response"];
         }
-        HSLogDebug(@"response was %@", [[[NSString alloc] initWithData:response encoding:NSUTF8StringEncoding] autorelease]);
+        HSLogDebug(@"response was %@", [[NSString alloc] initWithData:response encoding:NSUTF8StringEncoding]);
         HSLogError(@"error getting //ListBucketResult/Contents nodes: %@", myError);
         SETERRORFROMMYERROR;
         return nil;
@@ -168,14 +141,14 @@
     NSMutableArray *ret = [NSMutableArray array];
     
     for (NSString *foundPrefix in foundPrefixes) {
-        Item *item = [[[Item alloc] init] autorelease];
+        Item *item = [[Item alloc] init];
         item.isDirectory = YES;
         item.name = [foundPrefix lastPathComponent];
         [ret addObject:item];
     }
     
     for (NSXMLNode *objectNode in listBucketResultContents) {
-        Item *item = [[[Item alloc] init] autorelease];
+        Item *item = [[Item alloc] init];
         item.isDirectory = NO;
         
         NSXMLNode *keyNode = [[objectNode nodesForXPath:@"Key" error:error] lastObject];
@@ -225,17 +198,17 @@
         
     }
     if (lastObjectPath != nil) {
-        [marker release];
-        marker = [[lastObjectPath substringFromIndex:1] retain];
+        
+        marker = [lastObjectPath substringFromIndex:1];
     }
     return ret;
 }
 
 - (NSArray *)parseXMLResponse:(NSData *)response foundPrefixes:(NSArray **)foundPrefixes error:(NSError **)error {
     NSError *myError = nil;
-    NSXMLDocument *xmlDoc = [[[NSXMLDocument alloc] initWithData:response options:0 error:&myError] autorelease];
+    NSXMLDocument *xmlDoc = [[NSXMLDocument alloc] initWithData:response options:0 error:&myError];
     if (!xmlDoc) {
-        HSLogDebug(@"list Objects XML data: %@", [[[NSString alloc] initWithData:response encoding:NSUTF8StringEncoding] autorelease]);
+        HSLogDebug(@"list Objects XML data: %@", [[NSString alloc] initWithData:response encoding:NSUTF8StringEncoding]);
         SETNSERROR([S3Service errorDomain], [myError code], @"error parsing List Objects XML response: %@", myError);
         return nil;
     }

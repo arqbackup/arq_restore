@@ -30,11 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @protocol StandardRestorerDelegate;
 @class StandardRestorer;
-
 
 @interface StandardRestoreWorker : NSObject {
     StandardRestorer *standardRestorer;

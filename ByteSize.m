@@ -30,10 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "ByteSize.h"
-
 
 @implementation ByteSize
 + (NSString *)descriptionForSize:(unsigned long long)value {

@@ -30,13 +30,9 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 @protocol S3AuthorizationProvider;
 @protocol DataTransferDelegate;
 @protocol TargetConnectionDelegate;
-
 
 @interface S3Request : NSObject {
     NSString *method;

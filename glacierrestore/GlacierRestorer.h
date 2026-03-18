@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "Restorer.h"
 #import "TargetConnection.h"
 @class GlacierRestorerParamSet;
@@ -45,7 +43,6 @@
 @class Commit;
 @class Tree;
 @class BlobKey;
-
 
 @interface GlacierRestorer : NSObject <Restorer, TargetConnectionDelegate> {
     GlacierRestorerParamSet *paramSet;

@@ -30,10 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "S3Owner.h"
-
 
 @implementation S3Owner
 - (id)initWithDisplayName:(NSString *)dn idString:(NSString *)ids {

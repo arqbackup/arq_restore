@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #include <sys/stat.h>
 #import "StringIO.h"
 #import "IntegerIO.h"
@@ -47,7 +45,6 @@
 #import "NSObject_extra.h"
 #import "BlobKeyIO.h"
 
-
 @interface Tree (internal)
 - (BOOL)readHeader:(BufferedInputStream *)is error:(NSError **)error;
 @end
@@ -56,7 +53,6 @@
 @synthesize xattrsBlobKey, xattrsSize, aclBlobKey, uid, gid, mode, mtime_sec, mtime_nsec, flags, finderFlags, extendedFinderFlags, st_dev, treeVersion, st_rdev;
 @synthesize ctime_sec, ctime_nsec, createTime_sec, createTime_nsec, st_nlink, st_ino, st_blocks, st_blksize;
 @dynamic aggregateUncompressedDataSize;
-
 
 + (NSString *)errorDomain {
     return @"TreeErrorDomain";
@@ -74,7 +70,7 @@
         missingNodes = [[NSMutableDictionary alloc] init];
 
         if (![self readHeader:is error:error]) {
-            [self release];
+            
             return nil;
         }
         BlobKeyCompressionType xattrsCompressionType = BlobKeyCompressionNone;
@@ -84,7 +80,7 @@
             BOOL theAclIsCompressed = NO;
             if (![BooleanIO read:&theXattrsAreCompressed from:is error:error]
                 || ![BooleanIO read:&theAclIsCompressed from:is error:error]) {
-                [self release];
+                
                 return nil;
             }
             xattrsCompressionType = theXattrsAreCompressed ? BlobKeyCompressionGzip : BlobKeyCompressionNone;
@@ -95,16 +91,18 @@
             int32_t theAclCompressionType = 0;
             if (![IntegerIO readInt32:&theXattrsCompressionType from:is error:error]
                 || ![IntegerIO readInt32:&theAclCompressionType from:is error:error]) {
-                [self release];
+                
                 return nil;
             }
             xattrsCompressionType = (BlobKeyCompressionType)theXattrsCompressionType;
             aclCompressionType = (BlobKeyCompressionType)theAclCompressionType;
         }
         
-        BOOL ret = [BlobKeyIO read:&xattrsBlobKey from:is treeVersion:treeVersion compressionType:xattrsCompressionType error:error]
+        BlobKey *localXattrsBlobKey = nil;
+        BlobKey *localAclBlobKey = nil;
+        BOOL ret = [BlobKeyIO read:&localXattrsBlobKey from:is treeVersion:treeVersion compressionType:xattrsCompressionType error:error]
         && [IntegerIO readUInt64:&xattrsSize from:is error:error]
-        && [BlobKeyIO read:&aclBlobKey from:is treeVersion:treeVersion compressionType:aclCompressionType error:error]
+        && [BlobKeyIO read:&localAclBlobKey from:is treeVersion:treeVersion compressionType:aclCompressionType error:error]
         && [IntegerIO readInt32:&uid from:is error:error]
         && [IntegerIO readInt32:&gid from:is error:error]
         && [IntegerIO readInt32:&mode from:is error:error]
@@ -121,17 +119,19 @@
         && [IntegerIO readInt64:&ctime_nsec from:is error:error]
         && [IntegerIO readInt64:&st_blocks from:is error:error]
         && [IntegerIO readUInt32:&st_blksize from:is error:error];
-        [xattrsBlobKey retain];
-        [aclBlobKey retain];
+        
+        
         if (!ret) {
             goto initError;
         }
+        xattrsBlobKey = localXattrsBlobKey;
+        aclBlobKey = localAclBlobKey;
         if ([xattrsBlobKey sha1] == nil) {
-            [xattrsBlobKey release];
+
             xattrsBlobKey = nil;
         }
         if ([aclBlobKey sha1] == nil) {
-            [aclBlobKey release];
+
             aclBlobKey = nil;
         }
         
@@ -158,7 +158,7 @@
                 if (![StringIO read:&missingNodeName from:is error:error]) {
                     goto initError;
                 }
-                Node *node = [[[Node alloc] initWithInputStream:is treeVersion:treeVersion error:error] autorelease];
+                Node *node = [[Node alloc] initWithInputStream:is treeVersion:treeVersion error:error];
                 if (node == nil) {
                     goto initError;
                 }
@@ -180,22 +180,15 @@
                 goto initError;
             }
             [nodes setObject:node forKey:nodeName];
-            [node release];
+            
         }
         goto initDone;
     initError:
-        [self release];
+        
         self = nil;
 	}
 initDone:
 	return self;
-}
-- (void)dealloc {
-    [xattrsBlobKey release];
-    [aclBlobKey release];
-	[nodes release];
-    [missingNodes release];
-	[super dealloc];
 }
 - (NSArray *)childNodeNames {
 	return [nodes allKeys];
@@ -233,7 +226,7 @@ initDone:
     return missingNodes;
 }
 - (NSData *)toData {
-    NSMutableData *data = [[[NSMutableData alloc] init] autorelease];
+    NSMutableData *data = [[NSMutableData alloc] init];
     [IntegerIO writeInt32:(int32_t)[xattrsBlobKey compressionType] to:data];
     [IntegerIO writeInt32:(int32_t)[aclBlobKey compressionType] to:data];
     [BlobKeyIO write:xattrsBlobKey to:data];
@@ -275,7 +268,7 @@ initDone:
     
     char header[TREE_HEADER_LENGTH + 1];
     sprintf(header, "TreeV%03d", CURRENT_TREE_VERSION);
-    NSMutableData *completeData = [[[NSMutableData alloc] init] autorelease];
+    NSMutableData *completeData = [[NSMutableData alloc] init];
     [completeData appendBytes:header length:TREE_HEADER_LENGTH];
     
     [completeData appendBytes:[data bytes] length:[data length]];
@@ -393,11 +386,12 @@ initDone:
 @implementation Tree (internal)
 - (BOOL)readHeader:(BufferedInputStream *)is error:(NSError **)error {
     BOOL ret = NO;
+    NSString *header = nil;
     unsigned char *buf = (unsigned char *)malloc(TREE_HEADER_LENGTH);
     if (![is readExactly:TREE_HEADER_LENGTH into:buf error:error]) {
         goto readHeader_error;
     }
-    NSString *header = [[[NSString alloc] initWithBytes:buf length:TREE_HEADER_LENGTH encoding:NSASCIIStringEncoding] autorelease];
+    header = [[NSString alloc] initWithBytes:buf length:TREE_HEADER_LENGTH encoding:NSASCIIStringEncoding];
     if (![header hasPrefix:@"TreeV"] || [header length] < 6) {
         SETNSERROR([Tree errorDomain], ERROR_INVALID_OBJECT_VERSION, @"invalid Tree header: %@", header);
         goto readHeader_error;

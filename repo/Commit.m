@@ -30,9 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 #import "IntegerIO.h"
 #import "DateIO.h"
 #import "StringIO.h"
@@ -45,7 +42,6 @@
 #import "DataIO.h"
 #import "BlobKey.h"
 
-
 #define HEADER_LENGTH (10)
 
 @interface Commit (internal)
@@ -56,7 +52,6 @@
 + (NSString *)errorDomain {
     return @"CommitErrorDomain";
 }
-
 
 @synthesize commitVersion,
 author = _author, 
@@ -72,12 +67,11 @@ isComplete = _isComplete,
 bucketXMLData = _bucketXMLData,
 arqVersion = _arqVersion;
 
-
 - (id)initWithCommit:(Commit *)theCommit parentCommitBlobKey:(BlobKey *)theParentBlobKey {
     if (self = [super init]) {
         _author = [[theCommit author] copy];
         _comment = [[theCommit comment] copy];
-        _parentCommitBlobKey = [theParentBlobKey retain];
+        _parentCommitBlobKey = theParentBlobKey;
         _treeBlobKey = [[theCommit treeBlobKey] copy];
         _location = [[theCommit location] copy];
         _computer = [[theCommit computer] copy];
@@ -106,8 +100,8 @@ arqVersion = _arqVersion;
         commitVersion = CURRENT_COMMIT_VERSION;
         _author = [theAuthor copy];
         _comment = [theComment copy];
-        _parentCommitBlobKey = [theParentCommitBlobKey retain];
-        _treeBlobKey = [theTreeBlobKey retain];
+        _parentCommitBlobKey = theParentCommitBlobKey;
+        _treeBlobKey = theTreeBlobKey;
         _location = [theLocation copy];
         NSRange computerRange = [_location rangeOfRegex:@"^file://([^/]+)/" capture:1];
         if (computerRange.location != NSNotFound) {
@@ -115,8 +109,8 @@ arqVersion = _arqVersion;
         } else {
             _computer = @"";
         }
-        [_computer retain];
-        _creationDate = [theCreationDate retain];
+        
+        _creationDate = theCreationDate;
         _commitFailedFiles = [theCommitFailedFiles copy];
         _hasMissingNodes = theHasMissingNodes;
         _isComplete = theIsComplete;
@@ -127,18 +121,23 @@ arqVersion = _arqVersion;
 }
 - (id)initWithBufferedInputStream:(BufferedInputStream *)is error:(NSError **)error {
 	if (self = [super init]) {
+        NSString *theAuthor = nil;
+        NSString *theComment = nil;
+        NSString *theLocation = nil;
+        NSDate *theCreationDate = nil;
+        NSData *theBucketXMLData = nil;
+        NSString *theArqVersion = nil;
         if (![self readHeader:is error:error]) {
             goto init_error;
         }
-        if (![StringIO read:&_author from:is error:error]) {
+        if (![StringIO read:&theAuthor from:is error:error]) {
             goto init_error;
         }
-        [_author retain];
-        
-        if (![StringIO read:&_comment from:is error:error]) {
+        _author = theAuthor;
+        if (![StringIO read:&theComment from:is error:error]) {
             goto init_error;
         }
-        [_comment retain];
+        _comment = theComment;
         
         uint64_t parentCommitKeyCount = 0;
         if (![IntegerIO readUInt64:&parentCommitKeyCount from:is error:error]) {
@@ -194,18 +193,16 @@ arqVersion = _arqVersion;
             goto init_error;
         }
         
-        if (![StringIO read:&_location from:is error:error]) {
+        if (![StringIO read:&theLocation from:is error:error]) {
             goto init_error;
         }
-        [_location retain];
-        
+        _location = theLocation;
         NSRange computerRange = [_location rangeOfRegex:@"^file://([^/]+)/" capture:1];
         if (computerRange.location != NSNotFound) {
             _computer = [[_location substringWithRange:computerRange] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
         } else {
             _computer = @"";
         }
-        [_computer retain];
         
         // Removed mergeCommonAncestorCommitBlobKey in Commit version 8. It was never used.
         if (commitVersion < 8) {
@@ -224,10 +221,11 @@ arqVersion = _arqVersion;
 //            }
         }
         
-        if (![DateIO read:&_creationDate from:is error:error]) {
+        if (![DateIO read:&theCreationDate from:is error:error]) {
             goto init_error;
         }
-        [_creationDate retain];
+        _creationDate = theCreationDate;
+        
         if (commitVersion >= 3) {
             uint64_t commitFailedFileCount = 0;
             if (![IntegerIO readUInt64:&commitFailedFileCount from:is error:error]) {
@@ -240,9 +238,9 @@ arqVersion = _arqVersion;
                     goto init_error;
                 }
                 [commitFailedFiles addObject:cff];
-                [cff release];
+                
             }
-            _commitFailedFiles = [commitFailedFiles retain];
+            _commitFailedFiles = commitFailedFiles;
         }
         
         if (commitVersion >= 8) {
@@ -258,46 +256,35 @@ arqVersion = _arqVersion;
             _isComplete = YES;
         }
         if (commitVersion >= 5) {
-            if (![DataIO read:&_bucketXMLData from:is error:error]) {
+            if (![DataIO read:&theBucketXMLData from:is error:error]) {
                 goto init_error;
             }
-            [_bucketXMLData retain];
+            _bucketXMLData = theBucketXMLData;
+            
         }
         if (commitVersion >= 12) {
-            if (![StringIO read:&_arqVersion from:is error:error]) {
+            if (![StringIO read:&theArqVersion from:is error:error]) {
                 goto init_error;
             }
-            [_arqVersion retain];
+            _arqVersion = theArqVersion;
+            
         }
     }
     goto init_done;
     
 init_error:
-    [self release];
+    
     self = nil;
     
 init_done:
     return self;
 }
-- (void)dealloc {
-    [_author release];
-    [_comment release];
-    [_parentCommitBlobKey release];
-    [_treeBlobKey release];
-    [_location release];
-    [_computer release];
-    [_creationDate release];
-    [_commitFailedFiles release];
-    [_bucketXMLData release];
-    [_arqVersion release];
-    [super dealloc];
-}
 - (NSString *)displayDescription {
     NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
     [dateFormatter setDateStyle:NSDateFormatterMediumStyle];
     [dateFormatter setTimeStyle:NSDateFormatterShortStyle];
-    NSMutableString *ret = [[[NSMutableString alloc] initWithString:[dateFormatter stringFromDate:[self creationDate]]] autorelease];
-    [dateFormatter release];
+    NSMutableString *ret = [[NSMutableString alloc] initWithString:[dateFormatter stringFromDate:[self creationDate]]];
+    
     NSString *commitLocation = [self location];
     NSRange range = [commitLocation rangeOfRegex:@"^([^/]+)://([^/]+)(.+)$" capture:3];
     if (range.location != NSNotFound) {
@@ -313,7 +300,7 @@ init_done:
     return ret;
 }
 - (NSData *)toData {
-    NSMutableData *data = [[[NSMutableData alloc] init] autorelease];
+    NSMutableData *data = [[NSMutableData alloc] init];
     char header[HEADER_LENGTH + 1];
     sprintf(header, "CommitV%03d", CURRENT_COMMIT_VERSION);
     [data appendBytes:header length:HEADER_LENGTH];
@@ -352,11 +339,12 @@ init_done:
 @implementation Commit (internal)
 - (BOOL)readHeader:(BufferedInputStream *)is error:(NSError **)error {
     BOOL ret = NO;
+    NSString *header = nil;
     unsigned char *buf = (unsigned char *)malloc(HEADER_LENGTH);
     if (![is readExactly:HEADER_LENGTH into:buf error:error]) {
         goto readHeader_error;
     }
-    NSString *header = [[[NSString alloc] initWithBytes:buf length:HEADER_LENGTH encoding:NSASCIIStringEncoding] autorelease];
+    header = [[NSString alloc] initWithBytes:buf length:HEADER_LENGTH encoding:NSASCIIStringEncoding];
     if (![header hasPrefix:@"CommitV"] || [header length] < 8) {
         HSLogDebug(@"current Commit version: %d", CURRENT_COMMIT_VERSION);
         SETNSERROR([Commit errorDomain], ERROR_INVALID_COMMIT_HEADER, @"invalid header %@", header);

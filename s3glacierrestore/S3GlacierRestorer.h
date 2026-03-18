@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "TargetConnection.h"
 #import "Restorer.h"
 @class S3GlacierRestorerParamSet;
@@ -40,7 +38,6 @@
 @class Commit;
 @class Tree;
 @class Node;
-
 
 @interface S3GlacierRestorer : NSObject <Restorer, TargetConnectionDelegate> {
     S3GlacierRestorerParamSet *paramSet;

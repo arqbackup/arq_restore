@@ -30,9 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 @interface KeychainItem : NSObject {
     NSString *_label;
     NSString *_account;

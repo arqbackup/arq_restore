@@ -30,9 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #import "XMLPlistParser.h"
-
 
 @implementation XMLPlistParser
 - (id)initWithContentsOfPath:(NSString *)thePath {
@@ -43,20 +41,12 @@
     }
     return self;
 }
-- (void)dealloc {
-    [currentStringValue release];
-    [parser release];
-    [path release];
-    [keyNames release];
-    [containerNames release];
-    [super dealloc];
-}
 - (void)setDelegate:(id <XMLPlistParserDelegate>)theDelegate {
-    [delegate release];
-    delegate = [theDelegate retain];
+    
+    delegate = theDelegate;
 }
 - (void)parse {
-    [parser release];
+    
     parser = [[NSXMLParser alloc] initWithContentsOfURL:[NSURL fileURLWithPath:path]];
     [parser setDelegate:self];
     [parser parse];
@@ -65,7 +55,7 @@
 #pragma mark NSXMLParserDelegate
 - (void)parser:(NSXMLParser *)parser didStartElement:(NSString *)elementName namespaceURI:(NSString *)namespaceURI 
  qualifiedName:(NSString *)qualifiedName attributes:(NSDictionary *)attributeDict {
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    @autoreleasepool {
     if ([elementName isEqualToString:@"dict"]) {
         if ([keyNames count] > 0) {
             if ([[containerNames lastObject] isEqualToString:@"array"]) {
@@ -83,10 +73,10 @@
         }
         [containerNames addObject:elementName];
     } else {
-        [currentStringValue release];
+        
         currentStringValue = nil;
     }
-    [pool drain];
+    }
 }
 - (void)parser:(NSXMLParser *)parser foundCharacters:(NSString *)string {
     if (currentStringValue == nil) {
@@ -95,10 +85,10 @@
     [currentStringValue appendString:string];
 }
 - (void)parser:(NSXMLParser *)parser didEndElement:(NSString *)elementName namespaceURI:(NSString *)namespaceURI qualifiedName:(NSString *)qName {
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    @autoreleasepool {
     if ([elementName isEqualToString:@"key"]) {
         [keyNames addObject:currentStringValue];
-        [currentStringValue release];
+        
         currentStringValue = nil;
     } else if ([elementName isEqualToString:@"string"]) {
         if ([[containerNames lastObject] isEqualToString:@"array"]) {
@@ -107,7 +97,7 @@
             [delegate parser:self foundString:currentStringValue key:[keyNames lastObject]];
             [keyNames removeLastObject];
         }
-        [currentStringValue release];
+        
         currentStringValue = nil;
     } else if ([elementName isEqualToString:@"integer"]) {
         if ([[containerNames lastObject] isEqualToString:@"array"]) {
@@ -116,7 +106,7 @@
             [delegate parser:self foundInteger:[currentStringValue intValue] key:[keyNames lastObject]];
             [keyNames removeLastObject];
         }
-        [currentStringValue release];
+        
         currentStringValue = nil;
     } else if ([elementName isEqualToString:@"real"]) {
         double value = 0;
@@ -130,7 +120,7 @@
             [delegate parser:self foundReal:value key:[keyNames lastObject]];
             [keyNames removeLastObject];
         }
-        [currentStringValue release];
+        
         currentStringValue = nil;
     } else if ([elementName isEqualToString:@"true"]) {
         if ([[containerNames lastObject] isEqualToString:@"array"]) {
@@ -139,7 +129,7 @@
             [delegate parser:self foundBoolean:YES key:[keyNames lastObject]];
             [keyNames removeLastObject];
         }
-        [currentStringValue release];
+        
         currentStringValue = nil;
     } else if ([elementName isEqualToString:@"false"]) {
         if ([[containerNames lastObject] isEqualToString:@"array"]) {
@@ -148,7 +138,7 @@
             [delegate parser:self foundBoolean:NO key:[keyNames lastObject]];
             [keyNames removeLastObject];
         }
-        [currentStringValue release];
+        
         currentStringValue = nil;
     } else if ([elementName isEqualToString:@"dict"]) {
         NSAssert([[containerNames lastObject] isEqualToString:elementName], @"must be last object in containerNames");
@@ -171,7 +161,7 @@
             [keyNames removeLastObject];
         }
     }
-    [pool drain];
+    }
 }
 - (void)parser:(NSXMLParser *)theParser parseErrorOccurred:(NSError *)parseError {
     [delegate parser:self parseErrorOccurred:parseError lineNumber:[theParser lineNumber] columnNumber:[theParser columnNumber]];

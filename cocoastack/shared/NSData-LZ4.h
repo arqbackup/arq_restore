@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @interface NSData (LZ4)
 
 - (NSData *)lz4Deflate:(NSError **)error;

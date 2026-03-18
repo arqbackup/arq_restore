@@ -30,14 +30,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 @class Tree;
 @class Node;
 @protocol Restorer;
 @class Repo;
-
 
 @interface GlacierRequestItem : NSObject {
     Tree *tree;

@@ -30,13 +30,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "StandardRestorerDelegate.h"
 #import "S3GlacierRestorerDelegate.h"
 #import "GlacierRestorerDelegate.h"
 @class Target;
-
 
 @interface ArqRestoreCommand : NSObject <StandardRestorerDelegate, S3GlacierRestorerDelegate, GlacierRestorerDelegate> {
     unsigned long long maxRequested;

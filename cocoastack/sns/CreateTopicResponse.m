@@ -30,38 +30,29 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "CreateTopicResponse.h"
 
 @implementation CreateTopicResponse
 - (id)initWithData:(NSData *)theData {
     if (self = [super init]) {
-        HSLogDebug(@"createtopicresponse: %@", [[[NSString alloc] initWithData:theData encoding:NSUTF8StringEncoding] autorelease]);
+        HSLogDebug(@"createtopicresponse: %@", [[NSString alloc] initWithData:theData encoding:NSUTF8StringEncoding]);
         NSXMLParser *parser = [[NSXMLParser alloc] initWithData:theData];
         [parser setDelegate:self];
         [parser parse];
-        [parser release];
+        
     }
     return self;
 }
-- (void)dealloc {
-    [topicArn release];
-    [currentStringBuffer release];
-    [super dealloc];
-}
-
 - (NSString *)topicArn {
     return topicArn;
 }
-
 
 #pragma mark - NSXMLParserDelegate
 - (void)parser:(NSXMLParser *)parser didStartElement:(NSString *)elementName
   namespaceURI:(NSString *)namespaceURI
  qualifiedName:(NSString *)qualifiedName
     attributes:(NSDictionary *)attributeDict {
-    [currentStringBuffer release];
+    
     currentStringBuffer = nil;
 }
 - (void)parser:(NSXMLParser *)parser foundCharacters:(NSString *)string {
@@ -73,7 +64,7 @@
 - (void)parser:(NSXMLParser *)parser didEndElement:(NSString *)elementName namespaceURI:(NSString *)namespaceURI qualifiedName:(NSString *)qName {
     if (currentStringBuffer != nil) {
         if ([elementName isEqualToString:@"TopicArn"]) {
-            [topicArn release];
+            
             topicArn = [currentStringBuffer copy];
         }
     }

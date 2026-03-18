@@ -41,7 +41,6 @@
 extern "C" {
 #endif
 
-
 /*
 ** Provide the ability to override linkage features of the interface.
 */
@@ -1022,7 +1021,6 @@ struct sqlite3_io_methods {
 #define SQLITE_SET_LOCKPROXYFILE      SQLITE_FCNTL_SET_LOCKPROXYFILE
 #define SQLITE_LAST_ERRNO             SQLITE_FCNTL_LAST_ERRNO
 
-
 /*
 ** CAPI3REF: Mutex Handle
 **
@@ -1293,7 +1291,6 @@ struct sqlite3_vfs {
 ** lock outside of this range
 */
 #define SQLITE_SHM_NLOCK        8
-
 
 /*
 ** CAPI3REF: Initialize The SQLite Library
@@ -1956,7 +1953,6 @@ struct sqlite3_mem_methods {
 #define SQLITE_DBCONFIG_ENABLE_TRIGGER        1003 /* int int* */
 #define SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER 1004 /* int int* */
 #define SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION 1005 /* int int* */
-
 
 /*
 ** CAPI3REF: Enable Or Disable Extended Result Codes
@@ -3101,7 +3097,6 @@ SQLITE_API int SQLITE_STDCALL sqlite3_open_v2(
 SQLITE_API const char *SQLITE_STDCALL sqlite3_uri_parameter(const char *zFilename, const char *zParam);
 SQLITE_API int SQLITE_STDCALL sqlite3_uri_boolean(const char *zFile, const char *zParam, int bDefault);
 SQLITE_API sqlite3_int64 SQLITE_STDCALL sqlite3_uri_int64(const char*, const char*, sqlite3_int64);
-
 
 /*
 ** CAPI3REF: Error Codes And Messages
@@ -4587,7 +4582,6 @@ SQLITE_API sqlite3 *SQLITE_STDCALL sqlite3_context_db_handle(sqlite3_context*);
 SQLITE_API void *SQLITE_STDCALL sqlite3_get_auxdata(sqlite3_context*, int N);
 SQLITE_API void SQLITE_STDCALL sqlite3_set_auxdata(sqlite3_context*, int N, void*, void (*)(void*));
 
-
 /*
 ** CAPI3REF: Constants Defining Special Destructor Behavior
 **
@@ -4742,7 +4736,6 @@ SQLITE_API void SQLITE_STDCALL sqlite3_result_text16be(sqlite3_context*, const v
 SQLITE_API void SQLITE_STDCALL sqlite3_result_value(sqlite3_context*, sqlite3_value*);
 SQLITE_API void SQLITE_STDCALL sqlite3_result_zeroblob(sqlite3_context*, int n);
 SQLITE_API int SQLITE_STDCALL sqlite3_result_zeroblob64(sqlite3_context*, sqlite3_uint64 n);
-
 
 /*
 ** CAPI3REF: Setting The Subtype Of An SQL Function
@@ -5381,7 +5374,6 @@ SQLITE_API sqlite3_int64 SQLITE_STDCALL sqlite3_soft_heap_limit64(sqlite3_int64 
 ** [sqlite3_soft_heap_limit64()] interface rather than this one.
 */
 SQLITE_API SQLITE_DEPRECATED void SQLITE_STDCALL sqlite3_soft_heap_limit(int N);
-
 
 /*
 ** CAPI3REF: Extract Metadata About A Column Of A Table
@@ -6600,7 +6592,6 @@ SQLITE_API int SQLITE_STDCALL sqlite3_status64(
   int resetFlag
 );
 
-
 /*
 ** CAPI3REF: Status Parameters
 ** KEYWORDS: {status parameters}
@@ -6822,7 +6813,6 @@ SQLITE_API int SQLITE_STDCALL sqlite3_db_status(sqlite3*, int op, int *pCur, int
 #define SQLITE_DBSTATUS_CACHE_WRITE          9
 #define SQLITE_DBSTATUS_DEFERRED_FKS        10
 #define SQLITE_DBSTATUS_MAX                 10   /* Largest defined DBSTATUS */
-
 
 /*
 ** CAPI3REF: Prepared Statement Status
@@ -7117,7 +7107,6 @@ struct sqlite3_pcache_methods {
   void (*xTruncate)(sqlite3_pcache*, unsigned iLimit);
   void (*xDestroy)(sqlite3_pcache*);
 };
-
 
 /*
 ** CAPI3REF: Online Backup Object
@@ -7448,7 +7437,6 @@ SQLITE_API int SQLITE_STDCALL sqlite3_unlock_notify(
   void (*xNotify)(void **apArg, int nArg),    /* Callback function to invoke */
   void *pNotifyArg                            /* Argument to pass to xNotify */
 );
-
 
 /*
 ** CAPI3REF: String Comparison
@@ -8223,7 +8211,6 @@ SQLITE_API SQLITE_EXPERIMENTAL int SQLITE_STDCALL sqlite3_snapshot_cmp(
 #ifndef _SQLITE3RTREE_H_
 #define _SQLITE3RTREE_H_
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -8253,7 +8240,6 @@ SQLITE_API int SQLITE_STDCALL sqlite3_rtree_geometry_callback(
   void *pContext
 );
 
-
 /*
 ** A pointer to a structure of the following type is passed as the first
 ** argument to callbacks registered using rtree_geometry_callback().
@@ -8279,7 +8265,6 @@ SQLITE_API int SQLITE_STDCALL sqlite3_rtree_query_callback(
   void *pContext,
   void (*xDestructor)(void*)
 );
-
 
 /*
 ** A pointer to a structure of the following type is passed as the 
@@ -8317,7 +8302,6 @@ struct sqlite3_rtree_query_info {
 #define PARTLY_WITHIN    1   /* Object partially overlaps query region */
 #define FULLY_WITHIN     2   /* Object fully contained within query region */
 
-
 #ifdef __cplusplus
 }  /* end of the 'extern "C"' block */
 #endif
@@ -8336,7 +8320,6 @@ struct sqlite3_rtree_query_info {
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 
 /*
 ** CAPI3REF: Session Object Handle
@@ -8397,7 +8380,6 @@ int sqlite3session_create(
 ** [sqlite3session_create()] for details.
 */
 void sqlite3session_delete(sqlite3_session *pSession);
-
 
 /*
 ** CAPI3REF: Enable Or Disable A Session Object
@@ -8670,7 +8652,6 @@ int sqlite3session_diff(
   char **pzErrMsg
 );
 
-
 /*
 ** CAPI3REF: Generate A Patchset From A Session Object
 **
@@ -8760,7 +8741,6 @@ int sqlite3changeset_start(
   int nChangeset,                 /* Size of changeset blob in bytes */
   void *pChangeset                /* Pointer to blob containing changeset */
 );
-
 
 /*
 ** CAPI3REF: Advance A Changeset Iterator
@@ -8956,7 +8936,6 @@ int sqlite3changeset_fk_conflicts(
   int *pnOut                      /* OUT: Number of FK violations */
 );
 
-
 /*
 ** CAPI3REF: Finalize A Changeset Iterator
 **
@@ -9051,7 +9030,6 @@ int sqlite3changeset_concat(
   int *pnOut,                     /* OUT: Number of bytes in output changeset */
   void **ppOut                    /* OUT: Buffer containing output changeset */
 );
-
 
 /*
 ** Changegroup handle.
@@ -9593,7 +9571,6 @@ int sqlite3changegroup_output_strm(sqlite3_changegroup*,
     void *pOut
 );
 
-
 /*
 ** Make sure we can call this stuff from C++.
 */
@@ -9624,10 +9601,8 @@ int sqlite3changegroup_output_strm(sqlite3_changegroup*,
 **     * custom auxiliary functions.
 */
 
-
 #ifndef _FTS5_H
 #define _FTS5_H
-
 
 #ifdef __cplusplus
 extern "C" {
@@ -10183,6 +10158,5 @@ struct fts5_api {
 #endif
 
 #endif /* _FTS5_H */
-
 
 /******** End of fts5.h *********/

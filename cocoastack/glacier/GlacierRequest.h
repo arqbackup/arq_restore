@@ -30,13 +30,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @class GlacierAuthorizationProvider;
 @class AWSRegion;
 @class GlacierResponse;
 @protocol DataTransferDelegate;
-
 
 @interface GlacierRequest : NSObject {
     NSString *method;

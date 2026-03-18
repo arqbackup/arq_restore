@@ -30,11 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "SHA256Hash.h"
 #import <CommonCrypto/CommonDigest.h>
-
 
 @implementation SHA256Hash
 + (NSData *)hashData:(NSData *)data {

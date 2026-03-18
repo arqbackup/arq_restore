@@ -30,32 +30,22 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "KeychainItem.h"
-
 
 @implementation KeychainItem
 @synthesize label = _label;
 @synthesize account = _account;
 @synthesize passwordData = _passwordData;
 
-
 - (id)initWithLabel:(NSString *)theLabel account:(NSString *)theAccount password:(NSString *)thePassword {
     return [self initWithLabel:theLabel account:theAccount passwordData:[thePassword dataUsingEncoding:NSUTF8StringEncoding]];
 }
 - (id)initWithLabel:(NSString *)theLabel account:(NSString *)theAccount passwordData:(NSData *)thePasswordData {
     if (self = [super init]) {
-        _label = [theLabel retain];
-        _account = [theAccount retain];
-        _passwordData = [thePasswordData retain];
+        _label = theLabel;
+        _account = theAccount;
+        _passwordData = thePasswordData;
     }
     return self;
-}
-- (void)dealloc {
-    [_label release];
-    [_account release];
-    [_passwordData release];
-    [super dealloc];
 }
 @end

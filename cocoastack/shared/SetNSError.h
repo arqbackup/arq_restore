@@ -30,14 +30,11 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "NSError_extra.h"
-
 
 #define SETNSERROR(domain, theCode, format, args...) \
 if (error != NULL) {\
-    *error = [[[NSError alloc] initWithDomain:(domain) code:(theCode) userInfo:[NSDictionary dictionaryWithObjectsAndKeys:[NSString stringWithFormat:format, ##args], NSLocalizedDescriptionKey, nil]] autorelease];\
+    *error = [[NSError alloc] initWithDomain:(domain) code:(theCode) userInfo:[NSDictionary dictionaryWithObjectsAndKeys:[NSString stringWithFormat:format, ##args], NSLocalizedDescriptionKey, nil]];\
 }
 
 #define SETERRORFROMMYERROR \

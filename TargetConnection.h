@@ -30,19 +30,15 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @class Target;
 #import "RemoteFS.h"
 @class Item;
 @protocol DataTransferDelegate;
 @protocol DeleteDelegate;
 
-
 @protocol TargetConnectionDelegate <NSObject>
 - (BOOL)targetConnectionShouldRetryOnTransientError:(NSError **)error;
 @end
-
 
 @interface TargetConnection : NSObject {
     Target *target;

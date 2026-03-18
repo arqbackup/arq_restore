@@ -30,18 +30,15 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "NSError_Glacier.h"
 #import "NSXMLNode_extra.h"
 #import "NSError_extra.h"
 #import "GlacierService.h"
 #import "NSString+SBJSON.h"
 
-
 @implementation NSError (Glacier)
 + (NSError *)glacierErrorWithDomain:(NSString *)theDomain httpStatusCode:(int)theHTTPStatusCode responseBody:(NSData *)theResponseBody {
-    NSString *msg = [[[NSString alloc] initWithData:theResponseBody encoding:NSUTF8StringEncoding] autorelease];
+    NSString *msg = [[NSString alloc] initWithData:theResponseBody encoding:NSUTF8StringEncoding];
     NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:[NSString stringWithFormat:@"Glacier error %d", theHTTPStatusCode] forKey:NSLocalizedDescriptionKey];
     if (msg != nil) {
         NSDictionary *json = [msg JSONValue:NULL];
@@ -59,6 +56,6 @@
         [userInfo setObject:@"Your AWS account is not signed up for all services. Please visit http://aws.amazon.com and sign up for S3, Glacier, SNS and SQS." forKey:NSLocalizedDescriptionKey];
     }
     [userInfo setObject:[NSNumber numberWithInt:theHTTPStatusCode] forKey:@"HTTPStatusCode"];
-    return [[[NSError alloc] initWithDomain:theDomain code:GLACIER_ERROR_AMAZON_ERROR userInfo:userInfo] autorelease];
+    return [[NSError alloc] initWithDomain:theDomain code:GLACIER_ERROR_AMAZON_ERROR userInfo:userInfo];
 }
 @end

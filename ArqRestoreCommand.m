@@ -30,7 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include <termios.h>
 #import "ArqRestoreCommand.h"
 #import "Target.h"
@@ -59,9 +58,7 @@
 #import "ExePath.h"
 #import "AWSRegion.h"
 
-
 #define BUFSIZE (65536)
-
 
 @implementation ArqRestoreCommand
 - (NSString *)errorDomain {
@@ -71,7 +68,7 @@
 - (BOOL)executeWithArgc:(int)argc argv:(const char **)argv error:(NSError **)error {
     NSMutableArray *args = [NSMutableArray array];
     for (int i = 0; i < argc; i++) {
-        [args addObject:[[[NSString alloc] initWithBytes:argv[i] length:strlen(argv[i]) encoding:NSUTF8StringEncoding] autorelease]];
+        [args addObject:[[NSString alloc] initWithBytes:argv[i] length:strlen(argv[i]) encoding:NSUTF8StringEncoding]];
     }
     
     if ([args count] < 2) {
@@ -111,7 +108,6 @@
     
     return YES;
 }
-
 
 #pragma mark internal
 - (BOOL)listTargets:(NSError **)error {
@@ -167,7 +163,7 @@
         return NO;
     }
     
-    Target *target = [[[Target alloc] initWithUUID:targetUUID nickname:targetNickname endpoint:endpoint awsRequestSignatureVersion:4] autorelease];
+    Target *target = [[Target alloc] initWithUUID:targetUUID nickname:targetNickname endpoint:endpoint awsRequestSignatureVersion:4];
     [target setOAuth2ClientId:oAuth2ClientId];
     [target setOAuth2RedirectURI:oAuth2RedirectURI];
     if (![[TargetFactory sharedTargetFactory] saveTarget:target error:error]) {
@@ -199,7 +195,7 @@
         SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"target not found");
         return NO;
     }
-    TargetConnection *conn = [[target newConnection:error] autorelease];
+    TargetConnection *conn = [target newConnection:error];
     if (conn == nil) {
         return NO;
     }
@@ -248,7 +244,6 @@
     }
     return YES;
 }
-
 
 - (BOOL)listFolders:(NSArray *)args error:(NSError **)error {
     if ([args count] != 4) {
@@ -338,7 +333,7 @@
     printf("folder   %s\n", [theBucketUUID UTF8String]);
     
     NSData *xmlData = [matchingBucket toXMLData];
-    NSString *xmlString = [[[NSString alloc] initWithData:xmlData encoding:NSUTF8StringEncoding] autorelease];
+    NSString *xmlString = [[NSString alloc] initWithData:xmlData encoding:NSUTF8StringEncoding];
     printf("%s\n", [xmlString UTF8String]);
     return YES;
 }
@@ -389,7 +384,7 @@
     printf("computer %s\n", [theComputerUUID UTF8String]);
     printf("folder   %s\n", [theBucketUUID UTF8String]);
     
-    Repo *repo = [[[Repo alloc] initWithBucket:matchingBucket encryptionPassword:theEncryptionPassword targetConnectionDelegate:nil repoDelegate:nil activityListener:nil error:error] autorelease];
+    Repo *repo = [[Repo alloc] initWithBucket:matchingBucket encryptionPassword:theEncryptionPassword targetConnectionDelegate:nil repoDelegate:nil activityListener:nil error:error];
     if (repo == nil) {
         return NO;
     }
@@ -477,7 +472,7 @@
     printf("computer %s\n", [theComputerUUID UTF8String]);
     printf("folder   %s\n", [theBucketUUID UTF8String]);
     
-    Repo *repo = [[[Repo alloc] initWithBucket:matchingBucket encryptionPassword:theEncryptionPassword targetConnectionDelegate:nil repoDelegate:nil activityListener:nil error:error] autorelease];
+    Repo *repo = [[Repo alloc] initWithBucket:matchingBucket encryptionPassword:theEncryptionPassword targetConnectionDelegate:nil repoDelegate:nil activityListener:nil error:error];
     if (repo == nil) {
         return NO;
     }
@@ -546,7 +541,7 @@
     AWSRegion *region = [AWSRegion regionWithS3Endpoint:[target endpoint]];
     BOOL isGlacierDestination = [region supportsGlacier];
     if ([matchingBucket storageType] == StorageTypeGlacier && isGlacierDestination) {
-        GlacierRestorerParamSet *paramSet = [[[GlacierRestorerParamSet alloc] initWithBucket:matchingBucket
+        GlacierRestorerParamSet *paramSet = [[GlacierRestorerParamSet alloc] initWithBucket:matchingBucket
                                                                           encryptionPassword:theEncryptionPassword
                                                                       downloadBytesPerSecond:bytesPerSecond
                                                                         glacierRetrievalTier:GLACIER_RETRIEVAL_TIER_EXPEDITED
@@ -559,11 +554,11 @@
                                                                                    targetGID:getgid()
                                                                           useTargetUIDAndGID:YES
                                                                              destinationPath:destinationPath
-                                                                                    logLevel:[[HSLog sharedHSLog] hsLogLevel]] autorelease];
-        [[[GlacierRestorer alloc] initWithGlacierRestorerParamSet:paramSet delegate:self] autorelease];
+                                                                                    logLevel:[[HSLog sharedHSLog] hsLogLevel]];
+        (void)[[GlacierRestorer alloc] initWithGlacierRestorerParamSet:paramSet delegate:self];
         
     } else if ([matchingBucket storageType] == StorageTypeS3Glacier && isGlacierDestination) {
-        S3GlacierRestorerParamSet *paramSet = [[[S3GlacierRestorerParamSet alloc] initWithBucket:matchingBucket
+        S3GlacierRestorerParamSet *paramSet = [[S3GlacierRestorerParamSet alloc] initWithBucket:matchingBucket
                                                                               encryptionPassword:theEncryptionPassword
                                                                           downloadBytesPerSecond:bytesPerSecond
                                                                             glacierRetrievalTier:GLACIER_RETRIEVAL_TIER_EXPEDITED
@@ -576,11 +571,11 @@
                                                                                        targetGID:getgid()
                                                                               useTargetUIDAndGID:YES
                                                                                  destinationPath:destinationPath
-                                                                                        logLevel:[[HSLog sharedHSLog] hsLogLevel]] autorelease];
-        S3GlacierRestorer *restorer = [[[S3GlacierRestorer alloc] initWithS3GlacierRestorerParamSet:paramSet delegate:self] autorelease];
+                                                                                        logLevel:[[HSLog sharedHSLog] hsLogLevel]];
+        S3GlacierRestorer *restorer = [[S3GlacierRestorer alloc] initWithS3GlacierRestorerParamSet:paramSet delegate:self];
         [restorer run];
     } else {
-        StandardRestorerParamSet *paramSet = [[[StandardRestorerParamSet alloc] initWithBucket:matchingBucket
+        StandardRestorerParamSet *paramSet = [[StandardRestorerParamSet alloc] initWithBucket:matchingBucket
                                                                             encryptionPassword:theEncryptionPassword
                                                                                  commitBlobKey:commitBlobKey
                                                                                   rootItemName:[[matchingBucket localPath] lastPathComponent]
@@ -591,8 +586,8 @@
                                                                                      targetGID:getgid()
                                                                             useTargetUIDAndGID:YES
                                                                                destinationPath:destinationPath
-                                                                                      logLevel:[[HSLog sharedHSLog] hsLogLevel]] autorelease];
-        [[[StandardRestorer alloc] initWithParamSet:paramSet delegate:self] autorelease];
+                                                                                      logLevel:[[HSLog sharedHSLog] hsLogLevel]];
+        (void)[[StandardRestorer alloc] initWithParamSet:paramSet delegate:self];
     }
     
     return YES;
@@ -607,14 +602,12 @@
         SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"target not found");
         return NO;
     }
-    TargetConnection *conn = [[target newConnection:error] autorelease];
+    TargetConnection *conn = [target newConnection:error];
     if (conn == nil) {
         return NO;
     }
     return [conn clearAllCachedData:error];
 }
-
-
 
 - (BackupSet *)backupSetForTarget:(Target *)theInitialTarget computerUUID:(NSString *)theComputerUUID error:(NSError **)error {
     NSArray *expandedTargetList = [self expandedTargetListForTarget:theInitialTarget error:error];
@@ -669,7 +662,7 @@
                                                                                                                             secretKey:theSecretKey
                                                                                                                      signatureVersion:4
                                                                                                                             awsRegion:[AWSRegion usEast1]];
-        s3 = [[[S3Service alloc] initWithS3AuthorizationProvider:sap endpoint:usEast1Endpoint] autorelease];
+        s3 = [[S3Service alloc] initWithS3AuthorizationProvider:sap endpoint:usEast1Endpoint];
     } else {
         s3 = [theTarget s3:error];
         if (s3 == nil) {
@@ -716,16 +709,15 @@
         if (endpoint != nil) {
             HSLogDebug(@"endpoint: %@", endpoint);
             
-            Target *target = [[[Target alloc] initWithUUID:targetUUID
+            Target *target = [[Target alloc] initWithUUID:targetUUID
                                                   nickname:s3BucketName
                                                   endpoint:endpoint
-                                awsRequestSignatureVersion:[theTarget awsRequestSignatureVersion]] autorelease];
+                                awsRequestSignatureVersion:[theTarget awsRequestSignatureVersion]];
             [ret addObject:target];
         }
     }
     return ret;
 }
-
 
 #pragma mark StandardRestorerDelegate
 // Methods return YES if cancel is requested.
@@ -751,7 +743,6 @@
     printf("failed: %s\n", [[error localizedDescription] UTF8String]);
     return NO;
 }
-
 
 #pragma mark S3GlacierRestorerDelegate
 - (BOOL)s3GlacierRestorerMessageDidChange:(NSString *)message {
@@ -788,7 +779,6 @@
     printf("failed: %s\n", [[error localizedDescription] UTF8String]);
 }
 
-
 #pragma mark GlacierRestorerDelegate
 - (BOOL)glacierRestorerMessageDidChange:(NSString *)message {
     printf("status: %s\n", [message UTF8String]);
@@ -821,7 +811,6 @@
     return NO;
 }
 
-
 #pragma mark internal
 - (NSString *)readPasswordWithPrompt:(NSString *)thePrompt error:(NSError **)error {
     fprintf(stderr, "%s ", [thePrompt UTF8String]);
@@ -849,6 +838,6 @@
         --len;
     }
     
-    return [[[NSString alloc] initWithBytes:buf length:len encoding:NSUTF8StringEncoding] autorelease];
+    return [[NSString alloc] initWithBytes:buf length:len encoding:NSUTF8StringEncoding];
 }
 @end

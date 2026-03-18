@@ -30,9 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 #import "TargetConnection.h"
 #import "StorageType.h"
 @class Target;
@@ -42,7 +39,6 @@
 @protocol DataTransferDelegate;
 @class ReflogEntry;
 #import "DeleteDelegate.h"
-
 
 @interface Fark : NSObject {
     Target *target;

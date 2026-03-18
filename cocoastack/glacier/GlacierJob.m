@@ -30,26 +30,17 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "GlacierJob.h"
 
 @implementation GlacierJob
 - (id)initWithAWSRegion:(AWSRegion *)theAWSRegion vaultName:(NSString *)theVaultName json:(NSDictionary *)theJSON {
     if (self = [super init]) {
-        awsRegion = [theAWSRegion retain];
-        vaultName = [theVaultName retain];
-        json = [theJSON retain];
+        awsRegion = theAWSRegion;
+        vaultName = theVaultName;
+        json = theJSON;
     }
     return self;
 }
-- (void)dealloc {
-    [awsRegion release];
-    [vaultName release];
-    [json release];
-    [super dealloc];
-}
-
 - (AWSRegion *)awsRegion {
     return awsRegion;
 }

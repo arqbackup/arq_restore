@@ -30,26 +30,19 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "ListTopicsResponse.h"
 
 @implementation ListTopicsResponse
 - (id)initWithData:(NSData *)theData {
     if (self = [super init]) {
         topicArns = [[NSMutableArray alloc] init];
-        HSLogDebug(@"createtopicresponse: %@", [[[NSString alloc] initWithData:theData encoding:NSUTF8StringEncoding] autorelease]);
+        HSLogDebug(@"createtopicresponse: %@", [[NSString alloc] initWithData:theData encoding:NSUTF8StringEncoding]);
         NSXMLParser *parser = [[NSXMLParser alloc] initWithData:theData];
         [parser setDelegate:self];
         [parser parse];
-        [parser release];
+        
     }
     return self;
-}
-- (void)dealloc {
-    [topicArns release];
-    [currentStringBuffer release];
-    [super dealloc];
 }
 - (NSArray *)topicArns {
     return topicArns;
@@ -60,7 +53,7 @@
   namespaceURI:(NSString *)namespaceURI
  qualifiedName:(NSString *)qualifiedName
     attributes:(NSDictionary *)attributeDict {
-    [currentStringBuffer release];
+    
     currentStringBuffer = nil;
 }
 - (void)parser:(NSXMLParser *)parser foundCharacters:(NSString *)string {
@@ -72,7 +65,7 @@
 - (void)parser:(NSXMLParser *)parser didEndElement:(NSString *)elementName namespaceURI:(NSString *)namespaceURI qualifiedName:(NSString *)qName {
     if (currentStringBuffer != nil) {
         if ([elementName isEqualToString:@"TopicArn"]) {
-            [topicArns addObject:[[currentStringBuffer copy] autorelease]];
+            [topicArns addObject:[currentStringBuffer copy]];
         }
     }
 }

@@ -30,9 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 #import "BucketExclude.h"
 #import "DictNode.h"
 #import "IntegerNode.h"
@@ -45,26 +42,21 @@
 - (id)initWithType:(BucketExcludeType)theType text:(NSString *)theText {
     if (self = [super init]) {
         type = theType;
-        text = [theText retain];
+        text = theText;
     }
     return self;
 }
 - (id)initWithPlist:(DictNode *)thePlist {
     if (self = [super init]) {
         type = [[thePlist integerNodeForKey:@"type"] intValue];
-        text = [[[thePlist stringNodeForKey:@"text"] stringValue] retain];
+        text = [[thePlist stringNodeForKey:@"text"] stringValue];
     }
     return self;
 }
-- (void)dealloc {
-    [text release];
-    [super dealloc];
-}
-
 - (DictNode *)toPlist {
-    DictNode *ret = [[[DictNode alloc] init] autorelease];
-    [ret put:[[[IntegerNode alloc] initWithInt:type] autorelease] forKey:@"type"];
-    [ret put:[[[StringNode alloc] initWithString:text] autorelease] forKey:@"text"];
+    DictNode *ret = [[DictNode alloc] init];
+    [ret put:[[IntegerNode alloc] initWithInt:type] forKey:@"type"];
+    [ret put:[[StringNode alloc] initWithString:text] forKey:@"text"];
     return ret;
 }
 
@@ -106,7 +98,6 @@
     }
     return [NSString stringWithFormat:@"<BucketExclude: type=%@ text=%@>", typeDesc, text];
 }
-
 
 #pragma mark NSCopying
 - (id)copyWithZone:(NSZone *)theZone {

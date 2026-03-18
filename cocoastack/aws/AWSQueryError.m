@@ -30,11 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "AWSQueryError.h"
-
-
 
 @implementation AWSQueryError
 - (id)initWithDomain:(NSString *)theDomain httpStatusCode:(int)theCode responseBody:(NSData *)theBody {
@@ -43,7 +39,7 @@
         NSXMLParser *parser = [[NSXMLParser alloc] initWithData:theBody];
         [parser setDelegate:self];
         [parser parse];
-        [parser release];
+        
         if (parseErrorOccurred) {
             nsError = [[NSError alloc] initWithDomain:theDomain code:theCode description:@"SNS error"];
         } else {
@@ -65,24 +61,16 @@
     }
     return self;
 }
-- (void)dealloc {
-    [values release];
-    [currentStringBuffer release];
-    [nsError release];
-    [super dealloc];
-}
-
 - (NSError *)nsError {
     return nsError;
 }
-
 
 #pragma mark - NSXMLParserDelegate
 - (void)parser:(NSXMLParser *)parser didStartElement:(NSString *)elementName
   namespaceURI:(NSString *)namespaceURI
  qualifiedName:(NSString *)qualifiedName
     attributes:(NSDictionary *)attributeDict {
-    [currentStringBuffer release];
+    
     currentStringBuffer = nil;
 }
 - (void)parser:(NSXMLParser *)parser foundCharacters:(NSString *)string {

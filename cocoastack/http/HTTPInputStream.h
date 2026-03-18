@@ -30,12 +30,9 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @protocol HTTPConnection;
 @class NetMonitor;
 #import "HTTPThrottle.h"
-
 
 @interface HTTPInputStream : NSObject {
     id <HTTPConnection> conn;

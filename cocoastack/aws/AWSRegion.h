@@ -30,9 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 @interface AWSRegion : NSObject {
     NSString *regionName;
     NSArray *s3LocationConstraints;
@@ -74,7 +71,6 @@
 + (AWSRegion *)saEast1;
 + (AWSRegion *)afSouth1;
 + (AWSRegion *)meSouth1;
-
 
 - (NSString *)regionName;
 - (NSString *)displayName;

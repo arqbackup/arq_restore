@@ -30,9 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 #import "S3Signer.h"
 
 @interface LocalS3Signer : NSObject <S3Signer> {

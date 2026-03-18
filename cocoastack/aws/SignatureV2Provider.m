@@ -30,26 +30,18 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #include <CommonCrypto/CommonHMAC.h>
 #import "SignatureV2Provider.h"
 #import "NSData-Base64Extensions.h"
-
 
 @implementation SignatureV2Provider
 
 - (id)initWithSecretKey:(NSString *)theSecretKey {
     if (self = [super init]) {
-        secretKeyData = [[theSecretKey dataUsingEncoding:NSUTF8StringEncoding] retain];
+        secretKeyData = [theSecretKey dataUsingEncoding:NSUTF8StringEncoding];
     }
     return self;
 }
-- (void)dealloc {
-    [secretKeyData release];
-    [super dealloc];
-}
-
 - (NSString *)signatureForHTTPMethod:(NSString *)theMethod url:(NSURL *)theURL {
     NSMutableString *stringToSign = [NSMutableString string];
     [stringToSign appendFormat:@"%@\n", theMethod];

@@ -30,11 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "CWLSynthesizeSingleton.h"
 @class Target;
-
 
 @protocol TargetFactoryChangeListener <NSObject>
 - (void)targetFactoryTargetWasAdded:(Target *)theTarget;

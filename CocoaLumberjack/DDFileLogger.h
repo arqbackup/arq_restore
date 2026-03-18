@@ -26,7 +26,6 @@
  * This class provides a logger to write log statements to a file.
  **/
 
-
 // Default configuration and safety/sanity values.
 //
 // maximumFileSize         -> kDDDefaultLogMaxFileSize
@@ -40,7 +39,6 @@ extern unsigned long long const kDDDefaultLogMaxFileSize;
 extern NSTimeInterval     const kDDDefaultLogRollingFrequency;
 extern NSUInteger         const kDDDefaultLogMaxNumLogFiles;
 extern unsigned long long const kDDDefaultLogFilesDiskQuota;
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark -

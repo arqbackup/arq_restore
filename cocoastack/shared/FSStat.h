@@ -30,13 +30,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #include <sys/param.h>
 #include <sys/ucred.h>
 #include <sys/mount.h>
 @class Volume;
-
 
 @interface FSStat : NSObject {
     int count;

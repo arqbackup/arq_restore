@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "CommitFailedFile.h"
 #import "StringIO.h"
 #import "BufferedInputStream.h"
@@ -46,26 +44,22 @@
 }
 - (id)initWithInputStream:(BufferedInputStream *)is error:(NSError **)error {
     if (self = [super init]) {
-        BOOL ret = [StringIO read:&path from:is error:error] && [StringIO read:&errorMessage from:is error:error];
-        [path retain];
-        [errorMessage retain];
+        NSString *thePath = nil;
+        NSString *theErrorMessage = nil;
+        BOOL ret = [StringIO read:&thePath from:is error:error] && [StringIO read:&theErrorMessage from:is error:error];
         if (!ret) {
-            [self release];
             return nil;
         }
+        path = thePath;
+        errorMessage = theErrorMessage;
     }
     return self;
 }
-- (void)dealloc {
-    [path release];
-    [errorMessage release];
-    [super dealloc];
-}
 - (NSString *)path {
-    return [[path retain] autorelease];
+    return path;
 }
 - (NSString *)errorMessage {
-    return [[errorMessage retain] autorelease];
+    return errorMessage;
 }
 - (void)writeTo:(NSMutableData *)data {
     [StringIO write:path to:data];

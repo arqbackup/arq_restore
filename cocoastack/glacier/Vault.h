@@ -30,11 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @class AWSRegion;
 @protocol VaultDelegate;
-
 
 @interface Vault : NSObject {
     AWSRegion *awsRegion;

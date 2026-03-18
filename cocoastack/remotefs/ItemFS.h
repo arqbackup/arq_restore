@@ -30,15 +30,12 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #ifndef Arq_ItemFS_h
 #define Arq_ItemFS_h
 
 @protocol DataTransferDelegate;
 @protocol TargetConnectionDelegate;
 @class Item;
-
 
 @protocol ItemFS <NSObject>
 - (NSString *)itemFSDescription;

@@ -30,10 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "StandardRestorerDelegate.h"
-
 
 @interface StandardRestorerDelegateMux : NSObject <StandardRestorerDelegate> {
     id <StandardRestorerDelegate> srd;

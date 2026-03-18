@@ -30,9 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #import "HTTPThrottle.h"
-
 
 @implementation HTTPThrottle
 - (id)init {

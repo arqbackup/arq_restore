@@ -30,20 +30,16 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "PIELoader.h"
 #import "PIELoaderWorker.h"
 
-
 #define NUM_WORKER_THREADS (5)
-
 
 @implementation PIELoader
 - (id)initWithDelegate:(id <PIELoaderDelegate>)theDelegate packIds:(NSArray *)thePackIds fark:(Fark *)theFark storageType:(StorageType)theStorageType {
     if (self = [super init]) {
         workerThreadSemaphore = dispatch_semaphore_create(0);
-        packIds = [thePackIds retain];
+        packIds = thePackIds;
         fark = theFark;
         delegate = theDelegate;
         lock = [[NSLock alloc] init];
@@ -53,17 +49,15 @@
         
         
         for (NSUInteger i = 0; i < NUM_WORKER_THREADS; i++) {
-            [[[PIELoaderWorker alloc] initWithPIELoader:self fark:fark storageType:theStorageType] autorelease];
+            (void)[[PIELoaderWorker alloc] initWithPIELoader:self fark:fark storageType:theStorageType];
         }
     }
     return self;
 }
 - (void)dealloc {
-    [loadError release];
-    [packIds release];
-    [lock release];
-    dispatch_release(workerThreadSemaphore);
-    [super dealloc];
+    
+    
+    
 }
 - (BOOL)waitForCompletion:(NSError **)error {
     for (NSUInteger i = 0; i < NUM_WORKER_THREADS; i++) {
@@ -92,16 +86,18 @@
 - (void)packIndexEntries:(NSArray *)thePIES wereLoadedForPackId:(PackId *)thePackId {
     [lock lock];
     loadedCount++;
-    if (![delegate pieLoaderDidLoadPackIndexEntries:thePIES forPackId:thePackId index:loadedCount total:[packIds count] error:&loadError]) {
+    NSError *theLoadError = nil;
+    if (![delegate pieLoaderDidLoadPackIndexEntries:thePIES forPackId:thePackId index:loadedCount total:[packIds count] error:&theLoadError]) {
+        loadError = theLoadError;
         loadErrorOccurred = YES;
-        [loadError retain];
+        
     }
     [lock unlock];
 }
 - (void)errorDidOccur:(NSError *)theError {
     [lock lock];
     loadErrorOccurred = YES;
-    loadError = [theError retain];
+    loadError = theError;
     HSLogError(@"PIELoader: load error occurred: %@", loadError);
     [lock unlock];
 }

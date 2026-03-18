@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @class Bucket;
 #import "BlobKey.h"
 @class Commit;
@@ -45,7 +43,6 @@
 #import "Fark.h"
 #import "PackSet.h"
 
-
 @protocol RepoDelegate <NSObject>
 - (void)headBlobKeyDidChangeForTargetUUID:(NSString *)theTargetUUID computerUUID:(NSString *)theComputerUUID bucketUUID:(NSString *)theBucketUUID from:(BlobKey *)fromBlobKey to:(BlobKey *)toBlobKey rewrite:(BOOL)rewrite;
 - (void)headBlobKeyWasDeletedForTargetUUID:(NSString *)theTargetUUID computerUUID:(NSString *)theComputerUUID bucketUUID:(NSString *)theBucketUUID;
@@ -55,7 +52,6 @@
 - (void)repoActivity:(NSString *)theActivity;
 - (void)repoActivityDidFinish;
 @end
-
 
 @interface Repo : NSObject <PackSetActivityListener> {
     Bucket *bucket;
@@ -107,6 +103,5 @@ targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD
 - (NSData *)decryptData:(NSData *)theData error:(NSError **)error;
 
 - (BOOL)deleteBlobForBlobKey:(BlobKey *)theBlobKey error:(NSError **)error;
-
 
 @end

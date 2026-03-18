@@ -30,10 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "RFC2616DateFormatter.h"
-
 
 @implementation RFC2616DateFormatter
 CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(RFC2616DateFormatter)
@@ -53,12 +50,6 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(RFC2616DateFormatter)
     }
     return self;
 }
-- (void)dealloc {
-    [formatter release];
-    [usLocale release];
-    [super dealloc];
-}
-
 - (NSString *)rfc2616StringFromDate:(NSDate *)date {
     //FIXME: If US locale isn't available, put the English words into the date yourself, according to http://www.ietf.org/rfc/rfc2616.txt
     

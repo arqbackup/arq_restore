@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #include "lz4.h"
 #import "LZ4Compressor.h"
 
@@ -61,8 +59,6 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(LZ4Compressor)
     [lock unlock];
     return ret;
 }
-
-
 
 - (NSData *)lockedLZ4Deflate:(NSData *)data error:(NSError **)error {
     if ([data length] > (NSUInteger)INT_MAX) {
@@ -112,7 +108,7 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(LZ4Compressor)
         SETNSERROR([self errorDomain], -1, @"LZ4_decompress failed");
         return nil;
     }
-    return [[[NSData alloc] initWithBytesNoCopy:buf length:originalSize freeWhenDone:YES] autorelease];
+    return [[NSData alloc] initWithBytesNoCopy:buf length:originalSize freeWhenDone:YES];
 }
 
 @end

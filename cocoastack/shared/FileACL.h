@@ -30,10 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
-
 @interface FileACL : NSObject {
 }
 + (BOOL)aclText:(NSString **)aclText forFile:(NSString *)path error:(NSError **)error;

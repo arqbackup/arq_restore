@@ -30,19 +30,16 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "PIELoader.h"
 #import "PIELoaderWorker.h"
 #import "Fark.h"
 #import "PackIndexGenerator.h"
 #import "PackIndex.h"
 
-
 @implementation PIELoaderWorker
 - (id)initWithPIELoader:(PIELoader *)thePIELoader fark:(Fark *)theFark storageType:(StorageType)theStorageType {
     if (self = [super init]) {
-        pieLoader = [thePIELoader retain];
+        pieLoader = thePIELoader;
         fark = theFark;
         storageType = theStorageType;
         
@@ -50,21 +47,12 @@
     }
     return self;
 }
-- (void)dealloc {
-    [pieLoader release];
-    [super dealloc];
-}
-
 - (NSString *)errorDomain {
     return @"PIELoaderWorkerErrorDomain";
 }
 
 - (void)run {
-    NSAutoreleasePool *pool = nil;
     for (;;) {
-        [pool drain];
-        pool = [[NSAutoreleasePool alloc] init];
-        
         PackId *packId = [pieLoader nextPackId];
         if (packId == nil) {
             break;
@@ -80,7 +68,6 @@
         }
     }
     [pieLoader workerDidFinish];
-    [pool drain];
 }
 
 - (BOOL)loadPackId:(PackId *)thePackId error:(NSError **)error {
@@ -101,7 +88,7 @@
                 SETERRORFROMMYERROR;
                 return NO;
             }
-            PackIndexGenerator *pig = [[[PackIndexGenerator alloc] initWithPackId:thePackId packData:packData] autorelease];
+            PackIndexGenerator *pig = [[PackIndexGenerator alloc] initWithPackId:thePackId packData:packData];
             indexData = [pig indexData:&myError];
             if (indexData == nil) {
                 HSLogDebug(@"failed to create index data from pack %@: %@", thePackId, myError);
@@ -127,7 +114,7 @@
             return NO;
         }
     }
-    PackIndex *packIndex = [[[PackIndex alloc] initWithPackId:thePackId indexData:indexData] autorelease];
+    PackIndex *packIndex = [[PackIndex alloc] initWithPackId:thePackId indexData:indexData];
     NSArray *pies = [packIndex packIndexEntries:&myError];
     if (pies == nil) {
         SETERRORFROMMYERROR;

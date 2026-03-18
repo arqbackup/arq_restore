@@ -30,13 +30,9 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 #import "StorageType.h"
 @class PackId;
 @class Fark;
-
 
 @protocol PIELoaderDelegate <NSObject>
 - (BOOL)pieLoaderDidLoadPackIndexEntries:(NSArray *)thePIEs forPackId:(PackId *)thePackId index:(NSUInteger)theIndex total:(NSUInteger)theTotal error:(NSError **)error;

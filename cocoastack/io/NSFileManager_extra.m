@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #include <sys/time.h>
 #include <sys/stat.h>
 #import "NSFileManager_extra.h"

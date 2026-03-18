@@ -30,15 +30,11 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 @class Tree;
 @class Node;
 @class Repo;
 @protocol Restorer;
 @class FileOutputStream;
-
 
 @interface RestoreItem : NSObject {
     Tree *tree;

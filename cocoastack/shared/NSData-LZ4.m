@@ -30,11 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "NSData-LZ4.h"
 #import "LZ4Compressor.h"
-
 
 @implementation NSData (LZ4)
 - (NSString *)lz4ErrorDomain {

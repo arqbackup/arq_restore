@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "StorageType.h"
 #import "PIELoader.h"
 @class Fark;
@@ -40,12 +38,10 @@
 @class PackSetDB;
 @class PackIndexEntry;
 
-
 @protocol PackSetActivityListener <NSObject>
 - (void)packSetActivity:(NSString *)theActivity;
 - (void)packSetActivityDidFinish;
 @end
-
 
 @interface PackSet : NSObject <PIELoaderDelegate> {
     Fark *fark;
@@ -59,7 +55,6 @@
     PackBuilder *packBuilder;
     PackSetDB *packSetDB;
 }
-
 
 + (unsigned long long)maxPackFileSizeMB;
 + (unsigned long long)maxPackItemSizeBytes;

@@ -30,13 +30,13 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "Bucket.h"
 #import "DictNode.h"
 #import "ArrayNode.h"
 #import "StringNode.h"
 #import "BooleanNode.h"
+#import "IntegerNode.h"
+#import "RealNode.h"
 #import "NSString_slashed.h"
 #import "BucketExcludeSet.h"
 #import "S3AuthorizationProvider.h"
@@ -59,9 +59,7 @@
 #import "StringIO.h"
 #import "NSString_extra.h"
 
-
 #define BUCKET_PLIST_SALT "BucketPL"
-
 
 @interface StringArrayPair : NSObject {
     NSString *left;
@@ -75,17 +73,11 @@
 @implementation StringArrayPair
 - (id)initWithLeft:(NSString *)theLeft right:(NSArray *)theRight {
     if (self = [super init]) {
-        left = [theLeft retain];
-        right = [theRight retain];
+        left = theLeft;
+        right = theRight;
     }
     return self;
 }
-- (void)dealloc {
-    [left release];
-    [right release];
-    [super dealloc];
-}
-
 - (NSString *)left {
     return left;
 }
@@ -93,8 +85,6 @@
     return right;
 }
 @end
-
-
 
 @implementation Bucket
 + (NSArray *)bucketsWithTarget:(Target *)theTarget
@@ -155,10 +145,10 @@
                 [ret addObject:bucket];
             }
         }
-        NSSortDescriptor *descriptor = [[[NSSortDescriptor alloc] initWithKey:@"bucketName" ascending:YES selector:@selector(caseInsensitiveCompare:)] autorelease];
+        NSSortDescriptor *descriptor = [[NSSortDescriptor alloc] initWithKey:@"bucketName" ascending:YES selector:@selector(caseInsensitiveCompare:)];
         [ret sortUsingDescriptors:[NSArray arrayWithObject:descriptor]];
     } while(0);
-    [targetConnection release];
+    
     HSLogDebug(@"returning %ld buckets for computer %@", [ret count], theComputerUUID);
     return ret;
 }
@@ -171,10 +161,9 @@
         return nil;
     }
     NSArray *ret = [targetConnection bucketUUIDsForComputerUUID:theComputerUUID deleted:NO delegate:theTCD error:error];
-    [targetConnection release];
+    
     return ret;
 }
-
 
 + (NSString *)errorDomain {
     return @"BucketErrorDomain";
@@ -188,12 +177,12 @@
      localMountPoint:(NSString *)theLocalMountPoint
          storageType:(int)theStorageType {
     if (self = [super init]) {
-        target = [theTarget retain];
-        bucketUUID = [theBucketUUID retain];
-        bucketName = [theBucketName retain];
-        computerUUID = [theComputerUUID retain];
-        localPath = [theLocalPath retain];
-        localMountPoint = [theLocalMountPoint retain];
+        target = theTarget;
+        bucketUUID = theBucketUUID;
+        bucketName = theBucketName;
+        computerUUID = theComputerUUID;
+        localPath = theLocalPath;
+        localMountPoint = theLocalMountPoint;
         storageType = theStorageType;
         ignoredRelativePaths = [[NSMutableArray alloc] init];
         excludeSet = [[BucketExcludeSet alloc] init];
@@ -202,43 +191,28 @@
     return self;
 }
 - (id)initWithBufferedInputStream:(BufferedInputStream *)theBIS error:(NSError **)error {
-    Target *theTarget = [[[Target alloc] initWithBufferedInputStream:theBIS error:error] autorelease];
+    Target *theTarget = [[Target alloc] initWithBufferedInputStream:theBIS error:error];
     if (theTarget == nil) {
-        [self release];
+        
         return nil;
     }
     NSData *xmlData = nil;
     if (![DataIO read:&xmlData from:theBIS error:error]) {
-        [self release];
+        
         return nil;
     }
     if (xmlData == nil) {
         SETNSERROR([Bucket errorDomain], -1, @"nil xmlData!");
-        [self release];
+        
         return nil;
     }
     DictNode *plist = [DictNode dictNodeWithXMLData:xmlData error:error];
     if (plist == nil) {
-        [self release];
+        
         return nil;
     }
     return [self initWithTarget:theTarget plist:plist];
 }
-- (void)dealloc {
-    [target release];
-    [bucketUUID release];
-    [bucketName release];
-    [computerUUID release];
-    [localPath release];
-    [localMountPoint release];
-    [ignoredRelativePaths release];
-    [excludeSet release];
-    [vaultName release];
-    [vaultCreatedDate release];
-    [plistDeletedDate release];
-    [super dealloc];
-}
-
 - (Target *)target {
     return target;
 }
@@ -314,7 +288,7 @@
     return skipIfNotMounted;
 }
 - (NSData *)toXMLData {
-    DictNode *plist = [[[DictNode alloc] init] autorelease];
+    DictNode *plist = [[DictNode alloc] init];
     [plist putString:[[target endpoint] description] forKey:@"Endpoint"];
     [plist putString:bucketUUID forKey:@"BucketUUID"];
     [plist putString:bucketName forKey:@"BucketName"];
@@ -333,11 +307,11 @@
     }
     [plist putBoolean:skipDuringBackup forKey:@"SkipDuringBackup"];
     [plist putBoolean:excludeItemsWithTimeMachineExcludeMetadataFlag forKey:@"ExcludeItemsWithTimeMachineExcludeMetadataFlag"];
-    ArrayNode *ignoredRelativePathsNode = [[[ArrayNode alloc] init] autorelease];
+    ArrayNode *ignoredRelativePathsNode = [[ArrayNode alloc] init];
     [plist put:ignoredRelativePathsNode forKey:@"IgnoredRelativePaths"];
     NSArray *sortedRelativePaths = [ignoredRelativePaths sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)];
     for (NSString *ignoredRelativePath in sortedRelativePaths) {
-        [ignoredRelativePathsNode add:[[[StringNode alloc] initWithString:ignoredRelativePath] autorelease]];
+        [ignoredRelativePathsNode add:[[StringNode alloc] initWithString:ignoredRelativePath]];
     }
     [plist put:[excludeSet toPlist] forKey:@"Excludes"];
     [plist putBoolean:skipIfNotMounted forKey:@"SkipIfNotMounted"];
@@ -371,8 +345,8 @@
                                 skipDuringBackup:skipDuringBackup
   excludeItemsWithTimeMachineExcludeMetadataFlag:excludeItemsWithTimeMachineExcludeMetadataFlag
                                 skipIfNotMounted:skipIfNotMounted];
-    [excludeSetCopy release];
-    [ignoredRelativePathsCopy release];
+    
+    
     return ret;
 }
 
@@ -382,7 +356,6 @@
     return [NSString stringWithFormat:@"<Bucket %@: %@ (%lu ignored path%@)>", bucketUUID, localPath, (unsigned long)ignoredCount, (ignoredCount == 1 ? @"" : @"s")];
 }
 
-
 #pragma mark internal
 + (Bucket *)bucketWithTarget:(Target *)theTarget
             targetConnection:(TargetConnection *)theTargetConnection
@@ -391,12 +364,12 @@
                   bucketUUID:(NSString *)theBucketUUID
     targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD
                        error:(NSError **)error {
-    ObjectEncryptor *encryptor = [[[ObjectEncryptor alloc] initWithTarget:theTarget
+    ObjectEncryptor *encryptor = [[ObjectEncryptor alloc] initWithTarget:theTarget
                                                              computerUUID:theComputerUUID
                                                        encryptionPassword:theEncryptionPassword
                                                              customV1Salt:[NSData dataWithBytes:BUCKET_PLIST_SALT length:strlen(BUCKET_PLIST_SALT)]
                                                  targetConnectionDelegate:nil
-                                                                    error:error] autorelease];
+                                                                    error:error];
     if (encryptor == nil) {
         return nil;
     }
@@ -422,28 +395,28 @@
     DictNode *plist = [DictNode dictNodeWithXMLData:data error:&myError];
     if (plist == nil) {
         HSLogDebug(@"error parsing XML data into DictNode: %@", myError);
-        NSString *str = [[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] autorelease];
+        NSString *str = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
         HSLogDebug(@"invalid XML: %@", str);
         SETNSERROR(@"BucketErrorDomain", ERROR_INVALID_PLIST_XML, @"%@ %@ not valid XML", theComputerUUID, theBucketUUID);
         return nil;
     }
-    Bucket *bucket = [[[Bucket alloc] initWithTarget:theTarget plist:plist] autorelease];
+    Bucket *bucket = [[Bucket alloc] initWithTarget:theTarget plist:plist];
     return bucket;
 }
 
 - (id)initWithTarget:(Target *)theTarget plist:(DictNode *)thePlist {
     if (self = [super init]) {
-        target = [theTarget retain];
-        bucketUUID = [[[thePlist stringNodeForKey:@"BucketUUID"] stringValue] retain];
-        bucketName = [[[thePlist stringNodeForKey:@"BucketName"] stringValue] retain];
-        computerUUID = [[[thePlist stringNodeForKey:@"ComputerUUID"] stringValue] retain];
-        localPath = [[[thePlist stringNodeForKey:@"LocalPath"] stringValue] retain];
-        localMountPoint = [[[thePlist stringNodeForKey:@"LocalMountPoint"] stringValue] retain];
+        target = theTarget;
+        bucketUUID = [[thePlist stringNodeForKey:@"BucketUUID"] stringValue];
+        bucketName = [[thePlist stringNodeForKey:@"BucketName"] stringValue];
+        computerUUID = [[thePlist stringNodeForKey:@"ComputerUUID"] stringValue];
+        localPath = [[thePlist stringNodeForKey:@"LocalPath"] stringValue];
+        localMountPoint = [[thePlist stringNodeForKey:@"LocalMountPoint"] stringValue];
         storageType = StorageTypeS3;
         if ([thePlist containsKey:@"StorageType"]) {
             storageType = [[thePlist integerNodeForKey:@"StorageType"] intValue];
         }
-        vaultName = [[[thePlist stringNodeForKey:@"VaultName"] stringValue] retain];
+        vaultName = [[thePlist stringNodeForKey:@"VaultName"] stringValue];
         if ([thePlist containsKey:@"VaultCreatedTime"]) {
             vaultCreatedDate = [[NSDate alloc] initWithTimeIntervalSinceReferenceDate:[[thePlist realNodeForKey:@"VaultCreatedTime"] doubleValue]];
         }
@@ -479,8 +452,6 @@
     [ignoredRelativePaths sortUsingSelector:@selector(compareByLength:)];
 }
 
-
-
 - (id)initWithTarget:(Target *)theTarget
           bucketUUID:(NSString *)theBucketUUID
           bucketName:(NSString *)theBucketName
@@ -497,18 +468,18 @@ ignoredRelativePaths:(NSMutableArray *)theIgnoredRelativePaths
 excludeItemsWithTimeMachineExcludeMetadataFlag:(BOOL)theExcludeItemsWithTimeMachineExcludeMetadataFlag
     skipIfNotMounted:(BOOL)theSkipIfNotMounted {
     if (self = [super init]) {
-        target = [theTarget retain];
-        bucketUUID = [theBucketUUID retain];
-        bucketName = [theBucketName retain];
-        computerUUID = [theComputerUUID retain];
-        localPath = [theLocalPath retain];
-        localMountPoint = [theLocalMountPoint retain];
+        target = theTarget;
+        bucketUUID = theBucketUUID;
+        bucketName = theBucketName;
+        computerUUID = theComputerUUID;
+        localPath = theLocalPath;
+        localMountPoint = theLocalMountPoint;
         storageType = theStorageType;
-        ignoredRelativePaths = [theIgnoredRelativePaths retain];
-        excludeSet = [theExcludeSet retain];
-        vaultName = [theVaultName retain];
-        vaultCreatedDate = [theVaultCreatedDate retain];
-        plistDeletedDate = [thePlistDeletedDate retain];
+        ignoredRelativePaths = theIgnoredRelativePaths;
+        excludeSet = theExcludeSet;
+        vaultName = theVaultName;
+        vaultCreatedDate = theVaultCreatedDate;
+        plistDeletedDate = thePlistDeletedDate;
         skipDuringBackup = theSkipDuringBackup;
         excludeItemsWithTimeMachineExcludeMetadataFlag = theExcludeItemsWithTimeMachineExcludeMetadataFlag;
         skipIfNotMounted = theSkipIfNotMounted;

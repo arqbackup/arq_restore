@@ -30,20 +30,17 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "ItemFSFileDeleter.h"
 #import "ItemFSFileDeleterWorker.h"
 
 #define NUM_WORKER_THREADS (5)
 
-
 @implementation ItemFSFileDeleter
 - (id)initWithItemFS:(id <ItemFS>)theItemFS itemsByPath:(NSDictionary *)theItemsByPath targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD {
     if (self = [super init]) {
         itemFS = theItemFS;
-        itemsByPath = [theItemsByPath retain];
-        keys = [[itemsByPath allKeys] retain];
+        itemsByPath = theItemsByPath;
+        keys = [itemsByPath allKeys];
         targetConnectionDelegate = theTCD;
         workerThreadSemaphore = dispatch_semaphore_create(0);
         
@@ -54,17 +51,11 @@
         
         HSLogDebug(@"creating %d worker threads", NUM_WORKER_THREADS);
         for (NSUInteger i = 0; i < NUM_WORKER_THREADS; i++) {
-            [[[ItemFSFileDeleterWorker alloc] initWithItemFSFileDeleter:self itemFS:itemFS targetConnectionDelegate:theTCD] autorelease];
+            (void)[[ItemFSFileDeleterWorker alloc] initWithItemFSFileDeleter:self itemFS:itemFS targetConnectionDelegate:theTCD];
         }
     }
     return self;
 }
-- (void)dealloc {
-    [itemsByPath release];
-    [keys release];
-    [super dealloc];
-}
-
 - (void)waitForCompletion {
     for (NSUInteger i = 0; i < NUM_WORKER_THREADS; i++) {
         dispatch_semaphore_wait(workerThreadSemaphore, DISPATCH_TIME_FOREVER);

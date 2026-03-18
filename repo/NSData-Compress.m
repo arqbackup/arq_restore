@@ -30,12 +30,9 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "NSData-Compress.h"
 #import "NSData-GZip.h"
 #import "NSData-LZ4.h"
-
 
 @implementation NSData (Compress)
 - (NSData *)compress:(BlobKeyCompressionType)theCompressionType error:(NSError **)error {

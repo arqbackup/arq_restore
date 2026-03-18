@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "SubscribeResponse.h"
 
 @implementation SubscribeResponse
@@ -40,27 +38,20 @@
         NSXMLParser *parser = [[NSXMLParser alloc] initWithData:theData];
         [parser setDelegate:self];
         [parser parse];
-        [parser release];
+        
     }
     return self;
 }
-- (void)dealloc {
-    [subscriptionArn release];
-    [currentStringBuffer release];
-    [super dealloc];
-}
-
 - (NSString *)subscriptionArn {
     return subscriptionArn;
 }
-
 
 #pragma mark - NSXMLParserDelegate
 - (void)parser:(NSXMLParser *)parser didStartElement:(NSString *)elementName
   namespaceURI:(NSString *)namespaceURI
  qualifiedName:(NSString *)qualifiedName
     attributes:(NSDictionary *)attributeDict {
-    [currentStringBuffer release];
+    
     currentStringBuffer = nil;
 }
 - (void)parser:(NSXMLParser *)parser foundCharacters:(NSString *)string {
@@ -72,7 +63,7 @@
 - (void)parser:(NSXMLParser *)parser didEndElement:(NSString *)elementName namespaceURI:(NSString *)namespaceURI qualifiedName:(NSString *)qName {
     if (currentStringBuffer != nil) {
         if ([elementName isEqualToString:@"SubscriptionArn"]) {
-            [subscriptionArn release];
+            
             subscriptionArn = [currentStringBuffer copy];
         }
     }

@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "InputStream.h"
 #import "RegexKitLite.h"
 #import "S3Owner.h"
@@ -58,7 +56,6 @@
 #import "Item.h"
 #import "S3ObjectsLister.h"
 
-
 NSString *kS3StorageClassStandard = @"STANDARD";
 NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
 
@@ -67,7 +64,6 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
  * This class *must* be reentrant!
  */
 
-
 @implementation S3Service
 + (NSString *)errorDomain {
     return @"S3ServiceErrorDomain";
@@ -75,17 +71,11 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
 
 - (id)initWithS3AuthorizationProvider:(id <S3AuthorizationProvider>)theSAP endpoint:(NSURL *)theEndpoint {
 	if (self = [super init]) {
-		sap = [theSAP retain];
-        endpoint = [theEndpoint retain];
+		sap = theSAP;
+        endpoint = theEndpoint;
     }
     return self;
 }
-- (void)dealloc {
-	[sap release];
-    [endpoint release];
-	[super dealloc];
-}
-
 - (S3Owner *)s3OwnerWithTargetConnectionDelegate:(id<TargetConnectionDelegate>)theDelegate error:(NSError **)error {
     if (error) {
         *error = 0;
@@ -114,7 +104,7 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
     }
 	NSXMLNode *displayNameNode = [displayNameNodes objectAtIndex:0];
     HSLogDebug(@"s3 owner ID: %@", [displayNameNode stringValue]);
-	return [[[S3Owner alloc] initWithDisplayName:[displayNameNode stringValue] idString:[ownerIDNode stringValue]] autorelease];
+	return [[S3Owner alloc] initWithDisplayName:[displayNameNode stringValue] idString:[ownerIDNode stringValue]];
 }
 - (NSArray *)s3BucketNamesWithTargetConnectionDelegate:(id<TargetConnectionDelegate>)theDelegate error:(NSError **)error {
 	NSXMLDocument *doc = [self listBucketsWithTargetConnectionDelegate:theDelegate error:error];
@@ -126,7 +116,7 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
 	if (!nameNodes) {
         return nil;
     }
-	NSMutableArray *bucketNames = [[[NSMutableArray alloc] init] autorelease];
+	NSMutableArray *bucketNames = [[NSMutableArray alloc] init];
 	for (NSXMLNode *nameNode in nameNodes) {
 		[bucketNames addObject:[nameNode stringValue]];
 	}
@@ -142,7 +132,7 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
 }
 - (NSString *)locationOfS3Bucket:(NSString *)theS3BucketName targetConnectionDelegate:(id<TargetConnectionDelegate>)theDelegate error:(NSError **)error {
     NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"https://s3.amazonaws.com/%@/?location", theS3BucketName]];
-    id <HTTPConnection> conn = [[[HTTPConnectionFactory theFactory] newHTTPConnectionToURL:url method:@"GET" dataTransferDelegate:nil] autorelease];
+    id <HTTPConnection> conn = [[HTTPConnectionFactory theFactory] newHTTPConnectionToURL:url method:@"GET" dataTransferDelegate:nil];
     [conn setRequestHostHeader];
     NSDate *now = [NSDate date];
     NSString *contentSHA256 = [NSString hexStringWithData:[SHA256Hash hashData:[@"" dataUsingEncoding:NSUTF8StringEncoding]]];
@@ -168,7 +158,7 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
         SETNSERROR([S3Service errorDomain], ERROR_NOT_FOUND, @"bucket %@ not found", theS3BucketName);
         return nil;
     } else if (code != 200) {
-        S3ErrorResult *errorResult = [[[S3ErrorResult alloc] initWithAction:[NSString stringWithFormat:@"GET %@", url] data:response httpErrorCode:(int)code stringToSign:stringToSign canonicalRequest:canonicalRequest] autorelease];
+        S3ErrorResult *errorResult = [[S3ErrorResult alloc] initWithAction:[NSString stringWithFormat:@"GET %@", url] data:response httpErrorCode:(int)code stringToSign:stringToSign canonicalRequest:canonicalRequest];
         NSError *myError = [errorResult error];
         HSLogDebug(@"GET %@ error: %@", conn, myError);
         if (error != NULL) {
@@ -178,9 +168,9 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
     }
     
     NSError *myError = nil;
-    NSXMLDocument *xmlDoc = [[[NSXMLDocument alloc] initWithData:response options:0 error:&myError] autorelease];
+    NSXMLDocument *xmlDoc = [[NSXMLDocument alloc] initWithData:response options:0 error:&myError];
     if (!xmlDoc) {
-        HSLogDebug(@"list Objects XML data: %@", [[[NSString alloc] initWithData:response encoding:NSUTF8StringEncoding] autorelease]);
+        HSLogDebug(@"list Objects XML data: %@", [[NSString alloc] initWithData:response encoding:NSUTF8StringEncoding]);
         SETNSERROR([S3Service errorDomain], [myError code], @"error parsing List Objects XML response: %@", myError);
         return nil;
     }
@@ -198,7 +188,6 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
     return constraint;
 }
 
-
 #pragma mark ItemFS
 - (NSString *)itemFSDescription {
     return [NSString stringWithFormat:@"s3:%@", [endpoint description]];
@@ -213,7 +202,7 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
     return YES;
 }
 - (Item *)rootDirectoryItemWithTargetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error {
-    Item *item = [[[Item alloc] init] autorelease];
+    Item *item = [[Item alloc] init];
     item.name = @"/";
     item.isDirectory = YES;
     return item;
@@ -228,7 +217,7 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
         }
         NSMutableDictionary *ret = [NSMutableDictionary dictionary];
         for (NSString *name in bucketNames) {
-            Item *item = [[[Item alloc] init] autorelease];
+            Item *item = [[Item alloc] init];
             item.name = name;
             item.isDirectory = YES;
             [ret setObject:item forKey:name];
@@ -241,24 +230,24 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
     
     NSDictionary *ret = nil;
     if ([theDirectoryPath isMatchedByRegex:@"^/([^/]+)/(\\S{8}-\\S{4}-\\S{4}-\\S{4}-\\S{12})/objects/$"]) {
-        S3ObjectsLister *lister = [[[S3ObjectsLister alloc] initWithS3AuthorizationProvider:sap
+        S3ObjectsLister *lister = [[S3ObjectsLister alloc] initWithS3AuthorizationProvider:sap
                                                                            endpoint:endpoint
                                                                                path:theDirectoryPath
-                                                           targetConnectionDelegate:theTCD] autorelease];
+                                                           targetConnectionDelegate:theTCD];
         ret = [lister itemsByName:error];
     } else {
-        S3Lister *lister = [[[S3Lister alloc] initWithS3AuthorizationProvider:sap
+        S3Lister *lister = [[S3Lister alloc] initWithS3AuthorizationProvider:sap
                                                                      endpoint:endpoint
                                                                          path:theDirectoryPath
                                                                     delimiter:@"/"
-                                                     targetConnectionDelegate:theTCD] autorelease];
+                                                     targetConnectionDelegate:theTCD];
         ret = [lister itemsByName:error];
     }
     return ret;
 }
 - (Item *)createDirectoryWithName:(NSString *)theName inDirectoryItem:(Item *)theDirectoryItem itemPath:(NSString *)thePath targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error {
     // There's no such thing as a directory in S3.
-    Item *item = [[[Item alloc] init] autorelease];
+    Item *item = [[Item alloc] init];
     item.name = theName;
     item.isDirectory = YES;
     return item;
@@ -276,7 +265,6 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
         [s3r setRequestHeader:[NSString stringWithFormat:@"bytes=%ld-%ld", theRange.location, (theRange.location + theRange.length - 1)] forKey:@"Range"];
     }
     NSData *ret = [s3r dataWithTargetConnectionDelegate:theTCD error:error];
-    [s3r release];
     
     if (theRange.location != NSNotFound && [ret length] != theRange.length) {
         SETNSERROR([S3Service errorDomain], -1, @"requested bytes at %ld length %ld but got %ld bytes", theRange.location, theRange.length, [ret length]);
@@ -289,7 +277,7 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
         SETNSERROR([S3Service errorDomain], S3SERVICE_INVALID_PARAMETERS, @"path must begin with '/'");
         return nil;
     }
-    S3Request *s3r = [[[S3Request alloc] initWithMethod:@"PUT" endpoint:endpoint path:theFullPath queryString:nil authorizationProvider:sap dataTransferDelegate:theDTD error:error] autorelease];
+    S3Request *s3r = [[S3Request alloc] initWithMethod:@"PUT" endpoint:endpoint path:theFullPath queryString:nil authorizationProvider:sap dataTransferDelegate:theDTD error:error];
     if (s3r == nil) {
         return nil;
     }
@@ -297,7 +285,7 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
     [s3r setRequestBody:theData];
     NSTimeInterval start = [NSDate timeIntervalSinceReferenceDate];
     NSData *ret = [s3r dataWithTargetConnectionDelegate:theTCD error:error];
-    NSString *etag = [[[s3r responseHeaderForKey:@"ETag"] retain] autorelease];
+    NSString *etag = [s3r responseHeaderForKey:@"ETag"];
     if (etag == nil) {
         // Sometimes S3 doesn't capitalize the T in ETag, even though their doc says "ETag".
         etag = [s3r responseHeaderForKey:@"Etag"];
@@ -311,7 +299,7 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
         HSLogDebug(@"uploaded %ld bytes to %@ in %0.1f seconds (%01.f bytes/sec)", (unsigned long)[theData length], theFullPath, duration, ([theData length] / duration));
     }
     
-    Item *item = [[[Item alloc] init] autorelease];
+    Item *item = [[Item alloc] init];
     item.name = theName;
     item.isDirectory = NO;
     item.fileSize = [theData length];
@@ -342,7 +330,7 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
     }
     
     HSLogDebug(@"deleting %@", theFullPath);
-    S3Request *s3r = [[[S3Request alloc] initWithMethod:@"DELETE" endpoint:endpoint path:theFullPath queryString:nil authorizationProvider:sap error:error] autorelease];
+    S3Request *s3r = [[S3Request alloc] initWithMethod:@"DELETE" endpoint:endpoint path:theFullPath queryString:nil authorizationProvider:sap error:error];
     if (s3r == nil) {
         return NO;
     }
@@ -360,7 +348,7 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
     return NO;
 }
 - (NSNumber *)isObjectRestoredAtPath:(NSString *)thePath targetConnectionDelegate:(id<TargetConnectionDelegate>)theDelegate error:(NSError **)error {
-    S3Request *s3r = [[[S3Request alloc] initWithMethod:@"HEAD" endpoint:endpoint path:thePath queryString:nil authorizationProvider:sap error:error] autorelease];
+    S3Request *s3r = [[S3Request alloc] initWithMethod:@"HEAD" endpoint:endpoint path:thePath queryString:nil authorizationProvider:sap error:error];
     if (s3r == nil) {
         return nil;
     }
@@ -386,7 +374,7 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
     if (alreadyRestoredOrRestoring != NULL) {
         *alreadyRestoredOrRestoring = NO;
     }
-    S3Request *s3r = [[[S3Request alloc] initWithMethod:@"POST" endpoint:endpoint path:thePath queryString:@"restore" authorizationProvider:sap error:error] autorelease];
+    S3Request *s3r = [[S3Request alloc] initWithMethod:@"POST" endpoint:endpoint path:thePath queryString:@"restore" authorizationProvider:sap error:error];
     if (s3r == nil) {
         return NO;
     }
@@ -450,12 +438,10 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
     return NO;
 }
 
-
 #pragma mark NSCopying
 - (id)copyWithZone:(NSZone *)zone {
     return [[S3Service alloc] initWithS3AuthorizationProvider:sap endpoint:endpoint];
 }
-
 
 #pragma mark internal
 - (NSXMLDocument *)listBucketsWithTargetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error {
@@ -465,7 +451,7 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
     }
     NSError *myError = nil;
     NSData *response = [s3r dataWithTargetConnectionDelegate:theDelegate error:&myError];
-    [s3r release];
+    
     if (response == nil) {
         SETERRORFROMMYERROR;
         if ([myError isErrorWithDomain:[S3Service errorDomain] code:S3SERVICE_ERROR_AMAZON_ERROR]) {
@@ -478,15 +464,15 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
         }
         return nil;
     }
-    NSXMLDocument *ret = [[[NSXMLDocument alloc] initWithData:response options:0 error:&myError] autorelease];
+    NSXMLDocument *ret = [[NSXMLDocument alloc] initWithData:response options:0 error:&myError];
     if (ret == nil) {
-        HSLogDebug(@"error parsing List Buckets result XML %@", [[[NSString alloc] initWithBytes:[response bytes] length:[response length] encoding:NSUTF8StringEncoding] autorelease]);
+        HSLogDebug(@"error parsing List Buckets result XML %@", [[NSString alloc] initWithBytes:[response bytes] length:[response length] encoding:NSUTF8StringEncoding]);
         SETNSERROR([S3Service errorDomain], [myError code], @"error parsing S3 List Buckets result XML: %@", [myError description]);
     }
     return ret;
 }
 - (BOOL)createOrDeleteS3Bucket:(NSString *)s3BucketName methodName:(NSString *)methodName requestBody:(NSData *)data targetConnectionDelegate:(id <TargetConnectionDelegate>)theDelegate error:(NSError **)error {
-    S3Request *s3r = [[[S3Request alloc] initWithMethod:methodName endpoint:endpoint path:[NSString stringWithFormat:@"/%@/", s3BucketName] queryString:nil authorizationProvider:sap error:error] autorelease];
+    S3Request *s3r = [[S3Request alloc] initWithMethod:methodName endpoint:endpoint path:[NSString stringWithFormat:@"/%@/", s3BucketName] queryString:nil authorizationProvider:sap error:error];
     if (s3r == nil) {
         return NO;
     }

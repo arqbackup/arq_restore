@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "GlacierService.h"
 #import "AWSRegion.h"
 #import "GlacierRequest.h"
@@ -46,9 +44,7 @@
 #import "GlacierJobLister.h"
 #import "S3Service.h"
 
-
 #define MAX_JOB_DOWNLOAD_RETRIES (10)
-
 
 @implementation GlacierService
 + (NSString *)errorDomain {
@@ -57,25 +53,20 @@
 
 - (id)initWithGlacierAuthorizationProvider:(GlacierAuthorizationProvider *)theGAP awsRegion:(AWSRegion *)theAWSRegion useSSL:(BOOL)theUseSSL retryOnTransientError:(BOOL)retry {
     if (self = [super init]) {
-        gap = [theGAP retain];
-        awsRegion = [theAWSRegion retain];
+        gap = theGAP;
+        awsRegion = theAWSRegion;
         useSSL = theUseSSL;
         retryOnTransientError = retry;
     }
     return self;
 }
-- (void)dealloc {
-    [gap release];
-    [super dealloc];
-}
-
 - (NSArray *)vaults:(NSError **)error {
-    VaultLister *lister = [[[VaultLister alloc] initWithGlacierAuthorizationProvider:gap awsRegion:awsRegion useSSL:useSSL retryOnTransientError:retryOnTransientError] autorelease];
+    VaultLister *lister = [[VaultLister alloc] initWithGlacierAuthorizationProvider:gap awsRegion:awsRegion useSSL:useSSL retryOnTransientError:retryOnTransientError];
     return [lister vaults:error];
 }
 - (Vault *)vaultWithName:(NSString *)theVaultName error:(NSError **)error {
     NSURL *theURL =[NSURL URLWithString:[NSString stringWithFormat:@"%@/-/vaults/%@", [awsRegion glacierEndpointWithSSL:useSSL], theVaultName]];
-    GlacierRequest *req = [[[GlacierRequest alloc] initWithMethod:@"GET" url:theURL awsRegion:awsRegion authorizationProvider:gap retryOnTransientError:retryOnTransientError dataTransferDelegate:nil] autorelease];
+    GlacierRequest *req = [[GlacierRequest alloc] initWithMethod:@"GET" url:theURL awsRegion:awsRegion authorizationProvider:gap retryOnTransientError:retryOnTransientError dataTransferDelegate:nil];
     [req setHeader:@"application/json" forKey:@"Accept"];
     [req setHeader:@"application/x-amz-json-1.0" forKey:@"Content-Type"];
     [req setHeader:@"Glacier.DescribeVault" forKey:@"x-amz-target"];
@@ -84,16 +75,16 @@
         return nil;
     }
     NSData *data = [response body];
-    NSString *responseString = [[[NSString alloc] initWithBytes:[data bytes] length:[data length] encoding:NSUTF8StringEncoding] autorelease];
+    NSString *responseString = [[NSString alloc] initWithBytes:[data bytes] length:[data length] encoding:NSUTF8StringEncoding];
     NSDictionary *dict = [responseString JSONValue:error];
     if (dict == nil) {
         return nil;
     }
-    return [[[Vault alloc] initWithAWSRegion:awsRegion json:dict] autorelease];
+    return [[Vault alloc] initWithAWSRegion:awsRegion json:dict];
 }
 - (BOOL)createVaultWithName:(NSString *)theName error:(NSError **)error {
     NSURL *theURL =[NSURL URLWithString:[NSString stringWithFormat:@"%@/-/vaults/%@", [awsRegion glacierEndpointWithSSL:useSSL], theName]];
-    GlacierRequest *req = [[[GlacierRequest alloc] initWithMethod:@"PUT" url:theURL awsRegion:awsRegion authorizationProvider:gap retryOnTransientError:retryOnTransientError dataTransferDelegate:nil] autorelease];
+    GlacierRequest *req = [[GlacierRequest alloc] initWithMethod:@"PUT" url:theURL awsRegion:awsRegion authorizationProvider:gap retryOnTransientError:retryOnTransientError dataTransferDelegate:nil];
     
     NSData *requestData = [NSData data];
     [req setRequestData:requestData];
@@ -113,7 +104,7 @@
 }
 - (BOOL)deleteVaultWithName:(NSString *)theName error:(NSError **)error {
     NSURL *theURL =[NSURL URLWithString:[NSString stringWithFormat:@"%@/-/vaults/%@", [awsRegion glacierEndpointWithSSL:useSSL], theName]];
-    GlacierRequest *req = [[[GlacierRequest alloc] initWithMethod:@"DELETE" url:theURL awsRegion:awsRegion authorizationProvider:gap retryOnTransientError:retryOnTransientError dataTransferDelegate:nil] autorelease];
+    GlacierRequest *req = [[GlacierRequest alloc] initWithMethod:@"DELETE" url:theURL awsRegion:awsRegion authorizationProvider:gap retryOnTransientError:retryOnTransientError dataTransferDelegate:nil];
     
     [req setHeader:@"application/json" forKey:@"Accept"];
     [req setHeader:@"application/x-amz-json-1.0" forKey:@"Content-Type"];
@@ -139,7 +130,7 @@
 }
 - (NSString *)uploadArchive:(NSData *)data toVaultName:(NSString *)theVaultName dataTransferDelegate:(id <DataTransferDelegate>)theDelegate error:(NSError **)error {
     NSURL *theURL =[NSURL URLWithString:[NSString stringWithFormat:@"%@/-/vaults/%@/archives", [awsRegion glacierEndpointWithSSL:useSSL], theVaultName]];
-    GlacierRequest *req = [[[GlacierRequest alloc] initWithMethod:@"POST" url:theURL awsRegion:awsRegion authorizationProvider:gap retryOnTransientError:retryOnTransientError dataTransferDelegate:theDelegate] autorelease];
+    GlacierRequest *req = [[GlacierRequest alloc] initWithMethod:@"POST" url:theURL awsRegion:awsRegion authorizationProvider:gap retryOnTransientError:retryOnTransientError dataTransferDelegate:theDelegate];
     [req setHeader:[NSString hexStringWithData:[SHA256Hash hashData:data]] forKey:@"x-amz-content-sha256"];
     [req setHeader:[NSString stringWithFormat:@"%ld", (long)[data length]] forKey:@"Content-Length"];
     [req setHeader:[NSString hexStringWithData:[SHA256TreeHash treeHashOfData:data]] forKey:@"x-amz-sha256-tree-hash"];
@@ -158,7 +149,7 @@
 }
 - (BOOL)deleteArchive:(NSString *)theArchiveId inVault:(NSString *)theVaultName error:(NSError **)error {
     NSURL *theURL =[NSURL URLWithString:[NSString stringWithFormat:@"%@/-/vaults/%@/archives/%@", [awsRegion glacierEndpointWithSSL:useSSL], theVaultName, theArchiveId]];
-    GlacierRequest *req = [[[GlacierRequest alloc] initWithMethod:@"DELETE" url:theURL awsRegion:awsRegion authorizationProvider:gap retryOnTransientError:retryOnTransientError dataTransferDelegate:nil] autorelease];
+    GlacierRequest *req = [[GlacierRequest alloc] initWithMethod:@"DELETE" url:theURL awsRegion:awsRegion authorizationProvider:gap retryOnTransientError:retryOnTransientError dataTransferDelegate:nil];
     
     GlacierResponse *response = [req execute:error];
     if (response == nil) {
@@ -192,7 +183,7 @@
     }
     
     NSURL *theURL =[NSURL URLWithString:[NSString stringWithFormat:@"%@/-/vaults/%@/jobs", [awsRegion glacierEndpointWithSSL:useSSL], theVaultName]];
-    GlacierRequest *req = [[[GlacierRequest alloc] initWithMethod:@"POST" url:theURL awsRegion:awsRegion authorizationProvider:gap retryOnTransientError:retryOnTransientError dataTransferDelegate:nil] autorelease];
+    GlacierRequest *req = [[GlacierRequest alloc] initWithMethod:@"POST" url:theURL awsRegion:awsRegion authorizationProvider:gap retryOnTransientError:retryOnTransientError dataTransferDelegate:nil];
     [req setHeader:[NSString stringWithFormat:@"%ld", (long)[requestData length]] forKey:@"Content-Length"];
     [req setRequestData:requestData];
     
@@ -219,7 +210,7 @@
     }
     
     NSURL *theURL =[NSURL URLWithString:[NSString stringWithFormat:@"%@/-/vaults/%@/jobs", [awsRegion glacierEndpointWithSSL:useSSL], theVaultName]];
-    GlacierRequest *req = [[[GlacierRequest alloc] initWithMethod:@"POST" url:theURL awsRegion:awsRegion authorizationProvider:gap retryOnTransientError:retryOnTransientError dataTransferDelegate:nil] autorelease];
+    GlacierRequest *req = [[GlacierRequest alloc] initWithMethod:@"POST" url:theURL awsRegion:awsRegion authorizationProvider:gap retryOnTransientError:retryOnTransientError dataTransferDelegate:nil];
     [req setHeader:[NSString stringWithFormat:@"%ld", (long)[requestData length]] forKey:@"Content-Length"];
     [req setRequestData:requestData];
     
@@ -234,7 +225,7 @@
     return ret;
 }
 - (NSArray *)jobsForVaultName:(NSString *)theVaultName error:(NSError **)error {
-    GlacierJobLister *lister = [[[GlacierJobLister alloc] initWithGlacierAuthorizationProvider:gap vaultName:theVaultName awsRegion:awsRegion useSSL:useSSL retryOnTransientError:retryOnTransientError] autorelease];
+    GlacierJobLister *lister = [[GlacierJobLister alloc] initWithGlacierAuthorizationProvider:gap vaultName:theVaultName awsRegion:awsRegion useSSL:useSSL retryOnTransientError:retryOnTransientError];
     return [lister jobs:error];
 }
 - (NSData *)dataForVaultName:(NSString *)theVaultName jobId:(NSString *)theJobId retries:(NSUInteger)theRetries error:(NSError **)error {
@@ -243,7 +234,7 @@
     
     NSError *myError = nil;
     for (NSUInteger i = 0; i < theRetries; i++) {
-        GlacierRequest *req = [[[GlacierRequest alloc] initWithMethod:@"GET" url:theURL awsRegion:awsRegion authorizationProvider:gap retryOnTransientError:retryOnTransientError dataTransferDelegate:nil] autorelease];
+        GlacierRequest *req = [[GlacierRequest alloc] initWithMethod:@"GET" url:theURL awsRegion:awsRegion authorizationProvider:gap retryOnTransientError:retryOnTransientError dataTransferDelegate:nil];
         [req setHeader:@"2012-06-01" forKey:@"x-amz-glacier-version"];
         
         GlacierResponse *response = [req execute:&myError];

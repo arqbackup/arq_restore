@@ -30,32 +30,23 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 #import "S3PIEInputStream.h"
 #import "Fark.h"
 #import "PackIndexEntry.h"
+#import "PackId.h"
 #import "DataInputStream.h"
 #import "BufferedInputStream.h"
 #import "StringIO.h"
 #import "IntegerIO.h"
 #import "SHA1Hash.h"
 
-
 @implementation S3PIEInputStream
 - (id)initWithFark:(Fark *)theFark packIds:(NSSet *)thePackIds {
     if (self = [super init]) {
-        fark = [theFark retain];
+        fark = theFark;
         packIds = [[NSArray alloc] initWithArray:[thePackIds allObjects]];
     }
     return self;
-}
-- (void)dealloc {
-    [fark release];
-    [packIds release];
-    [bis release];
-    [super dealloc];
 }
 - (BOOL)nextPackIndexEntry:(PackIndexEntry **)pie data:(NSData **)data error:(NSError **)error {
     *pie = nil;
@@ -85,14 +76,14 @@
         return NO;
     }
     NSString *objectSHA1 = [SHA1Hash hashData:blobData];
-    *pie = [[[PackIndexEntry alloc] initWithPackId:currentPackId offset:offset dataLength:[blobData length] objectSHA1:objectSHA1] autorelease];
+    *pie = [[PackIndexEntry alloc] initWithPackId:currentPackId offset:offset dataLength:[blobData length] objectSHA1:objectSHA1];
     *data = blobData;
     objectIndex++;
     return YES;
 }
 - (BOOL)loadNextPack:(NSError **)error {
-    [currentPackId release];
-    currentPackId = [[packIds objectAtIndex:packIdsIndex++] retain];
+    
+    currentPackId = [packIds objectAtIndex:packIdsIndex++];
     NSData *packData = [fark packDataForPackId:currentPackId storageType:StorageTypeS3 error:error];
     if (packData == nil) {
         return NO;
@@ -100,8 +91,8 @@
     
     HSLogDebug(@"reading pack data for %@", currentPackId);
     
-    DataInputStream *dis = [[[DataInputStream alloc] initWithData:packData description:[currentPackId description]] autorelease];
-    [bis release];
+    DataInputStream *dis = [[DataInputStream alloc] initWithData:packData description:[currentPackId description]];
+    
     bis = [[BufferedInputStream alloc] initWithUnderlyingStream:dis];
     
     uint32_t packSig;

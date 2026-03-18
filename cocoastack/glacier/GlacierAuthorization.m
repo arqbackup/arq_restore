@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "GlacierAuthorization.h"
 #import "HTTPConnection.h"
 #import "GlacierSigner.h"
@@ -40,31 +38,20 @@
 #import "SHA256Hash.h"
 #import "NSString_extra.h"
 
-
 @implementation GlacierAuthorization
 - (id)initWithAWSRegion:(AWSRegion *)theAWSRegion connection:(id <HTTPConnection>)theConn requestBody:(NSData *)theRequestBody accessKey:(NSString *)theAccessKey signer:(id <GlacierSigner>)theSigner {
     if (self = [super init]) {
-        awsRegion = [theAWSRegion retain];
-        conn = [theConn retain];
-        requestBody = [theRequestBody retain];
-        accessKey = [theAccessKey retain];
-        signer = [theSigner retain];
+        awsRegion = theAWSRegion;
+        conn = theConn;
+        requestBody = theRequestBody;
+        accessKey = theAccessKey;
+        signer = theSigner;
     }
     return self;
 }
-- (void)dealloc {
-    [awsRegion release];
-    [conn release];
-    [requestBody release];
-    [accessKey release];
-    [signer release];
-    [super dealloc];
-}
-
-
 #pragma mark NSObject
 - (NSString *)description {
-    NSMutableString *canonicalRequest = [[[NSMutableString alloc] init] autorelease];
+    NSMutableString *canonicalRequest = [[NSMutableString alloc] init];
     [canonicalRequest appendString:[conn requestMethod]];
     [canonicalRequest appendString:@"\n"];
     
@@ -72,11 +59,11 @@
     [canonicalRequest appendString:@"\n"];
     
     if ([conn requestQueryString] != nil) {
-        NSString *query = [(NSString *)CFURLCreateStringByAddingPercentEscapes(NULL,
-                                                                               (CFStringRef)[conn requestQueryString],
-                                                                               (CFStringRef)@"=",
-                                                                               (CFStringRef)@"!*'();:@&+$,/?%#[]",
-                                                                               kCFStringEncodingUTF8) autorelease];
+        NSString *query = (__bridge_transfer NSString *)CFURLCreateStringByAddingPercentEscapes(NULL,
+                                                                               (__bridge CFStringRef)[conn requestQueryString],
+                                                                               (__bridge CFStringRef)@"=",
+                                                                               (__bridge CFStringRef)@"!*'();:@&+$,/?%#[]",
+                                                                               kCFStringEncodingUTF8);
         
         [canonicalRequest appendString:query];
     }
@@ -122,7 +109,6 @@
     }
     [canonicalRequest appendString:[NSString hexStringWithData:[SHA256Hash hashData:payload]]];
 
-
     NSString *dateStamp = [[ISO8601Date sharedISO8601Date] basicDateStringFromDate:[conn date]];
     NSString *dateTime = [[ISO8601Date sharedISO8601Date] basicDateTimeStringFromDate:[conn date]];
     
@@ -137,7 +123,7 @@
     //FIXME: Extract the service name from the hostname (see AwsHostNameUtils.parseServiceName() method in Java AWS SDK).
     NSString *signature = [signer signString:stringToSign withDateStamp:dateStamp regionName:[awsRegion regionName] serviceName:@"glacier"];
     
-    NSString *ret = [[[NSString alloc] initWithFormat:@"AWS4-HMAC-SHA256 Credential=%@, SignedHeaders=%@, Signature=%@", signingCredentials, namesOfSignedHeaders, signature] autorelease];
+    NSString *ret = [[NSString alloc] initWithFormat:@"AWS4-HMAC-SHA256 Credential=%@, SignedHeaders=%@, Signature=%@", signingCredentials, namesOfSignedHeaders, signature];
     return ret;
 }
 @end

@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "ChunkedInputStream.h"
 
 #import "InputStreams.h"
@@ -43,15 +41,10 @@
 @implementation ChunkedInputStream
 - (id)initWithUnderlyingStream:(BufferedInputStream *)is {
     if (self = [super init]) {
-        underlyingStream = [is retain];
+        underlyingStream = is;
     }
     return self;
 }
-- (void)dealloc {
-    [underlyingStream release];
-    [super dealloc];
-}
-
 #pragma mark InputStream protocol
 - (NSInteger)read:(unsigned char *)buf bufferLength:(NSUInteger)bufferLength error:(NSError **)error {
     if (received >= chunkLength) {

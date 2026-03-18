@@ -30,9 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 #import "StorageType.h"
 @class AWSRegion;
 @class DictNode;
@@ -43,7 +40,6 @@
 @class BufferedOutputStream;
 @protocol TargetConnectionDelegate;
 @class TargetConnection;
-
 
 @protocol BucketActivityListener <NSObject>
 - (void)bucketActivity:(NSString *)theActivity;
@@ -102,7 +98,6 @@ typedef NSInteger BucketPathState;
      localMountPoint:(NSString *)theLocalMountPoint
          storageType:(int)theStorageType;
 - (id)initWithBufferedInputStream:(BufferedInputStream *)theBIS error:(NSError **)error;
-
 
 - (Target *)target;
 - (NSString *)computerUUID;

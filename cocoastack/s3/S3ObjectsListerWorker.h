@@ -30,12 +30,9 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @protocol S3AuthorizationProvider;
 @protocol TargetConnectionDelegate;
 @class S3ObjectsLister;
-
 
 @interface S3ObjectsListerWorker : NSObject {
     id <S3AuthorizationProvider>sap;

@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "ObjectEncryptorV1.h"
 #import "ArqSalt.h"
 #import "Target.h"
@@ -42,21 +40,20 @@
 
 #define ENCRYPTION_VERSION (1)
 
-
 @implementation ObjectEncryptorV1
 - (id)initWithTarget:(Target *)theTarget
         computerUUID:(NSString *)theComputerUUID
            masterKey:(NSData *)theMasterKey
 targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD
                error:(NSError **)error {
-    ArqSalt *arqSalt = [[[ArqSalt alloc] initWithTarget:theTarget computerUUID:theComputerUUID error:error] autorelease];
+    ArqSalt *arqSalt = [[ArqSalt alloc] initWithTarget:theTarget computerUUID:theComputerUUID error:error];
     if (arqSalt == nil) {
-        [self release];
+        
         return nil;
     }
     NSData *saltData = [arqSalt saltDataWithTargetConnectionDelegate:theTCD error:error];
     if (saltData == nil) {
-        [self release];
+        
         return nil;
     }
     return [self initWithTarget:theTarget computerUUID:theComputerUUID masterKey:theMasterKey salt:saltData error:error];
@@ -68,37 +65,28 @@ targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD
                 salt:(NSData *)theSalt
                error:(NSError **)error {
     if (self = [super init]) {
-        target = [theTarget retain];
-        computerUUID = [theComputerUUID retain];
+        target = theTarget;
+        computerUUID = theComputerUUID;
         
-        NSString *theMasterPassword = [[[NSString alloc] initWithData:theMasterKey encoding:NSUTF8StringEncoding] autorelease];
+        NSString *theMasterPassword = [[NSString alloc] initWithData:theMasterKey encoding:NSUTF8StringEncoding];
         
         cryptoKey = [[CryptoKey alloc] initLegacyWithPassword:theMasterPassword error:error];
         if (cryptoKey == nil) {
-            [self release];
+            
             return nil;
         }
         stretchedCryptoKey = [[CryptoKey alloc] initWithPassword:theMasterPassword salt:theSalt error:error];
         if (stretchedCryptoKey == nil) {
-            [self release];
+            
             return nil;
         }
 
     }
     return self;
 }
-- (void)dealloc {
-    [target release];
-    [computerUUID release];
-    [cryptoKey release];
-    [stretchedCryptoKey release];
-    [super dealloc];
-}
-
-
 #pragma ObjectEncryptorImpl
 - (BOOL)ensureDatFileExistsAtTargetWithEncryptionPassword:(NSString *)theEncryptionPassword targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD error:(NSError **)error {
-    ArqSalt *arqSalt = [[[ArqSalt alloc] initWithTarget:target computerUUID:computerUUID error:error] autorelease];
+    ArqSalt *arqSalt = [[ArqSalt alloc] initWithTarget:target computerUUID:computerUUID error:error];
     if (arqSalt == nil) {
         return NO;
     }
@@ -107,14 +95,14 @@ targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD
     }
 
     NSError *myError = nil;
-    EncryptionDatFile *encryptionDatFile = [[[EncryptionDatFile alloc] initFromTargetWithEncryptionPassword:theEncryptionPassword target:target computerUUID:computerUUID encryptionVersion:ENCRYPTION_VERSION targetConnectionDelegate:theTCD error:&myError] autorelease];
+    EncryptionDatFile *encryptionDatFile = [[EncryptionDatFile alloc] initFromTargetWithEncryptionPassword:theEncryptionPassword target:target computerUUID:computerUUID encryptionVersion:ENCRYPTION_VERSION targetConnectionDelegate:theTCD error:&myError];
     if (encryptionDatFile == nil) {
         if ([myError code] != ERROR_NOT_FOUND) {
             SETERRORFROMMYERROR;
             return NO;
         }
         
-        encryptionDatFile = [[[EncryptionDatFile alloc] initFromLocalCacheWithEncryptionPassword:theEncryptionPassword target:target computerUUID:computerUUID encryptionVersion:ENCRYPTION_VERSION error:&myError] autorelease];
+        encryptionDatFile = [[EncryptionDatFile alloc] initFromLocalCacheWithEncryptionPassword:theEncryptionPassword target:target computerUUID:computerUUID encryptionVersion:ENCRYPTION_VERSION error:&myError];
         if (encryptionDatFile == nil) {
             if ([myError code] != ERROR_NOT_FOUND) {
                 SETERRORFROMMYERROR;

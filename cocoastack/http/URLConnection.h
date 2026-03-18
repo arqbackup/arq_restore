@@ -30,14 +30,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 #import "HTTPConnection.h"
 
 @protocol DataTransferDelegate;
 @class HTTPInputStream;
-
 
 @interface URLConnection : NSObject <HTTPConnection> {
     NSString *method;

@@ -30,17 +30,13 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "S3ObjectsLister.h"
 #import "S3AuthorizationProvider.h"
 #import "NSString_extra.h"
 #import "S3ObjectsListerWorker.h"
 #import "Item.h"
 
-
 #define NUM_WORKER_THREADS (6)
-
 
 @implementation S3ObjectsLister
 - (id)initWithS3AuthorizationProvider:(id <S3AuthorizationProvider>)theSAP
@@ -48,9 +44,9 @@
                                  path:(NSString *)thePath
              targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD {
     if (self = [super init]) {
-        sap = [theSAP retain];
-        endpoint = [theEndpoint retain];
-		path = [thePath retain];
+        sap = theSAP;
+        endpoint = theEndpoint;
+		path = thePath;
         targetConnectionDelegate = theTCD;
 
         workerThreadSemaphore = dispatch_semaphore_create(0);
@@ -70,18 +66,16 @@
     return self;
 }
 - (void)dealloc {
-    [endpoint release];
-	[sap release];
-    dispatch_release(workerThreadSemaphore);
-    [prefixes release];
-    [lock release];
-    [itemsByName release];
-    [_error release];
-	[super dealloc];
+    
+	
+    
+    
+    
+    
 }
 - (NSDictionary *)itemsByName:(NSError **)error {
     for (int i = 0; i < NUM_WORKER_THREADS; i++) {
-        [[[S3ObjectsListerWorker alloc] initWithS3AuthorizationProvider:sap endpoint:endpoint targetConnectionDelegate:targetConnectionDelegate s3ObjectsLister:self] autorelease];
+        (void)[[S3ObjectsListerWorker alloc] initWithS3AuthorizationProvider:sap endpoint:endpoint targetConnectionDelegate:targetConnectionDelegate s3ObjectsLister:self];
     }
     
     for (int i = 0; i < NUM_WORKER_THREADS; i++) {
@@ -90,7 +84,7 @@
     
     if (_error != nil) {
         if (error != NULL) {
-            *error = [[_error retain] autorelease];
+            *error = _error;
         }
         return nil;
     }
@@ -102,7 +96,7 @@
     [lock lock];
     NSString *ret = nil;
     if ([prefixes count] > 0) {
-        ret = [[[prefixes lastObject] retain] autorelease];
+        ret = [prefixes lastObject];
         [prefixes removeLastObject];
     }
     [lock unlock];
@@ -110,8 +104,7 @@
 }
 - (void)workerDidFail:(NSError *)theError {
     [lock lock];
-    [theError retain];
-    [_error release];
+    
     _error = theError;
     [lock unlock];
 }

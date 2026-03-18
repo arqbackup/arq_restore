@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "PackIndexGenerator.h"
 #import "DataInputStream.h"
 #import "BufferedInputStream.h"
@@ -40,21 +38,14 @@
 #import "SHA1Hash.h"
 #import "NSString_extra.h"
 
-
 @implementation PackIndexGenerator
 - (id)initWithPackId:(PackId *)thePackId packData:(NSData *)thePackData {
     if (self = [super init]) {
-        packId = [thePackId retain];
-        packData = [thePackData retain];
+        packId = thePackId;
+        packData = thePackData;
     }
     return self;
 }
-- (void)dealloc {
-    [packId release];
-    [packData release];
-    [super dealloc];
-}
-
 - (NSString *)errorDomain {
     return @"PackIndexGeneratorErrorDomain";
 }
@@ -68,8 +59,8 @@
     return ret;
 }
 - (NSData *)doIndexData:(NSError **)error {
-    DataInputStream *dis = [[[DataInputStream alloc] initWithData:packData description:@"pack"] autorelease];
-    BufferedInputStream *bis = [[[BufferedInputStream alloc] initWithUnderlyingStream:dis] autorelease];
+    DataInputStream *dis = [[DataInputStream alloc] initWithData:packData description:@"pack"];
+    BufferedInputStream *bis = [[BufferedInputStream alloc] initWithUnderlyingStream:dis];
     NSMutableData *indexData = [NSMutableData data];
     [IntegerIO writeUInt32:0xff744f63 to:indexData]; // Magic number
     [IntegerIO writeUInt32:0x00000002 to:indexData]; // Version 2

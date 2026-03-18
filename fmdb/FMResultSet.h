@@ -37,7 +37,7 @@
 
 /** Executed query */
 
-@property (atomic, retain) NSString *query;
+@property(atomic, strong) NSString *query;
 
 /** `NSMutableDictionary` mapping column names to numeric index */
 
@@ -45,7 +45,7 @@
 
 /** `FMStatement` used by result set. */
 
-@property (atomic, retain) FMStatement *statement;
+@property(atomic, strong) FMStatement *statement;
 
 ///------------------------------------
 /// @name Creating and closing database
@@ -432,7 +432,6 @@ If you don't, you're going to be in a world of hurt when you try and use the dat
  */
 
 - (BOOL)columnIsNull:(NSString*)columnName;
-
 
 /** Returns a dictionary of the row results mapped to case sensitive keys of the column names. 
  

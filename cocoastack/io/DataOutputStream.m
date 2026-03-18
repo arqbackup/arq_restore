@@ -30,22 +30,14 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 #import "DataOutputStream.h"
-
 
 @implementation DataOutputStream
 - (id)initWithMutableData:(NSMutableData *)theMutableData {
     if (self = [super init]) {
-        mutableData = [theMutableData retain];
+        mutableData = theMutableData;
     }
     return self;
-}
-- (void)dealloc {
-    [mutableData release];
-    [super dealloc];
 }
 #pragma mark OutputStream protocol
 - (NSInteger)write:(const unsigned char *)buf length:(NSUInteger)len error:(NSError **)error {

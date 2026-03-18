@@ -30,11 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 @class BlobKey;
-
 
 @protocol Restorer <NSObject>
 - (NSString *)errorDomain;

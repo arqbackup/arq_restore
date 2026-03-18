@@ -30,10 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
-
 @interface NSString (extra)
 + (NSString *)hexStringWithData:(NSData *)data;
 + (NSString *)hexStringWithBytes:(const unsigned char *)bytes length:(unsigned int)length;

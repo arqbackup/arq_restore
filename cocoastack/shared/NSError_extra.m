@@ -30,13 +30,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import <Security/Security.h>
 #import <Security/SecCertificate.h>
 #import "NSError_extra.h"
 #import "S3Service.h"
-
 
 @implementation NSError (extra)
 - (id)initWithDomain:(NSString *)domain code:(NSInteger)code description:(NSString *)theDescription {

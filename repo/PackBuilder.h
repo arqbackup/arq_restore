@@ -30,12 +30,9 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "StorageType.h"
 @class Fark;
 @class PackId;
-
 
 @interface PackBuilder : NSObject {
     Fark *fark;

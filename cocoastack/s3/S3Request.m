@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "S3Request.h"
 #import "HTTP.h"
 #import "URLConnection.h"
@@ -48,11 +46,9 @@
 #import "SHA256Hash.h"
 #import "NSString_extra.h"
 
-
 #define INITIAL_RETRY_SLEEP (0.5)
 #define RETRY_SLEEP_GROWTH_FACTOR (1.5)
 #define MAX_RETRY_SLEEP (5.0)
-
 
 @implementation S3Request
 - (id)initWithMethod:(NSString *)theMethod endpoint:(NSURL *)theEndpoint path:(NSString *)thePath queryString:(NSString *)theQueryString authorizationProvider:(id <S3AuthorizationProvider>)theSAP error:(NSError **)error {
@@ -61,7 +57,7 @@
 - (id)initWithMethod:(NSString *)theMethod endpoint:(NSURL *)theEndpoint path:(NSString *)thePath queryString:(NSString *)theQueryString authorizationProvider:(id <S3AuthorizationProvider>)theSAP dataTransferDelegate:(id<DataTransferDelegate>)theDelegate error:(NSError **)error {
     if (self = [super init]) {
         method = [theMethod copy];
-        sap = [theSAP retain];
+        sap = theSAP;
         dataTransferDelegate = theDelegate; // Don't retain it.
         extraRequestHeaders = [[NSMutableDictionary alloc] init];
         responseHeaders = [[NSMutableDictionary alloc] init];
@@ -69,7 +65,7 @@
         if (theQueryString != nil) {
             if ([theQueryString hasPrefix:@"?"]) {
                 SETNSERROR([S3Service errorDomain], -1, @"query string may not begin with a ?");
-                [self release];
+                
                 return nil;
             }
             thePath = [[thePath stringByAppendingString:@"?"] stringByAppendingString:theQueryString];
@@ -78,24 +74,14 @@
         url = [[NSURL alloc] initWithString:urlString];
         if (url == nil) {
             SETNSERROR([S3Service errorDomain], -1, @"invalid URL: %@", urlString);
-            [self release];
+            
             return nil;
         }
     }
     return self;
 }
-- (void)dealloc {
-    [method release];
-    [url release];
-    [sap release];
-    [requestBody release];
-    [extraRequestHeaders release];
-    [responseHeaders release];
-    [super dealloc];
-}
 - (void)setRequestBody:(NSData *)theRequestBody {
-    [theRequestBody retain];
-    [requestBody release];
+    
     requestBody = theRequestBody;
 }
 - (void)setRequestHeader:(NSString *)value forKey:(NSString *)key {
@@ -111,13 +97,10 @@
     return [responseHeaders objectForKey:theKey];
 }
 - (NSData *)dataWithTargetConnectionDelegate:(id<TargetConnectionDelegate>)theDelegate error:(NSError **)error {
-    NSAutoreleasePool *pool = nil;
     NSTimeInterval sleepTime = INITIAL_RETRY_SLEEP;
     NSData *responseData = nil;
     NSError *myError = nil;
     for (;;) {
-        [pool drain];
-        pool = [[NSAutoreleasePool alloc] init];
         BOOL needRetry = NO;
         BOOL needSleep = NO;
         myError = nil;
@@ -135,11 +118,11 @@
         if ([myError isErrorWithDomain:[S3Service errorDomain] code:ERROR_TEMPORARY_REDIRECT]) {
             NSString *location = [[myError userInfo] objectForKey:@"location"];
             HSLogDebug(@"redirecting %@ to %@", url, location);
-            [url release];
+            
             url = [[NSURL alloc] initWithString:location];
             if (url == nil) {
                 HSLogError(@"invalid redirect URL %@", location);
-                myError = [[[NSError alloc] initWithDomain:[S3Service errorDomain] code:-1 description:[NSString stringWithFormat:@"invalid redirect URL %@", location]] autorelease];
+                myError = [[NSError alloc] initWithDomain:[S3Service errorDomain] code:-1 description:[NSString stringWithFormat:@"invalid redirect URL %@", location]];
                 break;
             }
             needRetry = YES;
@@ -183,24 +166,21 @@
             }
         }
     }
-    [responseData retain];
+    
     if (responseData == nil) {
-        [myError retain];
+        
     }
-    [pool drain];
-    [responseData autorelease];
     if (responseData == nil) {
-        [myError autorelease];
+        
         SETERRORFROMMYERROR;
     }
     
     return responseData;
 }
 
-
 #pragma mark internal
 - (NSData *)dataOnce:(NSError **)error {
-    id <HTTPConnection> conn = [[[HTTPConnectionFactory theFactory] newHTTPConnectionToURL:url method:method dataTransferDelegate:dataTransferDelegate] autorelease];
+    id <HTTPConnection> conn = [[HTTPConnectionFactory theFactory] newHTTPConnectionToURL:url method:method dataTransferDelegate:dataTransferDelegate];
     if (conn == nil) {
         return nil;
     }
@@ -251,15 +231,15 @@
     }
     HSLogDebug(@"HTTP %d; response length=%ld", httpResponseCode, (long)[response length]);
     
-    NSString *responseString = [[[NSString alloc] initWithBytes:[response bytes] length:[response length] encoding:NSUTF8StringEncoding] autorelease];
+    NSString *responseString = [[NSString alloc] initWithBytes:[response bytes] length:[response length] encoding:NSUTF8StringEncoding];
     responseString = [responseString stringByReplacingOccurrencesOfString:@"\n" withString:@""];
     HSLogDebug(@"http response body: %@", responseString);
     if (httpResponseCode == ARQ_HTTP_NOT_FOUND) {
-        S3ErrorResult *errorResult = [[[S3ErrorResult alloc] initWithAction:[NSString stringWithFormat:@"%@ %@", method, [url description]]
+        S3ErrorResult *errorResult = [[S3ErrorResult alloc] initWithAction:[NSString stringWithFormat:@"%@ %@", method, [url description]]
                                                                        data:response
                                                               httpErrorCode:httpResponseCode
                                                                stringToSign:stringToSign
-                                                           canonicalRequest:canonicalRequest] autorelease];
+                                                           canonicalRequest:canonicalRequest];
         NSError *myError = [errorResult error];
         NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithDictionary:[myError userInfo]];
         [userInfo setObject:[NSString stringWithFormat:@"%@ not found", url] forKey:NSLocalizedDescriptionKey];
@@ -282,11 +262,11 @@
         HSLogDebug(@"returning moved-temporarily error");
         return nil;
     }
-    S3ErrorResult *errorResult = [[[S3ErrorResult alloc] initWithAction:[NSString stringWithFormat:@"%@ %@", method, [url description]]
+    S3ErrorResult *errorResult = [[S3ErrorResult alloc] initWithAction:[NSString stringWithFormat:@"%@ %@", method, [url description]]
                                                                    data:response
                                                           httpErrorCode:httpResponseCode
                                                            stringToSign:stringToSign
-                                                       canonicalRequest:canonicalRequest] autorelease];
+                                                       canonicalRequest:canonicalRequest];
     NSError *myError = [errorResult error];
     HSLogDebug(@"%@ error: %@", conn, myError);
     SETERRORFROMMYERROR;

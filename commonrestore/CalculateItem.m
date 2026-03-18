@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "CalculateItem.h"
 #import "Tree.h"
 #import "Node.h"
@@ -43,12 +41,11 @@
 #import "SHA1Hash.h"
 #import "Restorer.h"
 
-
 @implementation CalculateItem
 - (id)initWithPath:(NSString *)thePath tree:(Tree *)theTree {
     if (self = [super init]) {
-        path = [thePath retain];
-        tree = [theTree retain];
+        path = thePath;
+        tree = theTree;
         filesToSkip = [[NSMutableSet alloc] init];
         nextItems = [[NSMutableArray alloc] init];
     }
@@ -56,21 +53,13 @@
 }
 - (id)initWithPath:(NSString *)thePath node:(Node *)theNode {
     if (self = [super init]) {
-        path = [thePath retain];
-        node = [theNode retain];
+        path = thePath;
+        node = theNode;
         filesToSkip = [[NSMutableSet alloc] init];
         nextItems = [[NSMutableArray alloc] init];
     }
     return self;
 }
-- (void)dealloc {
-    [path release];
-    [node release];
-    [filesToSkip release];
-    [nextItems release];
-    [super dealloc];
-}
-
 - (BOOL)calculateWithRepo:(Repo *)theRepo restorer:(id <Restorer>)theRestorer error:(NSError **)error {
     if (tree != nil) {
         if (![self addBlobKeyToBytesToTransfer:[tree xattrsBlobKey] restorer:theRestorer error:error]) {
@@ -82,7 +71,7 @@
         for (NSString *childNodeName in [tree childNodeNames]) {
             Node *childNode = [tree childNodeWithName:childNodeName];
             NSString *childPath = [path stringByAppendingPathComponent:childNodeName];
-            [nextItems addObject:[[[CalculateItem alloc] initWithPath:childPath node:childNode] autorelease]];
+            [nextItems addObject:[[CalculateItem alloc] initWithPath:childPath node:childNode]];
         }
     } else {
         NSAssert(node != nil, @"node can't be nil if tree is nil");
@@ -91,7 +80,7 @@
             if (childTree == nil) {
                 return NO;
             }
-            [nextItems addObject:[[[CalculateItem alloc] initWithPath:path tree:childTree] autorelease]];
+            [nextItems addObject:[[CalculateItem alloc] initWithPath:path tree:childTree]];
         } else {
             if (![self addBlobKeyToBytesToTransfer:[node xattrsBlobKey] restorer:theRestorer error:error]) {
                 return NO;
@@ -117,7 +106,6 @@
 - (NSArray *)nextItems {
     return nextItems;
 }
-
 
 #pragma mark internal
 - (BOOL)addBlobKeyToBytesToTransfer:(BlobKey *)theBlobKey restorer:(id <Restorer>)theRestorer error:(NSError **)error {

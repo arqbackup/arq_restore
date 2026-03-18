@@ -30,11 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #include <mach-o/dyld.h>
 #import "ExePath.h"
-
 
 @implementation ExePath
 + (NSString *)exePath {
@@ -42,7 +39,7 @@
     _NSGetExecutablePath(NULL, &exePathSize);
     char *exePath = (char *)malloc(exePathSize);
     NSAssert(_NSGetExecutablePath(exePath, &exePathSize) == 0, @"must be zero");
-    NSString *ret = [[[NSString alloc] initWithBytes:exePath length:exePathSize encoding:NSUTF8StringEncoding] autorelease];
+    NSString *ret = [[NSString alloc] initWithBytes:exePath length:exePathSize encoding:NSUTF8StringEncoding];
     free(exePath);
     return ret;
 }

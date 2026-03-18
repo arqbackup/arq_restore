@@ -30,11 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "S3AuthorizationProvider.h"
 @class AWSRegion;
-
 
 @interface S3SignatureV4AuthorizationProvider : NSObject <S3AuthorizationProvider> {
     NSString *accessKey;

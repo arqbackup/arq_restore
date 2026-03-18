@@ -30,12 +30,9 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "ObjectEncryptorImpl.h"
 @class Target;
 @class EncryptionDatFile;
-
 
 @interface ObjectEncryptorV2 : NSObject <ObjectEncryptorImpl> {
     Target *target;

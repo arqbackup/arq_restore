@@ -30,9 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 @protocol DeleteDelegate <NSObject>
 - (BOOL)didDelete:(NSUInteger)count ofTotal:(NSUInteger)total error:(NSError **)error;
 - (void)didFinishDeleting:(NSUInteger)total;

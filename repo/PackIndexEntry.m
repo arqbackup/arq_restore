@@ -30,26 +30,18 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "PackIndexEntry.h"
 #import "PackId.h"
-
 
 @implementation PackIndexEntry
 - (id)initWithPackId:(PackId *)thePackId offset:(unsigned long long)theOffset dataLength:(unsigned long long)theDataLength objectSHA1:(NSString *)theObjectSHA1 {
     if (self = [super init]) {
-        packId = [thePackId retain];
+        packId = thePackId;
         offset = theOffset;
         dataLength = theDataLength;
         objectSHA1 = [theObjectSHA1 copy];
     }
     return self;
-}
-- (void)dealloc {
-    [packId release];
-    [objectSHA1 release];
-    [super dealloc];
 }
 - (PackId *)packId {
     return packId;
@@ -64,12 +56,10 @@
     return objectSHA1;
 }
 
-
 #pragma mark NSObject
 - (NSString *)description {
     return [NSString stringWithFormat:@"<PackIndexEntry: packId=%@ offset=%qu dataLength=%qu objectSHA1=%@>", packId, offset, dataLength, objectSHA1];
 }
-
 
 #pragma mark NSCopying
 - (id)copyWithZone:(NSZone *)zone {

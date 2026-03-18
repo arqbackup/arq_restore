@@ -98,7 +98,6 @@
  */- (NSString*)stringWithObject:(id)value
                            error:(NSError**)error;
 
-
 @end
 
 /**

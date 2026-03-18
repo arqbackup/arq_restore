@@ -30,10 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
-
 @interface NSXMLNode (extra)
 - (NSXMLNode *)childNodeNamed:(NSString *)name;
 @end

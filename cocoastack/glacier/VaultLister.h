@@ -30,11 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @class GlacierAuthorizationProvider;
 @class AWSRegion;
-
 
 @interface VaultLister : NSObject {
     GlacierAuthorizationProvider *gap;

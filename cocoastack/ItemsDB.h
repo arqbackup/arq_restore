@@ -30,12 +30,9 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "CWLSynthesizeSingleton.h"
 @class Item;
 @class FMDatabase;
-
 
 @interface ItemsDB : NSObject {
     NSLock *lock;

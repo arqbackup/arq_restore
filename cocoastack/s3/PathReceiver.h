@@ -30,9 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 #import "S3Receiver.h"
 
 @interface PathReceiver : NSObject <S3Receiver> {

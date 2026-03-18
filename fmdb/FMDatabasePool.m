@@ -16,13 +16,11 @@
 
 @end
 
-
 @implementation FMDatabasePool
 @synthesize path=_path;
 @synthesize delegate=_delegate;
 @synthesize maximumNumberOfDatabasesToCreate=_maximumNumberOfDatabasesToCreate;
 @synthesize openFlags=_openFlags;
-
 
 + (instancetype)databasePoolWithPath:(NSString*)aPath {
     return FMDBReturnAutoreleased([[self alloc] initWithPath:aPath]);
@@ -57,7 +55,6 @@
     return [self initWithPath:nil];
 }
 
-
 - (void)dealloc {
     
     _delegate = 0x00;
@@ -70,10 +67,8 @@
         _lockQueue = 0x00;
     }
 #if ! __has_feature(objc_arc)
-    [super dealloc];
 #endif
 }
-
 
 - (void)executeLocked:(void (^)(void))aBlock {
     dispatch_sync(_lockQueue, aBlock);

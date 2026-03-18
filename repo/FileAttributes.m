@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #include <CoreServices/CoreServices.h>
 #include <sys/attr.h>
 #include <unistd.h>
@@ -110,15 +108,15 @@ OSStatus SymlinkPathMakeRef(const UInt8 *path, FSRef *ref, Boolean *isDirectory)
         NSError *myError = nil;
         NSDictionary *attribs = [[NSFileManager defaultManager] attributesOfItemAtPath:thePath error:&myError];
         if (attribs == nil) {
-            myError = [[[NSError alloc] initWithDomain:[FileAttributes errorDomain]
+            myError = [[NSError alloc] initWithDomain:[FileAttributes errorDomain]
                                                   code:-1
                                               userInfo:[NSDictionary dictionaryWithObjectsAndKeys:
                                                         [NSString stringWithFormat:@"[FileAttributes attributesOfItemAtPath:%@]: %@", thePath, [myError localizedDescription]], NSLocalizedDescriptionKey,
                                                         myError, NSUnderlyingErrorKey,
-                                                        nil]] autorelease];
+                                                        nil]];
             HSLogError(@"%@", myError);
             SETERRORFROMMYERROR;
-            [self release];
+            
             return nil;
         }
         isFileExtensionHidden = [[attribs objectForKey:NSFileExtensionHidden] boolValue];
@@ -148,7 +146,7 @@ OSStatus SymlinkPathMakeRef(const UInt8 *path, FSRef *ref, Boolean *isDirectory)
                 if (oserr) {
                     HSLogError(@"FSGetCatalogInfo(%@): %@", thePath, [OSStatusDescription descriptionForOSStatus:(OSStatus)oserr]);
                     SETNSERROR([FileAttributes errorDomain], oss, @"FSGetCatalogInfo(%@): %@", thePath, [OSStatusDescription descriptionForOSStatus:(OSStatus)oserr]);
-                    [self release];
+                    
                     self = nil;
                     return self;
                 }
@@ -169,8 +167,8 @@ OSStatus SymlinkPathMakeRef(const UInt8 *path, FSRef *ref, Boolean *isDirectory)
                     finderFlags = folderInfo->finderFlags;
                     ExtendedFolderInfo *extFolderInfo = (ExtendedFolderInfo *)&catalogInfo.extFinderInfo;
                     extendedFinderFlags = extFolderInfo->extendedFinderFlags;
-                    finderFileType = [[NSString alloc] initWithString:@""];
-                    finderFileCreator = [[NSString alloc] initWithString:@""];
+                    finderFileType = @"";
+                    finderFileCreator = @"";
                 } else {
                     FileInfo *fileInfo = (FileInfo *)&catalogInfo.finderInfo;
                     finderFlags = fileInfo->finderFlags;
@@ -196,11 +194,6 @@ OSStatus SymlinkPathMakeRef(const UInt8 *path, FSRef *ref, Boolean *isDirectory)
         }
     }
     return self;
-}
-- (void)dealloc {
-    [finderFileType release];
-    [finderFileCreator release];
-    [super dealloc];
 }
 - (int)finderFlags {
     return finderFlags;

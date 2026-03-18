@@ -30,39 +30,25 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "RemoteFSFileDeleterWorker.h"
 #import "RemoteFS.h"
 #import "TargetConnection.h"
 #import "RemoteFSFileDeleter.h"
 
-
 @implementation RemoteFSFileDeleterWorker
 - (id)initWithRemoteFSFileDeleter:(RemoteFSFileDeleter *)theDeleter remoteFS:(RemoteFS *)theRemoteFS targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD {
     if (self = [super init]) {
-        deleter = [theDeleter retain];
-        remoteFS = [theRemoteFS retain];
+        deleter = theDeleter;
+        remoteFS = theRemoteFS;
         targetConnectionDelegate = theTCD;
         
         [NSThread detachNewThreadSelector:@selector(run) toTarget:self withObject:nil];
     }
     return self;
 }
-- (void)dealloc {
-    [deleter release];
-    [remoteFS release];
-    [super dealloc];
-}
-
-
 - (void)run {
-    NSAutoreleasePool *pool = nil;
     HSLogDetail(@"file delete worker thread started");
     for (;;) {
-        [pool drain];
-        pool = [[NSAutoreleasePool alloc] init];
-        
         NSString *nextPath = [deleter nextPath];
         if (nextPath == nil) {
             break;
@@ -74,7 +60,6 @@
     }
     [deleter workerDidFinish];
     HSLogDetail(@"file delete worker thread exiting");
-    [pool drain];
 }
 
 - (BOOL)deletePath:(NSString *)thePath error:(NSError **)error {

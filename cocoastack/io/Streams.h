@@ -30,10 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #import "InputStream.h"
 #import "OutputStream.h"
-
 
 @interface Streams : NSObject {
 

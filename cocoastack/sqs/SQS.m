@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "SQS.h"
 #import "SignatureV2Provider.h"
 #import "AWSRegion.h"
@@ -43,7 +41,6 @@
 #import "ReceiveMessageResponse.h"
 #import "ListQueuesResponse.h"
 
-
 @implementation SQS
 + (NSString *)errorDomain {
     return @"SQSErrorDomain";
@@ -51,20 +48,13 @@
 
 - (id)initWithAccessKey:(NSString *)theAccessKey secretKey:(NSString *)secret awsRegion:(AWSRegion *)theAWSRegion retryOnTransientError:(BOOL)retry {
     if (self = [super init]) {
-        accessKey = [theAccessKey retain];
+        accessKey = theAccessKey;
         sap = [[SignatureV2Provider alloc] initWithSecretKey:secret];
-        awsRegion = [theAWSRegion retain];
+        awsRegion = theAWSRegion;
         retryOnTransientError = retry;
     }
     return self;
 }
-- (void)dealloc {
-    [accessKey release];
-    [sap release];
-    [awsRegion release];
-    [super dealloc];
-}
-
 - (NSURL *)createQueueWithName:(NSString *)theName error:(NSError **)error {
     NSDateFormatter *formatter = [self dateFormatter];
     
@@ -83,12 +73,12 @@
     [str appendFormat:@"&Signature=%@", [signature stringByEscapingURLCharacters]];
     
     NSURL *urlWithSignature = [NSURL URLWithString:str];
-    AWSQueryRequest *req = [[[AWSQueryRequest alloc] initWithMethod:@"GET" url:urlWithSignature retryOnTransientError:retryOnTransientError] autorelease];
+    AWSQueryRequest *req = [[AWSQueryRequest alloc] initWithMethod:@"GET" url:urlWithSignature retryOnTransientError:retryOnTransientError];
     AWSQueryResponse *response = [req execute:error];
     if (response == nil) {
         return nil;
     }
-    CreateQueueResponse *cqr = [[[CreateQueueResponse alloc] initWithData:[response body]] autorelease];
+    CreateQueueResponse *cqr = [[CreateQueueResponse alloc] initWithData:[response body]];
     NSURL *ret = [cqr queueURL];
     if (ret == nil) {
         SETNSERROR([SQS errorDomain], -1, @"QueueURL not found in CreateQueue response");
@@ -113,13 +103,13 @@
     [str appendFormat:@"&Signature=%@", [signature stringByEscapingURLCharacters]];
     
     NSURL *urlWithSignature = [NSURL URLWithString:str];
-    AWSQueryRequest *req = [[[AWSQueryRequest alloc] initWithMethod:@"GET" url:urlWithSignature retryOnTransientError:retryOnTransientError] autorelease];
+    AWSQueryRequest *req = [[AWSQueryRequest alloc] initWithMethod:@"GET" url:urlWithSignature retryOnTransientError:retryOnTransientError];
     AWSQueryResponse *response = [req execute:error];
     if (response == nil) {
         return nil;
     }
     
-    GetQueueAttributesResponse *gqar = [[[GetQueueAttributesResponse alloc] initWithData:[response body]] autorelease];
+    GetQueueAttributesResponse *gqar = [[GetQueueAttributesResponse alloc] initWithData:[response body]];
     NSString *ret = [gqar queueArn];
     if (ret == nil) {
         SETNSERROR([SQS errorDomain], -1, @"QueueArn not found in GetQueueAttributes response");
@@ -130,7 +120,7 @@
     NSString *theQueueName = [[theQueueArn componentsSeparatedByString:@":"] lastObject];
     NSString *policy = [NSString stringWithFormat:@"{\"Statement\": [{\"Sid\": \"%@-policy\", \"Effect\": \"Allow\", \"Principal\": {\"AWS\": \"*\"}, \"Action\": \"sqs:SendMessage\", \"Resource\": \"%@\", \"Condition\": { \"ArnEquals\": { \"aws:sourceArn\": \"%@\" } } }]}", theQueueName, theQueueArn, theSourceArn];
     HSLogDebug(@"policy = %@", policy);
-    NSString *escapedPolicy = [(NSString *)CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, (CFStringRef)policy, NULL, CFSTR("?=&+?:,*"), kCFStringEncodingUTF8) autorelease];
+    NSString *escapedPolicy = (__bridge_transfer NSString *)CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, (__bridge CFStringRef)policy, NULL, CFSTR("?=&+?:,*"), kCFStringEncodingUTF8);
 
     NSDateFormatter *formatter = [self dateFormatter];
     
@@ -149,7 +139,7 @@
     [str appendFormat:@"&Signature=%@", [signature stringByEscapingURLCharacters]];
     
     NSURL *urlWithSignature = [NSURL URLWithString:str];
-    AWSQueryRequest *req = [[[AWSQueryRequest alloc] initWithMethod:@"GET" url:urlWithSignature retryOnTransientError:retryOnTransientError] autorelease];
+    AWSQueryRequest *req = [[AWSQueryRequest alloc] initWithMethod:@"GET" url:urlWithSignature retryOnTransientError:retryOnTransientError];
     AWSQueryResponse *response = [req execute:error];
     if (response == nil) {
         return NO;
@@ -178,12 +168,12 @@
     [str appendFormat:@"&Signature=%@", [signature stringByEscapingURLCharacters]];
     
     NSURL *urlWithSignature = [NSURL URLWithString:str];
-    AWSQueryRequest *req = [[[AWSQueryRequest alloc] initWithMethod:@"GET" url:urlWithSignature retryOnTransientError:retryOnTransientError] autorelease];
+    AWSQueryRequest *req = [[AWSQueryRequest alloc] initWithMethod:@"GET" url:urlWithSignature retryOnTransientError:retryOnTransientError];
     AWSQueryResponse *response = [req execute:error];
     if (response == nil) {
         return nil;
     }
-    ReceiveMessageResponse *msg = [[[ReceiveMessageResponse alloc] initWithQueueURL:theURL data:[response body]] autorelease];
+    ReceiveMessageResponse *msg = [[ReceiveMessageResponse alloc] initWithQueueURL:theURL data:[response body]];
     return msg;
 }
 - (BOOL)deleteMessageWithQueueURL:(NSURL *)theURL receiptHandle:(NSString *)theReceiptHandle error:(NSError **)error {
@@ -203,7 +193,7 @@
     [str appendFormat:@"&Signature=%@", [signature stringByEscapingURLCharacters]];
     
     NSURL *urlWithSignature = [NSURL URLWithString:str];
-    AWSQueryRequest *req = [[[AWSQueryRequest alloc] initWithMethod:@"GET" url:urlWithSignature retryOnTransientError:retryOnTransientError] autorelease];
+    AWSQueryRequest *req = [[AWSQueryRequest alloc] initWithMethod:@"GET" url:urlWithSignature retryOnTransientError:retryOnTransientError];
     AWSQueryResponse *response = [req execute:error];
     if (response == nil) {
         return NO;
@@ -228,12 +218,12 @@
     [str appendFormat:@"&Signature=%@", [signature stringByEscapingURLCharacters]];
     
     NSURL *urlWithSignature = [NSURL URLWithString:str];
-    AWSQueryRequest *req = [[[AWSQueryRequest alloc] initWithMethod:@"GET" url:urlWithSignature retryOnTransientError:retryOnTransientError] autorelease];
+    AWSQueryRequest *req = [[AWSQueryRequest alloc] initWithMethod:@"GET" url:urlWithSignature retryOnTransientError:retryOnTransientError];
     AWSQueryResponse *response = [req execute:error];
     if (response == nil) {
         return nil;
     }
-    ListQueuesResponse *msg = [[[ListQueuesResponse alloc] initWithData:[response body]] autorelease];
+    ListQueuesResponse *msg = [[ListQueuesResponse alloc] initWithData:[response body]];
     return [msg queueURLs];
 }
 - (BOOL)deleteQueue:(NSURL *)theQueueURL error:(NSError **)error {
@@ -252,7 +242,7 @@
     [str appendFormat:@"&Signature=%@", [signature stringByEscapingURLCharacters]];
     
     NSURL *urlWithSignature = [NSURL URLWithString:str];
-    AWSQueryRequest *req = [[[AWSQueryRequest alloc] initWithMethod:@"GET" url:urlWithSignature retryOnTransientError:retryOnTransientError] autorelease];
+    AWSQueryRequest *req = [[AWSQueryRequest alloc] initWithMethod:@"GET" url:urlWithSignature retryOnTransientError:retryOnTransientError];
     AWSQueryResponse *response = [req execute:error];
     if (response == nil) {
         return NO;
@@ -260,12 +250,11 @@
     return YES;
 }
 
-
 - (NSDateFormatter*)dateFormatter {
-    NSDateFormatter *formatter = [[[NSDateFormatter alloc] init] autorelease];
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
     [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss'Z'"];
     [formatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
-    NSLocale *usLocale = [[[NSLocale alloc] initWithLocaleIdentifier:@"en_US"] autorelease];
+    NSLocale *usLocale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US"];
     if (usLocale != nil) {
         [formatter setLocale:usLocale];
     } else {

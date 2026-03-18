@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #include <CommonCrypto/CommonHMAC.h>
 #import "HMACSHA256.h"
 
@@ -39,7 +37,7 @@
 + (NSData *)digestForKey:(NSData *)theKey data:(NSData *)theData {
     unsigned char digest[CC_SHA256_DIGEST_LENGTH];
     CCHmac(kCCHmacAlgSHA256, [theKey bytes], [theKey length], [theData bytes], [theData length], digest);
-    NSData *hmacSHA1 = [[[NSData alloc] initWithBytes:digest length:CC_SHA256_DIGEST_LENGTH] autorelease];
+    NSData *hmacSHA1 = [[NSData alloc] initWithBytes:digest length:CC_SHA256_DIGEST_LENGTH];
     return hmacSHA1;
 }
 @end

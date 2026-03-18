@@ -30,7 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #import "S3ObjectMetadata.h"
 #import "RFC822.h"
 #import "StringIO.h"
@@ -39,33 +38,35 @@
 
 @implementation S3ObjectMetadata
 - (id)initWithS3BucketName:(NSString *)s3BucketName node:(NSXMLNode *)node error:(NSError **)error {
-	if (error != NULL) {
-		*error = nil;
-	}
-	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-	if (self = [super init]) {
-		NSArray *nodes = [node nodesForXPath:@"Key" error:error];
+    if (self = [super init]) {
+        NSArray *nodes = nil;
+        NSXMLNode *keyNode = nil;
+        NSXMLNode *lastModifiedNode = nil;
+        NSXMLNode *sizeNode = nil;
+        NSNumberFormatter *numberFormatter = nil;
+
+        nodes = [node nodesForXPath:@"Key" error:error];
         if (!nodes) {
-			goto init_error;
+            goto init_error;
         }
-		NSXMLNode *keyNode = [nodes objectAtIndex:0];
-		path = [[NSString alloc] initWithFormat:@"/%@/%@", s3BucketName, [keyNode stringValue]];
-		nodes = [node nodesForXPath:@"LastModified" error:error];
+        keyNode = [nodes objectAtIndex:0];
+        path = [[NSString alloc] initWithFormat:@"/%@/%@", s3BucketName, [keyNode stringValue]];
+        nodes = [node nodesForXPath:@"LastModified" error:error];
         if (!nodes) {
-			goto init_error;
+            goto init_error;
         }
-		NSXMLNode *lastModifiedNode = [nodes objectAtIndex:0];
-        lastModified = [[RFC822 dateFromString:[lastModifiedNode stringValue] error:error] retain];
+        lastModifiedNode = [nodes objectAtIndex:0];
+        lastModified = [RFC822 dateFromString:[lastModifiedNode stringValue] error:error];
         if (lastModified == nil) {
-			goto init_error;
+            goto init_error;
         }
-		nodes = [node nodesForXPath:@"Size" error:error];
+        nodes = [node nodesForXPath:@"Size" error:error];
         if (!nodes) {
-			goto init_error;
+            goto init_error;
         }
-		NSXMLNode *sizeNode = [nodes objectAtIndex:0];
-		NSNumberFormatter *numberFormatter = [[[NSNumberFormatter alloc] init] autorelease];
-		size = [[numberFormatter numberFromString:[sizeNode stringValue]] longValue];
+        sizeNode = [nodes objectAtIndex:0];
+        numberFormatter = [[NSNumberFormatter alloc] init];
+        size = [[numberFormatter numberFromString:[sizeNode stringValue]] longValue];
         nodes = [node nodesForXPath:@"StorageClass" error:error];
         if (!nodes) {
             goto init_error;
@@ -74,63 +75,51 @@
             storageClass = @"STANDARD";
         } else {
             NSXMLNode *storageClassNode = [nodes objectAtIndex:0];
-            storageClass = [[storageClassNode stringValue] retain];
+            storageClass = [storageClassNode stringValue];
         }
-		goto init_done;
-	init_error:
-		[self release];
-		self = nil;
-		goto init_done;
-	}
-init_done:
-	if (error != NULL) {
-		[*error retain];
-	}
-	[pool drain];
-	if (error != NULL) {
-		[*error autorelease];
-	}
-	return self;
+        goto init_done;
+    init_error:
+        self = nil;
+    init_done:;
+    }
+    return self;
 }
 - (id)initWithPath:(NSString *)thePath lastModified:(NSDate *)theLastModified size:(long)theSize storageClass:(NSString *)theStorageClass {
     return [self initWithPath:thePath lastModified:theLastModified size:theSize storageClass:theStorageClass itemId:nil];
 }
 - (id)initWithPath:(NSString *)thePath lastModified:(NSDate *)theLastModified size:(long)theSize storageClass:(NSString *)theStorageClass itemId:(NSString  *)theItemId {
     if (self = [super init]) {
-        path = [thePath retain];
-        lastModified = [theLastModified retain];
+        path = thePath;
+        lastModified = theLastModified;
         size = theSize;
-        storageClass = [theStorageClass retain];
-        itemId = [theItemId retain];
+        storageClass = theStorageClass;
+        itemId = theItemId;
     }
     return self;
 }
 - (id)initFromBufferedInputStream:(BufferedInputStream *)theBIS error:(NSError **)error {
     if (self = [super init]) {
+        NSString *thePath = nil;
+        NSDate *theLastModified = nil;
         int64_t theSize = 0;
-        BOOL ret = [StringIO read:&path from:theBIS error:error]
-        && [DateIO read:&lastModified from:theBIS error:error]
+        NSString *theStorageClass = nil;
+        NSString *theItemId = nil;
+        BOOL ret = [StringIO read:&thePath from:theBIS error:error]
+        && [DateIO read:&theLastModified from:theBIS error:error]
         && [IntegerIO readInt64:&theSize from:theBIS error:error]
-        && [StringIO read:&storageClass from:theBIS error:error]
-        && [StringIO read:&itemId from:theBIS error:error];
-        [path retain];
-        [lastModified retain];
-        [itemId retain];
-        size = (long)theSize;
-        [storageClass retain];
+        && [StringIO read:&theStorageClass from:theBIS error:error]
+        && [StringIO read:&theItemId from:theBIS error:error];
+
         if (!ret) {
-            [self release];
             return nil;
         }
+        path = thePath;
+        lastModified = theLastModified;
+        size = (long)theSize;
+        storageClass = theStorageClass;
+        itemId = theItemId;
     }
     return self;
-}
-- (void)dealloc {
-	[path release];
-	[lastModified release];
-    [storageClass release];
-    [itemId release];
-	[super dealloc];
 }
 - (BOOL)writeToBufferedOutputStream:(BufferedOutputStream *)theBOS error:(NSError **)error {
     return [StringIO write:path to:theBOS error:error]

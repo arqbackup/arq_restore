@@ -30,13 +30,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "Computer.h"
 #include <SystemConfiguration/SCDynamicStoreCopySpecific.h>
 
 #define SERIAL_BUF_SIZE (1024)
-
 
 static void get_serial_number(char *buf, int bufSize) {
     io_registry_entry_t ioRegistryRoot = IORegistryEntryFromPath(kIOMasterPortDefault, "IOService:/");
@@ -48,11 +45,11 @@ static void get_serial_number(char *buf, int bufSize) {
 
 @implementation Computer
 + (NSString *)name {
-    NSString *theName = (NSString *)SCDynamicStoreCopyComputerName(NULL,NULL);
+    NSString *theName = (__bridge_transfer NSString *)SCDynamicStoreCopyComputerName(NULL,NULL);
     if (theName == nil) {
-        theName = [[NSString alloc] initWithString:@"unknown-computer-name"];
+        theName = @"unknown-computer-name";
     }
-    return [theName autorelease];
+    return theName;
 }
 + (NSString *)serialNumber {
     char buf[SERIAL_BUF_SIZE];
@@ -66,6 +63,6 @@ static void get_serial_number(char *buf, int bufSize) {
 //	if (err != noErr) {
 //        return nil;
 //    }
-//    return [[[NSString alloc] initWithBytes:machineName+1 length:machineName[0] encoding:NSUTF8StringEncoding] autorelease];
+//    return [[NSString alloc] initWithBytes:machineName+1 length:machineName[0] encoding:NSUTF8StringEncoding];
 //}
 @end

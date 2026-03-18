@@ -30,10 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import <Cocoa/Cocoa.h>
-
 
 @interface Volume : NSObject {
     NSURL *url; // e.g. "afp://elise@iMac._afpovertcp._tcp.local/Pictures", "hdi://localhost/Users/stefan/Pictures.sparseimage", "file://localhost/"

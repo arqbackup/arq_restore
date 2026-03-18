@@ -30,11 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "ISO8601Date.h"
 #import "RegexKitLite.h"
-
 
 #define FMT822 (@"^(\\d{4})-(\\d{2})-(\\d{2})T(\\d{2}):(\\d{2}):(\\d{2})\\.(\\d+)Z$")
 
@@ -49,13 +46,6 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(ISO8601Date)
     }
     return self;
 }
-- (void)dealloc {
-    [dateFormatter release];
-    [dateTimeFormatter release];
-    [lock release];
-    [super dealloc];
-}
-
 - (NSString *)errorDomain {
     return @"ISO8601DateErrorDomain";
 }
@@ -100,20 +90,19 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(ISO8601Date)
     return [dateFormatter stringFromDate:theDate];
 }
 
-
 #pragma mark internal
 - (NSDateFormatter *)newDateFormatterWithFormat:(NSString *)theFormat {
     NSDateFormatter *ret = [[NSDateFormatter alloc] init];
     [ret setDateFormat:theFormat];
     
-    NSLocale *usLocale = [[[NSLocale alloc] initWithLocaleIdentifier:@"en_US"] autorelease];
+    NSLocale *usLocale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US"];
     if (usLocale != nil) {
         [ret setLocale:usLocale];
     } else {
         HSLogWarn(@"no en_US locale installed");
     }
     [ret setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
-    NSCalendar *gregorianCalendar = [[[NSCalendar alloc] initWithCalendarIdentifier:NSGregorianCalendar] autorelease];
+    NSCalendar *gregorianCalendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSGregorianCalendar];
     [ret setCalendar:gregorianCalendar];
     return ret;
 }

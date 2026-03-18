@@ -30,12 +30,9 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @class BufferedInputStream;
 @class BufferedOutputStream;
 #import "BlobKey.h"
-
 
 @interface BlobKeyIO : NSObject {
     

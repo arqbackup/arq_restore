@@ -30,7 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #import "IntegerIO.h"
 #import "StringIO.h"
 #import "DataInputStream.h"
@@ -39,7 +38,6 @@
 #import "BooleanIO.h"
 #import "BufferedInputStream.h"
 #import "BufferedOutputStream.h"
-
 
 @implementation StringIO
 + (void)write:(NSString *)str to:(NSMutableData *)data {
@@ -56,14 +54,13 @@
     NSMutableData *data = [[NSMutableData alloc] init];
     [StringIO write:str to:data];
     BOOL ret = [os writeFully:[data bytes] length:[data length] error:error];
-    [data release];
+    
     return ret;
 }
 + (BOOL)read:(NSString **)value from:(BufferedInputStream *)is error:(NSError **)error {
     if (![StringIO newString:value from:is error:error]) {
         return NO;
     }
-    [*value autorelease];
     return YES;
 }
 + (BOOL)newString:(NSString **)value from:(BufferedInputStream *)is error:(NSError **)error {

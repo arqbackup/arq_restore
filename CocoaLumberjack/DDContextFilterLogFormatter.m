@@ -41,7 +41,6 @@
 
 @end
 
-
 @implementation DDContextWhitelistFilterLogFormatter
 
 - (instancetype)init {
@@ -88,7 +87,6 @@
 
 @end
 
-
 @implementation DDContextBlacklistFilterLogFormatter
 
 - (instancetype)init {
@@ -129,14 +127,12 @@
 #pragma mark -
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
 @interface DDLoggingContextSet () {
     OSSpinLock _lock;
     NSMutableSet *_set;
 }
 
 @end
-
 
 @implementation DDLoggingContextSet
 

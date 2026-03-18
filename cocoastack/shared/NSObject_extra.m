@@ -30,10 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "NSObject_extra.h"
-
 
 @implementation NSObject (extra)
 + (BOOL)equalObjects:(id)left and:(id)right {

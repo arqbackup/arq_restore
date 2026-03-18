@@ -30,10 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
-
 @interface BinarySHA1 : NSObject {
 }
 + (NSComparisonResult)compare:(const void *)a to:(const void *)b;

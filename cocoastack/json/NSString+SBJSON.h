@@ -27,7 +27,6 @@
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 /**
  @brief Adds JSON parsing methods to NSString
  

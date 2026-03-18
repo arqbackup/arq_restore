@@ -58,7 +58,6 @@
     FMDBRelease(_openFunctions);
     
 #if ! __has_feature(objc_arc)
-    [super dealloc];
 #endif
 }
 
@@ -173,7 +172,6 @@
 }
 #endif
 
-
 - (BOOL)close {
     
     [self clearCachedStatements];
@@ -266,7 +264,6 @@ static int FMDBDatabaseBusyHandler(void *f, int count) {
     return _maxBusyRetryTimeInterval;
 }
 
-
 // we no longer make busyRetryTimeout public
 // but for folks who don't bother noticing that the interface to FMDatabase changed,
 // we'll still implement the method so they don't get suprise crashes
@@ -330,7 +327,6 @@ static int FMDBDatabaseBusyHandler(void *f, int count) {
         
     }] anyObject];
 }
-
 
 - (void)setCachedStatement:(FMStatement*)statement forQuery:(NSString*)query {
     
@@ -408,7 +404,6 @@ static int FMDBDatabaseBusyHandler(void *f, int count) {
     result.locale = FMDBReturnAutoreleased([[NSLocale alloc] initWithLocaleIdentifier:@"en_US"]);
     return result;
 }
-
 
 - (BOOL)hasDateFormatter {
     return _dateFormat != nil;
@@ -1104,7 +1099,6 @@ static int FMDBDatabaseBusyHandler(void *f, int count) {
     return (rc == SQLITE_DONE || rc == SQLITE_OK);
 }
 
-
 - (BOOL)executeUpdate:(NSString*)sql, ... {
     va_list args;
     va_start(args, sql);
@@ -1140,7 +1134,6 @@ static int FMDBDatabaseBusyHandler(void *f, int count) {
     
     return [self executeUpdate:sql withArgumentsInArray:arguments];
 }
-
 
 int FMDBExecuteBulkSQLCallback(void *theBlockAsVoid, int columns, char **values, char **names); // shhh clang.
 int FMDBExecuteBulkSQLCallback(void *theBlockAsVoid, int columns, char **values, char **names) {
@@ -1191,7 +1184,6 @@ int FMDBExecuteBulkSQLCallback(void *theBlockAsVoid, int columns, char **values,
     va_end(args);
     return result;
 }
-
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-implementations"
@@ -1366,7 +1358,6 @@ void FMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlite3
     }
 }
 
-
 - (void)makeFunctionNamed:(NSString*)name maximumArguments:(int)count withBlock:(void (^)(sqlite3_context *context, int argc, sqlite3_value **argv))block {
     
     if (!_openFunctions) {
@@ -1387,8 +1378,6 @@ void FMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlite3
 
 @end
 
-
-
 @implementation FMStatement
 @synthesize statement=_statement;
 @synthesize query=_query;
@@ -1404,7 +1393,6 @@ void FMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlite3
     [self close];
     FMDBRelease(_query);
 #if ! __has_feature(objc_arc)
-    [super dealloc];
 #endif
 }
 
@@ -1428,7 +1416,6 @@ void FMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlite3
 - (NSString*)description {
     return [NSString stringWithFormat:@"%@ %ld hit(s) for query %@", [super description], _useCount, _query];
 }
-
 
 @end
 

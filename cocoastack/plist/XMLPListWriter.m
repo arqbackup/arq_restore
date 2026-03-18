@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "ArrayNode.h"
 #import "BooleanNode.h"
 #import "DictNode.h"
@@ -57,29 +55,24 @@
 @implementation XMLPListWriter
 - (id)initWithMutableData:(NSMutableData *)theData {
 	if (self = [super init]) {
-        data = [theData retain];
+        data = theData;
 	}
 	return self;
 }
-- (void)dealloc {
-	[data release];
-	[super dealloc];
-}
-
 - (void)write:(DictNode *)plist {
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    @autoreleasepool {
 	NSXMLElement *rootElem = [[NSXMLElement alloc] initWithName:@"plist"];
 	NSMutableDictionary *attributes = [[NSMutableDictionary alloc] init];
 	[attributes setObject:@"1.0" forKey:@"version"];
 	[rootElem setAttributesAsDictionary:attributes];
-    [attributes release];
+    
 	[self writeDict:plist toElement:rootElem];
 	NSXMLDocument *doc = [[NSXMLDocument alloc] initWithRootElement:rootElem];
-    [rootElem release];
+    
     NSString *xmlString = [doc XMLStringWithOptions:NSXMLNodePrettyPrint];
-    [doc release];
+    
     [data appendData:[xmlString dataUsingEncoding:NSUTF8StringEncoding]];
-    [pool drain];
+    }
 }
 
 @end
@@ -92,7 +85,7 @@
 		[self writePListNode:[node objectAtIndex:(int)i] toElement:arrayElem];
 	}
 	[elem addChild:arrayElem];
-	[arrayElem release];
+	
 }
 - (void)writeBoolean:(BooleanNode *)node toElement:(NSXMLElement *)elem {
 	NSXMLElement *childElem;
@@ -102,7 +95,7 @@
 		childElem = [[NSXMLElement alloc] initWithName:@"false"];
 	}
 	[elem addChild:childElem];
-	[childElem release];
+	
 }
 - (void)writeDict:(DictNode *)node toElement:(NSXMLElement *)elem {
 	NSXMLElement *dictElem = [[NSXMLElement alloc] initWithName:@"dict"];
@@ -115,24 +108,24 @@
             NSXMLElement *keyElem = [[NSXMLElement alloc] initWithName:@"key"];
             [keyElem setStringValue:key];
             [dictElem addChild:keyElem];
-            [keyElem release];
+            
             [self writePListNode:[node nodeForKey:key] toElement:dictElem];
         }
 	}
 	[elem addChild:dictElem];
-	[dictElem release];
+	
 }
 - (void)writeInteger:(IntegerNode *)node toElement:(NSXMLElement *)elem {
 	NSXMLElement *integerElem = [[NSXMLElement alloc] initWithName:@"integer"];
 	[integerElem setStringValue:[NSString stringWithFormat:@"%qi", [node longlongValue]]];
 	[elem addChild:integerElem];
-	[integerElem release];
+	
 }
 - (void)writeReal:(RealNode *)node toElement:(NSXMLElement *)elem {
 	NSXMLElement *realElem = [[NSXMLElement alloc] initWithName:@"real"];
 	[realElem setStringValue:[NSString stringWithFormat:@"%f", [node doubleValue]]];
 	[elem addChild:realElem];
-	[realElem release];
+	
 }
 - (void)writeString:(StringNode *)node toElement:(NSXMLElement *)elem {
     if ([node stringValue] == nil) {
@@ -140,11 +133,11 @@
         return;
     }
 	NSXMLElement *stringElem = [[NSXMLElement alloc] initWithName:@"string"];
-	NSString *value = (NSString *)CFXMLCreateStringByEscapingEntities(kCFAllocatorDefault, (CFStringRef)[node stringValue], NULL);
+	NSString *value = (__bridge_transfer NSString *)CFXMLCreateStringByEscapingEntities(kCFAllocatorDefault, (__bridge CFStringRef)[node stringValue], NULL);
 	[stringElem setStringValue:value];
-	[value release];
+	
 	[elem addChild:stringElem];
-	[stringElem release];
+	
 }
 - (void)writePListNode:(id <PListNode>)node toElement:(NSXMLElement *)elem {
 	int type = [node type];

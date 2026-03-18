@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "BooleanIO.h"
 #import "IntegerIO.h"
 #import "DateIO.h"

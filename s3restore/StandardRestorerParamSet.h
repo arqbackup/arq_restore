@@ -30,15 +30,12 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "StorageType.h"
 @class Bucket;
 @class BufferedInputStream;
 @class BufferedOutputStream;
 @class AWSRegion;
 #import "BlobKey.h"
-
 
 @interface StandardRestorerParamSet : NSObject {
     Bucket *bucket;
@@ -71,16 +68,16 @@
 
 - (BOOL)writeTo:(BufferedOutputStream *)theBOS error:(NSError **)error;
 
-@property (readonly, retain) Bucket *bucket;
-@property (readonly, retain) NSString *encryptionPassword;
-@property (readonly, retain) BlobKey *commitBlobKey;
-@property (readonly, retain) NSString *rootItemName;
-@property (readonly, retain) BlobKey *treeBlobKey;
-@property (readonly, retain) NSString *nodeName;
+@property(readonly, strong) Bucket *bucket;
+@property(readonly, strong) NSString *encryptionPassword;
+@property(readonly, strong) BlobKey *commitBlobKey;
+@property(readonly, strong) NSString *rootItemName;
+@property(readonly, strong) BlobKey *treeBlobKey;
+@property(readonly, strong) NSString *nodeName;
 @property (readonly) uid_t targetUID;
 @property (readonly) gid_t targetGID;
 @property (readonly) BOOL useTargetUIDAndGID;
-@property (readonly, retain) NSString *destinationPath;
+@property(readonly, strong) NSString *destinationPath;
 @property (readonly) int logLevel;
 
 @end

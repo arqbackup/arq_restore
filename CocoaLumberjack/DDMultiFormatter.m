@@ -15,7 +15,6 @@
 
 #import "DDMultiFormatter.h"
 
-
 #if TARGET_OS_IPHONE
 // Compiling for iOS
 #if __IPHONE_OS_VERSION_MIN_REQUIRED >= 60000 // iOS 6.0 or later
@@ -32,11 +31,9 @@
 #endif
 #endif
 
-
 #if !__has_feature(objc_arc)
 #error This file must be compiled with ARC. Use -fobjc-arc flag (or convert project to ARC).
 #endif
-
 
 @interface DDMultiFormatter () {
     dispatch_queue_t _queue;
@@ -46,7 +43,6 @@
 - (DDLogMessage *)logMessageForLine:(NSString *)line originalMessage:(DDLogMessage *)message;
 
 @end
-
 
 @implementation DDMultiFormatter
 

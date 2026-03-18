@@ -3,12 +3,11 @@
 #import "FMResultSet.h"
 #import "FMDatabasePool.h"
 
-
 #if ! __has_feature(objc_arc)
-    #define FMDBAutorelease(__v) ([__v autorelease]);
+    #define FMDBAutorelease(__v) (__v);
     #define FMDBReturnAutoreleased FMDBAutorelease
 
-    #define FMDBRetain(__v) ([__v retain]);
+    #define FMDBRetain(__v) (__v);
     #define FMDBReturnRetained FMDBRetain
 
     #define FMDBRelease(__v) ([__v release]);
@@ -38,9 +37,7 @@
     #define instancetype id
 #endif
 
-
 typedef int(^FMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDictionary);
-
 
 /** A SQLite ([http://sqlite.org/](http://sqlite.org/)) Objective-C wrapper.
  
@@ -69,7 +66,6 @@ typedef int(^FMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDictionary
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wobjc-interface-ivars"
-
 
 @interface FMDatabase : NSObject  {
     
@@ -114,7 +110,7 @@ typedef int(^FMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDictionary
 
 /** Dictionary of cached statements */
 
-@property (atomic, retain) NSMutableDictionary *cachedStatements;
+@property(atomic, strong) NSMutableDictionary *cachedStatements;
 
 ///---------------------
 /// @name Initialization
@@ -175,7 +171,6 @@ typedef int(^FMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDictionary
  */
 
 - (instancetype)initWithPath:(NSString*)inPath;
-
 
 ///-----------------------------------
 /// @name Opening and closing database
@@ -246,7 +241,6 @@ typedef int(^FMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDictionary
  */
 
 - (BOOL)goodConnection;
-
 
 ///----------------------
 /// @name Perform updates
@@ -373,7 +367,6 @@ typedef int(^FMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDictionary
 
 - (BOOL)executeUpdate:(NSString*)sql withParameterDictionary:(NSDictionary *)arguments;
 
-
 /** Execute single update statement
 
  This method executes a single SQL update statement (i.e. any SQL that does not return results, such as `UPDATE`, `INSERT`, or `DELETE`. This method employs [`sqlite3_prepare_v2`](http://sqlite.org/c3ref/prepare.html) and [`sqlite_step`](http://sqlite.org/c3ref/step.html) to perform the update. Unlike the other `executeUpdate` methods, this uses printf-style formatters (e.g. `%s`, `%d`, etc.) to build the SQL.
@@ -453,7 +446,6 @@ typedef int(^FMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDictionary
  */
 
 - (int)changes;
-
 
 ///-------------------------
 /// @name Retrieving results
@@ -548,7 +540,6 @@ typedef int(^FMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDictionary
 
 - (FMResultSet *)executeQuery:(NSString *)sql withParameterDictionary:(NSDictionary *)arguments;
 
-
 // Documentation forthcoming.
 - (FMResultSet *)executeQuery:(NSString*)sql withVAList: (va_list)args;
 
@@ -620,7 +611,6 @@ typedef int(^FMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDictionary
 
 - (BOOL)inTransaction;
 
-
 ///----------------------------------------
 /// @name Cached statements and result sets
 ///----------------------------------------
@@ -653,7 +643,6 @@ typedef int(^FMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDictionary
  */
 
 - (void)setShouldCacheStatements:(BOOL)value;
-
 
 ///-------------------------
 /// @name Encryption methods
@@ -711,7 +700,6 @@ typedef int(^FMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDictionary
 
 - (BOOL)rekeyWithData:(NSData *)keyData;
 
-
 ///------------------------------
 /// @name General inquiry methods
 ///------------------------------
@@ -731,7 +719,6 @@ typedef int(^FMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDictionary
  */
 
 - (sqlite3*)sqliteHandle;
-
 
 ///-----------------------------
 /// @name Retrieving error codes
@@ -788,11 +775,9 @@ typedef int(^FMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDictionary
 
 - (NSError*)lastError;
 
-
 // description forthcoming
 - (void)setMaxBusyRetryTimeInterval:(NSTimeInterval)timeoutInSeconds;
 - (NSTimeInterval)maxBusyRetryTimeInterval;
-
 
 #if SQLITE_VERSION_NUMBER >= 3007000
 
@@ -881,11 +866,9 @@ typedef int(^FMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDictionary
 
 + (NSString*)sqliteLibVersion;
 
-
 + (NSString*)FMDBUserVersion;
 
 + (SInt32)FMDBVersion;
-
 
 ///------------------------
 /// @name Make SQL function
@@ -936,7 +919,6 @@ typedef int(^FMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDictionary
  */
 
 - (void)makeFunctionNamed:(NSString*)name maximumArguments:(int)count withBlock:(void (^)(sqlite3_context *context, int argc, sqlite3_value **argv))block;
-
 
 ///---------------------
 /// @name Date formatter
@@ -1026,7 +1008,6 @@ typedef int(^FMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDictionary
 
 @end
 
-
 /** Objective-C wrapper for `sqlite3_stmt`
  
  This is a wrapper for a SQLite `sqlite3_stmt`. Generally when using FMDB you will not need to interact directly with `FMStatement`, but rather with `<FMDatabase>` and `<FMResultSet>` only.
@@ -1055,7 +1036,7 @@ typedef int(^FMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDictionary
 
 /** SQL statement */
 
-@property (atomic, retain) NSString *query;
+@property(atomic, strong) NSString *query;
 
 /** SQLite sqlite3_stmt
  

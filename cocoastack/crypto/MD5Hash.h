@@ -30,9 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 @interface MD5Hash : NSObject
 + (NSString *)hashDataBase64Encode:(NSData *)theData;
 + (NSString *)hashData:(NSData *)data;

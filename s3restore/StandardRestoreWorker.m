@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #include <sys/stat.h>
 #import "StandardRestoreWorker.h"
 #import "StandardRestorer.h"
@@ -43,30 +41,19 @@
 #import "FileOutputStream.h"
 #import "BufferedOutputStream.h"
 
-
 @implementation StandardRestoreWorker
 - (id)initWithStandardRestorer:(StandardRestorer *)theStandardRestorer standardRestorerDelegate:(id <StandardRestorerDelegate>)theSRD {
     if (self = [super init]) {
-        standardRestorer = [theStandardRestorer retain];
+        standardRestorer = theStandardRestorer;
         standardRestorerDelegate = theSRD;
         
-        [self retain];
+        
         [NSThread detachNewThreadSelector:@selector(run) toTarget:self withObject:nil];
     }
     return self;
 }
-- (void)dealloc {
-    [standardRestorer release];
-    [super dealloc];
-}
-
-
 - (void)run {
-    NSAutoreleasePool *pool = nil;
     for (;;) {
-        [pool drain];
-        pool = [[NSAutoreleasePool alloc] init];
-        
         StandardRestoreItem *item = [standardRestorer nextItem];
         if (item == nil) {
             break;
@@ -77,8 +64,5 @@
         }
     }
     [standardRestorer workerDidFinish];
-    [pool drain];
-    
-    [self release];
 }
 @end

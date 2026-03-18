@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "CreateQueueResponse.h"
 
 @implementation CreateQueueResponse
@@ -40,27 +38,20 @@
         NSXMLParser *parser = [[NSXMLParser alloc] initWithData:theData];
         [parser setDelegate:self];
         [parser parse];
-        [parser release];
+        
     }
     return self;
 }
-- (void)dealloc {
-    [queueURL release];
-    [currentStringBuffer release];
-    [super dealloc];
-}
-
 - (NSURL *)queueURL {
     return queueURL;
 }
-
 
 #pragma mark - NSXMLParserDelegate
 - (void)parser:(NSXMLParser *)parser didStartElement:(NSString *)elementName
   namespaceURI:(NSString *)namespaceURI
  qualifiedName:(NSString *)qualifiedName
     attributes:(NSDictionary *)attributeDict {
-    [currentStringBuffer release];
+    
     currentStringBuffer = nil;
 }
 - (void)parser:(NSXMLParser *)parser foundCharacters:(NSString *)string {
@@ -72,7 +63,7 @@
 - (void)parser:(NSXMLParser *)parser didEndElement:(NSString *)elementName namespaceURI:(NSString *)namespaceURI qualifiedName:(NSString *)qName {
     if (currentStringBuffer != nil) {
         if ([elementName isEqualToString:@"QueueUrl"]) {
-            [queueURL release];
+            
             queueURL = [[NSURL alloc] initWithString:currentStringBuffer];
         }
     }

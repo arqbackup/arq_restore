@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @protocol XMLPlistParserDelegate;
 
 @interface XMLPlistParser : NSObject <NSXMLParserDelegate> {

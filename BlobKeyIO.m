@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "BlobKeyIO.h"
 #import "BooleanIO.h"
 #import "StringIO.h"
@@ -39,7 +37,6 @@
 #import "StorageType.h"
 #import "BlobKey.h"
 #import "DateIO.h"
-
 
 @implementation BlobKeyIO
 + (void)write:(BlobKey *)theBlobKey to:(NSMutableData *)data {
@@ -77,7 +74,7 @@
             || ![StringIO read:&archiveId from:is error:error]
             || ![IntegerIO readUInt64:&archiveSize from:is error:error]
             || ![DateIO read:&archiveUploadedDate from:is error:error]) {
-            [self release];
+            
             return NO;
         }
     }
@@ -87,7 +84,7 @@
         // If the sha1 is nil, it must have been a nil BlobKey, so we return nil here.
         *theBlobKey = nil;
     } else {
-        *theBlobKey = [[[BlobKey alloc] initWithStorageType:storageType archiveId:archiveId archiveSize:archiveSize archiveUploadedDate:archiveUploadedDate sha1:dataSHA1 stretchEncryptionKey:stretchEncryptionKey compressionType:theCompressionType error:error] autorelease];
+        *theBlobKey = [[BlobKey alloc] initWithStorageType:storageType archiveId:archiveId archiveSize:archiveSize archiveUploadedDate:archiveUploadedDate sha1:dataSHA1 stretchEncryptionKey:stretchEncryptionKey compressionType:theCompressionType error:error];
         if (*theBlobKey == nil) {
             return NO;
         }

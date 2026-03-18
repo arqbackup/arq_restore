@@ -30,13 +30,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "CWLSynthesizeSingleton.h"
 @class PackIndexEntry;
 @class PackId;
 @class FMDatabaseQueue;
-
 
 @interface PackSetDB : NSObject {
     FMDatabaseQueue *fmdbq;

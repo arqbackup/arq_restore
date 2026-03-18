@@ -30,19 +30,16 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "ReflogEntry.h"
 #import "DictNode.h"
 #import "BlobKey.h"
 #import "BooleanNode.h"
 #import "StringNode.h"
 
-
 @implementation ReflogEntry
 - (id)initWithId:(NSString *)theReflogId plist:(DictNode *)thePlist error:(NSError **)error {
     if (self = [super init]) {
-        reflogId = [theReflogId retain];
+        reflogId = theReflogId;
         double timeInterval = [reflogId doubleValue];
         createdDate = [[NSDate alloc] initWithTimeIntervalSinceReferenceDate:timeInterval];
         
@@ -51,7 +48,7 @@
             NSString *oldHeadSHA1 = [[thePlist stringNodeForKey:@"oldHeadSHA1"] stringValue];
             oldHeadBlobKey = [[BlobKey alloc] initWithSHA1:oldHeadSHA1 storageType:StorageTypeS3 stretchEncryptionKey:oldHeadStretchKey compressionType:BlobKeyCompressionNone error:error];
             if (oldHeadBlobKey == nil) {
-                [self release];
+                
                 return nil;
             }
         }
@@ -59,25 +56,16 @@
         NSString *newHeadSHA1 = [[thePlist stringNodeForKey:@"newHeadSHA1"] stringValue];
         newHeadBlobKey = [[BlobKey alloc] initWithSHA1:newHeadSHA1 storageType:StorageTypeS3 stretchEncryptionKey:newHeadStretchKey compressionType:BlobKeyCompressionNone error:error];
         if (newHeadBlobKey == nil) {
-            [self release];
+            
             return nil;
         }
         
         isRewrite = [[thePlist booleanNodeForKey:@"isRewrite"] booleanValue];
         
-        packSHA1 = [[[thePlist stringNodeForKey:@"packSHA1"] stringValue] retain];
+        packSHA1 = [[thePlist stringNodeForKey:@"packSHA1"] stringValue];
     }
     return self;
 }
-- (void)dealloc {
-    [createdDate release];
-    [reflogId release];
-    [oldHeadBlobKey release];
-    [newHeadBlobKey release];
-    [packSHA1 release];
-    [super dealloc];
-}
-
 - (NSDate *)createdDate {
     return createdDate;
 }

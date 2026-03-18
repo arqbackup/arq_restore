@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "S3MultiDeleteResponse.h"
 
 @implementation S3MultiDeleteResponse
@@ -43,23 +41,13 @@
         NSXMLParser *parser = [[NSXMLParser alloc] initWithData:theData];
         [parser setDelegate:self];
         [parser parse];
-        [parser release];
+        
     }
     return self;
-}
-- (void)dealloc {
-    [elementNames release];
-    [currentStringBuffer release];
-    [errorKey release];
-    [errorCode release];
-    [errorMessage release];
-    [errorCodesByPath release];
-    [super dealloc];
 }
 - (NSDictionary *)errorCodesByPath {
     return errorCodesByPath;
 }
-
 
 #pragma mark - NSXMLParserDelegate
 - (void)parser:(NSXMLParser *)parser didStartElement:(NSString *)elementName
@@ -67,7 +55,7 @@
  qualifiedName:(NSString *)qualifiedName
     attributes:(NSDictionary *)attributeDict {
     [elementNames addObject:elementName];
-    [currentStringBuffer release];
+    
     currentStringBuffer = nil;
 }
 - (void)parser:(NSXMLParser *)parser foundCharacters:(NSString *)string {
@@ -78,15 +66,15 @@
 }
 - (void)parser:(NSXMLParser *)parser didEndElement:(NSString *)elementName namespaceURI:(NSString *)namespaceURI qualifiedName:(NSString *)qName {
     if ([elementNames isEqual:[NSArray arrayWithObjects:@"DeleteResult", @"Error", @"Key", nil]]) {
-        [errorKey release];
+        
         errorKey = [currentStringBuffer copy];
     }
     if ([elementNames isEqual:[NSArray arrayWithObjects:@"DeleteResult", @"Error", @"Code", nil]]) {
-        [errorCode release];
+        
         errorCode = [currentStringBuffer copy];
     }
     if ([elementNames isEqual:[NSArray arrayWithObjects:@"DeleteResult", @"Error", @"Message", nil]]) {
-        [errorMessage release];
+        
         errorMessage = [currentStringBuffer copy];
     }
     if ([elementNames isEqual:[NSArray arrayWithObjects:@"DeleteResult", @"Error", nil]]) {

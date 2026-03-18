@@ -30,9 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 @protocol GlacierSigner <NSObject>
 - (NSString *)signString:(NSString *)theString withDateStamp:(NSString *)theDateStamp regionName:(NSString *)theRegionName serviceName:(NSString *)theServiceName;
 @end

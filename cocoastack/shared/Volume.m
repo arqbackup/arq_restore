@@ -30,10 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "Volume.h"
-
 
 @implementation Volume
 + (NSString *)errorDomain {
@@ -49,26 +46,17 @@
              name:(NSString *)theName
          isRemote:(BOOL)theIsRemote {
     if (self = [super init]) {
-        url = [theURL retain];
-        mountPoint = [theMountPoint retain];
-        fileSystem = [theFileSystem retain];
-        fsTypeName = [theFSTypeName retain];
+        url = theURL;
+        mountPoint = theMountPoint;
+        fileSystem = theFileSystem;
+        fsTypeName = theFSTypeName;
         fsType = theFSType;
         owner = theOwner;
-        name = [theName retain];
+        name = theName;
         isRemote = theIsRemote;
     }
     return self;
 }
-- (void)dealloc {
-    [url release];
-    [mountPoint release];
-    [fileSystem release];
-    [fsTypeName release];
-    [name release];
-    [super dealloc];
-}
-
 - (NSURL *)url {
     return url;
 }
@@ -81,7 +69,6 @@
 - (BOOL)isRemote {
     return isRemote;
 }
-
 
 #pragma mark NSObject
 - (NSString *)description {

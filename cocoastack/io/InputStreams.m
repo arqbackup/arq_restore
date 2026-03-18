@@ -30,11 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 #import "InputStreams.h"
-
 
 #import "BufferedInputStream.h"
 
@@ -42,7 +38,7 @@
 
 @implementation InputStreams
 + (NSData *)slurp:(id <InputStream>)is error:(NSError **)error {
-    NSMutableData *data = [[[NSMutableData alloc] init] autorelease];
+    NSMutableData *data = [[NSMutableData alloc] init];
     if (![InputStreams slurp:is intoBuffer:data error:error]) {
         return nil;
     }

@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "NSData-Random.h"
 
 @implementation NSData (Random)
@@ -40,7 +38,7 @@
     for (NSUInteger i = 0; i < theLength; i++) {
         buf[i] = (unsigned char)arc4random_uniform(256);
     }
-    NSData *ret = [[[NSData alloc] initWithBytes:buf length:theLength] autorelease];
+    NSData *ret = [[NSData alloc] initWithBytes:buf length:theLength];
     free(buf);
     return ret;
 }

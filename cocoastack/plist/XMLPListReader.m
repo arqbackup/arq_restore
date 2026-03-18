@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "ArrayNode.h"
 #import "BooleanNode.h"
 #import "DictNode.h"
@@ -42,24 +40,18 @@
 #import "PListNodeType.h"
 #import "XMLPListReader.h"
 
-
 @interface XMLPListReader (internal)
 - (ArrayNode *)readArray:(NSXMLNode *)elem error:(NSError **)error;
 - (DictNode *)readDict:(NSXMLNode *)elem error:(NSError **)error;
 - (id <PListNode>)makeNode:(NSXMLNode *)child error:(NSError **)error;
 @end
 
-
 @implementation XMLPListReader
 - (id)initWithData:(NSData *)theData {
 	if (self = [super init]) {
-		data = [theData retain];
+		data = theData;
 	}
 	return self;
-}
-- (void)dealloc {
-	[data release];
-	[super dealloc];
 }
 - (DictNode *)read:(NSError **)error {
     NSError *myError = nil;
@@ -72,26 +64,26 @@
     NSXMLElement *rootElem = [doc rootElement];
     if (![[rootElem name] isEqualToString:@"plist"]) {
         SETNSERROR(@"PListErrorDomain", -1, @"expected root element 'plist'");
-        [doc release];
+        
         return nil;
     }
     ArrayNode *an = [self readArray:rootElem error:error];
     if (!an) {
-        [doc release];
+        
         return nil;
     }
     if ([an size] != 1) {
         SETNSERROR(@"PListErrorDomain", -1, @"empty root array in PList");
-        [doc release];
+        
         return nil;
     }
     if ([an arrayElementsType] != PLN_DICT) {
         SETNSERROR(@"PListErrorDomain", -1, @"expected root array in PList");
-        [doc release];
+        
         return nil;
     }
     dn = (DictNode *)[an objectAtIndex:0];
-    [doc release];
+    
     return dn;
 }
 @end
@@ -108,18 +100,18 @@
 		} else {
             id <PListNode> node = [self makeNode:childNode error:error];
             if (!node) {
-                [nodes release];
+                
                 return nil;
             }
 			[nodes addObject:node];
 		}
 	}
-	ArrayNode *ret = [[[ArrayNode alloc] initWithArray:nodes] autorelease];
-	[nodes release];
+	ArrayNode *ret = [[ArrayNode alloc] initWithArray:nodes];
+	
 	return ret;
 }
 - (DictNode *)readDict:(NSXMLNode *)elem error:(NSError **)error {
-	DictNode *dn = [[[DictNode alloc] init] autorelease];
+	DictNode *dn = [[DictNode alloc] init];
 	NSArray *children = [elem children];
 	NSString *key = nil;
 	for (NSXMLNode *childNode in children) {
@@ -151,23 +143,23 @@
 	} else if ([childName isEqualToString:@"dict"]) {
 		ret = [self readDict:child error:error];
 	} else if ([childName isEqualToString:@"true"]) {
-		ret = [[[BooleanNode alloc] initWithBoolean:YES] autorelease];
+		ret = [[BooleanNode alloc] initWithBoolean:YES];
 	} else if ([childName isEqualToString:@"false"]) {
-		ret = [[[BooleanNode alloc] initWithBoolean:NO] autorelease];
+		ret = [[BooleanNode alloc] initWithBoolean:NO];
 	} else if ([childName isEqualToString:@"integer"]) {
-        IntegerNode *node = [[[IntegerNode alloc] initWithString:[child stringValue] error:error] autorelease];
+        IntegerNode *node = [[IntegerNode alloc] initWithString:[child stringValue] error:error];
         if (node) {
             ret = node;
         }
 	} else if ([childName isEqualToString:@"real"]) {
-		RealNode *node = [[[RealNode alloc] initWithString:[child stringValue] error:error] autorelease];
+		RealNode *node = [[RealNode alloc] initWithString:[child stringValue] error:error];
         if (node) {
             ret = node;
         }
 	} else if ([childName isEqualToString:@"string"]) {
-        NSString *value = (NSString *)CFXMLCreateStringByUnescapingEntities(kCFAllocatorDefault, (CFStringRef)[child stringValue], NULL);
-		ret = [[[StringNode alloc] initWithString:value] autorelease];
-        [value release];
+        NSString *value = (__bridge_transfer NSString *)CFXMLCreateStringByUnescapingEntities(kCFAllocatorDefault, (__bridge CFStringRef)[child stringValue], NULL);
+		ret = [[StringNode alloc] initWithString:value];
+        
 	} else {
         SETNSERROR(@"PListErrorDomain", -1, @"invalid node type");
 	}

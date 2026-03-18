@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "Fark.h"
 #import "S3AuthorizationProvider.h"
 #import "S3Service.h"
@@ -54,36 +52,25 @@
 #import "CacheOwnership.h"
 #import "Item.h"
 
-
 @implementation Fark
 - (id)initWithTarget:(Target *)theTarget
         computerUUID:(NSString *)theComputerUUID
 targetConnectionDelegate:(id <TargetConnectionDelegate>)theTargetConnectionDelegate
                error:(NSError **)error {
     if (self = [super init]) {
-        target = [theTarget retain];
+        target = theTarget;
         targetConnection = [target newConnection:error];
         if (targetConnection == nil) {
-            [self release];
+            
             return nil;
         }
-        computerUUID = [theComputerUUID retain];
+        computerUUID = theComputerUUID;
         targetConnectionDelegate = theTargetConnectionDelegate;
         packIdsAlreadyPostedForRestore = [[NSMutableSet alloc] init];
         downloadablePackIds = [[NSMutableSet alloc] init];
     }
     return self;
 }
-- (void)dealloc {
-    [target release];
-    [targetConnection release];
-    [computerUUID release];
-    [packIdsAlreadyPostedForRestore release];
-    [downloadablePackIds release];
-    [super dealloc];
-}
-
-
 #pragma mark Fark
 - (NSString *)errorDomain {
     return @"FarkErrorDomain";
@@ -107,13 +94,13 @@ targetConnectionDelegate:(id <TargetConnectionDelegate>)theTargetConnectionDeleg
         return nil;
     }
     
-    NSString *sha1 = [[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] autorelease];
+    NSString *sha1 = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
     BOOL stretch = NO;
     if ([sha1 length] > 40) {
         stretch = [sha1 characterAtIndex:40] == 'Y';
         sha1 = [sha1 substringToIndex:40];
     }
-    return [[[BlobKey alloc] initWithSHA1:sha1 storageType:StorageTypeS3 stretchEncryptionKey:stretch compressionType:BlobKeyCompressionNone error:error] autorelease];
+    return [[BlobKey alloc] initWithSHA1:sha1 storageType:StorageTypeS3 stretchEncryptionKey:stretch compressionType:BlobKeyCompressionNone error:error];
 }
 - (BOOL)setHeadBlobKey:(BlobKey *)theHeadBlobKey forBucketUUID:(NSString *)theBucketUUID error:(NSError **)error {
     NSMutableString *str = [NSMutableString stringWithString:[theHeadBlobKey sha1]];
@@ -151,7 +138,7 @@ targetConnectionDelegate:(id <TargetConnectionDelegate>)theTargetConnectionDeleg
     if (plist == nil) {
         return nil;
     }
-    ReflogEntry *entry = [[[ReflogEntry alloc] initWithId:theReflogEntryId plist:plist error:error] autorelease];
+    ReflogEntry *entry = [[ReflogEntry alloc] initWithId:theReflogEntryId plist:plist error:error];
     return entry;
 }
 - (BOOL)clearBucketDataItemsDBCacheForBucketUUID:(NSString *)theBucketUUID error:(NSError **)error {
@@ -335,7 +322,7 @@ targetConnectionDelegate:(id <TargetConnectionDelegate>)theTargetConnectionDeleg
             NSString *packSHA1 = [item.name substringWithRange:[item.name rangeOfRegex:regex capture:1]];
             PackId *packId = [[PackId alloc] initWithPackSetName:packSetName packSHA1:packSHA1];
             [ret addObject:packId];
-            [packId release];
+            
         }
     }
     return ret;
@@ -437,8 +424,8 @@ targetConnectionDelegate:(id <TargetConnectionDelegate>)theTargetConnectionDeleg
         }
         
         NSData *subdata = [packData subdataWithRange:NSMakeRange([thePIE offset], [packData length] - [thePIE offset])];
-        DataInputStream *dis = [[[DataInputStream alloc] initWithData:subdata description:@"blob"] autorelease];
-        BufferedInputStream *bis = [[[BufferedInputStream alloc] initWithUnderlyingStream:dis] autorelease];
+        DataInputStream *dis = [[DataInputStream alloc] initWithData:subdata description:@"blob"];
+        BufferedInputStream *bis = [[BufferedInputStream alloc] initWithUnderlyingStream:dis];
         ret = [self packDataFromBufferedInputStream:bis error:error];
     }
     return ret;
@@ -481,7 +468,6 @@ targetConnectionDelegate:(id <TargetConnectionDelegate>)theTargetConnectionDeleg
     }
     return YES;
 }
-
 
 #pragma mark internal
 - (NSArray *)objectsDirectories {
@@ -582,8 +568,7 @@ targetConnectionDelegate:(id <TargetConnectionDelegate>)theTargetConnectionDeleg
         ret = [self packDataFromBufferedInputStream:bis error:error];
     } while (0);
     close(fd);
-    [bis release];
-    [fdis release];
+    
     
 //    if (ret != nil) {
 //        HSLogDebug(@"found cached pack data for %@ at %@", thePIE, cachePath);

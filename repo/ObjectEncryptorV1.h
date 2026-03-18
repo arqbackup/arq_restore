@@ -30,15 +30,11 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 #import "ObjectEncryptorImpl.h"
 @class Target;
 @protocol TargetConnectionDelegate;
 @class CryptoKey;
 @class EncryptionDatFile;
-
 
 @interface ObjectEncryptorV1 : NSObject <ObjectEncryptorImpl> {
     Target *target;

@@ -30,11 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @class PIELoader;
 @class Fark;
-
 
 @interface PIELoaderWorker : NSObject {
     PIELoader *pieLoader;

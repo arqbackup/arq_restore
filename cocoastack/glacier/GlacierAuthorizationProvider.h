@@ -30,12 +30,9 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @protocol GlacierSigner;
 @protocol HTTPConnection;
 @class AWSRegion;
-
 
 @interface GlacierAuthorizationProvider : NSObject {
     NSString *accessKey;

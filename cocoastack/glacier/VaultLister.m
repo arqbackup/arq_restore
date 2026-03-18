@@ -30,15 +30,12 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "VaultLister.h"
 #import "GlacierRequest.h"
 #import "GlacierResponse.h"
 #import "NSString+SBJSON.h"
 #import "Vault.h"
 #import "AWSRegion.h"
-
 
 @interface VaultLister ()
 - (BOOL)get:(NSError **)error;
@@ -47,20 +44,13 @@
 @implementation VaultLister
 - (id)initWithGlacierAuthorizationProvider:(GlacierAuthorizationProvider *)theGAP awsRegion:(AWSRegion *)theAWSRegion useSSL:(BOOL)theUseSSL retryOnTransientError:(BOOL)retry {
     if (self = [super init]) {
-        gap = [theGAP retain];
-        awsRegion = [theAWSRegion retain];
+        gap = theGAP;
+        awsRegion = theAWSRegion;
         useSSL = theUseSSL;
         retryOnTransientError = retry;
         vaults = [[NSMutableArray alloc] init];
     }
     return self;
-}
-- (void)dealloc {
-    [gap release];
-    [awsRegion release];
-    [marker release];
-    [vaults release];
-    [super dealloc];
 }
 - (NSArray *)vaults:(NSError **)error {
     for (;;) {
@@ -74,7 +64,6 @@
     return vaults;
 }
 
-
 #pragma mark internal
 - (BOOL)get:(NSError **)error {
     NSString *urlString = [NSString stringWithFormat:@"%@/-/vaults", [awsRegion glacierEndpointWithSSL:useSSL]];
@@ -83,7 +72,7 @@
     }
     NSURL *theURL = [NSURL URLWithString:urlString];
     
-    GlacierRequest *req = [[[GlacierRequest alloc] initWithMethod:@"GET" url:theURL awsRegion:awsRegion authorizationProvider:gap retryOnTransientError:retryOnTransientError dataTransferDelegate:nil] autorelease];
+    GlacierRequest *req = [[GlacierRequest alloc] initWithMethod:@"GET" url:theURL awsRegion:awsRegion authorizationProvider:gap retryOnTransientError:retryOnTransientError dataTransferDelegate:nil];
     [req setHeader:@"application/json" forKey:@"Accept"];
     [req setHeader:@"Glacier.ListVaults" forKey:@"x-amz-target"];
     GlacierResponse *response = [req execute:error];
@@ -91,17 +80,17 @@
         return NO;
     }
     NSData *data = [response body];
-    NSString *responseString = [[[NSString alloc] initWithBytes:[data bytes] length:[data length] encoding:NSUTF8StringEncoding] autorelease];
+    NSString *responseString = [[NSString alloc] initWithBytes:[data bytes] length:[data length] encoding:NSUTF8StringEncoding];
     NSDictionary *dict = [responseString JSONValue:error];
-    [marker release];
-    marker = [[dict objectForKey:@"Marker"] retain];
+    
+    marker = [dict objectForKey:@"Marker"];
     if ([marker isKindOfClass:[NSNull class]]) {
-        [marker release];
+        
         marker = nil;
     }
     NSArray *vaultList = [dict objectForKey:@"VaultList"];
     for (NSDictionary *vaultDict in vaultList) {
-        Vault *vault = [[[Vault alloc] initWithAWSRegion:awsRegion json:vaultDict] autorelease];
+        Vault *vault = [[Vault alloc] initWithAWSRegion:awsRegion json:vaultDict];
         [vaults addObject:vault];
     }
     return YES;

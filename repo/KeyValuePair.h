@@ -30,15 +30,11 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
-
 @interface KeyValuePair : NSObject {
 	id _key;
 	id _value;
 }
 - (id)initWithKey:(id)theKey value:(id)theValue;
-@property(readonly,retain) id key;
-@property(readonly,retain) id value;
+@property(readonly,strong) id key;
+@property(readonly,strong) id value;
 @end

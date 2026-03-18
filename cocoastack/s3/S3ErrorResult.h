@@ -30,9 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 @interface S3ErrorResult : NSObject <NSXMLParserDelegate> {
     NSMutableDictionary *values;
     NSMutableString *currentStringBuffer;

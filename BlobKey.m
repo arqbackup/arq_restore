@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "BlobKey.h"
 #import "BufferedInputStream.h"
 #import "StringIO.h"
@@ -41,7 +39,6 @@
 #import "NSString_extra.h"
 #import "SHA1Hash.h"
 
-
 @implementation BlobKey
 - (id)initWithSHA1:(NSString *)theSHA1 archiveId:(NSString *)theArchiveId archiveSize:(uint64_t)theArchiveSize archiveUploadedDate:(NSDate *)theArchiveUploadedDate compressionType:(BlobKeyCompressionType)theCompressionType error:(NSError **)error {
     if (self = [super init]) {
@@ -49,20 +46,20 @@
         
         NSData *sha1Data = [theSHA1 hexStringToData:error];
         if (sha1Data == nil) {
-            [self release];
+            
             return nil;
         }
         if ([sha1Data length] != 20) {
             SETNSERROR(@"BlobKeyErrorDomain", -1, @"invalid sha1 '%@' for BlobKey (must be 20 bytes)", theSHA1);
-            [self release];
+            
             return nil;
         }
         sha1Bytes = (unsigned char *)malloc(20);
         memcpy(sha1Bytes, [sha1Data bytes], 20);
         
-        archiveId = [theArchiveId retain];
+        archiveId = theArchiveId;
         archiveSize = theArchiveSize;
-        archiveUploadedDate = [theArchiveUploadedDate retain];
+        archiveUploadedDate = theArchiveUploadedDate;
         compressionType = theCompressionType;
     }
     return self;
@@ -73,12 +70,12 @@
         
         NSData *sha1Data = [theSHA1 hexStringToData:error];
         if (sha1Data == nil) {
-            [self release];
+            
             return nil;
         }
         if ([sha1Data length] != 20) {
             SETNSERROR(@"BlobKeyErrorDomain", -1, @"invalid sha1 '%@' for BlobKey (must be 20 bytes)", theSHA1);
-            [self release];
+            
             return nil;
         }
         sha1Bytes = (unsigned char *)malloc(20);
@@ -92,18 +89,18 @@
 - (id)initWithStorageType:(StorageType)theStorageType archiveId:(NSString *)theArchiveId archiveSize:(uint64_t)theArchiveSize archiveUploadedDate:(NSDate *)theArchiveUploadedDate sha1:(NSString *)theSHA1 stretchEncryptionKey:(BOOL)isStretchedKey compressionType:(BlobKeyCompressionType)theCompressionType error:(NSError **)error {
     if (self = [super init]) {
         storageType = theStorageType;
-        archiveId = [theArchiveId retain];
+        archiveId = theArchiveId;
         archiveSize = theArchiveSize;
-        archiveUploadedDate = [theArchiveUploadedDate retain];
+        archiveUploadedDate = theArchiveUploadedDate;
         
         NSData *sha1Data = [theSHA1 hexStringToData:error];
         if (sha1Data == nil) {
-            [self release];
+            
             return nil;
         }
         if ([sha1Data length] != 20) {
             SETNSERROR(@"BlobKeyErrorDomain", -1, @"invalid sha1 '%@' for BlobKey (must be 20 bytes)", theSHA1);
-            [self release];
+            
             return nil;
         }
         sha1Bytes = (unsigned char *)malloc(20);
@@ -124,10 +121,9 @@
                                 compressionType:[theBlobKey compressionType]];
 }
 - (void)dealloc {
-    [archiveId release];
-    [archiveUploadedDate release];
+    
+    
     free(sha1Bytes);
-    [super dealloc];
 }
 
 - (StorageType)storageType {
@@ -164,12 +160,10 @@
     return YES;
 }
 
-
 #pragma mark NSCopying
 - (id)copyWithZone:(NSZone *)zone {
     return [[BlobKey alloc] initWithStorageType:storageType archiveId:archiveId archiveSize:archiveSize archiveUploadedDate:archiveUploadedDate sha1Bytes:sha1Bytes stretchEncryptionKey:stretchEncryptionKey compressionType:compressionType];
 }
-
 
 #pragma mark NSObject
 - (NSString *)description {
@@ -197,14 +191,13 @@
     return (NSUInteger)(*sha1Bytes);
 }
 
-
 #pragma mark internal
 - (id)initWithStorageType:(StorageType)theStorageType archiveId:(NSString *)theArchiveId archiveSize:(uint64_t)theArchiveSize archiveUploadedDate:(NSDate *)theArchiveUploadedDate sha1Bytes:(unsigned char *)theSHA1Bytes stretchEncryptionKey:(BOOL)isStretchedKey compressionType:(BlobKeyCompressionType)theCompressionType {
     if (self = [super init]) {
         storageType = theStorageType;
-        archiveId = [theArchiveId retain];
+        archiveId = theArchiveId;
         archiveSize = theArchiveSize;
-        archiveUploadedDate = [theArchiveUploadedDate retain];
+        archiveUploadedDate = theArchiveUploadedDate;
         
         NSAssert(theSHA1Bytes != NULL, @"theSHA1Bytes may not be null");
         sha1Bytes = (unsigned char *)malloc(20);

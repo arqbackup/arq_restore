@@ -30,20 +30,17 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "Vault.h"
 #import "ISO8601Date.h"
-
 
 @implementation Vault
 - (id)initWithAWSRegion:(AWSRegion *)theAWSRegion json:(NSDictionary *)theDict {
     if (self = [super init]) {
-        awsRegion = [theAWSRegion retain];
+        awsRegion = theAWSRegion;
         NSString *theCreationDate = [theDict objectForKey:@"CreationDate"];
         if (theCreationDate != nil && ![theCreationDate isKindOfClass:[NSNull class]]) {
             NSError *myError = nil;
-            creationDate = [[[ISO8601Date sharedISO8601Date] dateFromString:theCreationDate error:&myError] retain];
+            creationDate = [[ISO8601Date sharedISO8601Date] dateFromString:theCreationDate error:&myError];
             if (creationDate == nil) {
                 HSLogError(@"%@", myError);
             }
@@ -52,28 +49,19 @@
         NSString *theLastInventoryDate = [theDict objectForKey:@"LastInventoryDate"];
         if (theLastInventoryDate != nil && ![theLastInventoryDate isKindOfClass:[NSNull class]]) {
             NSError *myError = nil;
-            lastInventoryDate = [[[ISO8601Date sharedISO8601Date] dateFromString:theLastInventoryDate error:&myError] retain];
+            lastInventoryDate = [[ISO8601Date sharedISO8601Date] dateFromString:theLastInventoryDate error:&myError];
             if (lastInventoryDate == nil) {
                 HSLogError(@"%@", myError);
             }
         }
         
-        vaultARN = [[theDict objectForKey:@"VaultARN"] retain];
-        vaultName = [[theDict objectForKey:@"VaultName"] retain];
+        vaultARN = [theDict objectForKey:@"VaultARN"];
+        vaultName = [theDict objectForKey:@"VaultName"];
         numberOfArchives = (uint64_t)[[theDict objectForKey:@"NumberOfArchives"] unsignedLongLongValue];
         size = (uint64_t)[[theDict objectForKey:@"SizeInBytes"] unsignedLongLongValue];
     }
     return self;
 }
-- (void)dealloc {
-    [awsRegion release];
-    [creationDate release];
-    [lastInventoryDate release];
-    [vaultARN release];
-    [vaultName release];
-    [super dealloc];
-}
-
 - (AWSRegion *)awsRegion {
     return awsRegion;
 }

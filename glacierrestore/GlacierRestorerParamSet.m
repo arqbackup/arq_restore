@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "GlacierRestorerParamSet.h"
 #import "AWSRegion.h"
 #import "BlobKey.h"
@@ -44,11 +42,9 @@
 #import "DoubleIO.h"
 #import "Bucket.h"
 
-
 @interface GlacierRestorerParamSet ()
 - (BOOL)readFromStream:(BufferedInputStream *)theIS error:(NSError **)error;
 @end
-
 
 @implementation GlacierRestorerParamSet
 @synthesize bucket;
@@ -65,11 +61,10 @@
 @synthesize destinationPath;
 @synthesize logLevel;
 
-
 - (id)initWithBufferedInputStream:(BufferedInputStream *)theIS error:(NSError **)error {
     if (self = [super init]) {
         if (![self readFromStream:theIS error:error]) {
-            [self release];
+            
             return nil;
         }
     }
@@ -90,34 +85,23 @@ glacierRetrievalTier:(int)theGlacierRetrievalTier
      destinationPath:(NSString *)theDestination
             logLevel:(int)theLogLevel {
     if (self = [super init]) {
-        bucket = [theBucket retain];
-        encryptionPassword = [theEncryptionPassword retain];
+        bucket = theBucket;
+        encryptionPassword = theEncryptionPassword;
         downloadBytesPerSecond = theDownloadBytesPerSecond;
         glacierRetrievalTier = theGlacierRetrievalTier;
-        commitBlobKey = [theCommitBlobKey retain];
-        rootItemName = [theRootItemName retain];
+        commitBlobKey = theCommitBlobKey;
+        rootItemName = theRootItemName;
         treeVersion = theTreeVersion;
-        treeBlobKey = [theTreeBlobKey retain];
-        nodeName = [theNodeName retain];
+        treeBlobKey = theTreeBlobKey;
+        nodeName = theNodeName;
         targetUID = theTargetUID;
         targetGID = theTargetGID;
         useTargetUIDAndGID = theUseTargetUIDAndGID;
-        destinationPath = [theDestination retain];
+        destinationPath = theDestination;
         logLevel = theLogLevel;
     }
     return self;
 }
-- (void)dealloc {
-    [bucket release];
-    [encryptionPassword release];
-    [commitBlobKey release];
-    [rootItemName release];
-    [treeBlobKey release];
-    [nodeName release];
-    [destinationPath release];
-    [super dealloc];
-}
-
 - (BOOL)writeTo:(BufferedOutputStream *)theBOS error:(NSError **)error {
     return [bucket writeTo:theBOS error:error]
     && [StringIO write:encryptionPassword to:theBOS error:error]
@@ -136,7 +120,6 @@ glacierRetrievalTier:(int)theGlacierRetrievalTier
     && [IntegerIO writeUInt32:(uint32_t)logLevel to:theBOS error:error];
 }
 
-
 #pragma mark internal
 - (BOOL)readFromStream:(BufferedInputStream *)theIS error:(NSError **)error {
     bucket = [[Bucket alloc] initWithBufferedInputStream:theIS error:error];
@@ -144,11 +127,12 @@ glacierRetrievalTier:(int)theGlacierRetrievalTier
         return NO;
     }
     
-    if (![StringIO read:&encryptionPassword from:theIS error:error]) {
+    NSString *theEncryptionPassword = nil;
+    if (![StringIO read:&theEncryptionPassword from:theIS error:error]) {
         return NO;
     }
-    [encryptionPassword retain];
-    
+    encryptionPassword = theEncryptionPassword;
+
     if (![DoubleIO read:&downloadBytesPerSecond from:theIS error:error]) {
         return NO;
     }
@@ -159,14 +143,18 @@ glacierRetrievalTier:(int)theGlacierRetrievalTier
     }
     glacierRetrievalTier = theTier;
     
-    if (![BlobKeyIO read:&commitBlobKey from:theIS treeVersion:CURRENT_TREE_VERSION compressionType:BlobKeyCompressionNone error:error]) {
+    BlobKey *theCommitBlobKey = nil;
+    if (![BlobKeyIO read:&theCommitBlobKey from:theIS treeVersion:CURRENT_TREE_VERSION compressionType:BlobKeyCompressionNone error:error]) {
         return NO;
     }
-    [commitBlobKey retain];
-    if (![StringIO read:&rootItemName from:theIS error:error]) {
+    commitBlobKey = theCommitBlobKey;
+
+    NSString *theRootItemName = nil;
+    if (![StringIO read:&theRootItemName from:theIS error:error]) {
         return NO;
     }
-    [rootItemName retain];
+    rootItemName = theRootItemName;
+
     if (![IntegerIO readInt32:&treeVersion from:theIS error:error]) {
         return NO;
     }
@@ -174,14 +162,18 @@ glacierRetrievalTier:(int)theGlacierRetrievalTier
     if (![IntegerIO readInt32:&treeBlobKeyCompressionType from:theIS error:error]) {
         return NO;
     }
-    if (![BlobKeyIO read:&treeBlobKey from:theIS treeVersion:treeVersion compressionType:(BlobKeyCompressionType)treeBlobKeyCompressionType error:error]) {
+    BlobKey *theTreeBlobKey = nil;
+    if (![BlobKeyIO read:&theTreeBlobKey from:theIS treeVersion:treeVersion compressionType:(BlobKeyCompressionType)treeBlobKeyCompressionType error:error]) {
         return NO;
     }
-    [treeBlobKey retain];
-    if (![StringIO read:&nodeName from:theIS error:error]) {
+    treeBlobKey = theTreeBlobKey;
+
+    NSString *theNodeName = nil;
+    if (![StringIO read:&theNodeName from:theIS error:error]) {
         return NO;
     }
-    [nodeName retain];
+    nodeName = theNodeName;
+
     int64_t theTargetUID = 0;
     if (![IntegerIO readInt64:&theTargetUID from:theIS error:error]) {
         return NO;
@@ -195,10 +187,12 @@ glacierRetrievalTier:(int)theGlacierRetrievalTier
     if (![BooleanIO read:&useTargetUIDAndGID from:theIS error:error]) {
         return NO;
     }
-    if (![StringIO read:&destinationPath from:theIS error:error]) {
+    NSString *theDestinationPath = nil;
+    if (![StringIO read:&theDestinationPath from:theIS error:error]) {
         return NO;
     }
-    [destinationPath retain];
+    destinationPath = theDestinationPath;
+
     uint32_t theLogLevel;
     if (![IntegerIO readUInt32:&theLogLevel from:theIS error:error]) {
         return NO;

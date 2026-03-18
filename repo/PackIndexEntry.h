@@ -30,10 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @class PackId;
-
 
 @interface PackIndexEntry : NSObject <NSCopying> {
     PackId *packId;

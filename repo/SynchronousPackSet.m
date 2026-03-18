@@ -30,12 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 #import "SynchronousPackSet.h"
 #import "PackSet.h"
-
 
 @implementation SynchronousPackSet
 - (id)initWithFark:(Fark *)theFark
@@ -52,7 +48,7 @@
                                activityListener:theActivityListener
                                           error:error];
         if (packSet == nil) {
-            [self release];
+            
             return nil;
         }
         lock = [[NSLock alloc] init];
@@ -60,12 +56,6 @@
     }
     return self;
 }
-- (void)dealloc {
-    [packSet release];
-    [lock release];
-    [super dealloc];
-}
-
 - (NSString *)errorDomain {
     return [packSet errorDomain];
 }

@@ -31,12 +31,12 @@
 		F82951F119868D90001DC91B /* NSDictionary_HTTP.m in Sources */ = {isa = PBXBuildFile; fileRef = F82951AC19868D90001DC91B /* NSDictionary_HTTP.m */; };
 		F82951F219868D90001DC91B /* RFC2616DateFormatter.m in Sources */ = {isa = PBXBuildFile; fileRef = F82951AE19868D90001DC91B /* RFC2616DateFormatter.m */; };
 		F82951F519868D90001DC91B /* URLConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = F82951B419868D90001DC91B /* URLConnection.m */; };
-		F829521319868DE6001DC91B /* RegexKitLite.m in Sources */ = {isa = PBXBuildFile; fileRef = F829521219868DE6001DC91B /* RegexKitLite.m */; };
-		F829523019868E59001DC91B /* NSObject+SBJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = F829522719868E59001DC91B /* NSObject+SBJSON.m */; };
-		F829523119868E59001DC91B /* NSString+SBJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = F829522919868E59001DC91B /* NSString+SBJSON.m */; };
-		F829523219868E59001DC91B /* SBJsonBase.m in Sources */ = {isa = PBXBuildFile; fileRef = F829522B19868E59001DC91B /* SBJsonBase.m */; };
-		F829523319868E59001DC91B /* SBJsonParser.m in Sources */ = {isa = PBXBuildFile; fileRef = F829522D19868E59001DC91B /* SBJsonParser.m */; };
-		F829523419868E59001DC91B /* SBJsonWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = F829522F19868E59001DC91B /* SBJsonWriter.m */; };
+		F829521319868DE6001DC91B /* RegexKitLite.m in Sources */ = {isa = PBXBuildFile; fileRef = F829521219868DE6001DC91B /* RegexKitLite.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		F829523019868E59001DC91B /* NSObject+SBJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = F829522719868E59001DC91B /* NSObject+SBJSON.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		F829523119868E59001DC91B /* NSString+SBJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = F829522919868E59001DC91B /* NSString+SBJSON.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		F829523219868E59001DC91B /* SBJsonBase.m in Sources */ = {isa = PBXBuildFile; fileRef = F829522B19868E59001DC91B /* SBJsonBase.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		F829523319868E59001DC91B /* SBJsonParser.m in Sources */ = {isa = PBXBuildFile; fileRef = F829522D19868E59001DC91B /* SBJsonParser.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		F829523419868E59001DC91B /* SBJsonWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = F829522F19868E59001DC91B /* SBJsonWriter.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		F829523819868E83001DC91B /* AWSRegion.m in Sources */ = {isa = PBXBuildFile; fileRef = F829523719868E83001DC91B /* AWSRegion.m */; };
 		F829523C19868EA4001DC91B /* NetMonitor.m in Sources */ = {isa = PBXBuildFile; fileRef = F829523B19868EA4001DC91B /* NetMonitor.m */; };
 		F829524019868EC7001DC91B /* NSString_extra.m in Sources */ = {isa = PBXBuildFile; fileRef = F829523F19868EC7001DC91B /* NSString_extra.m */; };
@@ -2031,6 +2031,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_ARC = YES;
 				COPY_PHASE_STRIP = NO;
 				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)";
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -2061,6 +2062,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_ARC = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)";
 				GCC_MODEL_TUNING = G5;

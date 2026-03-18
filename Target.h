@@ -30,22 +30,17 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @class DictNode;
 @class BufferedInputStream;
 @class BufferedOutputStream;
 @class S3Service;
 @class TargetConnection;
 
-
 enum TargetType {
     kTargetAWS = 0,
     kTargetLocal = 12
 };
 typedef int TargetType;
-
-
 
 /*
  * Example endpoints:

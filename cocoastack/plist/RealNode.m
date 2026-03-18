@@ -30,11 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "PListNodeType.h"
 #import "RealNode.h"
-
 
 @implementation RealNode
 - (id)initWithDouble:(double)theValue {
@@ -48,7 +45,7 @@
 		NSScanner *scanner = [NSScanner scannerWithString:theValue];
 		if (![scanner scanDouble:&value]) {
             SETNSERROR(@"PListErrorDomain", -1, @"string does not contain a double: %@", theValue);
-            [self release];
+            
             self = nil;
 		}
 	}

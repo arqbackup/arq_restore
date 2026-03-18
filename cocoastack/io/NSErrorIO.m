@@ -30,12 +30,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #import "NSErrorIO.h"
 #import "BooleanIO.h"
 #import "StringIO.h"
 #import "IntegerIO.h"
-
 
 @implementation NSErrorIO
 + (NSString *)errorDomain {
@@ -91,7 +89,7 @@
                 SETNSERROR([NSErrorIO errorDomain], -1, @"nil description");
                 return NO;
             }
-            *theError = [[[NSError alloc] initWithDomain:domain code:(NSInteger)code description:description] autorelease];
+            *theError = [[NSError alloc] initWithDomain:domain code:(NSInteger)code description:description];
         }
 //    } else {
 //        HSLogDebug(@"NSErrorIO: received nil NSError");

@@ -30,12 +30,9 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "PListNodeType.h"
 #import "StringNode.h"
 #import "NSObject_extra.h"
-
 
 @implementation StringNode
 - (id)initWithString:(NSString *)theValue {
@@ -43,10 +40,6 @@
 		value = [theValue copy];
 	}
 	return self;
-}
-- (void)dealloc {
-	[value release];
-	[super dealloc];
 }
 - (NSString *)stringValue {
 	return value;

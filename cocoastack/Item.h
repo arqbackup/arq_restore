@@ -30,10 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @class BufferedInputStream;
-
 
 @interface Item : NSObject <NSCopying> {
     NSString *itemId;
@@ -47,15 +44,14 @@
     NSString *checksum;
 }
 
-
-@property (retain) NSString *itemId;
-@property (retain) NSString *parentId;
-@property (retain) NSString *name;
+@property(strong) NSString *itemId;
+@property(strong) NSString *parentId;
+@property(strong) NSString *name;
 @property BOOL isDirectory;
 @property unsigned long long fileSize;
-@property (retain) NSDate *fileLastModified;
-@property (retain) NSDate *createdDate;
-@property (retain) NSString *storageClass;
-@property (retain) NSString *checksum;
+@property(strong) NSDate *fileLastModified;
+@property(strong) NSDate *createdDate;
+@property(strong) NSString *storageClass;
+@property(strong) NSString *checksum;
 
 @end

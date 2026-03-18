@@ -30,10 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "PathReceiver.h"
-
 
 @implementation PathReceiver
 - (id)init {
@@ -41,10 +38,6 @@
         paths = [[NSMutableArray alloc] init];
     }
     return self;
-}
-- (void)dealloc {
-    [paths release];
-    [super dealloc];
 }
 - (NSArray *)paths {
     return paths;

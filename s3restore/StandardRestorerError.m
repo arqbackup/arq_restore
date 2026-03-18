@@ -30,25 +30,17 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "StandardRestorerError.h"
 
 @implementation StandardRestorerError
 @synthesize errorMessage;
 @synthesize path;
 
-
 - (id)initWithErrorMessage:(NSString *)theErrorMessage path:(NSString *)thePath {
     if (self = [super init]) {
-        errorMessage = [theErrorMessage retain];
-        path = [thePath retain];
+        errorMessage = theErrorMessage;
+        path = thePath;
     }
     return self;
-}
-- (void)dealloc {
-    [errorMessage release];
-    [path release];
-    [super dealloc];
 }
 @end

@@ -30,10 +30,9 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #include <libkern/OSByteOrder.h>
 #import "PackIndex.h"
+#import "PackId.h"
 #import "PackIndexEntry.h"
 #import "NSString_extra.h"
 #import "Fark.h"
@@ -41,7 +40,6 @@
 #import "IntegerIO.h"
 #import "DataInputStream.h"
 #import "BufferedInputStream.h"
-
 
 typedef struct index_object {
     uint64_t nbo_offset;
@@ -57,21 +55,14 @@ typedef struct pack_index {
     index_object first_index_object;
 } pack_index;
 
-
 @implementation PackIndex
 - (id)initWithPackId:(PackId *)thePackId indexData:(NSData *)theIndexData {
     if (self = [super init]) {
-        packId = [thePackId retain];
-        indexData = [theIndexData retain];
+        packId = thePackId;
+        indexData = theIndexData;
     }
     return self;
 }
-- (void)dealloc {
-    [packId release];
-    [indexData release];
-    [super dealloc];
-}
-
 - (NSArray *)packIndexEntries:(NSError **)error {
     NSMutableArray *ret = [NSMutableArray array];
     
@@ -94,22 +85,15 @@ typedef struct pack_index {
         return nil;
     }
     index_object *indexObjects = &(the_pack_index->first_index_object);
-    NSAutoreleasePool *pool = nil;
     for (uint32_t i = 0; i < count; i++) {
-        [pool drain];
-        pool = [[NSAutoreleasePool alloc] init];
         uint64_t offset = OSSwapBigToHostInt64(indexObjects[i].nbo_offset);
         uint64_t dataLength = OSSwapBigToHostInt64(indexObjects[i].nbo_datalength);
         NSString *objectSHA1 = [NSString hexStringWithBytes:indexObjects[i].sha1 length:20];
-        PackIndexEntry *pie = [[[PackIndexEntry alloc] initWithPackId:packId offset:offset dataLength:dataLength objectSHA1:objectSHA1] autorelease];
+        PackIndexEntry *pie = [[PackIndexEntry alloc] initWithPackId:packId offset:offset dataLength:dataLength objectSHA1:objectSHA1];
         [ret addObject:pie];
     }
-    [pool drain];
-    pool = nil;
-    
     return ret;
 }
-
 
 #pragma mark NSObject
 - (NSString *)errorDomain {

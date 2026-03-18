@@ -30,10 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "ItemFS.h"
-
 
 @interface LocalItemFS : NSObject <ItemFS> {
     BOOL volumeIsRemote;

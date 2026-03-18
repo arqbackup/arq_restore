@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "GlacierRestorer.h"
 #import "GlacierRestorerParamSet.h"
 #import "GlacierRestorerDelegate.h"
@@ -69,12 +67,12 @@
 #import "CalculateItem.h"
 #import "Bucket.h"
 #import "Target.h"
+#import "PackId.h"
 #import "GlacierPackSet.h"
 #import "GlacierPack.h"
 #import "GlacierPackIndex.h"
 #import "AWSRegion.h"
 #import "Streams.h"
-
 
 #define WAIT_TIME (3.0)
 #define SLEEP_CYCLES (2)
@@ -83,19 +81,18 @@
 
 #define RESTORE_DAYS (10)
 
-
 @implementation GlacierRestorer
 - (id)initWithGlacierRestorerParamSet:(GlacierRestorerParamSet *)theParamSet
                              delegate:(id <GlacierRestorerDelegate>)theDelegate {
     if (self = [super init]) {
-        paramSet = [theParamSet retain];
+        paramSet = theParamSet;
         delegate = theDelegate; // Don't retain it.
 
         bytesToRequestPerRound = paramSet.downloadBytesPerSecond * 60 * 60 * 4; // 4 hours at preferred download rate
-        dateToResumeRequesting = [[NSDate date] retain];
-        skipFilesRoot = [[[UserLibrary arqUserLibraryPath] stringByAppendingFormat:@"/RestoreJobSkipFiles/%f", [NSDate timeIntervalSinceReferenceDate]] retain];
+        dateToResumeRequesting = [NSDate date];
+        skipFilesRoot = [[UserLibrary arqUserLibraryPath] stringByAppendingFormat:@"/RestoreJobSkipFiles/%f", [NSDate timeIntervalSinceReferenceDate]];
         hardlinks = [[NSMutableDictionary alloc] init];        
-        jobUUID = [[NSString stringWithRandomUUID] retain];
+        jobUUID = [NSString stringWithRandomUUID];
         requestedGlacierPacksByPackSHA1 = [[NSMutableDictionary alloc] init];
         glacierPacksToDownload = [[NSMutableArray alloc] init];
 
@@ -106,39 +103,6 @@
     }
     return self;
 }
-- (void)dealloc {
-    [paramSet release];
-    
-    [dateToResumeRequesting release];
-    [skipFilesRoot release];
-    [hardlinks release];
-    [jobUUID release];
-    [sns release];
-    [sqs release];
-    [s3 release];
-    [glacier release];
-    [glacierPackSet release];
-    [requestedGlacierPacksByPackSHA1 release];
-    [glacierPacksToDownload release];
-    [calculateItems release];
-    [glacierRequestItems release];
-    [restoreItems release];
-    [requestedArchiveIds release];
-
-    [topicArn release];
-    [queueURL release];
-    [queueArn release];
-    [subscriptionArn release];
-
-    [repo release];
-    [commit release];
-    [commitDescription release];
-    [rootTree release];
-
-    [super dealloc];
-}
-
-
 - (void)run {
     HSLogDebug(@"GlacierRestorer starting");
     NSError *myError = nil;
@@ -164,7 +128,7 @@
     if ([theBlobKey storageType] == StorageTypeS3) {
         // In Repo.m doPutData (line 503) we were incorrectly creating a BlobKey with storageType hard-coded to StorageTypeS3 when it should have been StorageTypeS3Glacier.
         // Since we're here because we're restoring from a StorageTypeGlacier folder, we'll assume the storageType should be StorageTypeS3Glacier instead of StorageTypeS3.
-        theBlobKey = [[[BlobKey alloc] initCopyOfBlobKey:theBlobKey withStorageType:StorageTypeS3Glacier] autorelease];
+        theBlobKey = [[BlobKey alloc] initCopyOfBlobKey:theBlobKey withStorageType:StorageTypeS3Glacier];
     }
     
     if ([theBlobKey storageType] == StorageTypeS3Glacier) {
@@ -210,7 +174,7 @@
     if ([theBlobKey storageType] == StorageTypeS3) {
         // In Repo.m doPutData (line 503) we were incorrectly creating a BlobKey with storageType hard-coded to StorageTypeS3 when it should have been StorageTypeS3Glacier.
         // Since we're here because we're restoring from a StorageTypeGlacier folder, we'll assume the storageType should be StorageTypeS3Glacier instead of StorageTypeS3.
-        theBlobKey = [[[BlobKey alloc] initCopyOfBlobKey:theBlobKey withStorageType:StorageTypeS3Glacier] autorelease];
+        theBlobKey = [[BlobKey alloc] initCopyOfBlobKey:theBlobKey withStorageType:StorageTypeS3Glacier];
     }
     
     if ([theBlobKey storageType] == StorageTypeS3Glacier) {
@@ -258,7 +222,6 @@
     return YES;
 }
 
-
 #pragma mark Restorer
 - (NSString *)errorDomain {
     return @"GlacierRestorerErrorDomain";
@@ -267,7 +230,7 @@
     if ([theBlobKey storageType] == StorageTypeS3) {
         // In Repo.m doPutData (line 503) we were incorrectly creating a BlobKey with storageType hard-coded to StorageTypeS3 when it should have been StorageTypeS3Glacier.
         // Since we're here because we're restoring from a StorageTypeGlacier folder, we'll assume the storageType should be StorageTypeS3Glacier instead of StorageTypeS3.
-        theBlobKey = [[[BlobKey alloc] initCopyOfBlobKey:theBlobKey withStorageType:StorageTypeS3Glacier] autorelease];
+        theBlobKey = [[BlobKey alloc] initCopyOfBlobKey:theBlobKey withStorageType:StorageTypeS3Glacier];
     }
     
     if ([theBlobKey storageType] == StorageTypeS3Glacier) {
@@ -325,12 +288,10 @@
     return paramSet.targetGID;
 }
 
-
 #pragma mark TargetConnectionDelegate
 - (BOOL)targetConnectionShouldRetryOnTransientError:(NSError **)error {
     return YES;
 }
-
 
 #pragma mark internal
 - (BOOL)run:(NSError **)error {
@@ -385,17 +346,13 @@
     
     BOOL restoredAnItem = NO;
     BOOL ret = YES;
-    NSAutoreleasePool *pool = nil;
     for (;;) {
-        [pool drain];
-        pool = [[NSAutoreleasePool alloc] init];
-        
         // Reset counters if necessary.
         if (bytesRequestedThisRound >= bytesToRequestPerRound) {
             roundsCompleted++;
             bytesRequestedThisRound = 0;
-            NSDate *nextResumeDate = [[dateToResumeRequesting dateByAddingTimeInterval:(60 * 60 * 4)] retain];
-            [dateToResumeRequesting release];
+            NSDate *nextResumeDate = [dateToResumeRequesting dateByAddingTimeInterval:(60 * 60 * 4)];
+            
             dateToResumeRequesting = nextResumeDate;
             HSLogDebug(@"reset next request resume date to %@", nextResumeDate);
         }
@@ -534,13 +491,6 @@
             break;
         }
     }
-    if (!ret && error != NULL) {
-        [*error retain];
-    }
-    [pool drain];
-    if (!ret && error != NULL) {
-        [*error autorelease];
-    }
     return ret;
 }
 - (BOOL)setUp:(NSError **)error {
@@ -556,11 +506,11 @@
     }
     sns = [[SNS alloc] initWithAccessKey:[[[[paramSet bucket] target] endpoint] user] secretKey:secretAccessKey awsRegion:awsRegion retryOnTransientError:YES];
     sqs = [[SQS alloc] initWithAccessKey:[[[[paramSet bucket] target] endpoint] user] secretKey:secretAccessKey awsRegion:awsRegion retryOnTransientError:YES];
-    s3 = [[[[paramSet bucket] target] s3:error] retain];
+    s3 = [[[paramSet bucket] target] s3:error];
     if (s3 == nil) {
         return NO;
     }
-    GlacierAuthorizationProvider *gap = [[[GlacierAuthorizationProvider alloc] initWithAccessKey:[[[[paramSet bucket] target] endpoint] user] secretKey:secretAccessKey] autorelease];
+    GlacierAuthorizationProvider *gap = [[GlacierAuthorizationProvider alloc] initWithAccessKey:[[[[paramSet bucket] target] endpoint] user] secretKey:secretAccessKey];
     glacier = [[GlacierService alloc] initWithGlacierAuthorizationProvider:gap awsRegion:awsRegion useSSL:YES retryOnTransientError:YES];
     glacierPackSet = [[GlacierPackSet alloc] initWithTarget:[[paramSet bucket] target]
                                                          s3:s3
@@ -578,16 +528,16 @@
     if (repo == nil) {
         return NO;
     }
-    commit = [[repo commitForBlobKey:paramSet.commitBlobKey error:error] retain];
+    commit = [repo commitForBlobKey:paramSet.commitBlobKey error:error];
     if (commit == nil) {
         return NO;
     }
-    NSDateFormatter *dateFormatter = [[[NSDateFormatter alloc] init] autorelease];
+    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
     [dateFormatter setDateStyle:NSDateFormatterMediumStyle];
     [dateFormatter setTimeStyle:NSDateFormatterShortStyle];
-    commitDescription = [[dateFormatter stringFromDate:[commit creationDate]] retain];
+    commitDescription = [dateFormatter stringFromDate:[commit creationDate]];
     
-    rootTree = [[repo treeForBlobKey:paramSet.treeBlobKey error:error] retain];
+    rootTree = [repo treeForBlobKey:paramSet.treeBlobKey error:error];
     if (rootTree == nil) {
         return NO;
     }
@@ -597,22 +547,22 @@
         return NO;
     }
     
-    topicArn = [[sns createTopic:[NSString stringWithFormat:@"%@_topic", jobUUID] error:error] retain];
+    topicArn = [sns createTopic:[NSString stringWithFormat:@"%@_topic", jobUUID] error:error];
     if (topicArn == nil) {
         return NO;
     }
-    queueURL = [[sqs createQueueWithName:[NSString stringWithFormat:@"%@_queue", jobUUID] error:error] retain];
+    queueURL = [sqs createQueueWithName:[NSString stringWithFormat:@"%@_queue", jobUUID] error:error];
     if (queueURL == nil) {
         return NO;
     }
-    queueArn = [[sqs queueArnForQueueURL:queueURL error:error] retain];
+    queueArn = [sqs queueArnForQueueURL:queueURL error:error];
     if (queueArn == nil) {
         return NO;
     }
     if (![sqs setSendMessagePermissionToQueueURL:queueURL queueArn:queueArn forSourceArn:topicArn error:error]) {
         return NO;
     }
-    subscriptionArn = [[sns subscribeQueueArn:queueArn toTopicArn:topicArn error:error] retain];
+    subscriptionArn = [sns subscribeQueueArn:queueArn toTopicArn:topicArn error:error];
     if (subscriptionArn == nil) {
         return NO;
     }
@@ -625,24 +575,20 @@
         }
         NSAssert(node != nil, @"node can't be nil");
         
-        [calculateItems addObject:[[[CalculateItem alloc] initWithPath:paramSet.destinationPath node:node] autorelease]];
-        [glacierRequestItems addObject:[[[GlacierRequestItem alloc] initWithPath:paramSet.destinationPath node:node] autorelease]];
-        [restoreItems addObject:[[[RestoreItem alloc] initWithPath:paramSet.destinationPath tree:rootTree node:node] autorelease]];
+        [calculateItems addObject:[[CalculateItem alloc] initWithPath:paramSet.destinationPath node:node]];
+        [glacierRequestItems addObject:[[GlacierRequestItem alloc] initWithPath:paramSet.destinationPath node:node]];
+        [restoreItems addObject:[[RestoreItem alloc] initWithPath:paramSet.destinationPath tree:rootTree node:node]];
     } else {
-        [calculateItems addObject:[[[CalculateItem alloc] initWithPath:paramSet.destinationPath tree:rootTree] autorelease]];
-        [glacierRequestItems addObject:[[[GlacierRequestItem alloc] initWithPath:paramSet.destinationPath tree:rootTree] autorelease]];
-        [restoreItems addObject:[[[RestoreItem alloc] initWithPath:paramSet.destinationPath tree:rootTree] autorelease]];
+        [calculateItems addObject:[[CalculateItem alloc] initWithPath:paramSet.destinationPath tree:rootTree]];
+        [glacierRequestItems addObject:[[GlacierRequestItem alloc] initWithPath:paramSet.destinationPath tree:rootTree]];
+        [restoreItems addObject:[[RestoreItem alloc] initWithPath:paramSet.destinationPath tree:rootTree]];
     }
 
     return YES;
 }
 - (BOOL)calculateSizes:(NSError **)error {
     BOOL ret = YES;
-    NSAutoreleasePool *pool = nil;
     while ([calculateItems count] > 0) {
-        [pool drain];
-        pool = [[NSAutoreleasePool alloc] init];
-        
         CalculateItem *item = [calculateItems objectAtIndex:0];
         if (![item calculateWithRepo:repo restorer:self error:error]) {
             ret = NO;
@@ -666,14 +612,6 @@
             [calculateItems insertObjects:nextItems atIndexes:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, [nextItems count])]];
         }
     }
-    if (!ret && error != NULL) {
-        [*error retain];
-    }
-    [pool drain];
-    if (!ret && error != NULL) {
-        [*error autorelease];
-    }
-    
     return ret;
 }
 - (void)skipFile:(NSString *)thePath {
@@ -723,10 +661,7 @@
     }
     
     BOOL ret = YES;
-    NSAutoreleasePool *pool = nil;
     for (NSString *nodeName in [theTree childNodeNames]) {
-        [pool drain];
-        pool = [[NSAutoreleasePool alloc] init];
         Node *node = [theTree childNodeWithName:nodeName];
         NSString *childPath = [thePath stringByAppendingPathComponent:nodeName];
         if ([node isTree]) {
@@ -745,13 +680,6 @@
                 break;
             }
         }
-    }
-    if (!ret && error != NULL) {
-        [*error retain];
-    }
-    [pool drain];
-    if (!ret && error != NULL) {
-        [*error autorelease];
     }
     return ret;
 }
@@ -806,13 +734,13 @@
                 return NO;
             }
             
-            GlacierPack *glacierPack = [[[GlacierPack alloc] initWithTarget:[[paramSet bucket] target]
+            GlacierPack *glacierPack = [[GlacierPack alloc] initWithTarget:[[paramSet bucket] target]
                                                                s3BucketName:[[[[[paramSet bucket] target] endpoint] path] lastPathComponent]
                                                                computerUUID:[[paramSet bucket] computerUUID]
                                                                  bucketUUID:[[paramSet bucket] bucketUUID]
                                                                    packSHA1:[[glacierPackIndex packId] packSHA1]
                                                                   archiveId:archiveId
-                                                                   packSize:packSize] autorelease];
+                                                                   packSize:packSize];
             [requestedGlacierPacksByPackSHA1 setObject:glacierPack forKey:[[glacierPackIndex packId] packSHA1]];
         }
     }
@@ -821,10 +749,7 @@
 
 - (BOOL)readQueue:(NSError **)error {
     BOOL ret = YES;
-    NSAutoreleasePool *pool = nil;
     for (;;) {
-        [pool drain];
-        pool = [[NSAutoreleasePool alloc] init];
         ReceiveMessageResponse *response = [sqs receiveMessagesForQueueURL:queueURL maxMessages:MAX_QUEUE_MESSAGES_TO_READ error:error];
         if (response == nil) {
             ret = NO;
@@ -845,13 +770,6 @@
                 break;
             }
         }
-    }
-    if (!ret && error != NULL) {
-        [*error retain];
-    }
-    [pool drain];
-    if (!ret && error != NULL) {
-        [*error autorelease];
     }
     return ret;
 }
@@ -890,11 +808,7 @@
 }
 - (BOOL)requestMoreGlacierItems:(NSError **)error {
     BOOL ret = YES;
-    
-    NSAutoreleasePool *pool = nil;
     while (bytesRequestedThisRound < bytesToRequestPerRound && [glacierRequestItems count] > 0) {
-        [pool drain];
-        pool = [[NSAutoreleasePool alloc] init];
         GlacierRequestItem *item = [glacierRequestItems objectAtIndex:0];
         NSArray *nextItems = [item requestWithRestorer:self repo:repo error:error];
         if (nextItems == nil) {
@@ -905,13 +819,6 @@
         if ([nextItems count] > 0) {
             [glacierRequestItems insertObjects:nextItems atIndexes:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, [nextItems count])]];
         }
-    }
-    if (!ret && error != NULL) {
-        [*error retain];
-    }
-    [pool drain];
-    if (!ret && error != NULL) {
-        [*error autorelease];
     }
     return ret;
 }
@@ -929,7 +836,7 @@
             if (jobIdData == nil) {
                 return nil;
             }
-            ret = [[[NSString alloc] initWithData:jobIdData encoding:NSUTF8StringEncoding] autorelease];
+            ret = [[NSString alloc] initWithData:jobIdData encoding:NSUTF8StringEncoding];
         }
     }
     if (!ret) {

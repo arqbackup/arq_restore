@@ -30,13 +30,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "FSStat.h"
 #import "OSStatusDescription.h"
 #import "Volume.h"
 #import "NSString_slashed.h"
-
 
 @interface FSStat ()
 - (NSURL *)urlForMountPoint:(NSString *)theMountPoint error:(NSError **)error;
@@ -47,7 +44,6 @@
     if (buf != NULL) {
         free(buf);
     }
-    [super dealloc];
 }
 
 - (NSString *)errorDomain {
@@ -99,7 +95,7 @@
                 if (![theFileSystem isEqualToString:@"devfs"] && ![theFileSystem hasPrefix:@"map "]) {
                     Volume *vol = [[Volume alloc] initWithURL:theURL mountPoint:theMountPoint fileSystem:theFileSystem fsTypeName:theFSTypeName fsType:fs->f_type owner:fs->f_owner name:[self volumeNameForPath:theMountPoint] isRemote:isRemote];
                     [array addObject:vol];
-                    [vol release];
+                    
                 }
             }
         }
@@ -120,7 +116,7 @@
         [mountedVolumesByMountPoint setObject:vol forKey:[vol mountPoint]];
     }
     NSMutableArray *mountPoints = [NSMutableArray arrayWithArray:[mountedVolumesByMountPoint allKeys]];
-    NSSortDescriptor *descriptor = [[[NSSortDescriptor alloc] initWithKey:@"description" ascending:NO] autorelease];
+    NSSortDescriptor *descriptor = [[NSSortDescriptor alloc] initWithKey:@"description" ascending:NO];
     [mountPoints sortUsingDescriptors:[NSArray arrayWithObject:descriptor]];
     
     Volume *ret = nil;
@@ -164,7 +160,6 @@
     return ret;
 }
 
-
 #pragma mark internal
 - (NSURL *)urlForMountPoint:(NSString *)theMountPoint error:(NSError **)error {
     //            FSRef volRef;
@@ -192,7 +187,7 @@
         SETNSERROR([self errorDomain], oss, @"FSCopyURLForVolume(%@): %@", theMountPoint, [OSStatusDescription descriptionForOSStatus:oss]);
         return nil;
     }
-    return [(NSURL *)theURL autorelease];
+    return (__bridge_transfer NSURL *)theURL;
 }
 - (BOOL)loadFSStat:(NSError **)error {
     if (buf != NULL) {

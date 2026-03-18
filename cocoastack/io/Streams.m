@@ -30,7 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -42,9 +41,7 @@
 #import "BufferedOutputStream.h"
 #import "DataInputStream.h"
 
-
 #define MY_BUF_SIZE (4096)
-
 
 @implementation Streams
 + (BOOL)transferFrom:(id <InputStream>)is to:(id <OutputStream>)os error:(NSError **)error {
@@ -57,7 +54,7 @@
     if (ret && ![bos flush:error]) {
         ret = NO;
     }
-    [bos release];
+    
     return ret;
 }
 + (BOOL)transferFrom:(id <InputStream>)is atomicallyToFile:(NSString *)path targetUID:(uid_t)theTargetUID targetGID:(gid_t)theTargetGID bytesWritten:(unsigned long long *)written error:(NSError **)error {
@@ -112,7 +109,7 @@
             HSLogError(@"error transferring bytes to %@: %@", path, [*error localizedDescription]);
         }
     }
-    [fos release];
+    
     close(fd);
     return ret;
 }
@@ -120,7 +117,7 @@
     return [Streams writeData:theData atomicallyToFile:path setUIDs:YES targetUID:theTargetUID targetGID:theTargetGID bytesWritten:written error:error];
 }
 + (BOOL)writeData:(NSData *)theData atomicallyToFile:(NSString *)path setUIDs:(BOOL)theSetUIDs targetUID:(uid_t)theTargetUID targetGID:(gid_t)theTargetGID bytesWritten:(unsigned long long *)written error:(NSError **)error {
-    DataInputStream *dis = [[[DataInputStream alloc] initWithData:theData description:@"no description"] autorelease];
+    DataInputStream *dis = [[DataInputStream alloc] initWithData:theData description:@"no description"];
     return [Streams transferFrom:dis atomicallyToFile:path setUIDs:theSetUIDs targetUID:theTargetUID targetGID:theTargetGID bytesWritten:written error:error];
 }
 + (BOOL)transferFrom:(id <InputStream>)is toBufferedOutputStream:(BufferedOutputStream *)bos bytesWritten:(unsigned long long *)written error:(NSError **)error {

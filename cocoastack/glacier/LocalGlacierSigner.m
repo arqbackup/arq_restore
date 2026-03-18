@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "LocalGlacierSigner.h"
 #include <CommonCrypto/CommonHMAC.h>
 #import "NSData-Base64Extensions.h"
@@ -46,16 +44,10 @@
 @implementation LocalGlacierSigner
 - (id)initWithSecretKey:(NSString *)theSecretKey {
     if (self = [super init]) {
-        secretKey = [theSecretKey retain];
+        secretKey = theSecretKey;
     }
     return self;
 }
-- (void)dealloc {
-    [secretKey release];
-    [super dealloc];
-}
-
-
 #pragma mark GlacierSigner
 - (NSString *)signString:(NSString *)theStringToSign withDateStamp:(NSString *)theDateStamp regionName:(NSString *)theRegionName serviceName:(NSString *)theServiceName {
     // FIXME: Extract region name from endpoint.
@@ -70,7 +62,6 @@
     NSString *ret = [NSString hexStringWithBytes:[signature bytes] length:(unsigned int)[signature length]];
     return ret;
 }
-
 
 #pragma mark internal
 - (NSData *)signString:(NSString *)theString withKey:(NSData *)theKey {

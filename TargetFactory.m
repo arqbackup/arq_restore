@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "TargetFactory.h"
 #import "DictNode.h"
 #import "StringNode.h"
@@ -44,11 +42,9 @@
 #import "Streams.h"
 #import "CacheOwnership.h"
 
-
 @interface TargetFactory ()
 - (void)targetFilesChanged;
 @end
-
 
 static void fsEventStreamCallback(ConstFSEventStreamRef streamRef,
 								  void *clientCallBackInfo,
@@ -56,12 +52,9 @@ static void fsEventStreamCallback(ConstFSEventStreamRef streamRef,
 								  const char *const eventPaths[],
 								  const FSEventStreamEventFlags eventFlags[],
 								  const FSEventStreamEventId eventIds[]) {
-    TargetFactory *targetFactory = (TargetFactory *)clientCallBackInfo;
+    TargetFactory *targetFactory = (__bridge TargetFactory *)clientCallBackInfo;
     [targetFactory targetFilesChanged];
 }
-
-
-
 
 @implementation TargetFactory
 CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(TargetFactory);
@@ -155,7 +148,7 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(TargetFactory);
     CFAbsoluteTime latency = 1.0; // seconds
     FSEventStreamContext context = {
         0,
-        self,
+        (__bridge void *)self,
         NULL,
         NULL,
         NULL
@@ -164,7 +157,7 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(TargetFactory);
     streamRef = FSEventStreamCreate(NULL,
                                     (FSEventStreamCallback)&fsEventStreamCallback,
                                     &context,
-                                    (CFArrayRef)pathsToWatch,
+                                    (__bridge CFArrayRef)pathsToWatch,
                                     kFSEventStreamEventIdSinceNow,
                                     latency,
                                     kFSEventStreamCreateFlagNoDefer
@@ -172,7 +165,6 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(TargetFactory);
     FSEventStreamScheduleWithRunLoop(streamRef, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
     FSEventStreamStart(streamRef);
 }
-
 
 #pragma mark internal
 
@@ -225,7 +217,7 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(TargetFactory);
             }
         }
     }
-    NSSortDescriptor *descriptor = [[[NSSortDescriptor alloc] initWithKey:@"targetUUID" ascending:YES] autorelease];
+    NSSortDescriptor *descriptor = [[NSSortDescriptor alloc] initWithKey:@"targetUUID" ascending:YES];
     [ret sortUsingDescriptors:[NSArray arrayWithObject:descriptor]];
     return ret;
 }
@@ -236,14 +228,14 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(TargetFactory);
     }
     NSError *myError = nil;
     DictNode *plist = [DictNode dictNodeWithXMLData:data error:&myError];
-    [data release];
+    
     if (plist == nil) {
         SETNSERROR([self errorDomain], -1, @"error parsing %@: %@", thePath, [myError localizedDescription]);
         return nil;
     }
     NSString *targetType = [[plist stringNodeForKey:@"targetType"] stringValue];
     if ([targetType isEqualToString:@"s3"]) {
-        return [[[Target alloc] initWithPlist:plist] autorelease];
+        return [[Target alloc] initWithPlist:plist];
     }
     SETNSERROR([self errorDomain], -1, @"unknown target type '%@'", targetType);
     return nil;

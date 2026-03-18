@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "RestoreItem.h"
 #import "Tree.h"
 #import "Node.h"
@@ -50,7 +48,6 @@
 #import "NSData-Compress.h"
 #import "CacheOwnership.h"
 
-
 enum {
     kRestoreActionRestoreTree=1,
     kRestoreActionRestoreNode=2,
@@ -58,43 +55,34 @@ enum {
     kRestoreActionRestoreFileData=4
 } RestoreAction;
 
-
 @implementation RestoreItem
 - (id)initWithPath:(NSString *)thePath tree:(Tree *)theTree {
     if (self = [super init]) {
-        path = [thePath retain];
-        tree = [theTree retain];
+        path = thePath;
+        tree = theTree;
         restoreAction = kRestoreActionRestoreTree;
     }
     return self;
 }
 - (id)initWithPath:(NSString *)thePath tree:(Tree *)theTree node:(Node *)theNode {
     if (self = [super init]) {
-        path = [thePath retain];
-        tree = [theTree retain];
-        node = [theNode retain];
+        path = thePath;
+        tree = theTree;
+        node = theNode;
         restoreAction = kRestoreActionRestoreNode;
     }
     return self;
 }
 - (id)initWithPath:(NSString *)thePath tree:(Tree *)theTree node:(Node *)theNode fileOutputStream:(FileOutputStream *)theFileOutputStream dataBlobKeyIndex:(NSUInteger)theDataBlobKeyIndex {
     if (self = [super init]) {
-        path = [thePath retain];
-        tree = [theTree retain];
-        node = [theNode retain];
-        fileOutputStream = [theFileOutputStream retain];
+        path = thePath;
+        tree = theTree;
+        node = theNode;
+        fileOutputStream = theFileOutputStream;
         dataBlobKeyIndex = theDataBlobKeyIndex;
         restoreAction = kRestoreActionRestoreFileData;
     }
     return self;
-}
-
-- (void)dealloc {
-    [tree release];
-    [node release];
-    [path release];
-    [fileOutputStream release];
-    [super dealloc];
 }
 
 - (NSString *)errorDomain {
@@ -133,7 +121,7 @@ enum {
         case kRestoreActionRestoreFileData:
         case kRestoreActionRestoreNode:
             if (!errorOccurred && fileOutputStream != nil && [[node dataBlobKeys] count] > dataBlobKeyIndex) {
-                RestoreItem *nextItem = [[[RestoreItem alloc] initWithPath:path tree:tree node:node fileOutputStream:fileOutputStream dataBlobKeyIndex:dataBlobKeyIndex] autorelease];
+                RestoreItem *nextItem = [[RestoreItem alloc] initWithPath:path tree:tree node:node fileOutputStream:fileOutputStream dataBlobKeyIndex:dataBlobKeyIndex];
                 ret = [NSArray arrayWithObject:nextItem];
             } else {
                 ret = [NSArray array];
@@ -150,13 +138,12 @@ enum {
     return ret;
 }
 
-
 #pragma mark internal
 - (id)initApplyItemWithTree:(Tree *)theTree path:(NSString *)thePath {
     if (self = [super init]) {
-        tree = [theTree retain];
+        tree = theTree;
         restoreAction = kRestoreActionApplyTree;
-        path = [thePath retain];
+        path = thePath;
     }
     return self;
 }
@@ -331,9 +318,9 @@ enum {
     if (xattrsData == nil) {
         return NO;
     }
-    DataInputStream *dis = [[[DataInputStream alloc] initWithData:xattrsData description:[NSString stringWithFormat:@"xattrs %@", xattrsBlobKey]] autorelease];
-    BufferedInputStream *bis = [[[BufferedInputStream alloc] initWithUnderlyingStream:dis] autorelease];
-    XAttrSet *set = [[[XAttrSet alloc] initWithBufferedInputStream:bis error:error] autorelease];
+    DataInputStream *dis = [[DataInputStream alloc] initWithData:xattrsData description:[NSString stringWithFormat:@"xattrs %@", xattrsBlobKey]];
+    BufferedInputStream *bis = [[BufferedInputStream alloc] initWithUnderlyingStream:dis];
+    XAttrSet *set = [[XAttrSet alloc] initWithBufferedInputStream:bis error:error];
     if (!set) {
         return NO;
     }
@@ -352,7 +339,7 @@ enum {
     if (data == nil) {
         return NO;
     }
-    NSString *aclString = [[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] autorelease];
+    NSString *aclString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
     
     NSString *currentAclString = nil;
     if (![FileACL aclText:&currentAclString forFile:path error:error]) {
@@ -415,7 +402,7 @@ enum {
                 }
                 [data appendData:blobData];
             }
-            NSString *target = [[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] autorelease];
+            NSString *target = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
             
             if (symlink([target fileSystemRepresentation], [path fileSystemRepresentation]) == -1) {
                 int errnum = errno;
@@ -519,7 +506,7 @@ enum {
 
     BufferedOutputStream *bos = [[BufferedOutputStream alloc] initWithUnderlyingOutputStream:fileOutputStream];
     BOOL ret = [bos writeFully:[blobData bytes] length:[blobData length] error:&myError] && [bos flush:&myError];
-    [bos release];
+    
     if (!ret) {
         HSLogError(@"error appending data to %@: %@", path, myError);
         SETERRORFROMMYERROR;
@@ -583,7 +570,7 @@ enum {
         HSLogInfo(@"skipping applying some metadata for %@: %@", path, [OSStatusDescription descriptionForOSStatus:oss]);
     } else {
         if (!S_ISFIFO([node mode])) {
-            FileAttributes *fa = [[[FileAttributes alloc] initWithPath:path isSymLink:S_ISLNK([node mode]) error:error] autorelease];
+            FileAttributes *fa = [[FileAttributes alloc] initWithPath:path isSymLink:S_ISLNK([node mode]) error:error];
             if (fa == nil) {
                 return NO;
             }
@@ -620,10 +607,7 @@ enum {
 }
 - (NSArray *)nextItemsForTreeWithRepo:(Repo *)theRepo error:(NSError **)error {
     NSMutableArray *nextItems = [NSMutableArray array];
-    NSAutoreleasePool *pool = nil;
     for (NSString *childNodeName in [tree childNodeNames]) {
-        [pool drain];
-        pool = [[NSAutoreleasePool alloc] init];
         Node *childNode = [tree childNodeWithName:childNodeName];
         NSString *childPath = [path stringByAppendingPathComponent:childNodeName];
         if ([childNode isTree]) {
@@ -632,28 +616,20 @@ enum {
                 nextItems = nil;
                 break;
             }
-            RestoreItem *childRestoreItem = [[[RestoreItem alloc] initWithPath:childPath tree:childTree] autorelease];
+            RestoreItem *childRestoreItem = [[RestoreItem alloc] initWithPath:childPath tree:childTree];
             [nextItems addObject:childRestoreItem];
         } else {
-            RestoreItem *childRestoreItem = [[[RestoreItem alloc] initWithPath:childPath tree:tree node:childNode] autorelease];
+            RestoreItem *childRestoreItem = [[RestoreItem alloc] initWithPath:childPath tree:tree node:childNode];
             [nextItems addObject:childRestoreItem];
         }
-    }
-    if (nextItems == nil && error != NULL) {
-        [*error retain];
-    }
-    [pool drain];
-    if (nextItems == nil && error != NULL) {
-        [*error autorelease];
     }
     if (nextItems == nil) {
         return nil;
     }
-    RestoreItem *treeRestoreItem = [[[RestoreItem alloc] initApplyItemWithTree:tree path:path] autorelease];
+    RestoreItem *treeRestoreItem = [[RestoreItem alloc] initApplyItemWithTree:tree path:path];
     [nextItems addObject:treeRestoreItem];
     return nextItems;
 }
-
 
 #pragma mark NSObject
 - (NSString *)description {

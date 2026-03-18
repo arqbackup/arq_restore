@@ -30,19 +30,14 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 @class UserAndComputer;
 @class AppConfig;
 @class Target;
 @protocol TargetConnectionDelegate;
 
-
 @protocol BackupSetActivityListener <NSObject>
 - (void)backupSetActivity:(NSString *)theActivity;
 @end
-
 
 @interface BackupSet : NSObject {
     Target *target;

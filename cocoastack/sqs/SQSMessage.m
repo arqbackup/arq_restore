@@ -30,26 +30,17 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "SQSMessage.h"
 
 @implementation SQSMessage
 - (id)initWithQueueURL:(NSURL *)theQueueURL body:(NSString *)theBody receiptHandle:(NSString *)theReceiptHandle {
     if (self = [super init]) {
-        queueURL = [theQueueURL retain];
-        body = [theBody retain];
-        receiptHandle = [theReceiptHandle retain];
+        queueURL = theQueueURL;
+        body = theBody;
+        receiptHandle = theReceiptHandle;
     }
     return self;
 }
-- (void)dealloc {
-    [queueURL release];
-    [body release];
-    [receiptHandle release];
-    [super dealloc];
-}
-
 - (NSURL *)queueURL {
     return queueURL;
 }

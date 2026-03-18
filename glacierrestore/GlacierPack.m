@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "GlacierPack.h"
 #import "UserLibrary_Arq.h"
 #import "NSFileManager_extra.h"
@@ -43,7 +41,6 @@
 #import "Target.h"
 #import "CacheOwnership.h"
 
-
 @implementation GlacierPack
 - (id)initWithTarget:(Target *)theTarget
         s3BucketName:(NSString *)theS3BucketName
@@ -53,29 +50,18 @@
            archiveId:(NSString *)theArchiveId
             packSize:(unsigned long long)thePackSize {
     if (self = [super init]) {
-        s3BucketName = [theS3BucketName retain];
-        computerUUID = [theComputerUUID retain];
-        bucketUUID = [theBucketUUID retain];
+        s3BucketName = theS3BucketName;
+        computerUUID = theComputerUUID;
+        bucketUUID = theBucketUUID;
         packSetName = [[NSString alloc] initWithFormat:@"%@-glacierblobs", theBucketUUID];
-        packSHA1 = [thePackSHA1 retain];
-        archiveId = [theArchiveId retain];
+        packSHA1 = thePackSHA1;
+        archiveId = theArchiveId;
         packSize = thePackSize;
         localPath = [[NSString alloc] initWithFormat:@"%@/%@/%@/glacier_packsets/%@/%@/%@.pack",
                      [UserLibrary arqCachePath], [theTarget targetUUID], computerUUID, packSetName, [packSHA1 substringToIndex:2], [packSHA1 substringFromIndex:2]];
     }
     return self;
 }
-- (void)dealloc {
-    [s3BucketName release];
-    [computerUUID release];
-    [bucketUUID release];
-    [packSetName release];
-    [packSHA1 release];
-    [archiveId release];
-    [localPath release];
-    [super dealloc];
-}
-
 - (NSString *)packSHA1 {
     return packSHA1;
 }
@@ -132,11 +118,10 @@
         ret = data;
     } while (0);
     close(fd);
-    [bis release];
-    [fdis release];
+    
+    
     return ret;
 }
-
 
 #pragma mark NSObject
 - (NSString *)description {

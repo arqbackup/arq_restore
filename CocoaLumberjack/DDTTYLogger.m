@@ -79,7 +79,6 @@
 
 #define MAP_TO_TERMINAL_APP_COLORS 1
 
-
 @interface DDTTYLoggerColorProfile : NSObject {
     @public
     DDLogFlag mask;
@@ -134,7 +133,6 @@
 }
 
 @end
-
 
 @implementation DDTTYLogger
 

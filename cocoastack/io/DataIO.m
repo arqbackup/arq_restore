@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "DataIO.h"
 #import "IntegerIO.h"
 #import "BufferedInputStream.h"

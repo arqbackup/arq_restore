@@ -30,12 +30,9 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @class SignatureV2Provider;
 @class AWSRegion;
 @class ReceiveMessageResponse;
-
 
 @interface SQS : NSObject {
     NSString *accessKey;

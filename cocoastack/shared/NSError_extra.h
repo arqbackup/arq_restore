@@ -30,10 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
-
 @interface NSError (extra)
 - (id)initWithDomain:(NSString *)domain code:(NSInteger)code description:(NSString *)theDescription;
 - (BOOL)isErrorWithDomain:(NSString *)theDomain code:(int)theCode;

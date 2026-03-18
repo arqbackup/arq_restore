@@ -30,11 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "S3ErrorResult.h"
 #import "S3Service.h"
-
 
 @implementation S3ErrorResult
 - (id)initWithAction:(NSString *)theAction data:(NSData *)theData httpErrorCode:(int)theHTTPStatusCode stringToSign:(NSString *)theStringToSign canonicalRequest:(NSString *)theCanonicalRequest {
@@ -43,13 +40,13 @@
         NSXMLParser *parser = [[NSXMLParser alloc] initWithData:theData];
         [parser setDelegate:self];
         [parser parse];
-        [parser release];
+        
         if (errorOccurred) {
-            HSLogDebug(@"error parsing amazon result %@", [[[NSString alloc] initWithData:theData encoding:NSUTF8StringEncoding] autorelease]);
+            HSLogDebug(@"error parsing amazon result %@", [[NSString alloc] initWithData:theData encoding:NSUTF8StringEncoding]);
             if (theHTTPStatusCode == 500) {
                 // DreamObjects can return a 500 with an HTML response body, so we fake it as an Amazon XML error response so that S3Request retries the request:
                 NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithInt:500], @"HTTPStatusCode", @"InternalError", @"AmazonCode", nil];
-                amazonError = [[NSError errorWithDomain:[S3Service errorDomain] code:S3SERVICE_ERROR_AMAZON_ERROR userInfo:userInfo] retain];
+                amazonError = [NSError errorWithDomain:[S3Service errorDomain] code:S3SERVICE_ERROR_AMAZON_ERROR userInfo:userInfo];
             } else {
                 amazonError = [[NSError alloc] initWithDomain:[S3Service errorDomain] code:S3SERVICE_ERROR_AMAZON_ERROR description:[NSString stringWithFormat:@"%@: AWS error", theAction]];
             }
@@ -76,29 +73,21 @@
                     [userInfo setObject:theCanonicalRequest forKey:@"ArqCanonicalRequest"];
                 }
             }
-            amazonError = [[NSError errorWithDomain:[S3Service errorDomain] code:S3SERVICE_ERROR_AMAZON_ERROR userInfo:userInfo] retain];
+            amazonError = [NSError errorWithDomain:[S3Service errorDomain] code:S3SERVICE_ERROR_AMAZON_ERROR userInfo:userInfo];
         }
     }
     return self;
 }
-- (void)dealloc {
-    [values release];
-    [currentStringBuffer release];
-    [amazonError release];
-    [super dealloc];
-}
-
 - (NSError *)error {
     return amazonError;
 }
-
 
 #pragma mark - NSXMLParserDelegate
 - (void)parser:(NSXMLParser *)parser didStartElement:(NSString *)elementName 
   namespaceURI:(NSString *)namespaceURI 
  qualifiedName:(NSString *)qualifiedName 
     attributes:(NSDictionary *)attributeDict {
-    [currentStringBuffer release];
+    
     currentStringBuffer = nil;
 }
 - (void)parser:(NSXMLParser *)parser foundCharacters:(NSString *)string {

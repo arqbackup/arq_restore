@@ -30,29 +30,21 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "CommitList.h"
 #import "Commit.h"
 #import "Repo.h"
 #import "Bucket.h"
 
-
 @implementation BlobKeyCommitPair
 + (BlobKeyCommitPair *)pairWithBlobKey:(BlobKey *)theBlobKey commit:(Commit *)theCommit {
-    return [[[BlobKeyCommitPair alloc] initWithBlobKey:theBlobKey commit:theCommit] autorelease];
+    return [[BlobKeyCommitPair alloc] initWithBlobKey:theBlobKey commit:theCommit];
 }
 - (id)initWithBlobKey:(BlobKey *)theBlobKey commit:(Commit *)theCommit {
     if (self = [super init]) {
-        blobKey = [theBlobKey retain];
-        commit = [theCommit retain];
+        blobKey = theBlobKey;
+        commit = theCommit;
     }
     return self;
-}
-- (void)dealloc {
-    [blobKey release];
-    [commit release];
-    [super dealloc];
 }
 - (BlobKey *)blobKey {
     return blobKey;
@@ -78,7 +70,7 @@
             if (commit == nil) {
                 if (blobKey == headBlobKey || ![myError isErrorWithDomain:[repo errorDomain] code:ERROR_NOT_FOUND]) {
                     SETERRORFROMMYERROR;
-                    [self release];
+                    
                     return nil;
                 } else {
                     HSLogInfo(@"commit %@ not found! skipping it (and therefore all before it)", headBlobKey);
@@ -92,19 +84,15 @@
     }
     return self;
 }
-- (void)dealloc {
-    [reverseChronoPairs release];
-    [super dealloc];
-}
 - (NSArray *)commitBlobKeys {
-    NSMutableArray *array = [[[NSMutableArray alloc] init] autorelease];
+    NSMutableArray *array = [[NSMutableArray alloc] init];
     for (BlobKeyCommitPair *pair in reverseChronoPairs) {
         [array addObject:[pair blobKey]];
     }
     return array;
 }
 - (NSArray *)reverseChronoCommitBlobKeysBetween:(NSDate *)from and:(NSDate *)to {
-    NSMutableArray *array = [[[NSMutableArray alloc] init] autorelease];
+    NSMutableArray *array = [[NSMutableArray alloc] init];
     for (BlobKeyCommitPair *pair in reverseChronoPairs) {
         NSDate *creationDate = [[pair commit] creationDate];
         if ([creationDate earlierDate:from] != from) {

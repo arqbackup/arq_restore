@@ -30,12 +30,9 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "TargetConnection.h"
 @class AWSRegion;
 @class Target;
-
 
 @interface ArqSalt : NSObject {
     Target *target;

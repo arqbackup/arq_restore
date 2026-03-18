@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <libkern/OSByteOrder.h>
@@ -56,7 +54,6 @@
 #import "CacheOwnership.h"
 #import "Item.h"
 
-
 typedef struct index_object {
     uint64_t nbo_offset;
     uint64_t nbo_datalength;
@@ -70,7 +67,6 @@ typedef struct pack_index {
     uint32_t nbo_fanout[256];
     index_object first_index_object;
 } pack_index;
-
 
 @implementation GlacierPackIndex
 + (NSString *)s3PathWithS3BucketName:(NSString *)theS3BucketName computerUUID:(NSString *)theComputerUUID packId:(PackId *)thePackId {
@@ -97,19 +93,18 @@ typedef struct pack_index {
         NSRange sha1Range = [item.name rangeOfRegex:@"^(\\w+)\\.index$" capture:1];
         if (sha1Range.location != NSNotFound) {
             NSString *thePackSHA1 = [item.name substringWithRange:sha1Range];
-            PackId *packId = [[[PackId alloc] initWithPackSetName:thePackSetName packSHA1:thePackSHA1] autorelease];
+            PackId *packId = [[PackId alloc] initWithPackSetName:thePackSetName packSHA1:thePackSHA1];
             GlacierPackIndex *index = [[GlacierPackIndex alloc] initWithTarget:theTarget
                                                                      s3Service:theS3
                                                                   s3BucketName:theS3BucketName
                                                                   computerUUID:theComputerUUID
                                                                         packId:packId];
             [diskPackIndexes addObject:index];
-            [index release];
+            
         }
     }
     return diskPackIndexes;
 }
-
 
 - (id)initWithTarget:(Target *)theTarget
            s3Service:(S3Service *)theS3
@@ -117,25 +112,14 @@ typedef struct pack_index {
         computerUUID:(NSString *)theComputerUUID
               packId:(PackId *)thePackId {
     if (self = [super init]) {
-        s3 = [theS3 retain];
-        s3BucketName = [theS3BucketName retain];
-        computerUUID = [theComputerUUID retain];
-        packId = [thePackId retain];
-        s3Path = [[GlacierPackIndex s3PathWithS3BucketName:s3BucketName computerUUID:computerUUID packId:packId] retain];
-        localPath = [[GlacierPackIndex localPathWithTarget:theTarget computerUUID:computerUUID packId:packId] retain];
+        s3 = theS3;
+        s3BucketName = theS3BucketName;
+        computerUUID = theComputerUUID;
+        packId = thePackId;
+        s3Path = [GlacierPackIndex s3PathWithS3BucketName:s3BucketName computerUUID:computerUUID packId:packId];
+        localPath = [GlacierPackIndex localPathWithTarget:theTarget computerUUID:computerUUID packId:packId];
     }
     return self;
-}
-- (void)dealloc {
-    [s3 release];
-    [s3BucketName release];
-    [computerUUID release];
-    [packId release];
-    [s3Path release];
-    [localPath release];
-    [pies release];
-    [archiveId release];
-    [super dealloc];
 }
 - (BOOL)makeLocalWithTargetConnectionDelegate:(id)theTCD error:(NSError **)error {
     NSFileManager *fm = [NSFileManager defaultManager];
@@ -178,19 +162,9 @@ typedef struct pack_index {
 }
 
 - (PackIndexEntry *)entryForSHA1:(NSString *)sha1 error:(NSError **)error {
-    if (error != NULL) {
-        *error = nil;
-    }
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-    PackIndexEntry *ret = [self doEntryForSHA1:sha1 error:(NSError **)error];
-    [ret retain];
-    if (ret == nil && error != NULL) {
-        [*error retain];
-    }
-    [pool drain];
-    [ret autorelease];
-    if (ret == nil && error != NULL) {
-        [*error autorelease];
+    PackIndexEntry *ret = nil;
+    @autoreleasepool {
+        ret = [self doEntryForSHA1:sha1 error:error];
     }
     return ret;
 }
@@ -210,12 +184,10 @@ typedef struct pack_index {
     return packSize;
 }
 
-
 #pragma mark NSObject
 - (NSString *)description {
     return [NSString stringWithFormat:@"<DiskPackIndex: computerUUID=%@ packId=%@>", computerUUID, packId];
 }
-
 
 #pragma mark internal
 - (BOOL)readFile:(NSError **)error {
@@ -256,13 +228,13 @@ typedef struct pack_index {
     uint32_t count = OSSwapBigToHostInt32(the_pack_index->nbo_fanout[255]);
     index_object *indexObjects = &(the_pack_index->first_index_object);
     for (uint32_t i = 0; i < count; i++) {
-        NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+        @autoreleasepool {
         uint64_t offset = OSSwapBigToHostInt64(indexObjects[i].nbo_offset);
         uint64_t dataLength = OSSwapBigToHostInt64(indexObjects[i].nbo_datalength);
         NSString *objectSHA1 = [NSString hexStringWithBytes:indexObjects[i].sha1 length:20];
-        PackIndexEntry *pie = [[[PackIndexEntry alloc] initWithPackId:packId offset:offset dataLength:dataLength objectSHA1:objectSHA1] autorelease];
+        PackIndexEntry *pie = [[PackIndexEntry alloc] initWithPackId:packId offset:offset dataLength:dataLength objectSHA1:objectSHA1];
         [pies addObject:pie];
-        [pool drain];
+        }
     }
     if (munmap(the_pack_index, (size_t)st.st_size) == -1) {
         int errnum = errno;
@@ -277,10 +249,16 @@ typedef struct pack_index {
         close(fd);
         return NO;
     }
-    FDInputStream *fdis = [[[FDInputStream alloc] initWithFD:fd label:@"packindex"] autorelease];
-    BufferedInputStream *bis = [[[BufferedInputStream alloc] initWithUnderlyingStream:fdis] autorelease];
-    BOOL ret = [StringIO read:&archiveId from:bis error:error] && [IntegerIO readUInt64:&packSize from:bis error:error];
-    [archiveId retain];
+    FDInputStream *fdis = [[FDInputStream alloc] initWithFD:fd label:@"packindex"];
+    BufferedInputStream *bis = [[BufferedInputStream alloc] initWithUnderlyingStream:fdis];
+    NSString *theArchiveId = nil;
+    uint64_t thePackSize = 0;
+    BOOL ret = [StringIO read:&theArchiveId from:bis error:error] && [IntegerIO readUInt64:&thePackSize from:bis error:error];
+    if (ret) {
+        archiveId = theArchiveId;
+        packSize = thePackSize;
+    }
+    
     close(fd);
     if (!ret) {
         return NO;
@@ -291,7 +269,7 @@ typedef struct pack_index {
     if (![[NSFileManager defaultManager] ensureParentPathExistsForPath:localPath targetUID:[[CacheOwnership sharedCacheOwnership] uid] targetGID:[[CacheOwnership sharedCacheOwnership] gid] error:error]) {
         return NO;
     }
-    id <InputStream> is = [[[DataInputStream alloc] initWithData:theData description:[self description]] autorelease];
+    id <InputStream> is = [[DataInputStream alloc] initWithData:theData description:[self description]];
     NSError *myError = nil;
     unsigned long long written = 0;
     BOOL ret = [Streams transferFrom:is atomicallyToFile:localPath targetUID:[[CacheOwnership sharedCacheOwnership] uid] targetGID:[[CacheOwnership sharedCacheOwnership] gid] bytesWritten:&written error:&myError];
@@ -376,7 +354,7 @@ typedef struct pack_index {
             default:
                 offset = OSSwapBigToHostInt64(middleIndexObject->nbo_offset);
                 dataLength = OSSwapBigToHostInt64(middleIndexObject->nbo_datalength);
-                pie = [[[PackIndexEntry alloc] initWithPackId:packId offset:offset dataLength:dataLength objectSHA1:sha1] autorelease];
+                pie = [[PackIndexEntry alloc] initWithPackId:packId offset:offset dataLength:dataLength objectSHA1:sha1];
         }
         if (pie != nil) {
             break;

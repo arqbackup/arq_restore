@@ -30,17 +30,13 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #ifdef USE_OPENSSL
-
 
 #import "OpenSSLCryptoKey.h"
 #import "OpenSSL.h"
 #import "CryptoKey.h"
 #import "SetNSError.h"
 #import "HSLog.h"
-
 
 #define ITERATIONS (1000)
 #define KEYLEN (48)
@@ -52,18 +48,18 @@
 - (id)initWithPassword:(NSString *)thePassword salt:(NSData *)theSalt error:(NSError **)error {
     if (self = [super init]) {
         if (![OpenSSL initializeSSL:error]) {
-            [self release];
+            
             return nil;
         }
         if (theSalt != nil && [theSalt length] != 8) {
             SETNSERROR([CryptoKey errorDomain], -1, @"salt must be 8 bytes or nil");
-            [self release];
+            
             return nil;
         }
         cipher = EVP_aes_256_cbc();
         if (cipher == NULL) {
             SETNSERROR([CryptoKey errorDomain], -1, @"cipher not found!");
-            [self release];
+            
             return nil;
         }
         const char *cPassword = [thePassword UTF8String];
@@ -81,7 +77,7 @@
             if (cSaltCopy != NULL) {
                 free(cSaltCopy);
             }
-            [self release];
+            
             return nil;
         }
         evpKey[0] = 0;
@@ -91,12 +87,12 @@
         }
         if (keySize == 0) {
             SETNSERROR([CryptoKey errorDomain], -1, @"EVP_BytesToKey: %@", [OpenSSL errorMessage]);
-            [self release];
+            
             return nil;
         }
         if (keySize != 32) {
             SETNSERROR([CryptoKey errorDomain], -1, @"invalid key length -- should be 32 bytes");
-            [self release];
+            
             return nil;
         }
     }
@@ -105,7 +101,7 @@
 - (id)initLegacyWithPassword:(NSString *)thePassword error:(NSError **)error {
     if (self = [super init]) {
         if (![OpenSSL initializeSSL:error]) {
-            [self release];
+            
             return nil;
         }
         
@@ -115,21 +111,17 @@
         int keySize = EVP_BytesToKey(cipher, EVP_md5(), NULL, [passwordData bytes], (int)[passwordData length], 1, evpKey, iv);
         if (keySize == 0) {
             SETNSERROR([CryptoKey errorDomain], -1, @"EVP_BytesToKey: %@", [OpenSSL errorMessage]);
-            [self release];
+            
             return nil;
         }
         if (keySize != 32) {
             SETNSERROR([CryptoKey errorDomain], -1, @"invalid key length -- should be 32 bytes");
-            [self release];
+            
             return nil;
         }
     }
     return self;
 }
-- (void)dealloc {
-    [super dealloc];
-}
-
 - (NSData *)encrypt:(NSData *)plainData error:(NSError **)error {
     NSMutableData *outBuffer = [NSMutableData data];
     if (![self encrypt:plainData intoBuffer:outBuffer error:error]) {

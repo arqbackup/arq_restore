@@ -30,13 +30,11 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #import "KeychainFactory.h"
 #import "BaseKeychain.h"
 
-
 @implementation KeychainFactory
 + (id <Keychain>)keychain {
-    return [[[BaseKeychain alloc] init] autorelease];
+    return [[BaseKeychain alloc] init];
 }
 @end

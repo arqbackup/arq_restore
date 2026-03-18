@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "GetQueueAttributesResponse.h"
 
 @implementation GetQueueAttributesResponse
@@ -40,28 +38,20 @@
         NSXMLParser *parser = [[NSXMLParser alloc] initWithData:theData];
         [parser setDelegate:self];
         [parser parse];
-        [parser release];
+        
     }
     return self;
 }
-- (void)dealloc {
-    [currentStringBuffer release];
-    [lastAttributeName release];
-    [queueArn release];
-    [super dealloc];
-}
-
 - (NSString *)queueArn {
     return queueArn;
 }
-
 
 #pragma mark - NSXMLParserDelegate
 - (void)parser:(NSXMLParser *)parser didStartElement:(NSString *)elementName
   namespaceURI:(NSString *)namespaceURI
  qualifiedName:(NSString *)qualifiedName
     attributes:(NSDictionary *)attributeDict {
-    [currentStringBuffer release];
+    
     currentStringBuffer = nil;
     if ([elementName isEqualToString:@"Attribute"]) {
         inAttribute = YES;
@@ -77,11 +67,11 @@
     if (currentStringBuffer != nil) {
         if (inAttribute) {
             if ([elementName isEqualToString:@"Name"]) {
-                [lastAttributeName release];
+                
                 lastAttributeName = [currentStringBuffer copy];
             } else if ([elementName isEqualToString:@"Value"]) {
                 if ([lastAttributeName isEqualToString:@"QueueArn"]) {
-                    [queueArn release];
+                    
                     queueArn = [currentStringBuffer copy];
                 }
             }

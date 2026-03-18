@@ -30,9 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 #import "PListNode.h"
 @class ArrayNode;
 @class BooleanNode;
@@ -40,7 +37,6 @@
 @class IntegerNode;
 @class RealNode;
 @class StringNode;
-
 
 @interface ArrayNode : NSObject <PListNode> {
 	NSMutableArray *list;

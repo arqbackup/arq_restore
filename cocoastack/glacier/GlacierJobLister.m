@@ -30,15 +30,12 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "GlacierJobLister.h"
 #import "GlacierRequest.h"
 #import "GlacierResponse.h"
 #import "AWSRegion.h"
 #import "NSString+SBJSON.h"
 #import "GlacierJob.h"
-
 
 @interface GlacierJobLister ()
 - (BOOL)get:(NSError **)error;
@@ -47,22 +44,14 @@
 @implementation GlacierJobLister
 - (id)initWithGlacierAuthorizationProvider:(GlacierAuthorizationProvider *)theGAP vaultName:(NSString *)theVaultName awsRegion:(AWSRegion *)theAWSRegion useSSL:(BOOL)theUseSSL retryOnTransientError:(BOOL)retry {
     if (self = [super init]) {
-        gap = [theGAP retain];
-        vaultName = [theVaultName retain];
-        awsRegion = [theAWSRegion retain];
+        gap = theGAP;
+        vaultName = theVaultName;
+        awsRegion = theAWSRegion;
         useSSL = theUseSSL;
         retryOnTransientError = retry;
         jobs = [[NSMutableArray alloc] init];
     }
     return self;
-}
-- (void)dealloc {
-    [gap release];
-    [vaultName release];
-    [awsRegion release];
-    [marker release];
-    [jobs release];
-    [super dealloc];
 }
 - (NSArray *)jobs:(NSError **)error {
     for (;;) {
@@ -76,7 +65,6 @@
     return jobs;
 }
 
-
 #pragma mark internal
 - (BOOL)get:(NSError **)error {
     NSString *urlString = [NSString stringWithFormat:@"%@/-/vaults/%@/jobs", [awsRegion glacierEndpointWithSSL:useSSL], vaultName];
@@ -85,23 +73,23 @@
     }
     NSURL *theURL = [NSURL URLWithString:urlString];
     
-    GlacierRequest *req = [[[GlacierRequest alloc] initWithMethod:@"GET" url:theURL awsRegion:awsRegion authorizationProvider:gap retryOnTransientError:retryOnTransientError dataTransferDelegate:nil] autorelease];
+    GlacierRequest *req = [[GlacierRequest alloc] initWithMethod:@"GET" url:theURL awsRegion:awsRegion authorizationProvider:gap retryOnTransientError:retryOnTransientError dataTransferDelegate:nil];
     GlacierResponse *response = [req execute:error];
     if (response == nil) {
         return NO;
     }
     NSData *data = [response body];
-    NSString *responseString = [[[NSString alloc] initWithBytes:[data bytes] length:[data length] encoding:NSUTF8StringEncoding] autorelease];
+    NSString *responseString = [[NSString alloc] initWithBytes:[data bytes] length:[data length] encoding:NSUTF8StringEncoding];
     NSDictionary *dict = [responseString JSONValue:error];
-    [marker release];
-    marker = [[dict objectForKey:@"Marker"] retain];
+    
+    marker = [dict objectForKey:@"Marker"];
     if ([marker isKindOfClass:[NSNull class]]) {
-        [marker release];
+        
         marker = nil;
     }
     NSArray *jobList = [dict objectForKey:@"JobList"];
     for (NSDictionary *jobDict in jobList) {
-        GlacierJob *job = [[[GlacierJob alloc] initWithAWSRegion:awsRegion vaultName:vaultName json:jobDict] autorelease];
+        GlacierJob *job = [[GlacierJob alloc] initWithAWSRegion:awsRegion vaultName:vaultName json:jobDict];
         [jobs addObject:job];
     }
     return YES;

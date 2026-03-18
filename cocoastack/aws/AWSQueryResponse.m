@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "AWSQueryResponse.h"
 
 @implementation AWSQueryResponse
@@ -39,17 +37,10 @@
     if (self = [super init]) {
         code = theCode;
         headers = [theHeaders copy];
-        body = [theBody retain];
+        body = theBody;
     }
     return self;
 }
-- (void)dealloc {
-    [headers release];
-    [body release];
-    [super dealloc];
-}
-
-
 - (int)code {
     return code;
 }

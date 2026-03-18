@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @protocol StandardRestorerDelegate <NSObject>
 
 // Methods return YES if cancel is requested.

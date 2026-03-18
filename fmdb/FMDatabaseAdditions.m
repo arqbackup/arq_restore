@@ -27,7 +27,6 @@ type ret = [resultSet sel:0];                                        \
 [resultSet setParentDB:nil];                                         \
 return ret;
 
-
 - (NSString*)stringForQuery:(NSString*)query, ... {
     RETURN_RESULT_FOR_QUERY_WITH_SELECTOR(NSString *, stringForColumnIndex);
 }
@@ -55,7 +54,6 @@ return ret;
 - (NSDate*)dateForQuery:(NSString*)query, ... {
     RETURN_RESULT_FOR_QUERY_WITH_SELECTOR(NSDate *, dateForColumnIndex);
 }
-
 
 - (BOOL)tableExists:(NSString*)tableName {
     
@@ -118,7 +116,6 @@ return ret;
     return returnBool;
 }
 
-
 #if SQLITE_VERSION_NUMBER >= 3007017
 
 - (uint32_t)applicationID {
@@ -143,7 +140,6 @@ return ret;
     [rs close];
 }
 
-
 #if TARGET_OS_MAC && !TARGET_OS_IPHONE
 - (NSString*)applicationIDString {
     NSString *s = NSFileTypeForHFSTypeCode([self applicationID]);
@@ -165,7 +161,6 @@ return ret;
     
     [self setApplicationID:NSHFSTypeCodeFromFileType([NSString stringWithFormat:@"'%@'", s])];
 }
-
 
 #endif
 
@@ -199,7 +194,6 @@ return ret;
 }
 
 #pragma clang diagnostic pop
-
 
 - (BOOL)validateSQL:(NSString*)sql error:(NSError**)error {
     sqlite3_stmt *pStmt = NULL;

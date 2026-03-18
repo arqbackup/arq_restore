@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "CryptoKey.h"
 
 #ifdef USE_OPENSSL
@@ -39,7 +37,6 @@
 #else
 #import "CCCryptoKey.h"
 #endif
-
 
 @implementation CryptoKey
 + (NSString *)errorDomain {
@@ -53,7 +50,7 @@
     if (self = [super init]) {
         if ([thePassword length] == 0) {
             SETNSERROR([CryptoKey errorDomain], ERROR_NOT_FOUND, @"missing encryption password");
-            [self release];
+            
             return nil;
         }
 
@@ -65,7 +62,7 @@
 //        HSLogDebug(@"using CommonCrypto");
 #endif
         if (cryptoKey == nil) {
-            [self release];
+            
             return nil;
         }
     }
@@ -75,7 +72,7 @@
     if (self = [super init]) {
         if ([thePassword length] == 0) {
             SETNSERROR([CryptoKey errorDomain], ERROR_NOT_FOUND, @"missing encryption password");
-            [self release];
+            
             return nil;
         }
 
@@ -85,15 +82,11 @@
         cryptoKey = [[CCCryptoKey alloc] initLegacyWithPassword:thePassword error:error];
 #endif
         if (cryptoKey == nil) {
-            [self release];
+            
             return nil;
         }
     }
     return self;
-}
-- (void)dealloc {
-    [cryptoKey release];
-    [super dealloc];
 }
 - (NSData *)encrypt:(NSData *)plainData error:(NSError **)error {
     return [cryptoKey encrypt:plainData error:error];

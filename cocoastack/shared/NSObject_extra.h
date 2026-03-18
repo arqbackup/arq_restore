@@ -30,9 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 @interface NSObject (extra)
 + (BOOL)equalObjects:(id)left and:(id)right;
 @end

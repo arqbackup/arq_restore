@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @protocol OutputStream <NSObject>
 - (NSInteger)write:(const unsigned char *)buf length:(NSUInteger)len error:(NSError **)error;
 - (unsigned long long)bytesWritten;

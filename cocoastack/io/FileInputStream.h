@@ -30,11 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
-
-
 #import "InputStream.h"
 
 @interface FileInputStream : NSObject <InputStream> {

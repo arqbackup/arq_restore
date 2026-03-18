@@ -30,14 +30,11 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "OSStatusDescription.h"
-
 
 @implementation OSStatusDescription
 + (NSString *)descriptionForOSStatus:(OSStatus)status {
-    NSString *msg = [(NSString *)SecCopyErrorMessageString(status, NULL) autorelease];
+    NSString *msg = (__bridge_transfer NSString *)SecCopyErrorMessageString(status, NULL);
     if (msg == nil) {
         switch (status) {
             case ioErr:

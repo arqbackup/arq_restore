@@ -30,9 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 #import "PackBuilder.h"
 #import "DataOutputStream.h"
 #import "BufferedOutputStream.h"
@@ -49,7 +46,6 @@
 #import "BufferedInputStream.h"
 #import "PackBuilderEntry.h"
 
-
 @implementation PackBuilder
 - (id)init {
     NSAssert(1==0, @"can't call this init method!");
@@ -61,10 +57,10 @@
             buffer:(NSMutableData *)theBuffer
   cachePackFilesToDisk:(BOOL)theCachePackFilesToDisk {
     if (self = [super init]) {
-        fark = [theFark retain];
+        fark = theFark;
         storageType = theStorageType;
-        packSetName = [thePackSetName retain];
-        buffer = [theBuffer retain];
+        packSetName = thePackSetName;
+        buffer = theBuffer;
         [buffer setLength:0];
         cachePackFilesToDisk = theCachePackFilesToDisk;
         entriesBySHA1 = [[NSMutableDictionary alloc] init];
@@ -79,11 +75,10 @@
         HSLogError(@"PackBuilder was modified but not committed! contains %ld entries", [entriesBySHA1 count]);
     }
 #endif
-    [fark release];
-    [packSetName release];
-    [buffer release];
-    [entriesBySHA1 release];
-    [super dealloc];
+    
+    
+    
+    
 }
 
 - (NSString *)errorDomain {
@@ -103,7 +98,7 @@
 }
 - (void)addData:(NSData *)theData forSHA1:(NSString *)sha1 {
     if ([entriesBySHA1 objectForKey:sha1] == nil) {
-        PackBuilderEntry *entry = [[[PackBuilderEntry alloc] initWithOffset:[buffer length] length:[theData length]] autorelease];
+        PackBuilderEntry *entry = [[PackBuilderEntry alloc] initWithOffset:[buffer length] length:[theData length]];
         [buffer appendBytes:[theData bytes] length:[theData length]];
         [entriesBySHA1 setObject:entry forKey:sha1];
         modified = YES;
@@ -128,16 +123,9 @@
     if (error != NULL) {
         *error = nil;
     }
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-    PackId *ret = [self doCommit:error];
-    [ret retain];
-    if (error != NULL) {
-        [*error retain];
-    }
-    [pool drain];
-    [ret autorelease];
-    if (error != NULL) {
-        [*error autorelease];
+    PackId *ret = nil;
+    @autoreleasepool {
+        ret = [self doCommit:error];
     }
     modified = NO;
     return ret;
@@ -148,8 +136,8 @@
     NSMutableData *indexData = [NSMutableData data];
     NSMutableData *packData = [NSMutableData data];
     
-    BufferedOutputStream *indexBOS = [[[BufferedOutputStream alloc] initWithMutableData:indexData] autorelease];
-    BufferedOutputStream *packBOS = [[[BufferedOutputStream alloc] initWithMutableData:packData] autorelease];
+    BufferedOutputStream *indexBOS = [[BufferedOutputStream alloc] initWithMutableData:indexData];
+    BufferedOutputStream *packBOS = [[BufferedOutputStream alloc] initWithMutableData:packData];
     if (![self writeIndex:indexBOS pack:packBOS error:error]) {
         return nil;
     }
@@ -171,7 +159,7 @@
     [packData appendData:packHashBytes];
     
     NSString *packSHA1 = [SHA1Hash hashData:packData];
-    PackId *thePackId = [[[PackId alloc] initWithPackSetName:packSetName packSHA1:packSHA1] autorelease];
+    PackId *thePackId = [[PackId alloc] initWithPackSetName:packSetName packSHA1:packSHA1];
     
     // Write pack to fark before index, in case there's a problem.
     if (![fark putPackData:packData forPackId:thePackId storageType:storageType saveToCache:cachePackFilesToDisk error:error]) {

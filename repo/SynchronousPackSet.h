@@ -30,15 +30,12 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @class PackSet;
 @class Fark;
 #import "StorageType.h"
 @class PackId;
 @protocol PackSetActivityListener;
 @class PackIndexEntry;
-
 
 @interface SynchronousPackSet : NSObject {
     PackSet *packSet;

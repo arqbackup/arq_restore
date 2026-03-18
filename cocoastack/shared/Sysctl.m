@@ -30,14 +30,11 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #include <sys/sysctl.h>
 #include <netinet/in.h>
 #include <net/if.h>
 #include <net/route.h>
 #import "Sysctl.h"
-
 
 @implementation Sysctl
 + (BOOL)networkBytesIn:(unsigned long long *)bytesIn bytesOut:(unsigned long long *)bytesOut error:(NSError **)error {

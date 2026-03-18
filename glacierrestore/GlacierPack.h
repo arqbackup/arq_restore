@@ -30,10 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @class Target;
-
 
 @interface GlacierPack : NSObject {
     NSString *s3BucketName;

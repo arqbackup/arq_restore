@@ -30,12 +30,9 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #include <libgen.h>
 #import <Foundation/Foundation.h>
 #import "ArqRestoreCommand.h"
-
 
 static void printUsage(const char *exeName) {
 	fprintf(stderr, "Usage:\n");
@@ -57,23 +54,23 @@ static void printUsage(const char *exeName) {
 int main (int argc, const char **argv) {
     char *exePath = strdup(argv[0]);
     char *exeName = basename(exePath);
-    NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
-    ArqRestoreCommand *cmd = [[[ArqRestoreCommand alloc] init] autorelease];
     int ret = 0;
-    if (argc == 2 && !strcmp(argv[1], "-h")) {
-        printUsage(exeName);
-    } else {
-        NSError *myError = nil;
-        if (![cmd executeWithArgc:argc argv:argv error:&myError]) {
-            fprintf(stderr, "%s: %s\n", exeName, [[myError localizedDescription] UTF8String]);
+    @autoreleasepool {
+        ArqRestoreCommand *cmd = [[ArqRestoreCommand alloc] init];
+        if (argc == 2 && !strcmp(argv[1], "-h")) {
+            printUsage(exeName);
+        } else {
+            NSError *myError = nil;
+            if (![cmd executeWithArgc:argc argv:argv error:&myError]) {
+                fprintf(stderr, "%s: %s\n", exeName, [[myError localizedDescription] UTF8String]);
 
-            if ([myError isErrorWithDomain:[cmd errorDomain] code:ERROR_USAGE]) {
-                printUsage(exeName);
+                if ([myError isErrorWithDomain:[cmd errorDomain] code:ERROR_USAGE]) {
+                    printUsage(exeName);
+                }
+                ret = 1;
             }
-            ret = 1;
         }
     }
-    [pool drain];
     free(exePath);
     return ret;
 }

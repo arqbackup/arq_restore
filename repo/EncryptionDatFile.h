@@ -30,11 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @class Target;
 @protocol TargetConnectionDelegate;
-
 
 @interface EncryptionDatFile : NSObject {
     NSString *encryptionPassword;
@@ -50,7 +47,6 @@
                                encryptionPassword:(NSString *)theEncryptionPassword
                          targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD
                                             error:(NSError **)error;
-
 
 - (id)initFromLocalCacheWithEncryptionPassword:(NSString *)theEncryptionPassword
                                         target:(Target *)theTarget

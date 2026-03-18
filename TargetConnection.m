@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "TargetConnection.h"
 #import "Target.h"
 #import "RegexKitLite.h"
@@ -48,15 +46,14 @@
 #import "DataInputStream.h"
 #import "BufferedInputStream.h"
 
-
 @implementation TargetConnection
 - (id)initWithTarget:(Target *)theTarget {
     if (self = [super init]) {
-        target = [theTarget retain];
+        target = theTarget;
         if ([[[theTarget endpoint] path] isEqualToString:@"/"]) {
-            pathPrefix = [@"" retain];
+            pathPrefix = @"";
         } else {
-            pathPrefix = [[[theTarget endpoint] path] retain];
+            pathPrefix = [[theTarget endpoint] path];
         }
         
         remoteFSByThreadId = [[NSMutableDictionary alloc] init];
@@ -64,14 +61,6 @@
         [lock setName:@"TargetConnection lock"];
     }
     return self;
-}
-
-- (void)dealloc {
-    [target release];
-    [pathPrefix release];
-    [remoteFSByThreadId release];
-    [lock release];
-    [super dealloc];
 }
 
 - (BOOL)updateFingerprintWithTargetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error {
@@ -293,10 +282,7 @@
     }
     unsigned long long total = 0;
     BOOL ret = YES;
-    NSAutoreleasePool *pool = nil;
     for (Item *item in [itemsByName allValues]) {
-        [pool drain];
-        pool = [[NSAutoreleasePool alloc] init];
         if (theTCD != nil && ![theTCD targetConnectionShouldRetryOnTransientError:error]) {
             ret = NO;
             break;
@@ -312,13 +298,6 @@
         } else {
             total += item.fileSize;
         }
-    }
-    if (!ret && error != NULL) {
-        [*error retain];
-    }
-    [pool drain];
-    if (!ret && error != NULL) {
-        [*error autorelease];
     }
     if (!ret) {
         return nil;
@@ -464,8 +443,8 @@
         return nil;
     }
     int32_t theChunkerVersion = 0;
-    DataInputStream *dis = [[[DataInputStream alloc] initWithData:data description:@"chunker version"] autorelease];
-    BufferedInputStream *bis = [[[BufferedInputStream alloc] initWithUnderlyingStream:dis] autorelease];
+    DataInputStream *dis = [[DataInputStream alloc] initWithData:data description:@"chunker version"];
+    BufferedInputStream *bis = [[BufferedInputStream alloc] initWithUnderlyingStream:dis];
     if (![IntegerIO readInt32:&theChunkerVersion from:bis error:error]) {
         return nil;
     }
@@ -481,7 +460,6 @@
     return YES;
 }
 
-
 #pragma mark internal
 - (RemoteFS *)remoteFS:(NSError **)error {
     [lock lock];
@@ -491,7 +469,7 @@
         ret = [self newRemoteFS:error];
         if (ret != nil) {
             [remoteFSByThreadId setObject:ret forKey:threadId];
-            [ret release];
+            
         }
     }
     [lock unlock];
@@ -544,7 +522,7 @@
     NSAssert(theItemFS != nil, @"theItemFS may not be nil");
     
     RemoteFS *ret = [[RemoteFS alloc] initWithItemFS:theItemFS cacheUUID:[target targetUUID]];
-    [theItemFS release];
+    
     return ret;
 }
 @end

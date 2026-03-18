@@ -30,13 +30,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #include <pthread.h>
 #import "CocoaLumberjack/CocoaLumberjack.h"
 #import "CWLSynthesizeSingleton.h"
 @class HSLogFileManager;
-
 
 #define HSLOG_LEVEL_DEBUG (5)
 #define HSLOG_LEVEL_DETAIL (4)
@@ -50,7 +47,6 @@
 #define HSLogInfo( s, ... ) DDLogInfo(@"INFO [thread %x] %@", pthread_mach_thread_np(pthread_self()), [NSString stringWithFormat:(s), ##__VA_ARGS__]);
 #define HSLogWarn( s, ... ) DDLogWarn(@"WARN [thread %x] %@", pthread_mach_thread_np(pthread_self()), [NSString stringWithFormat:(s), ##__VA_ARGS__]);
 #define HSLogError( s, ... ) DDLogError(@"ERROR [thread %x] %@", pthread_mach_thread_np(pthread_self()), [NSString stringWithFormat:(s), ##__VA_ARGS__]);
-
 
 extern DDLogLevel ddLogLevel;
 

@@ -30,14 +30,11 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 typedef enum {
     HTTP_THROTTLE_TYPE_NONE = 0,
     HTTP_THROTTLE_TYPE_AUTOMATIC = 1,
     HTTP_THROTTLE_TYPE_FIXED = 2
 } HTTPThrottleType;
-
 
 @interface HTTPThrottle : NSObject {
     HTTPThrottleType throttleType;

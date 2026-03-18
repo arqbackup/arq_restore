@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "PListNode.h"
 #import "ArrayNode.h"
 #import "BooleanNode.h"
@@ -59,13 +57,9 @@
 @implementation BinaryPListWriter
 - (id)initWithMutableData:(NSMutableData *)theData {
 	if (self = [super init]) {
-        data = [theData retain];
+        data = theData;
 	}
 	return self;
-}
-- (void)dealloc {
-	[data release];
-	[super dealloc];
 }
 - (void)write:(DictNode *)plist {
 	[self writeDict:plist];
@@ -74,20 +68,20 @@
 
 @implementation BinaryPListWriter (internal)
 - (void)writeArray:(ArrayNode *)node {
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    @autoreleasepool {
 	NSUInteger size = [node size];
     NSAssert(size < 0xffffffff, @"size is greater than uint32_t max!");
 	[IntegerIO writeUInt32:(uint32_t)size to:data]; //FIXME: Should have written 64 bits!
 	for (int i = 0; i < size; i++) {
 		[self writePListNode:[node objectAtIndex:i]];
 	}
-    [pool drain];
+    }
 }
 - (void)writeBoolean:(BooleanNode *)node {
 	[BooleanIO write:[node booleanValue] to:data];
 }
 - (void)writeDict:(DictNode *)node {
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    @autoreleasepool {
 	NSArray *orderedKeys = [node orderedKeySet];
     NSUInteger count = [orderedKeys count];
     NSAssert(count < 0xffffffff, @"count is greater than uint32_t max!");
@@ -96,7 +90,7 @@
 		[StringIO write:key to:data];
 		[self writePListNode:[node nodeForKey:key]];
 	}
-    [pool drain];
+    }
 }
 - (void)writeInteger:(IntegerNode *)node {
 	[IntegerIO writeInt64:[node longlongValue] to:data];

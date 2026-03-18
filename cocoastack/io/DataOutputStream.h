@@ -30,11 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
-
-
 #import "OutputStream.h"
 
 @interface DataOutputStream : NSObject <OutputStream> {

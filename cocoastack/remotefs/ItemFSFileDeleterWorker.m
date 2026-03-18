@@ -30,12 +30,9 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "ItemFSFileDeleterWorker.h"
 #import "ItemFSFileDeleter.h"
 #import "ItemFS.h"
-
 
 @implementation ItemFSFileDeleterWorker
 - (id)initWithItemFSFileDeleter:(ItemFSFileDeleter *)theDeleter itemFS:(id <ItemFS>)theItemFS targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD {
@@ -50,12 +47,8 @@
 }
 
 - (void)run {
-    NSAutoreleasePool *pool = nil;
     HSLogDetail(@"file item delete worker thread started");
     for (;;) {
-        [pool drain];
-        pool = [[NSAutoreleasePool alloc] init];
-        
         Item *item = nil;
         NSString *nextPath = [deleter nextPath:&item];
         if (nextPath == nil) {
@@ -68,6 +61,5 @@
     }
     [deleter workerDidFinish];
     HSLogDetail(@"file delete worker thread exiting");
-    [pool drain];
 }
 @end

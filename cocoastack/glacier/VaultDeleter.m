@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "VaultDeleter.h"
 #import "NSString_extra.h"
 #import "GlacierService.h"
@@ -44,18 +42,15 @@
 #import "VaultDeleterDelegate.h"
 #import "Vault.h"
 
-
 #define INITIAL_SLEEP (0.5)
 #define SLEEP_GROWTH_FACTOR (2.0)
 #define MAX_SLEEP (60.0)
 #define MAX_GLACIER_RETRIES (10)
 
-
 @interface VaultDeleter ()
 - (BOOL)deleteArchives:(NSError **)error;
 - (void)cleanUp;
 @end
-
 
 @implementation VaultDeleter
 - (NSString *)errorDomain {
@@ -64,24 +59,14 @@
 
 - (id)initWithVault:(Vault *)theVault glacier:(GlacierService *)theGlacier sns:(SNS *)theSNS sqs:(SQS *)theSQS delegate:(id <VaultDeleterDelegate>)theDelegate {
     if (self = [super init]) {
-        vault = [theVault retain];
-        glacier = [theGlacier retain];
-        sns = [theSNS retain];
-        sqs = [theSQS retain];
+        vault = theVault;
+        glacier = theGlacier;
+        sns = theSNS;
+        sqs = theSQS;
         delegate = theDelegate;
     }
     return self;
 }
-- (void)dealloc {
-    [vault release];
-    [glacier release];
-    [sns release];
-    [sqs release];
-    [topicArn release];
-    [queueURL release];
-    [super dealloc];
-}
-
 - (BOOL)deleteVault:(NSError **)error {
     if ([vault numberOfArchives] > 0) {
         if ([delegate respondsToSelector:@selector(vaultDeleterStatusDidChange:)]) {
@@ -103,17 +88,16 @@
     return YES;
 }
 
-
 #pragma mark internal
 - (BOOL)deleteArchives:(NSError **)error {
     NSString *jobUUID = [NSString stringWithRandomUUID];
     NSString *topicName = [NSString stringWithFormat:@"%@_topic", jobUUID];
     NSString *queueName = [NSString stringWithFormat:@"%@_queue", jobUUID];
-    topicArn = [[sns createTopic:topicName error:error] retain];
+    topicArn = [sns createTopic:topicName error:error];
     if (topicArn == nil) {
         return NO;
     }
-    queueURL = [[sqs createQueueWithName:queueName error:error] retain];
+    queueURL = [sqs createQueueWithName:queueName error:error];
     if (queueURL == nil) {
         return NO;
     }
@@ -138,10 +122,7 @@
     }
     NSTimeInterval sleep = INITIAL_SLEEP;
     BOOL ret = YES;
-    NSAutoreleasePool *pool = nil;
     for (;;) {
-        [pool drain];
-        pool = [[NSAutoreleasePool alloc] init];
         if ([delegate respondsToSelector:@selector(vaultDeleterAbortRequestedForVaultName:)] && [delegate vaultDeleterAbortRequestedForVaultName:[vault vaultName]]) {
             ret = NO;
             SETNSERROR([self errorDomain], ERROR_ABORT_REQUESTED, @"abort requested");
@@ -171,14 +152,6 @@
         }
         [NSThread sleepForTimeInterval:sleep];
     }
-    if (!ret && error != NULL) {
-        [*error retain];
-    }
-    [pool drain];
-    if (!ret && error != NULL) {
-        [*error autorelease];
-    }
-    
     if (!ret) {
         return NO;
     }
@@ -187,7 +160,7 @@
     if (inventoryData == nil) {
         return NO;
     }
-    NSString *inventoryString = [[[NSString alloc] initWithData:inventoryData encoding:NSUTF8StringEncoding] autorelease];
+    NSString *inventoryString = [[NSString alloc] initWithData:inventoryData encoding:NSUTF8StringEncoding];
     HSLogDebug(@"inventoryString = %@", inventoryString);
     NSDictionary *json = [inventoryString JSONValue:error];
     if (json == nil) {

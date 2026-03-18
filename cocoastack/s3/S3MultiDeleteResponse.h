@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @interface S3MultiDeleteResponse : NSObject <NSXMLParserDelegate> {
     NSMutableArray *elementNames;
     NSMutableString *currentStringBuffer;

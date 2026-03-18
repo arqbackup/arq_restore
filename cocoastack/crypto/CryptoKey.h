@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #ifdef USE_OPENSSL
 #import "OpenSSLCryptoKey.h"
 #else

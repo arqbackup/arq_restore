@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "HTTPConnectionFactory.h"
 #import "URLConnection.h"
 #import "System.h"
@@ -48,21 +46,9 @@ static HTTPConnectionFactory *theFactory = nil;
 
 /* Singleton recipe: */
 + (id)allocWithZone:(NSZone *)zone {
-    return [[HTTPConnectionFactory theFactory] retain];
+    return [HTTPConnectionFactory theFactory];
 }
 - (id)copyWithZone:(NSZone *)zone {
-    return self;
-}
-- (id)retain {
-    return self;
-}
-- (NSUInteger)retainCount {
-    return NSUIntegerMax;  //denotes an object that cannot be released
-}
-- (oneway void)release {
-    //do nothing
-}
-- (id)autorelease {
     return self;
 }
 
@@ -71,10 +57,6 @@ static HTTPConnectionFactory *theFactory = nil;
     }
     return self;
 }
-- (void)dealloc {
-    [super dealloc];
-}
-
 - (id <HTTPConnection>)newHTTPConnectionToURL:(NSURL *)theURL
                                        method:(NSString *)theMethod
                          dataTransferDelegate:(id<DataTransferDelegate>)theDataTransferDelegate {

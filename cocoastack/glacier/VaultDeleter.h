@@ -30,15 +30,12 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @class AWSRegion;
 @class GlacierService;
 @class SNS;
 @class SQS;
 @protocol VaultDeleterDelegate;
 @class Vault;
-
 
 @interface VaultDeleter : NSObject {
     Vault *vault;

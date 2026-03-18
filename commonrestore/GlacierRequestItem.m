@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "GlacierRequestItem.h"
 #import "Tree.h"
 #import "Node.h"
@@ -39,39 +37,31 @@
 #import "BlobKey.h"
 #import "Repo.h"
 
-
 @implementation GlacierRequestItem
 - (id)initWithPath:(NSString *)thePath tree:(Tree *)theTree {
     if (self = [super init]) {
-        path = [thePath retain];
-        tree = [theTree retain];
+        path = thePath;
+        tree = theTree;
     }
     return self;
 }
 - (id)initWithPath:(NSString *)thePath node:(Node *)theNode {
     if (self = [super init]) {
-        path = [thePath retain];
-        node = [theNode retain];
+        path = thePath;
+        node = theNode;
     }
     return self;
 }
 - (id)initWithPath:(NSString *)thePath node:(Node *)theNode dataBlobKeyIndex:(NSUInteger)theDataBlobKeyIndex {
     if (self = [super init]) {
-        path = [thePath retain];
-        node = [theNode retain];
+        path = thePath;
+        node = theNode;
         dataBlobKeyIndex = theDataBlobKeyIndex;
         NSAssert(theDataBlobKeyIndex > 0, @"theDataBlobKeyIndex must be > 0");
         requestedFirstBlobKey = YES;
     }
     return self;
 }
-- (void)dealloc {
-    [path release];
-    [tree release];
-    [node release];
-    [super dealloc];
-}
-
 - (NSArray *)requestWithRestorer:(id <Restorer>)theRestorer repo:(Repo *)theRepo error:(NSError **)error {
     NSMutableArray *nextItems = [NSMutableArray array];
 
@@ -85,7 +75,7 @@
         for (NSString *childNodeName in [tree childNodeNames]) {
             Node *childNode = [tree childNodeWithName:childNodeName];
             NSString *childPath = [path stringByAppendingPathComponent:childNodeName];
-            [nextItems addObject:[[[GlacierRequestItem alloc] initWithPath:childPath node:childNode] autorelease]];
+            [nextItems addObject:[[GlacierRequestItem alloc] initWithPath:childPath node:childNode]];
         }
     } else {
         NSAssert(node != nil, @"node can't be nil if tree is nil");
@@ -94,7 +84,7 @@
             if (childTree == nil) {
                 return nil;
             }
-            [nextItems addObject:[[[GlacierRequestItem alloc] initWithPath:path tree:childTree] autorelease]];
+            [nextItems addObject:[[GlacierRequestItem alloc] initWithPath:path tree:childTree]];
         } else {
             if (!requestedFirstBlobKey) {
                 if (![theRestorer requestBlobKey:[node xattrsBlobKey] error:error]) {
@@ -111,7 +101,7 @@
                             return nil;
                         }
                         if ([[node dataBlobKeys] count] > 1) {
-                            [nextItems addObject:[[[GlacierRequestItem alloc] initWithPath:path node:node dataBlobKeyIndex:1] autorelease]];
+                            [nextItems addObject:[[GlacierRequestItem alloc] initWithPath:path node:node dataBlobKeyIndex:1]];
                         }
                     }
                 }
@@ -122,7 +112,7 @@
                     return nil;
                 }
                 if ([[node dataBlobKeys] count] > (dataBlobKeyIndex + 1)) {
-                    [nextItems addObject:[[[GlacierRequestItem alloc] initWithPath:path node:node dataBlobKeyIndex:(dataBlobKeyIndex + 1)] autorelease]];
+                    [nextItems addObject:[[GlacierRequestItem alloc] initWithPath:path node:node dataBlobKeyIndex:(dataBlobKeyIndex + 1)]];
                 }
             }
         }

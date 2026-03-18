@@ -30,9 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 @interface CreateTopicResponse : NSObject <NSXMLParserDelegate> {
     NSString *topicArn;
     NSMutableString *currentStringBuffer;

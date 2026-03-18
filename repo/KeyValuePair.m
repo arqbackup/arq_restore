@@ -30,24 +30,16 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "KeyValuePair.h"
-
 
 @implementation KeyValuePair
 @synthesize key = _key, value = _value;
 
 - (id)initWithKey:(id)theKey value:(id)theValue {
 	if (self = [super init]) {
-		_key = [theKey retain];
-		_value = [theValue retain];
+		_key = theKey;
+		_value = theValue;
 	}
 	return self;
-}
-- (void)dealloc {
-    [_key release];
-    [_value release];
-    [super dealloc];
 }
 @end

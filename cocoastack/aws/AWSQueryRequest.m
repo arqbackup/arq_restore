@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "AWSQueryRequest.h"
 #import "AWSQueryResponse.h"
 #import "HTTPConnectionFactory.h"
@@ -40,43 +38,31 @@
 #import "HTTP.h"
 #import "AWSQueryError.h"
 
-
 #define INITIAL_RETRY_SLEEP (0.5)
 #define RETRY_SLEEP_GROWTH_FACTOR (1.5)
 #define MAX_RETRY_SLEEP (5.0)
-
 
 @interface AWSQueryRequest ()
 - (AWSQueryResponse *)executeOnce:(NSError **)error;
 @end
 
-
 @implementation AWSQueryRequest
 - (id)initWithMethod:(NSString *)theMethod url:(NSURL *)theURL retryOnTransientError:(BOOL)theRetryOnTransientError {
     if (self = [super init]) {
-        method = [theMethod retain];
-        url = [theURL retain];
+        method = theMethod;
+        url = theURL;
         retryOnTransientError = theRetryOnTransientError;
     }
     return self;
 }
-- (void)dealloc {
-    [method release];
-    [url release];
-    [super dealloc];
-}
-
 - (NSString *)errorDomain {
     return @"AWSQueryRequestErrorDomain";
 }
 - (AWSQueryResponse *)execute:(NSError **)error {
-    NSAutoreleasePool *pool = nil;
     NSTimeInterval sleepTime = INITIAL_RETRY_SLEEP;
     AWSQueryResponse *theResponse = nil;
     NSError *myError = nil;
     for (;;) {
-        [pool drain];
-        pool = [[NSAutoreleasePool alloc] init];
         BOOL transientError = NO;
         BOOL needSleep = NO;
         myError = nil;
@@ -113,19 +99,13 @@
             }
         }
     }
-    [theResponse retain];
-    [myError retain];
-    [pool drain];
-    [theResponse autorelease];
-    [myError autorelease];
     if (error != NULL) { *error = myError; }
     return theResponse;
 }
 
-
 #pragma mark internal
 - (AWSQueryResponse *)executeOnce:(NSError **)error {
-    id <HTTPConnection> conn = [[[HTTPConnectionFactory theFactory] newHTTPConnectionToURL:url method:method dataTransferDelegate:nil] autorelease];
+    id <HTTPConnection> conn = [[HTTPConnectionFactory theFactory] newHTTPConnectionToURL:url method:method dataTransferDelegate:nil];
     if (conn == nil) {
         return nil;
     }
@@ -138,7 +118,7 @@
     int code = [conn responseCode];
     if (code >= 200 && code <= 299) {
         HSLogDebug(@"HTTP %d; returning response length=%lu", code, (unsigned long)[responseData length]);
-        AWSQueryResponse *response = [[[AWSQueryResponse alloc] initWithCode:code headers:[conn responseHeaders] body:responseData] autorelease];
+        AWSQueryResponse *response = [[AWSQueryResponse alloc] initWithCode:code headers:[conn responseHeaders] body:responseData];
         return response;
     }
     
@@ -151,7 +131,7 @@
         HSLogError(@"%@ 405 error", url);
         SETNSERROR([self errorDomain], ERROR_RRS_NOT_FOUND, @"%@ 405 error", url);
     }
-    AWSQueryError *queryError = [[[AWSQueryError alloc] initWithDomain:[self errorDomain] httpStatusCode:code responseBody:responseData] autorelease];
+    AWSQueryError *queryError = [[AWSQueryError alloc] initWithDomain:[self errorDomain] httpStatusCode:code responseBody:responseData];
     NSError *myError = [queryError nsError];
     HSLogDebug(@"%@ %@ error: %@", method, conn, myError);
     if (error != NULL) {

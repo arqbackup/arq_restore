@@ -30,11 +30,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "UserAndComputer.h"
 #import "Computer.h"
 #import "DictNode.h"
+#import "StringNode.h"
 
 @implementation UserAndComputer
 - (id)init {
@@ -48,7 +47,7 @@
     if (self = [super init]) {
         DictNode *plist = [DictNode dictNodeWithXMLData:theXMLData error:error];
         if (plist == nil) {
-            [self release];
+            
             return nil;
         }
         userName = [[[plist stringNodeForKey:@"userName"] stringValue] copy];
@@ -58,15 +57,10 @@
 }
 - (id)initWithUserName:(NSString *)theUserName computerName:(NSString *)theComputerName {
     if (self = [super init]) {
-        userName = [theUserName retain];
-        computerName = [theComputerName retain];
+        userName = theUserName;
+        computerName = theComputerName;
     }
     return self;
-}
-- (void)dealloc {
-    [userName release];
-    [computerName release];
-    [super dealloc];
 }
 - (NSString *)userName {
     return userName;
@@ -75,7 +69,7 @@
     return computerName;
 }
 - (NSData *)toXMLData {
-    DictNode *plist = [[[DictNode alloc] init] autorelease];
+    DictNode *plist = [[DictNode alloc] init];
     [plist putString:userName forKey:@"userName"];
     [plist putString:computerName forKey:@"computerName"];
     return [plist XMLData];

@@ -30,7 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 @protocol InputStream <NSObject>
 /*
  * Returns 0 on EOF, just like read(2).

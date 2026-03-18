@@ -30,14 +30,11 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #include <sys/stat.h>
 
 @protocol InputStream;
 @class BlobKey;
 @class BufferedInputStream;
-
 
 @interface Node : NSObject {
     int treeVersion;

@@ -30,12 +30,9 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @protocol ItemFS;
 @class ItemFSFileDeleter;
 @protocol TargetConnectionDelegate;
-
 
 @interface ItemFSFileDeleterWorker : NSObject {
     ItemFSFileDeleter *deleter;

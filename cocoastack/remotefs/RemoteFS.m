@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "RemoteFS.h"
 #import "Target.h"
 #import "Item.h"
@@ -42,24 +40,15 @@
 #import "RemoteFSFileDeleter.h"
 #import "ItemFSFileDeleter.h"
 
-
 @implementation RemoteFS
 - (id)initWithItemFS:(id <ItemFS>)theItemFS cacheUUID:(NSString *)theCacheUUID {
     if (self = [super init]) {
-        itemFS = [theItemFS retain];
-        cacheUUID = [theCacheUUID retain];
-        lockFilePath = [[[[UserLibrary arqCachePath] stringByAppendingPathComponent:theCacheUUID] stringByAppendingPathComponent:@"remotefs.lock"] retain];
+        itemFS = theItemFS;
+        cacheUUID = theCacheUUID;
+        lockFilePath = [[[UserLibrary arqCachePath] stringByAppendingPathComponent:theCacheUUID] stringByAppendingPathComponent:@"remotefs.lock"];
     }
     return self;
 }
-- (void)dealloc {
-    [lockFilePath release];
-    [itemFS release];
-    [cacheUUID release];
-    [super dealloc];
-}
-
-
 - (NSString *)remoteFSErrorDomain {
     return @"RemoteFSErrorDomain";
 }
@@ -67,30 +56,20 @@
     return [itemFS updateFingerprintWithTargetConnectionDelegate:theTCD error:error];
 }
 - (Item *)itemAtPath:(NSString *)thePath targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error {
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
     Item *ret = [self doItemAtPath:thePath targetConnectionDelegate:theTCD error:error];
-    
-    [ret retain];
-    if (ret == nil && error != NULL) {
-        [*error retain];
-    }
-    [pool drain];
-    [ret autorelease];
-    if (ret == nil && error != NULL) {
-        [*error autorelease];
-    }
-    
     return ret;
 }
 - (NSDictionary *)itemsByNameInDirectory:(NSString *)thePath targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error {
     return [self itemsByNameInDirectory:thePath useCachedData:YES targetConnectionDelegate:theTCD error:error];
 }
 - (NSDictionary *)itemsByNameInDirectory:(NSString *)thePath useCachedData:(BOOL)theUseCachedData targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD error:(NSError **)error {
-    FlockFile *ff = [[[FlockFile alloc] initWithPath:lockFilePath] autorelease];
+    FlockFile *ff = [[FlockFile alloc] initWithPath:lockFilePath];
     __block NSDictionary *ret = nil;
-    if (![ff lockAndExecute:^void() { ret = [self lockedItemsByNameInDirectory:thePath useCachedData:theUseCachedData targetConnectionDelegate:theTCD error:error]; } error:error]) {
+    __block NSError *blockError = nil;
+    if (![ff lockAndExecute:^void() { ret = [self lockedItemsByNameInDirectory:thePath useCachedData:theUseCachedData targetConnectionDelegate:theTCD error:&blockError]; } error:error]) {
         return nil;
     }
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (NSData *)contentsOfFileAtPath:(NSString *)thePath dataTransferDelegate:(id<DataTransferDelegate>)theDTDelegate targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCDelegate error:(NSError **)error {
@@ -157,11 +136,13 @@
     //    } else {
     // We overwrote it, so overwrite the item in the cache too.
     
-    FlockFile *ff = [[[FlockFile alloc] initWithPath:lockFilePath] autorelease];
+    FlockFile *ff = [[FlockFile alloc] initWithPath:lockFilePath];
     __block BOOL addOrReplaceSuccess = NO;
-    if (![ff lockAndExecute:^void() { addOrReplaceSuccess = [self lockedAddOrReplaceItemInCache:ret inDirectory:[thePath stringByDeletingLastPathComponent] error:error]; } error:error]) {
+    __block NSError *blockError = nil;
+    if (![ff lockAndExecute:^void() { addOrReplaceSuccess = [self lockedAddOrReplaceItemInCache:ret inDirectory:[thePath stringByDeletingLastPathComponent] error:&blockError]; } error:error]) {
         ret = nil;
     }
+    if (error != NULL) *error = blockError;
     if (!addOrReplaceSuccess) {
         ret = nil;
     }
@@ -170,10 +151,12 @@
 }
 - (BOOL)moveItemAtPath:(NSString *)thePath toPath:(NSString *)theDestinationPath targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error {
     __block BOOL ret = NO;
-    FlockFile *ff = [[[FlockFile alloc] initWithPath:lockFilePath] autorelease];
-    if (![ff lockAndExecute:^void() { ret = [self lockedMoveItemAtPath:thePath toPath:theDestinationPath targetConnectionDelegate:theTCD error:error]; } error:error]) {
+    __block NSError *blockError = nil;
+    FlockFile *ff = [[FlockFile alloc] initWithPath:lockFilePath];
+    if (![ff lockAndExecute:^void() { ret = [self lockedMoveItemAtPath:thePath toPath:theDestinationPath targetConnectionDelegate:theTCD error:&blockError]; } error:error]) {
         return NO;
     }
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (BOOL)lockedMoveItemAtPath:(NSString *)thePath toPath:(NSString *)theDestinationPath targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error {
@@ -221,20 +204,24 @@
     // This method might hold this lock a VERY long time, if it's deleting a huge directory and the ItemFS can't delete directories in one go.
     
     __block BOOL ret = NO;
-    FlockFile *ff = [[[FlockFile alloc] initWithPath:lockFilePath] autorelease];
-    if (![ff lockAndExecute:^void() { ret = [self lockedRemoveItemAtPath:thePath targetConnectionDelegate:theTCD error:error]; } error:error]) {
+    __block NSError *blockError = nil;
+    FlockFile *ff = [[FlockFile alloc] initWithPath:lockFilePath];
+    if (![ff lockAndExecute:^void() { ret = [self lockedRemoveItemAtPath:thePath targetConnectionDelegate:theTCD error:&blockError]; } error:error]) {
         return NO;
     }
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (Item *)createDirectoryAtPath:(NSString *)path targetConnectionDelegate:(id<TargetConnectionDelegate>)theDelegate error:(NSError **)error {
     HSLogDetail(@"creating directory %@", path);
     
     __block Item *ret = nil;
-    FlockFile *ff = [[[FlockFile alloc] initWithPath:lockFilePath] autorelease];
-    if (![ff lockAndExecute:^void() { ret = [self lockedCreateDirectoryAtPath:path targetConnectionDelegate:theDelegate error:error]; } error:error]) {
+    __block NSError *blockError = nil;
+    FlockFile *ff = [[FlockFile alloc] initWithPath:lockFilePath];
+    if (![ff lockAndExecute:^void() { ret = [self lockedCreateDirectoryAtPath:path targetConnectionDelegate:theDelegate error:&blockError]; } error:error]) {
         ret = nil;
     }
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (NSNumber *)isObjectRestoredAtPath:(NSString *)thePath targetConnectionDelegate:(id<TargetConnectionDelegate>)theDelegate error:(NSError **)error {
@@ -250,22 +237,25 @@
 - (BOOL)clearCacheForPath:(NSString *)thePath error:(NSError **)error {
     HSLogInfo(@"clearing cache for %@:%@", [itemFS itemFSDescription], thePath);
     __block BOOL ret = NO;
-    FlockFile *ff = [[[FlockFile alloc] initWithPath:lockFilePath] autorelease];
-    if (![ff lockAndExecute:^void() { ret = [self lockedClearCachedItemsForDirectory:thePath error:error]; } error:error]) {
+    __block NSError *blockError = nil;
+    FlockFile *ff = [[FlockFile alloc] initWithPath:lockFilePath];
+    if (![ff lockAndExecute:^void() { ret = [self lockedClearCachedItemsForDirectory:thePath error:&blockError]; } error:error]) {
         ret = NO;
     }
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (BOOL)clearCache:(NSError **)error {
     HSLogInfo(@"clearing cache for %@", [itemFS itemFSDescription]);
     __block BOOL ret = NO;
-    FlockFile *ff = [[[FlockFile alloc] initWithPath:lockFilePath] autorelease];
-    if (![ff lockAndExecute:^void() { ret = [self lockedClearAllCachedItems:error]; } error:error]) {
+    __block NSError *blockError = nil;
+    FlockFile *ff = [[FlockFile alloc] initWithPath:lockFilePath];
+    if (![ff lockAndExecute:^void() { ret = [self lockedClearAllCachedItems:&blockError]; } error:error]) {
         ret = NO;
     }
+    if (error != NULL) *error = blockError;
     return ret;
 }
-
 
 #pragma mark internal
 - (NSArray *)lockedPathsOfUnreferencedFilesInDirectories:(NSArray *)theDirectories error:(NSError **)error {
@@ -281,10 +271,12 @@
 }
 - (Item *)doItemAtPath:(NSString *)thePath targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error {
     __block Item *ret = nil;
-    FlockFile *ff = [[[FlockFile alloc] initWithPath:lockFilePath] autorelease];
-    if (![ff lockAndExecute:^void() { ret = [self lockedItemAtPath:thePath targetConnectionDelegate:theTCD error:error]; } error:error]) {
+    __block NSError *blockError = nil;
+    FlockFile *ff = [[FlockFile alloc] initWithPath:lockFilePath];
+    if (![ff lockAndExecute:^void() { ret = [self lockedItemAtPath:thePath targetConnectionDelegate:theTCD error:&blockError]; } error:error]) {
         return nil;
     }
+    if (error != NULL) *error = blockError;
     return ret;
 }
 - (Item *)lockedItemAtPath:(NSString *)thePath targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error {
@@ -419,10 +411,10 @@
             }
             
             // ItemFS can't remove the whole directory in one go, so delete the files using multiple threads.
-            NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-            ItemFSFileDeleter *deleter = [[[ItemFSFileDeleter alloc] initWithItemFS:itemFS itemsByPath:childItemsByPath targetConnectionDelegate:theDelegate] autorelease];
+            @autoreleasepool {
+            ItemFSFileDeleter *deleter = [[ItemFSFileDeleter alloc] initWithItemFS:itemFS itemsByPath:childItemsByPath targetConnectionDelegate:theDelegate];
             [deleter waitForCompletion];
-            [pool drain];
+            }
         } else {
             // Clear everything within the directory from the cache.
             if (![self lockedClearCachedItemsForDirectory:thePath error:error]) {
@@ -534,8 +526,6 @@
     }
     return item;
 }
-
-
 
 #pragma mark cache
 - (BOOL)lockedAddItemToCache:(Item *)theItem inDirectory:(NSString *)theDirectory error:(NSError **)error {

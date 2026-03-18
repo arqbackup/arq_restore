@@ -30,7 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #import "NetMonitor.h"
 #import "Sysctl.h"
 
@@ -59,7 +58,7 @@
         unsigned long long rawoutb;
         if (![Sysctl networkBytesIn:&rawinb bytesOut:&rawoutb error:&error]) {
             HSLogError(@"failed to get net stats: %@", [error localizedDescription]);
-            [self release];
+            
             return nil;
         }
         currentSample.timeInterval = [NSDate timeIntervalSinceReferenceDate];
@@ -68,11 +67,6 @@
         memset(bpsSamples, 0, sizeof(bpsSamples));
     }
     return self;
-}
-- (void)dealloc {
-    [currentSample release];
-    [previousSample release];
-    [super dealloc];
 }
 - (double)sample:(double)myBPS {
     bpsSamples[(numBPSSamples++ % 4)] = myBPS;

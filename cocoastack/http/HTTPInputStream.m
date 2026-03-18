@@ -30,18 +30,16 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #import "HTTPInputStream.h"
 #import "HTTPConnection.h"
 #import "NetMonitor.h"
 #import "HTTPThrottle.h"
 
-
 @implementation HTTPInputStream
 - (id)initWithHTTPConnection:(id <HTTPConnection>)theConn data:(NSData *)theData {
     if (self = [super init]) {
         conn = theConn; // Don't retain the connection.
-        inputStream = [[NSInputStream inputStreamWithData:theData] retain];
+        inputStream = [NSInputStream inputStreamWithData:theData];
         httpThrottleLock = [[NSLock alloc] init];
         [httpThrottleLock setName:@"HTTPThrottle lock"];
         netMonitor = [[NetMonitor alloc] init];
@@ -50,11 +48,10 @@
     return self;
 }
 - (void)dealloc {
-    [inputStream release];
-    [httpThrottleLock release];
-    [netMonitor release];
+    
+    
+    
     HSLogDebug(@"deallocing HTTPInputStream %p", self);
-    [super dealloc];
 }
 
 - (void)setHTTPThrottle:(HTTPThrottle *)theHTTPThrottle {
@@ -119,7 +116,6 @@
     return ret;
 }
 
-
 // Implement most of the NSInputStream methods:
 - (void)open {
     [inputStream open];
@@ -151,7 +147,6 @@
 - (NSError *)streamError {
     return [inputStream streamError];
 }
-
 
 // Forward everything else to the inputStream ivar.
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector {

@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "StandardRestorerDelegateMux.h"
 
 @implementation StandardRestorerDelegateMux
@@ -43,12 +41,6 @@
     }
     return self;
 }
-- (void)dealloc {
-    [lock release];
-    [super dealloc];
-}
-
-
 #pragma mark StandardRestorerDelegate
 - (BOOL)standardRestorerMessageDidChange:(NSString *)message {
     [lock lock];

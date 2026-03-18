@@ -30,7 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 enum {
     StorageTypeS3 = 1,
     StorageTypeGlacier = 2,

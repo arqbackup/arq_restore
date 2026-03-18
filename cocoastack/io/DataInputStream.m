@@ -30,35 +30,24 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
-
 #import "DataInputStream.h"
 #import "InputStreams.h"
-
 
 @implementation DataInputStream
 - (id)initWithData:(NSData *)theData description:(NSString *)theDescription {
     if (self = [super init]) {
-        data = [theData retain];
-        description = [theDescription retain];
+        data = theData;
+        description = theDescription;
     }
     return self;
 }
 - (id)initWithData:(NSData *)theData description:(NSString *)theDescription offset:(unsigned long long)theOffset length:(unsigned long long)theLength {
     if (self = [super init]) {
         data = [theData subdataWithRange:NSMakeRange((NSUInteger)theOffset, (NSUInteger)theLength)];
-        description = [theDescription retain];
+        description = theDescription;
     }
     return self;
 }
-- (void)dealloc {
-    [data release];
-    [description release];
-    [super dealloc];
-}
-
 #pragma mark InputStream protocol
 - (NSInteger)read:(unsigned char *)buf bufferLength:(NSUInteger)bufferLength error:(NSError **)error {
     NSInteger ret = 0;
@@ -74,7 +63,7 @@
 - (NSData *)slurp:(NSError **)error {
     NSData *ret = nil;
     if (pos == 0) {
-        ret = [[data retain] autorelease];
+        ret = data;
     } else if (pos >= [data length]) {
         ret = [NSData data];
     } else {
@@ -86,7 +75,6 @@
 - (BOOL)slurpIntoBuffer:(NSMutableData *)theBuffer error:(NSError **)error {
     return [InputStreams slurp:self intoBuffer:theBuffer error:error];
 }
-
 
 #pragma mark NSObject
 - (NSString *)description {

@@ -30,11 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 #import "UserLibrary_Arq.h"
-
 
 @implementation UserLibrary (Arq)
 + (NSString *)arqUserLibraryPath {

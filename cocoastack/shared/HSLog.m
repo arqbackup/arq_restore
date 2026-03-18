@@ -30,19 +30,15 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #include <sys/stat.h>
 #import "HSLog.h"
 #import "System.h"
 #import "NSFileManager_extra.h"
 #import "HSLogFileManager.h"
 
-
 int global_hslog_level = -1;
 
 DDLogLevel ddLogLevel = DDLogLevelInfo;
-
 
 @implementation HSLog
 CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(HSLog)

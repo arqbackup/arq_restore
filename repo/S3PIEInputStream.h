@@ -30,14 +30,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 @class PackIndexEntry;
 @class Fark;
 @class BufferedInputStream;
 @class PackId;
-
 
 @interface S3PIEInputStream : NSObject {
     Fark *fark;

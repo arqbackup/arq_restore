@@ -30,19 +30,14 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #ifdef USE_OPENSSL
-
 
 #import "OpenSSL.h"
 #import <openssl/err.h>
 #import <openssl/ssl.h>
 
-
 static BOOL initialized = NO;
 static SSL_CTX *ctx;
-
 
 @implementation OpenSSL
 + (BOOL)initializeSSL:(NSError **)error {
@@ -86,6 +81,5 @@ static SSL_CTX *ctx;
 }
 
 @end
-
 
 #endif /* USE_OPENSSL */

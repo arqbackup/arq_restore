@@ -30,14 +30,11 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @class S3Service;
 @class PackIndexEntry;
 @class PackId;
 @class Target;
 @protocol TargetConnectionDelegate;
-
 
 @interface GlacierPackIndex : NSObject {
     S3Service *s3;

@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #include <unistd.h>
 #include <sys/stat.h>
 #import "LocalItemFS.h"
@@ -44,7 +42,6 @@
 #import "NSFileManager_extra.h"
 #import "NSString_extra.h"
 
-
 @implementation LocalItemFS
 
 - (id)init {
@@ -56,14 +53,14 @@
         NSArray *names = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:[theEndpoint path] error:&myError];
         if (names == nil) {
             SETNSERROR([self errorDomain], -1, @"Failed to initialize endpoint %@: %@", [theEndpoint path], [myError localizedDescription]);
-            [self release];
+            
             return nil;
         }
         
-        FSStat *fsStat = [[[FSStat alloc] init] autorelease];
+        FSStat *fsStat = [[FSStat alloc] init];
         Volume *volume = [fsStat volumeForPath:[theEndpoint path] error:error];
         if (volume == nil) {
-            [self release];
+            
             return nil;
         }
         volumeIsRemote = [volume isRemote];
@@ -76,16 +73,9 @@
     }
     return self;
 }
-- (void)dealloc {
-    [tempDir release];
-    [super dealloc];
-}
-
-
 - (NSString *)errorDomain {
     return @"LocalItemFSErrorDomain";
 }
-
 
 #pragma mark ItemFS
 - (NSString *)itemFSDescription {
@@ -101,7 +91,7 @@
     return YES;
 }
 - (Item *)rootDirectoryItemWithTargetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error {
-    Item *item = [[[Item alloc] init] autorelease];
+    Item *item = [[Item alloc] init];
     item.name = @"/";
     item.isDirectory = YES;
     return item;
@@ -127,7 +117,7 @@
             if (attrs == nil) {
                 return nil;
             }
-            Item *item = [[[Item alloc] init] autorelease];
+            Item *item = [[Item alloc] init];
             item.name = name;
             item.isDirectory = [[attrs fileType] isEqualToString:NSFileTypeDirectory];
             if (!item.isDirectory) {
@@ -165,7 +155,7 @@
         }
     }
     
-    Item *ret = [[[Item alloc] init] autorelease];
+    Item *ret = [[Item alloc] init];
     ret.name = theName;
     ret.isDirectory = YES;
     return ret;
@@ -180,7 +170,7 @@
     NSData *ret = [NSData dataWithContentsOfFile:localPath options:NSUncachedRead error:&myError];
     if (ret == nil) {
         if ([myError isErrorWithDomain:NSCocoaErrorDomain code:NSFileReadNoSuchFileError]) {
-            myError = [[[NSError alloc] initWithDomain:[self errorDomain] code:ERROR_NOT_FOUND description:[NSString stringWithFormat:@"%@ not found", theFullPath]] autorelease];
+            myError = [[NSError alloc] initWithDomain:[self errorDomain] code:ERROR_NOT_FOUND description:[NSString stringWithFormat:@"%@ not found", theFullPath]];
         }
         SETERRORFROMMYERROR;
     }
@@ -249,7 +239,7 @@
             return nil;
         }
     }
-    Item *item = [[[Item alloc] init] autorelease];
+    Item *item = [[Item alloc] init];
     item.name = theName;
     item.isDirectory = NO;
     item.fileSize = [theData length];
@@ -294,7 +284,6 @@
     SETNSERROR([self errorDomain], -1, @"removeItemById not implemented");
     return NO;
 }
-
 
 - (BOOL)ensureTempDirExists:(NSError **)error {
     if (!tempDirExists) {

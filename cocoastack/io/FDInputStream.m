@@ -30,13 +30,9 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 #import "FDInputStream.h"
 
 #import "InputStreams.h"
-
 
 #define MY_BUF_SIZE (4096)
 #define DEFAULT_READ_TIMEOUT_SECONDS (60)
@@ -50,7 +46,7 @@
         fd = theFD;
         offset = theOffset;
         length = theLength;
-        label = [theLabel retain];
+        label = theLabel;
         needsSeek = YES;
         hasLength = YES;
     }
@@ -60,15 +56,10 @@
     if (self = [super init]) {
         fd = theFD;
         timeoutSeconds = theTimeoutSeconds;
-        label = [theLabel retain];
+        label = theLabel;
     }
     return self;
 }
-- (void)dealloc {
-    [label release];
-    [super dealloc];
-}
-
 #pragma mark InputStream
 - (NSInteger)read:(unsigned char *)buf bufferLength:(NSUInteger)bufferLength error:(NSError **)error {
     if (needsSeek) {
@@ -142,7 +133,6 @@ read_again:
 - (BOOL)slurpIntoBuffer:(NSMutableData *)theBuffer error:(NSError **)error {
     return [InputStreams slurp:self intoBuffer:theBuffer error:error];
 }
-
 
 #pragma mark NSObject protocol
 - (NSString *)description {

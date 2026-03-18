@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "CacheOwnership.h"
 
 @implementation CacheOwnership
@@ -54,6 +52,5 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(CacheOwnership)
 - (gid_t)gid {
     return gid;
 }
-
 
 @end

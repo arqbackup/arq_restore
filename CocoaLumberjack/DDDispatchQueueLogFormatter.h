@@ -23,7 +23,6 @@
 
 #import "DDLog.h"
 
-
 /**
  * This class provides a log formatter that prints the dispatch_queue label instead of the mach_thread_id.
  *

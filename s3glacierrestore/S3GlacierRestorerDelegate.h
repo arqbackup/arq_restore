@@ -30,9 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 @protocol S3GlacierRestorerDelegate <NSObject>
 
 // Methods return YES if cancel is requested.

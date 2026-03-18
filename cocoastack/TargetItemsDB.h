@@ -30,11 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @class Item;
 @class FMDatabaseQueue;
-
 
 @interface TargetItemsDB : NSObject {
     NSString *dbPath;

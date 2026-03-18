@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <string.h>
@@ -45,18 +43,17 @@
 }
 - (id)initWithPath:(NSString *)thePath {
     if (self = [super init]) {
-        path = [thePath retain];
+        path = thePath;
         fd = -1;
         
     }
     return self;
 }
 - (void)dealloc {
-    [path release];
+    
     if (fd >= 0) {
         close(fd);
     }
-    [super dealloc];
 }
 - (BOOL)tryLock:(NSError **)error {
     return [self lockWithBlockUntilAvailable:NO error:error];
@@ -74,17 +71,11 @@
     return YES;
 }
 
-
 #pragma mark internal
 - (BOOL)lockWithBlockUntilAvailable:(BOOL)blockUntilAvailable error:(NSError **)error {
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-    BOOL ret = [self doLockWithBlockUntilAvailable:blockUntilAvailable error:error];
-    if (!ret && error != NULL) {
-        [*error retain];
-    }
-    [pool drain];
-    if (!ret && error != NULL) {
-        [*error autorelease];
+    BOOL ret;
+    @autoreleasepool {
+        ret = [self doLockWithBlockUntilAvailable:blockUntilAvailable error:error];
     }
     return ret;
 }

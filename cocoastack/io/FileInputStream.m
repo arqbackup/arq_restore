@@ -30,14 +30,9 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
-
 #import "FileInputStream.h"
 
 #import "InputStreams.h"
-
 
 #define MY_BUF_SIZE (4096)
 
@@ -49,7 +44,7 @@
 - (id)initWithPath:(NSString *)thePath offset:(unsigned long long)theOffset length:(unsigned long long)theLength {
     if (self = [super init]) {
         fd = -1;
-        path = [thePath retain];
+        path = thePath;
         fileLength = theOffset + theLength;
         offset = theOffset;
     }
@@ -57,8 +52,7 @@
 }
 - (void)dealloc {
     [self close];
-    [path release];
-    [super dealloc];
+    
 }
 
 #pragma mark InputStream
@@ -107,7 +101,6 @@ read_again:
 - (BOOL)slurpIntoBuffer:(NSMutableData *)theBuffer error:(NSError **)error {
     return [InputStreams slurp:self intoBuffer:theBuffer error:error];
 }
-
 
 #pragma mark NSObject protocol
 - (NSString *)description {

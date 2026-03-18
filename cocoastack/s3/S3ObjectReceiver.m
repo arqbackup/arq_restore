@@ -30,10 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "S3ObjectReceiver.h"
-
 
 @implementation S3ObjectReceiver
 - (id)init {
@@ -41,10 +38,6 @@
         objects = [[NSMutableArray alloc] init];
     }
     return self;
-}
-- (void)dealloc {
-    [objects release];
-    [super dealloc];
 }
 - (NSArray *)objects {
     return objects;

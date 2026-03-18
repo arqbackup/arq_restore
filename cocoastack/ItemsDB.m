@@ -30,11 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "ItemsDB.h"
 #import "TargetItemsDB.h"
-
 
 @implementation ItemsDB
 CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(ItemsDB)
@@ -42,7 +39,6 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(ItemsDB)
 + (NSString *)errorDomain {
     return @"ItemsDBErrorDomain";
 }
-
 
 - (id)init {
     if (self = [super init]) {
@@ -87,7 +83,6 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(ItemsDB)
     [lock unlock];
     return ret;
 }
-
 
 - (BOOL)destroyForTargetUUID:(NSString *)theTargetUUID error:(NSError **)error {
     [lock lock];
@@ -149,7 +144,7 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(ItemsDB)
 - (TargetItemsDB *)targetItemsDBForTargetUUID:(NSString *)theTargetUUID error:(NSError **)error {
     TargetItemsDB *ret = [targetItemsDBsByUUID objectForKey:theTargetUUID];
     if (ret == nil) {
-        ret = [[[TargetItemsDB alloc] initWithTargetUUID:theTargetUUID error:error] autorelease];
+        ret = [[TargetItemsDB alloc] initWithTargetUUID:theTargetUUID error:error];
         if (ret == nil) {
             return nil;
         }

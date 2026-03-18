@@ -30,11 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 @class HTTPThrottle;
-
 
 @protocol DataTransferDelegate <NSObject>
 - (BOOL)dataTransferDidUploadBytes:(uint64_t)count httpThrottle:(HTTPThrottle **)theHTTPThrottle error:(NSError **)error;

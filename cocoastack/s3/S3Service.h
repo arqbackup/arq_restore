@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "ItemFS.h"
 #import "S3Receiver.h"
 #import "InputStream.h"
@@ -42,14 +40,12 @@
 @class Item;
 @class LifecycleConfiguration;
 
-
 #define S3_INITIAL_RETRY_SLEEP (0.5)
 #define S3_RETRY_SLEEP_GROWTH_FACTOR (1.5)
 #define S3_MAX_RETRY (5)
 
 extern NSString *kS3StorageClassStandard;
 extern NSString *kS3StorageClassReducedRedundancy;
-
 
 enum {
     S3SERVICE_ERROR_UNEXPECTED_RESPONSE = -51001,

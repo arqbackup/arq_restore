@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import <CommonCrypto/CommonHMAC.h>
 #import <CommonCrypto/CommonKeyDerivation.h>
 #import <CommonCrypto/CommonDigest.h>
@@ -48,13 +46,10 @@
 #import "CacheOwnership.h"
 #import "Streams.h"
 
-
 #define SALT_LENGTH (8)
 #define IV_LENGTH (16)
 #define KEY_DERIVATION_ROUNDS (200000)
 #define HEADER "ENCRYPTIONV2"
-
-
 
 @implementation EncryptionDatFile
 + (NSString *)errorDomain {
@@ -69,22 +64,22 @@
     NSError *myError = nil;
     
     // Try to read local v3 file.
-    EncryptionDatFile *datFile = [[[EncryptionDatFile alloc] initFromLocalCacheWithEncryptionPassword:theEncryptionPassword
+    EncryptionDatFile *datFile = [[EncryptionDatFile alloc] initFromLocalCacheWithEncryptionPassword:theEncryptionPassword
                                                                                                target:theTarget
                                                                                          computerUUID:theComputerUUID
                                                                                     encryptionVersion:3
-                                                                                                error:&myError] autorelease];
+                                                                                                error:&myError];
     if (datFile == nil) {
         if ([myError code] != ERROR_NOT_FOUND) {
             SETERRORFROMMYERROR;
             return nil;
         }
         // Try to read local v2 file.
-        datFile = [[[EncryptionDatFile alloc] initFromLocalCacheWithEncryptionPassword:theEncryptionPassword
+        datFile = [[EncryptionDatFile alloc] initFromLocalCacheWithEncryptionPassword:theEncryptionPassword
                                                                                 target:theTarget
                                                                           computerUUID:theComputerUUID
                                                                      encryptionVersion:2
-                                                                                 error:&myError] autorelease];
+                                                                                 error:&myError];
     }
     if (datFile == nil) {
         if ([myError code] != ERROR_NOT_FOUND) {
@@ -92,11 +87,11 @@
             return nil;
         }
         // Try to read local v1 file.
-        datFile = [[[EncryptionDatFile alloc] initFromLocalCacheWithEncryptionPassword:theEncryptionPassword
+        datFile = [[EncryptionDatFile alloc] initFromLocalCacheWithEncryptionPassword:theEncryptionPassword
                                                                                 target:theTarget
                                                                           computerUUID:theComputerUUID
                                                                      encryptionVersion:1
-                                                                                 error:&myError] autorelease];
+                                                                                 error:&myError];
     }
     if (datFile == nil) {
         if ([myError code] != ERROR_NOT_FOUND) {
@@ -104,12 +99,12 @@
             return nil;
         }
         // Try to read v3 file from target.
-        datFile = [[[EncryptionDatFile alloc] initFromTargetWithEncryptionPassword:theEncryptionPassword
+        datFile = [[EncryptionDatFile alloc] initFromTargetWithEncryptionPassword:theEncryptionPassword
                                                                             target:theTarget
                                                                       computerUUID:theComputerUUID
                                                                  encryptionVersion:3
                                                           targetConnectionDelegate:theTCD
-                                                                             error:&myError] autorelease];
+                                                                             error:&myError];
         if (datFile != nil) {
             NSError *cacheError = nil;
             if (![datFile saveToLocalCache:&cacheError]) {
@@ -123,12 +118,12 @@
             return nil;
         }
         // Try to read v2 file from target.
-        datFile = [[[EncryptionDatFile alloc] initFromTargetWithEncryptionPassword:theEncryptionPassword
+        datFile = [[EncryptionDatFile alloc] initFromTargetWithEncryptionPassword:theEncryptionPassword
                                                                             target:theTarget
                                                                       computerUUID:theComputerUUID
                                                                  encryptionVersion:2
                                                           targetConnectionDelegate:theTCD
-                                                                             error:&myError] autorelease];
+                                                                             error:&myError];
         if (datFile != nil) {
             NSError *cacheError = nil;
             if (![datFile saveToLocalCache:&cacheError]) {
@@ -142,12 +137,12 @@
             return nil;
         }
         // Try to read v1 file from target.
-        datFile = [[[EncryptionDatFile alloc] initFromTargetWithEncryptionPassword:theEncryptionPassword
+        datFile = [[EncryptionDatFile alloc] initFromTargetWithEncryptionPassword:theEncryptionPassword
                                                                             target:theTarget
                                                                       computerUUID:theComputerUUID
                                                                  encryptionVersion:1
                                                           targetConnectionDelegate:theTCD
-                                                                             error:&myError] autorelease];
+                                                                             error:&myError];
         if (datFile != nil) {
             NSError *cacheError = nil;
             if (![datFile saveToLocalCache:&cacheError]) {
@@ -173,13 +168,13 @@
                              encryptionVersion:(int)theEncryptionVersion
                                          error:(NSError **)error {
     if (self = [super init]) {
-        encryptionPassword = [theEncryptionPassword retain];
-        target = [theTarget retain];
-        computerUUID = [theComputerUUID retain];
+        encryptionPassword = theEncryptionPassword;
+        target = theTarget;
+        computerUUID = theComputerUUID;
         encryptionVersion = theEncryptionVersion;
         
         if (![self loadFromLocalCache:error]) {
-            [self release];
+            
             return nil;
         }
     }
@@ -192,27 +187,18 @@
                   targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD
                                      error:(NSError **)error {
     if (self = [super init]) {
-        encryptionPassword = [theEncryptionPassword retain];
-        target = [theTarget retain];
-        computerUUID = [theComputerUUID retain];
+        encryptionPassword = theEncryptionPassword;
+        target = theTarget;
+        computerUUID = theComputerUUID;
         encryptionVersion = theEncryptionVersion;
         
         if (![self loadFromTargetWithTargetConnectionDelegate:theTCD error:error]) {
-            [self release];
+            
             return nil;
         }
     }
     return self;
 }
-- (void)dealloc {
-    [encryptionPassword release];
-    [target release];
-    [computerUUID release];
-    [data release];
-    [masterKeys release];
-    [super dealloc];
-}
-
 - (NSString *)errorDomain {
     return @"EncryptionDatFileErrorDomain";
 }
@@ -221,7 +207,7 @@
     return encryptionVersion;
 }
 - (BOOL)saveToTargetWithTargetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error {
-    TargetConnection *conn = [[target newConnection:error] autorelease];
+    TargetConnection *conn = [target newConnection:error];
     if (conn == nil) {
         return NO;
     }
@@ -251,7 +237,6 @@
     return masterKeys;
 }
 
-
 #pragma mark internal
 - (BOOL)loadFromLocalCache:(NSError **)error {
     NSString *cachePath = [self cachePath];
@@ -259,7 +244,7 @@
         SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"encryption dat file cache not found");
         return NO;
     }
-    data = [[NSData dataWithContentsOfFile:cachePath options:NSUncachedRead error:error] retain];
+    data = [NSData dataWithContentsOfFile:cachePath options:NSUncachedRead error:error];
     if (data == nil) {
         return NO;
     }
@@ -270,14 +255,13 @@
     if (conn == nil) {
         return NO;
     }
-    data = [[conn encryptionDataForComputerUUID:computerUUID encryptionVersion:encryptionVersion delegate:theTCD error:error] retain];
-    [conn release];
+    data = [conn encryptionDataForComputerUUID:computerUUID encryptionVersion:encryptionVersion delegate:theTCD error:error];
+    
     if (data == nil) {
         return NO;
     }
     return [self loadPrivateKeyFromData:error];
 }
-
 
 #pragma mark internal
 - (id)initWithEncryptionPassword:(NSString *)theEncryptionPassword
@@ -287,12 +271,12 @@
                             data:(NSData *)theData
                        masterKeys:(NSData *)theMasterKeys {
     if (self = [super init]) {
-        encryptionPassword = [theEncryptionPassword retain];
-        target = [theTarget retain];
-        computerUUID = [theComputerUUID retain];
+        encryptionPassword = theEncryptionPassword;
+        target = theTarget;
+        computerUUID = theComputerUUID;
         encryptionVersion = theEncryptionVersion;
-        data = [theData retain];
-        masterKeys = [theMasterKeys retain];
+        data = theData;
+        masterKeys = theMasterKeys;
     }
     return self;
 }
@@ -357,7 +341,7 @@
     
     free(derivedEncryptionKey);
 
-    [masterKeys release];
+    
     masterKeys = [theMasterKeys copy];
     
     if ([masterKeys length] != expectedKeysLen && encryptionVersion != 1) {

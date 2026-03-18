@@ -30,15 +30,12 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import <CommonCrypto/CommonDigest.h>
 #include <sys/stat.h>
 #import "SHA1Hash.h"
 #import "NSString_extra.h"
 #import "FileInputStream.h"
 #import "BufferedInputStream.h"
-
 
 #define MY_BUF_SIZE (4096)
 
@@ -48,7 +45,6 @@
 + (NSString *)hashPhotoStream:(BufferedInputStream *)bis totalLength:(unsigned long long)totalLength error:(NSError **)error;
 + (BOOL)updateSHA1:(CC_SHA1_CTX *)ctx fromStream:(id <InputStream>)is length:(unsigned long long)theLength error:(NSError **)error;
 @end
-
 
 @implementation SHA1Hash
 + (NSString *)errorDomain {
@@ -73,7 +69,7 @@
     unsigned long long length = (unsigned long long)st.st_size;
     FileInputStream *fis = [[FileInputStream alloc] initWithPath:path offset:0 length:length];
     NSString *sha1 = [SHA1Hash hashStream:fis error:error];
-    [fis release];
+    
     return sha1;
 }
 + (NSString *)hashStream:(id <InputStream>)is withLength:(uint64_t)length error:(NSError **)error {
@@ -115,9 +111,9 @@
     unsigned long long totalLength = (unsigned long long)st.st_size;
     FileInputStream *fis = [[FileInputStream alloc] initWithPath:path offset:0 length:totalLength];
     BufferedInputStream *bis = [[BufferedInputStream alloc] initWithUnderlyingStream:fis];
-    [fis release];
+    
     NSString *sha1 = [SHA1Hash hashPhotoStream:bis totalLength:totalLength error:error];
-    [bis release];
+    
     if (sha1 == nil) {
         sha1 = [SHA1Hash hashFile:path error:error];
     }

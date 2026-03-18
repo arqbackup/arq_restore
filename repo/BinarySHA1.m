@@ -30,11 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 #import "BinarySHA1.h"
-
 
 @implementation BinarySHA1
 + (NSComparisonResult)compare:(const void *)a to:(const void *)b {

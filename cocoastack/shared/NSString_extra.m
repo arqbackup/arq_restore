@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "NSString_extra.h"
 #import "RegexKitLite.h"
 #include <openssl/bio.h>
@@ -140,15 +138,15 @@ static char hexCharToInt(char c1) {
         buf[i*2] = c1;
         buf[i*2+1] = c2;
     }
-    NSString *ret = [[[NSString alloc] initWithBytes:buf length:length*2 encoding:NSUTF8StringEncoding] autorelease];
+    NSString *ret = [[NSString alloc] initWithBytes:buf length:length*2 encoding:NSUTF8StringEncoding];
     free(buf);
     return ret;
 }
 + (NSString *)stringWithRandomUUID {
     CFUUIDRef uuidObj = CFUUIDCreate(nil);//create a new UUID
-	NSString *uuidString = (NSString*)CFUUIDCreateString(nil, uuidObj);
+	NSString *uuidString = (__bridge_transfer NSString *)CFUUIDCreateString(nil, uuidObj);
 	CFRelease(uuidObj);
-	return [uuidString autorelease];
+	return uuidString;
 }
 - (NSString *)stringWithUniquePath {
     NSString *left = self;
@@ -187,7 +185,7 @@ static char hexCharToInt(char c1) {
     const unsigned char *encoded = (const unsigned char *)[encodedData bytes];
     unsigned char *decoded = (unsigned char *)malloc([encodedData length]);
     int ret = UnBase64(decoded, encoded, (int)[encodedData length]);
-    NSData *decodedData = [[[NSData alloc] initWithBytes:decoded length:ret] autorelease];
+    NSData *decodedData = [[NSData alloc] initWithBytes:decoded length:ret];
     free(decoded);
     return decodedData;
 }
@@ -203,11 +201,11 @@ static char hexCharToInt(char c1) {
     return NSOrderedDescending;
 }
 - (NSString *)stringByEscapingURLCharacters {
-    return [(NSString *)CFURLCreateStringByAddingPercentEscapes(NULL,
-                                                                (CFStringRef)self,
+    return (__bridge_transfer NSString *)CFURLCreateStringByAddingPercentEscapes(NULL,
+                                                                (__bridge CFStringRef)self,
                                                                 NULL,
-                                                                (CFStringRef)@"!*'();:@&=+$,/?%#[]",
-                                                                kCFStringEncodingUTF8) autorelease];
+                                                                (__bridge CFStringRef)@"!*'();:@&=+$,/?%#[]",
+                                                                kCFStringEncodingUTF8);
 }
 - (NSString *)stringByDeletingTrailingSlash {
     if ([self isEqualToString:@"/"] || ![self hasSuffix:@"/"]) {

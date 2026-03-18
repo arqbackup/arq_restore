@@ -30,10 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @class AWSRegion;
-
 
 @interface GlacierJob : NSObject {
     AWSRegion *awsRegion;

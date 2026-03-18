@@ -30,12 +30,9 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "PListNode.h"
 #import "PListNodeType.h"
 #import "IntegerNode.h"
-
 
 @implementation IntegerNode
 - (id)initWithInt:(int)theValue {
@@ -49,7 +46,7 @@
 		NSScanner *scanner = [NSScanner scannerWithString:theValue];
 		if (![scanner scanLongLong:&value]) {
             SETNSERROR(@"PListErrorDomain", -1, @"string does not contain a long long: %@", theValue);
-            [self release];
+            
             self = nil;
 		}
 	}
@@ -84,7 +81,6 @@
 - (int)type {
 	return PLN_INTEGER;
 }
-
 
 #pragma mark NSObject protocol
 - (BOOL)isEqual:(id)other {

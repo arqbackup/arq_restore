@@ -30,15 +30,11 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 #include <sys/stat.h>
 @class Tree;
 @class Node;
 @class Repo;
 @protocol Restorer;
-
 
 @interface CalculateItem : NSObject {
     NSString *path;

@@ -30,11 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "PListNodeType.h"
 #import "BooleanNode.h"
-
 
 @implementation BooleanNode
 - (id)initWithBoolean:(BOOL)b {

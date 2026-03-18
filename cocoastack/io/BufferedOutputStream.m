@@ -30,10 +30,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "BufferedOutputStream.h"
-
 
 #import "DataOutputStream.h"
 #import "FDOutputStream.h"
@@ -48,24 +45,24 @@
 - (id)initWithMutableData:(NSMutableData *)theMutableData {
     DataOutputStream *dos = [[DataOutputStream alloc] initWithMutableData:theMutableData];
     id ret = [self initWithUnderlyingOutputStream:dos];
-    [dos release];
+    
     return ret;
 }
 - (id)initWithFD:(int)theFD {
     FDOutputStream *fdos = [[FDOutputStream alloc] initWithFD:theFD];
     id ret = [self initWithUnderlyingOutputStream:fdos];
-    [fdos release];
+    
     return ret;
 }
 - (id)initWithPath:(NSString *)thePath targetUID:(uid_t)theTargetUID targetGID:(gid_t)theTargetGID append:(BOOL)isAppend {
     FileOutputStream *fos = [[FileOutputStream alloc] initWithPath:thePath targetUID:theTargetUID targetGID:theTargetGID append:isAppend];
     id ret = [self initWithUnderlyingOutputStream:fos];
-    [fos release];
+    
     return ret;
 }
 - (id)initWithUnderlyingOutputStream:(id <OutputStream>)theOS {
     if (self = [super init]) {
-        os = [theOS retain];
+        os = theOS;
         buflen = MY_BUF_SIZE;
         buf = (unsigned char *)malloc(buflen);
     }
@@ -75,9 +72,8 @@
     if (pos > 0 && !errorOccurred) {
         HSLogWarn(@"BufferedOutputStream pos > 0 -- flush wasn't called?!");
     }
-    [os release];
+    
     free(buf);
-    [super dealloc];
 }
 - (BOOL)setBufferSize:(NSUInteger)size error:(NSError **)error {
     if (![self flush:error]) {

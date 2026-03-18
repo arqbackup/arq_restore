@@ -30,12 +30,9 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "SHA256TreeHash.h"
 #import "SHA256Hash.h"
 #import "NSString_extra.h"
-
 
 #define ONE_MB (1024 * 1024)
 

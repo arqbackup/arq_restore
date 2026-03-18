@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import <CommonCrypto/CommonDigest.h>
 #import "Repo.h"
 #import "Fark.h"
@@ -56,17 +54,14 @@
 #import "PackId.h"
 #import "StorageType.h"
 
-
 #define MAX_CONSISTENCY_TRIES (20)
 #define ENCRYPTED_OBJECT_HEADER_LEN (116)
 #define REVALIDATE_INTERVAL_DAYS (180)
-
 
 @implementation Repo
 + (BlobKeyCompressionType)defaultBlobKeyCompressionType {
     return BlobKeyCompressionLZ4;
 }
-
 
 - (id)initWithBucket:(Bucket *)theBucket
   encryptionPassword:(NSString *)theEncryptionPassword
@@ -75,7 +70,7 @@ targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD
     activityListener:(id <RepoActivityListener>)theActivityListener
                error:(NSError **)error {
     if (self = [super init]) {
-        bucket = [theBucket retain];
+        bucket = theBucket;
         targetConnectionDelegate = theTCD;
         repoDelegate = theRepoDelegate;
         repoActivityListener = theActivityListener;
@@ -85,7 +80,7 @@ targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD
                                    targetConnectionDelegate:targetConnectionDelegate
                                                       error:error];
         if (encryptor == nil) {
-            [self release];
+            
             return nil;
         }
         
@@ -94,7 +89,7 @@ targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD
                    targetConnectionDelegate:theTCD
                                       error:error];
         if (fark == nil) {
-            [self release];
+            
             return nil;
         }
         treesPackSet = [[SynchronousPackSet alloc] initWithFark:fark
@@ -104,7 +99,7 @@ targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD
                                                activityListener:self
                                                           error:error];
         if (treesPackSet == nil) {
-            [self release];
+            
             return nil;
         }
         
@@ -117,7 +112,7 @@ targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD
                                                activityListener:self
                                                           error:error];
         if (blobsPackSet == nil) {
-            [self release];
+            
             return nil;
         }
         
@@ -126,15 +121,6 @@ targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD
     }
     return self;
 }
-- (void)dealloc {
-    [bucket release];
-    [fark release];
-    [treesPackSet release];
-    [blobsPackSet release];
-    [compressEncryptLock release];
-    [super dealloc];
-}
-
 - (NSString *)errorDomain {
     return @"RepoErrorDomain";
 }
@@ -182,40 +168,14 @@ targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD
     return [self commitForBlobKey:commitBlobKey dataSize:NULL error:error];
 }
 - (Commit *)commitForBlobKey:(BlobKey *)commitBlobKey dataSize:(unsigned long long *)dataSize error:(NSError **)error {
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-    if (error != NULL) {
-        *error = nil;
-    }
     Commit *ret = [self doCommitForBlobKey:commitBlobKey dataSize:dataSize error:error];
-    [ret retain];
-    if (!ret && error != NULL) {
-        [*error retain];
-    }
-    [pool drain];
-    [ret autorelease];
-    if (!ret && error != NULL) {
-        [*error autorelease];
-    }
     return ret;
 }
 - (Tree *)treeForBlobKey:(BlobKey *)blobKey error:(NSError **)error {
     return [self treeForBlobKey:blobKey dataSize:NULL error:error];
 }
 - (Tree *)treeForBlobKey:(BlobKey *)treeBlobKey dataSize:(unsigned long long *)dataSize error:(NSError **)error {
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-    if (error != NULL) {
-        *error = nil;
-    }
     Tree *ret = [self doTreeForBlobKey:treeBlobKey dataSize:dataSize error:error];
-    [ret retain];
-    if (!ret && error != NULL) {
-        [*error retain];
-    }
-    [pool drain];
-    [ret autorelease];
-    if (!ret && error != NULL) {
-        [*error autorelease];
-    }
     return ret;
 }
 - (NSNumber *)containsBlobsInCacheForBlobKeys:(NSArray *)theBlobKeys error:(NSError **)error {
@@ -331,20 +291,7 @@ targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD
     return YES;
 }
 - (NSData *)dataForBlobKey:(BlobKey *)theBlobKey error:(NSError **)error {
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-    if (error != NULL) {
-        *error = nil;
-    }
     NSData *ret = [self doDataForBlobKey:theBlobKey error:error];
-    [ret retain];
-    if (!ret && error != NULL) {
-        [*error retain];
-    }
-    [pool drain];
-    [ret autorelease];
-    if (!ret && error != NULL) {
-        [*error autorelease];
-    }
     return ret;
 }
 
@@ -458,30 +405,19 @@ targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD
 }
 - (BlobKey *)blobKeyForV1Data:(NSData *)theData compressionType:(BlobKeyCompressionType)theCompressionType storageType:(StorageType)theStorageType error:(NSError **)error {
     NSString *theSHA1 = [SHA1Hash hashData:theData];
-    return [[[BlobKey alloc] initWithSHA1:theSHA1 storageType:theStorageType stretchEncryptionKey:YES compressionType:theCompressionType error:error] autorelease];
+    return [[BlobKey alloc] initWithSHA1:theSHA1 storageType:theStorageType stretchEncryptionKey:YES compressionType:theCompressionType error:error];
 }
 - (BlobKey *)blobKeyForV2Data:(NSData *)theFileData compressionType:(BlobKeyCompressionType)theCompressionType error:(NSError **)error {
     StorageType convertedStorageType = ([bucket storageType] == StorageTypeGlacier) ? StorageTypeS3Glacier : [bucket storageType];
     return [self blobKeyForV2Data:theFileData compressionType:theCompressionType storageType:convertedStorageType error:error];
 }
 - (BlobKey *)blobKeyForV2Data:(NSData *)theFileData compressionType:(BlobKeyCompressionType)theCompressionType storageType:(StorageType)theStorageType error:(NSError **)error {
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
     BlobKey *ret = [self doBlobKeyForV2Data:theFileData compressionType:theCompressionType storageType:theStorageType error:error];
-    
-    [ret retain];
-    if (ret == nil && error != NULL) {
-        [*error retain];
-    }
-    [pool drain];
-    [ret autorelease];
-    if (ret == nil & error != NULL) {
-        [*error autorelease];
-    }
     return ret;
 }
 - (BlobKey *)doBlobKeyForV2Data:(NSData *)theFileData compressionType:(BlobKeyCompressionType)theCompressionType storageType:(StorageType)theStorageType error:(NSError **)error {
     NSString *theSHA1 = [encryptor sha1HashForV2Data:theFileData];
-    return [[[BlobKey alloc] initWithSHA1:theSHA1 storageType:theStorageType stretchEncryptionKey:YES compressionType:theCompressionType error:error] autorelease];
+    return [[BlobKey alloc] initWithSHA1:theSHA1 storageType:theStorageType stretchEncryptionKey:YES compressionType:theCompressionType error:error];
 }
 - (NSData *)encryptedObjectForBlobKey:(BlobKey *)theBlobKey v2CompressedData:(NSData *)theV2CompressedData masterIV:(NSData *)theMasterIV dataIVAndSymmetricKey:(NSData *)theDataIVAndSymmetricKey error:(NSError **)error {
     
@@ -496,7 +432,6 @@ targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD
     
     return ret;
 }
-
 
 - (NSData *)decryptData:(NSData *)theData error:(NSError **)error {
     //    return [stretchedCryptoKey decrypt:theData error:error];
@@ -513,7 +448,6 @@ targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD
     return YES;
 }
 
-
 #pragma mark PackSetActivityListener
 - (void)packSetActivity:(NSString *)theActivity {
     [repoActivityListener repoActivity:theActivity];
@@ -522,12 +456,10 @@ targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD
     [repoActivityListener repoActivityDidFinish];
 }
 
-
 #pragma mark NSObject
 - (NSString *)description {
     return [NSString stringWithFormat:@"<Repo:bucket=%@>", bucket];
 }
-
 
 #pragma mark internal
 - (Commit *)doCommitForBlobKey:(BlobKey *)commitBlobKey dataSize:(unsigned long long *)dataSize error:(NSError **)error {
@@ -552,9 +484,9 @@ targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD
     
     DataInputStream *dis = [[DataInputStream alloc] initWithData:data description:[NSString stringWithFormat:@"Commit %@", commitBlobKey]];
     BufferedInputStream *bis = [[BufferedInputStream alloc] initWithUnderlyingStream:dis];
-    Commit *commit = [[[Commit alloc] initWithBufferedInputStream:bis error:error] autorelease];
-    [bis release];
-    [dis release];
+    Commit *commit = [[Commit alloc] initWithBufferedInputStream:bis error:error];
+    
+    
     return commit;
 }
 - (Tree *)doTreeForBlobKey:(BlobKey *)blobKey dataSize:(unsigned long long *)dataSize error:(NSError **)error {
@@ -587,9 +519,9 @@ targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD
         *dataSize = (unsigned long long)[data length];
     }
     
-    DataInputStream *dis = [[[DataInputStream alloc] initWithData:data description:[NSString stringWithFormat:@"Tree %@", [blobKey description]]] autorelease];
-    BufferedInputStream *bis = [[[BufferedInputStream alloc] initWithUnderlyingStream:dis] autorelease];
-    Tree *tree = [[[Tree alloc] initWithBufferedInputStream:bis error:error] autorelease];
+    DataInputStream *dis = [[DataInputStream alloc] initWithData:data description:[NSString stringWithFormat:@"Tree %@", [blobKey description]]];
+    BufferedInputStream *bis = [[BufferedInputStream alloc] initWithUnderlyingStream:dis];
+    Tree *tree = [[Tree alloc] initWithBufferedInputStream:bis error:error];
     return tree;
 }
 - (NSData *)doDataForBlobKey:(BlobKey *)theBlobKey error:(NSError **)error {
@@ -678,7 +610,7 @@ targetConnectionDelegate:(id<TargetConnectionDelegate>)theTCD
 }
 
 - (BOOL)writeReflogForOldHeadBlobKey:(BlobKey *)oldHeadBlobKey newHeadBlobKey:(BlobKey *)newHeadBlobKey isRewrite:(BOOL)rewrite packIndexEntry:(PackIndexEntry *)thePIE error:(NSError **)error {
-    DictNode *plist = [[[DictNode alloc] init] autorelease];
+    DictNode *plist = [[DictNode alloc] init];
     [plist putString:[oldHeadBlobKey sha1] forKey:@"oldHeadSHA1"];
     [plist putBoolean:[oldHeadBlobKey stretchEncryptionKey] forKey:@"oldHeadStretchKey"];
     [plist putString:[newHeadBlobKey sha1] forKey:@"newHeadSHA1"];

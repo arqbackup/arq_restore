@@ -30,9 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 #import <CommonCrypto/CommonCryptor.h>
 #import "ObjectEncryptor.h"
 #import "ObjectEncryptorImpl.h"
@@ -41,12 +38,10 @@
 #import "EncryptionDatFile.h"
 #import "Target.h"
 
-
 @implementation ObjectEncryptor
 + (NSString *)errorDomain {
     return @"ObjectEncryptorErrorDomain";
 }
-
 
 - (id)initWithTarget:(Target *)theTarget
         computerUUID:(NSString *)theComputerUUID
@@ -68,24 +63,18 @@ targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD
     }
     
     if (self = [super init]) {
-        target = [theTarget retain];
-        computerUUID = [theComputerUUID retain];
-        customV1Salt = [theCustomV1Salt retain];
+        target = theTarget;
+        computerUUID = theComputerUUID;
+        customV1Salt = theCustomV1Salt;
         targetConnectionDelegate = theTCD;
         
         if (![self initializeWithEncryptionPassword:theEncryptionPassword error:error]) {
-            [self release];
+            
             return nil;
         }
     }
     return self;
 }
-- (void)dealloc {
-    [target release];
-    [computerUUID release];
-    [super dealloc];
-}
-
 - (int)encryptionVersion {
     return encryptionVersion;
 }
@@ -114,7 +103,6 @@ targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD
 - (BOOL)masterIV:(NSData **)theMasterIV dataIVAndSymmetricKey:(NSData **)theDataIVAndSymmetricKey fromEncryptedObjectHeader:(NSData *)theHeader error:(NSError **)error {
     return [impl masterIV:theMasterIV dataIVAndSymmetricKey:theDataIVAndSymmetricKey fromEncryptedObjectHeader:theHeader error:error];
 }
-
 
 #pragma mark internal
 - (BOOL)initializeWithEncryptionPassword:(NSString *)theEncryptionPassword error:(NSError **)error {

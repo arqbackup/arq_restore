@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "GlacierRequest.h"
 #import "GlacierAuthorizationProvider.h"
 #import "HTTPConnectionFactory.h"
@@ -44,61 +42,44 @@
 #import "GlacierResponse.h"
 #import "GlacierService.h"
 
-
 #define INITIAL_RETRY_SLEEP (0.5)
 #define RETRY_SLEEP_GROWTH_FACTOR (1.5)
 #define MAX_RETRY_SLEEP (5.0)
-
 
 @interface GlacierRequest ()
 - (GlacierResponse *)executeOnce:(NSError **)error;
 @end
 
-
 @implementation GlacierRequest
 
 - (id)initWithMethod:(NSString *)theMethod url:(NSURL *)theURL awsRegion:(AWSRegion *)theAWSRegion authorizationProvider:(GlacierAuthorizationProvider *)theGAP retryOnTransientError:(BOOL)theRetryOnTransientError dataTransferDelegate:(id <DataTransferDelegate>)theDataTransferDelegate {
     if (self = [super init]) {
-        method = [theMethod retain];
-        url = [theURL retain];
+        method = theMethod;
+        url = theURL;
         NSAssert(url != nil, @"url may not be nil!");
-        awsRegion = [theAWSRegion retain];
-        gap = [theGAP retain];
+        awsRegion = theAWSRegion;
+        gap = theGAP;
         retryOnTransientError = theRetryOnTransientError;
         dataTransferDelegate = theDataTransferDelegate; // Do not retain.
         extraHeaders = [[NSMutableDictionary alloc] init];
     }
     return self;
 }
-- (void)dealloc {
-    [method release];
-    [url release];
-    [awsRegion release];
-    [gap release];
-    [requestData release];
-    [extraHeaders release];
-    [super dealloc];
-}
-
 - (NSString *)errorDomain {
     return @"GlacierRequestErrorDomain";
 }
 - (void)setRequestData:(NSData *)theRequestData {
-    [theRequestData retain];
-    [requestData release];
+    
     requestData = theRequestData;
 }
 - (void)setHeader:(NSString *)value forKey:(NSString *)key {
     [extraHeaders setObject:value forKey:key];
 }
 - (GlacierResponse *)execute:(NSError **)error {
-    NSAutoreleasePool *pool = nil;
     NSTimeInterval sleepTime = INITIAL_RETRY_SLEEP;
     GlacierResponse *theResponse = nil;
     NSError *myError = nil;
     for (;;) {
-        [pool drain];
-        pool = [[NSAutoreleasePool alloc] init];
         BOOL transientError = NO;
         BOOL needSleep = NO;
         myError = nil;
@@ -158,19 +139,13 @@
             }
         }
     }
-    [theResponse retain];
-    [myError retain];
-    [pool drain];
-    [theResponse autorelease];
-    [myError autorelease];
     if (error != NULL) { *error = myError; }
     return theResponse;
 }
 
-
 #pragma mark internal
 - (GlacierResponse *)executeOnce:(NSError **)error {
-    id <HTTPConnection> conn = [[[HTTPConnectionFactory theFactory] newHTTPConnectionToURL:url method:method dataTransferDelegate:dataTransferDelegate] autorelease];
+    id <HTTPConnection> conn = [[HTTPConnectionFactory theFactory] newHTTPConnectionToURL:url method:method dataTransferDelegate:dataTransferDelegate];
     [conn setDate:[NSDate date]];
     [conn setRequestHostHeader];
     [conn setRequestHeader:[[ISO8601Date sharedISO8601Date] basicDateTimeStringFromDate:[NSDate date]] forKey:@"x-amz-date"];
@@ -188,7 +163,7 @@
     int code = [conn responseCode];
     if (code >= 200 && code <= 299) {
         HSLogDebug(@"HTTP %d; returning response length=%lu", code, (unsigned long)[responseData length]);
-        GlacierResponse *response = [[[GlacierResponse alloc] initWithCode:code headers:[conn responseHeaders] body:responseData] autorelease];
+        GlacierResponse *response = [[GlacierResponse alloc] initWithCode:code headers:[conn responseHeaders] body:responseData];
         return response;
     }
     

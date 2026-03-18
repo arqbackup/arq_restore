@@ -30,13 +30,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "S3AuthorizationProviderFactory.h"
 #import "AWSRegion.h"
 #import "S3SignatureV1AuthorizationProvider.h"
 #import "S3SignatureV4AuthorizationProvider.h"
-
 
 @implementation S3AuthorizationProviderFactory
 CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(S3AuthorizationProviderFactory)
@@ -51,9 +48,9 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(S3AuthorizationProviderFactory)
     NSAssert(theSignatureVersion == 2 || theSignatureVersion == 4, @"signature version must be 2 or 4");
     
     if (theSignatureVersion == 4) {
-        ret = [[[S3SignatureV4AuthorizationProvider alloc] initWithAccessKey:theAccessKey secretKey:theSecretKey awsRegion:theAWSRegion] autorelease];
+        ret = [[S3SignatureV4AuthorizationProvider alloc] initWithAccessKey:theAccessKey secretKey:theSecretKey awsRegion:theAWSRegion];
     } else {
-        ret = [[[S3SignatureV1AuthorizationProvider alloc] initWithAccessKey:theAccessKey secretKey:theSecretKey] autorelease];
+        ret = [[S3SignatureV1AuthorizationProvider alloc] initWithAccessKey:theAccessKey secretKey:theSecretKey];
     }
     
     return ret;

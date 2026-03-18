@@ -30,11 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 @protocol HTTPConnection;
 @protocol DataTransferDelegate;
-
 
 @interface HTTPConnectionFactory : NSObject {
 //    NSTimeInterval maxConnectionLifetime;

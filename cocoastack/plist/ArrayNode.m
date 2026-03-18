@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "DictNode.h"
 #import "ArrayNode.h"
 #import "PListNodeType.h"
@@ -62,10 +60,6 @@
         return NO;
     }
     return YES;
-}
-- (void)dealloc {
-	[list release];
-	[super dealloc];
 }
 - (NSUInteger)size {
 	return [list count];
@@ -106,7 +100,6 @@
 	[list insertObject:node atIndex:index];
 }
 
-
 #pragma mark PListNode protocol
 
 - (int)type {
@@ -117,7 +110,7 @@
 - (id)copyWithZone:(NSZone *)zone {
     NSMutableArray *listCopy = [[NSMutableArray alloc] initWithArray:list copyItems:YES];
     ArrayNode *ret = [[ArrayNode alloc] initWithList:listCopy];
-    [listCopy release];
+    
     return ret;
 }
 
@@ -145,7 +138,7 @@
 @implementation ArrayNode (internal)
 - (id)initWithList:(NSMutableArray *)theList {
     if (self = [super init]) {
-        list = [theList retain];
+        list = theList;
     }
     return self;
 }

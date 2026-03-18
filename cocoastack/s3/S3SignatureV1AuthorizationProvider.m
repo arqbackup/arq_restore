@@ -30,12 +30,9 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "S3SignatureV1AuthorizationProvider.h"
 #import "LocalS3Signer.h"
 #import "HTTPConnection.h"
-
 
 @implementation S3SignatureV1AuthorizationProvider
 - (id)initWithAccessKey:(NSString *)access secretKey:(NSString *)secret {
@@ -47,13 +44,6 @@
     }
     return self;
 }
-- (void)dealloc {
-    [accessKey release];
-    [signer release];
-    [super dealloc];
-}
-
-
 #pragma mark S3AuthorizationProvider
 - (int)signatureVersion {
     return 1;
@@ -71,18 +61,16 @@
     return YES;
 }
 
-
 #pragma mark NSCopying
 - (id)copyWithZone:(NSZone *)zone {
     return [[S3SignatureV1AuthorizationProvider alloc] initWithAccessKey:accessKey signer:signer];
 }
 
-
 #pragma mark internal
 - (id)initWithAccessKey:(NSString *)access signer:(id <S3Signer>)theSigner {
     if (self = [super init]) {
-        accessKey = [access retain];
-        signer = [theSigner retain];
+        accessKey = access;
+        signer = theSigner;
     }
     return self;
 }
@@ -92,7 +80,7 @@
     if (signature == nil) {
         return nil;
     }
-    NSMutableString *buf = [[[NSMutableString alloc] init] autorelease];
+    NSMutableString *buf = [[NSMutableString alloc] init];
     [buf appendString:@"AWS "];
     [buf appendString:accessKey];
     [buf appendString:@":"];
@@ -105,7 +93,7 @@
     return ret;
 }
 - (NSString *)stringToSignForConnection:(id <HTTPConnection>)theConnection {
-    NSMutableString *buf = [[[NSMutableString alloc] init] autorelease];
+    NSMutableString *buf = [[NSMutableString alloc] init];
     [buf appendString:[theConnection requestMethod]];
     [buf appendString:@"\n"];
     NSString *contentMd5 = [theConnection requestHeaderForKey:@"Content-Md5"];
@@ -151,7 +139,7 @@
         HSLogDebug(@"v1 string to sign: <%@>", buf);
         const char *stringToSignBytes = [buf UTF8String];
         int stringToSignLen = (int)strlen(stringToSignBytes);
-        NSMutableString *displayBytes = [[[NSMutableString alloc] init] autorelease];
+        NSMutableString *displayBytes = [[NSMutableString alloc] init];
         for (int i = 0; i < stringToSignLen; i++) {
             [displayBytes appendString:[NSString stringWithFormat:@"%02x ", stringToSignBytes[i]]];
         }

@@ -30,11 +30,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "System.h"
 #import "RegexKitLite.h"
-
 
 #define SYSTEM_VERSION_PLIST @"/System/Library/CoreServices/SystemVersion.plist"
 

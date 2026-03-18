@@ -30,8 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #import "SNS.h"
 #import "AWSRegion.h"
 #import "NSString_extra.h"
@@ -42,7 +40,6 @@
 #import "SubscribeResponse.h"
 #import "ListTopicsResponse.h"
 
-
 @implementation SNS
 + (NSString *)errorDomain {
     return @"SNSErrorDomain";
@@ -50,20 +47,13 @@
 
 - (id)initWithAccessKey:(NSString *)theAccessKey secretKey:(NSString *)secret awsRegion:(AWSRegion *)theAWSRegion retryOnTransientError:(BOOL)retry {
     if (self = [super init]) {
-        accessKey = [theAccessKey retain];
+        accessKey = theAccessKey;
         sap = [[SignatureV2Provider alloc] initWithSecretKey:secret];
-        awsRegion = [theAWSRegion retain];
+        awsRegion = theAWSRegion;
         retryOnTransientError = retry;
     }
     return self;
 }
-- (void)dealloc {
-    [accessKey release];
-    [sap release];
-    [awsRegion release];
-    [super dealloc];
-}
-
 - (NSString *)createTopic:(NSString *)theName error:(NSError **)error {
     NSDateFormatter *formatter = [self dateFormatter];
     
@@ -81,12 +71,12 @@
     [str appendFormat:@"&Signature=%@", [signature stringByEscapingURLCharacters]];
 
     NSURL *urlWithSignature = [NSURL URLWithString:str];
-    AWSQueryRequest *req = [[[AWSQueryRequest alloc] initWithMethod:@"GET" url:urlWithSignature retryOnTransientError:retryOnTransientError] autorelease];
+    AWSQueryRequest *req = [[AWSQueryRequest alloc] initWithMethod:@"GET" url:urlWithSignature retryOnTransientError:retryOnTransientError];
     AWSQueryResponse *response = [req execute:error];
     if (response == nil) {
         return nil;
     }
-    CreateTopicResponse *ctr = [[[CreateTopicResponse alloc] initWithData:[response body]] autorelease];
+    CreateTopicResponse *ctr = [[CreateTopicResponse alloc] initWithData:[response body]];
     NSString *ret = [ctr topicArn];
     if (ret == nil) {
         SETNSERROR([SNS errorDomain], -1, @"TopicArn not found in CreateTopic response");
@@ -112,12 +102,12 @@
     [str appendFormat:@"&Signature=%@", [signature stringByEscapingURLCharacters]];
     
     NSURL *urlWithSignature = [NSURL URLWithString:str];
-    AWSQueryRequest *req = [[[AWSQueryRequest alloc] initWithMethod:@"GET" url:urlWithSignature retryOnTransientError:retryOnTransientError] autorelease];
+    AWSQueryRequest *req = [[AWSQueryRequest alloc] initWithMethod:@"GET" url:urlWithSignature retryOnTransientError:retryOnTransientError];
     AWSQueryResponse *response = [req execute:error];
     if (response == nil) {
         return nil;
     }
-    SubscribeResponse *sr = [[[SubscribeResponse alloc] initWithData:[response body]] autorelease];
+    SubscribeResponse *sr = [[SubscribeResponse alloc] initWithData:[response body]];
     NSString *subscriptionArn = [sr subscriptionArn];
     if (subscriptionArn == nil) {
         SETNSERROR([SNS errorDomain], -1, @"SubscriptionArn not found in Subscribe response");
@@ -139,12 +129,12 @@
     [str appendFormat:@"&Signature=%@", [signature stringByEscapingURLCharacters]];
     
     NSURL *urlWithSignature = [NSURL URLWithString:str];
-    AWSQueryRequest *req = [[[AWSQueryRequest alloc] initWithMethod:@"GET" url:urlWithSignature retryOnTransientError:retryOnTransientError] autorelease];
+    AWSQueryRequest *req = [[AWSQueryRequest alloc] initWithMethod:@"GET" url:urlWithSignature retryOnTransientError:retryOnTransientError];
     AWSQueryResponse *response = [req execute:error];
     if (response == nil) {
         return nil;
     }
-    ListTopicsResponse *ltr = [[[ListTopicsResponse alloc] initWithData:[response body]] autorelease];
+    ListTopicsResponse *ltr = [[ListTopicsResponse alloc] initWithData:[response body]];
     return [ltr topicArns];
 }
 - (BOOL)deleteTopicWithArn:(NSString *)theTopicArn error:(NSError **)error {
@@ -164,7 +154,7 @@
     [str appendFormat:@"&Signature=%@", [signature stringByEscapingURLCharacters]];
     
     NSURL *urlWithSignature = [NSURL URLWithString:str];
-    AWSQueryRequest *req = [[[AWSQueryRequest alloc] initWithMethod:@"GET" url:urlWithSignature retryOnTransientError:retryOnTransientError] autorelease];
+    AWSQueryRequest *req = [[AWSQueryRequest alloc] initWithMethod:@"GET" url:urlWithSignature retryOnTransientError:retryOnTransientError];
     AWSQueryResponse *response = [req execute:error];
     if (response == nil) {
         return NO;
@@ -172,12 +162,11 @@
     return YES;
 }
 
-
 - (NSDateFormatter*)dateFormatter {
-    NSDateFormatter *formatter = [[[NSDateFormatter alloc] init] autorelease];
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
     [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss'Z'"];
     [formatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
-    NSLocale *usLocale = [[[NSLocale alloc] initWithLocaleIdentifier:@"en_US"] autorelease];
+    NSLocale *usLocale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US"];
     if (usLocale != nil) {
         [formatter setLocale:usLocale];
     } else {

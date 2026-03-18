@@ -30,9 +30,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-
 @interface NSError (Glacier)
 + (NSError *)glacierErrorWithDomain:(NSString *)theDomain httpStatusCode:(int)theHTTPStatusCode responseBody:(NSData *)theResponseBody;
 @end
