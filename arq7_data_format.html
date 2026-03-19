@@ -1,0 +1,815 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+	<meta charset="utf-8"/>
+	<meta name="viewport" content="width=device-width initial-scale=1"/>
+	<title>Data Format</title>
+	
+	<meta name="description" content="Data Format"/>
+	
+	
+	<link rel="stylesheet" href="../css/main.css"/>
+	
+	<script src="../nav.js"></script>
+	
+</head>
+
+	<body class="help-page">
+		<header class="banner">
+	
+	<nav id="menu" class="dynamic">
+		
+		
+		<ul>
+		
+			
+				
+				<li>
+					<a href="../English.lproj/arq7ArqPremium.html"><nav>Arq 7 vs Arq Premium</nav></a>
+				</li>
+				
+			
+		
+			
+				
+			
+		
+			
+				
+				<li>
+					<a href="../English.lproj/arq7Pricing.html"><nav>Arq 7 Pricing FAQ</nav></a>
+				</li>
+				
+			
+		
+			
+				
+				<li>
+					<a href="../English.lproj/createBackupPlan.html"><nav>Creating a Backup Plan</nav></a>
+				</li>
+				
+			
+		
+			
+				
+				<li>
+					<a href="../English.lproj/excludeFiles.html"><nav>Excluding Files from Backup</nav></a>
+				</li>
+				
+			
+		
+			
+				
+				<li>
+					<a href="../English.lproj/objectLock.html"><nav>Immutable Backup Records</nav></a>
+				</li>
+				
+			
+		
+			
+				
+				<li>
+					<a href="../English.lproj/restore.html"><nav>Restoring Files</nav></a>
+				</li>
+				
+			
+		
+			
+				
+				<li>
+					<a href="../English.lproj/upgradingFromArq5.html"><nav>Upgrading from Arq 5</nav></a>
+				</li>
+				
+			
+		
+			
+				
+				<li>
+					<a href="../English.lproj/upgradingFromArq6.html"><nav>Upgrading from Arq 6</nav></a>
+				</li>
+				
+			
+		
+			
+				
+				<li>
+					<a href="../English.lproj/movingToNewComputer.html"><nav>Moving To a New Computer</nav></a>
+				</li>
+				
+			
+		
+			
+				
+				<li>
+					<a href="../English.lproj/validate.html"><nav>Back up and Validate</nav></a>
+				</li>
+				
+			
+		
+			
+				
+				<li>
+					<a href="../English.lproj/removeUnreferencedData.html"><nav>Remove Unreferenced Data</nav></a>
+				</li>
+				
+			
+		
+			
+				
+				<li>
+					<a href="../English.lproj/clearCache.html"><nav>Clear Cache</nav></a>
+				</li>
+				
+			
+		
+			
+				
+				<li>
+					<a href="../English.lproj/security.html"><nav>Securing Access to Arq</nav></a>
+				</li>
+				
+			
+		
+			
+				
+				<li>
+					<a href="../English.lproj/storageLocations.html"><nav>Storage Locations</nav></a>
+				</li>
+				
+			
+		
+			
+				
+				<li>
+					<a href="../English.lproj/arqc.html"><nav>arqc command-line utility</nav></a>
+				</li>
+				
+			
+		
+			
+				
+				<li class="group">
+					<a name="name"><nav>Advanced Configuration</nav></a>
+					<ul name="list">
+					
+						<li>
+							<a href="../English.lproj/createAWSKeyPair.html"><nav>Creating an AWS Key Pair</nav></a>
+						</li>
+					
+						<li>
+							<a href="../English.lproj/setUpGoogleCloudStorage.html"><nav>Using Google Cloud Storage with Arq</nav></a>
+						</li>
+					
+						<li>
+							<a href="../English.lproj/addB2AsS3Compatible.html"><nav>Creating Immutable Backups with B2</nav></a>
+						</li>
+					
+						<li>
+							<a href="../English.lproj/dropbox.html"><nav>Preventing Dropbox from Syncing Arq Data</nav></a>
+						</li>
+					
+						<li>
+							<a href="../English.lproj/emailWithGoogle.html"><nav>Sending Email Reports Using Google</nav></a>
+						</li>
+					
+						<li>
+							<a href="../English.lproj/emailWithICloud.html"><nav>Sending Email Reports Using iCloud</nav></a>
+						</li>
+					
+					</ul>
+				</li>
+			
+		
+			
+				
+				<li>
+					<a href="../English.lproj/troubleshooting.html"><nav>Troubleshooting</nav></a>
+				</li>
+				
+			
+		
+			
+				
+				<li class="active">
+					<a href="../English.lproj/dataFormat.html"><nav>Data Format</nav></a>
+				</li>
+				
+			
+		
+			
+				
+				<li>
+					<a href="../English.lproj/glossary.html"><nav>Glossary</nav></a>
+				</li>
+				
+			
+		
+			
+				
+				<li class="group">
+					<a name="name"><nav>Legal</nav></a>
+					<ul name="list">
+					
+						<li>
+							<a href="../English.lproj/license.html"><nav>License Agreement</nav></a>
+						</li>
+					
+						<li>
+							<a href="../English.lproj/acknowledgements.html"><nav>Acknowledgements</nav></a>
+						</li>
+					
+						<li>
+							<a href="../English.lproj/termsOfService.html"><nav>Arq Premium Terms of Service</nav></a>
+						</li>
+					
+						<li>
+							<a href="../English.lproj/privacyPolicy.html"><nav>Privacy Policy</nav></a>
+						</li>
+					
+					</ul>
+				</li>
+			
+		
+		</ul>
+	</nav>
+</header>
+
+		<main style="margin-bottom: 40px">
+			<h1>Data Format</h1>
+
+<p>Arq 7 stores your backup data in de-duplicated, compressed, (optionally) encrypted, content-addressable form.</p>
+
+<p>A “backup set” is a set of files created by a “backup plan”.
+It contains:</p>
+<ul>
+  <li>backupconfig.json</li>
+  <li>backupfolders.json</li>
+  <li>backupfolders/</li>
+  <li>backupplan.json</li>
+  <li>blobpacks/</li>
+  <li>largeblobpacks/</li>
+  <li>treepacks/</li>
+  <li>standardobjects/</li>
+  <li>standardiaobjects/</li>
+  <li>onezoneiaobjects/</li>
+  <li>s3glacierobjects/</li>
+  <li>s3deeparchiveobjects/</li>
+</ul>
+
+<h2 id="backupconfigjson">backupconfig.json</h2>
+
+<p>This file tells Arq how objects are to be added to the backup set – whether
+the data are encrypted, what kind of hashing mechanism to use, what maximum
+size to use for packing small files together, etc.</p>
+
+<p>Here’s a sample backupconfig.json file:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>{
+  "blobIdentifierType" : 2, /* 1=SHA1, 2=SHA256 */
+  "maxPackedItemLength" : 256000,
+  "backupName" : "Back up to NAS",
+  "isWORM" : false, /* unused */
+  "containsGlacierArchives" : false,
+  "additionalUnpackedBlobDirs" : [], /* if reused Arq 5 data, contains e.g. 'objects', or 'objects2' */
+  "chunkerVersion" : 3, /* Arq uses the same chunker version to ensure de-duplication works with old data */
+  "computerName" : "clack",
+  "computerSerial" : "unused",
+  "blobStorageClass" : "STANDARD", /* unused */
+  "isEncrypted" : false
+}
+</code></pre></div></div>
+
+<h2 id="backupfoldersjson">backupfolders.json</h2>
+<p>This file tells Arq where to find existing objects (for de-duplication).</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>{
+  "standardObjectDirs" : [
+    "\/5E7D9CE7-04DA-42E3-B55E-B35D76F29D03\/standardobjects"
+  ], /* only used with S3 */
+  "standardIAObjectDirs" : [
+    "\/5E7D9CE7-04DA-42E3-B55E-B35D76F29D03\/standardiaobjects"
+  ], /* only used with S3 */
+  "onezoneIAObjectDirs" : [
+    "\/5E7D9CE7-04DA-42E3-B55E-B35D76F29D03\/onezoneiaobjects"
+  ], /* only used with S3 */
+  "s3GlacierObjectDirs" : [
+    "\/5E7D9CE7-04DA-42E3-B55E-B35D76F29D03\/s3glacierobjects"
+  ], /* only used with S3 */
+  "s3DeepArchiveObjectDirs" : [
+    "\/5E7D9CE7-04DA-42E3-B55E-B35D76F29D03\/s3deeparchiveobjects"
+  ], /* only used with S3 */
+  "importedFrom" : "5.x" /* only appears if backup set was originally created by Arq 5 */
+}
+</code></pre></div></div>
+
+<h2 id="backupfolders">backupfolders/</h2>
+
+<p>For each folder specified in the backup plan, at backup time Arq creates a directory in backupfolders with a UUID as its name.
+Within that directory are a JSON file called ‘backupfolder.json’ describing the directory, and backup records.
+Here’s an example backupfolder.json file:</p>
+
+<h2 id="backupfoldersuuidbackupfolderjson">backupfolders/&lt;UUID&gt;/backupfolder.json</h2>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>{
+  "localPath" : "\/Users\/stefan",
+  "migratedFromArq60" : false,
+  "storageClass" : "STANDARD",
+  "diskIdentifier" : "ROOT",
+  "uuid" : "F1F83A27-E4EA-4994-BD9C-F63A682EBB80",
+  "migratedFromArq5" : false,
+  "localMountPoint" : "\/",
+  "name" : "stefan"
+}
+</code></pre></div></div>
+
+<h2 id="backupfoldersuuidbackuprecords001614294169backuprecord">backupfolders/&lt;UUID&gt;/backuprecords/00161/4294169.backuprecord</h2>
+
+<p>Each backup record is stored with a name that is the number of seconds since the epoch.
+For example, 00161/4294169.backuprecord was created Thu Feb 25 18:02:49 2021.</p>
+
+<p>The backup record file contains:</p>
+<ul>
+  <li>a copy of the backup plan at the time of backup</li>
+  <li>a Node describing the root of the directory structure stored</li>
+  <li>some additional metadata</li>
+</ul>
+
+<p>The file is stored LZ4-compressed and (optionally) encrypted.</p>
+
+<p>Here’s an example:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>{
+    archived = 0;
+    arqVersion = "7.3.1.0";
+    backupFolderUUID = "4297DBE8-DA5E-48EC-A1DB-0CDB47D7EE55";
+
+    /* copy of the backup plan at the time of backup: */
+    backupPlanJSON =     { 
+        active = 1;
+        arq5UseS3IA = 0;
+        backupFolderPlansByUUID =         {
+            "4297DBE8-DA5E-48EC-A1DB-0CDB47D7EE55" =             {
+                allDrives = 0;
+                backupFolderUUID = "4297DBE8-DA5E-48EC-A1DB-0CDB47D7EE55";
+                blobStorageClass = STANDARD;
+                diskIdentifier = "831954df-8078-4386-ba04-1fd663086298";
+                excludedDrives =                 (
+                );
+                ignoredRelativePaths =                 (
+                );
+                localMountPoint = "/C";
+                localPath = "/C/2files";
+                name = 2files;
+                regexExcludes =                 (
+                );
+                relativePath = "/2files";
+                skipDuringBackup = 0;
+                skipIfNotMounted = 0;
+                useDiskIdentifier = 0;
+                wildcardExcludes =                 (
+                );
+            };
+        };
+        cpuUsage = 25;
+        creationTime = "1616935479.219";
+        emailReportJSON =         {
+            authenticationType = none;
+            fromAddress = "";
+            hostname = "";
+            port = 587;
+            startTLS = 0;
+            subject = "";
+            toAddress = "";
+            type = custom;
+            username = "";
+            when = never;
+        };
+        excludedNetworkInterfaces =         (
+        );
+        excludedWiFiNetworkNames =         (
+        );
+        id = 3;
+        includeFileListInActivityLog = 0;
+        includeNetworkInterfaces = 0;
+        includeNewVolumes = 0;
+        includeWiFiNetworks = 0;
+        isEncrypted = 1;
+        keepDeletedFiles = 0;
+        name = "2files to Polycloud";
+        needsArq5Buckets = 0;
+        noBackupsAlertDays = 5;
+        notifyOnError = 1;
+        notifyOnSuccess = 0;
+        pauseOnBattery = 0;
+        planUUID = "1795F5BE-09F4-4133-BE83-2F4E7F7C3B75";
+        preventSleep = 0;
+        retainAll = 1;
+        retainDays = 30;
+        retainHours = 24;
+        retainMonths = 60;
+        retainWeeks = 52;
+        scheduleJSON =         {
+            daysOfWeek =             (
+                Mon,
+                Tue,
+                Wed,
+                Thu,
+                Fri,
+                Sat,
+                Sun
+            );
+            everyHours = 1;
+            minutesAfterHour = 0;
+            pauseDuringWindow = 0;
+            pauseFrom = "09:00";
+            pauseTo = "17:00";
+            startWhenVolumeIsConnected = 0;
+            type = Hourly;
+        };
+        storageLocationId = 7;
+        threadCount = 2;
+        transferRateJSON =         {
+            daysOfWeek =             (
+                Mon,
+                Tue,
+                Wed,
+                Thu,
+                Fri,
+                Sat,
+                Sun
+            );
+            enabled = 0;
+            endTimeOfDay = "18:00";
+            maxKBPS = 100;
+            scheduleType = Scheduled;
+            startTimeOfDay = "18:00";
+        };
+        updateTime = "1616935522.744";
+        useAPFSSnapshots = 1;
+        useBuzhash = 0;
+        version = 2;
+        wakeForBackup = 0;
+    };
+    backupPlanUUID = "1795F5BE-09F4-4133-BE83-2F4E7F7C3B75";
+    computerOSType = 2;
+    copiedFromCommit = 0;
+    copiedFromSnapshot = 0;
+    creationDate = 1616936407;
+    diskIdentifier = "831954df-8078-4386-ba04-1fd663086298";
+    errorCount = 0;
+    isComplete = 1;
+    localMountPoint = "/C";
+    localPath = "/C/2files";
+
+    /* the root "Node" of the file tree: */
+    node =     {
+        "changeTime_nsec" = 497677087;
+        "changeTime_sec" = 1586539575;
+        computerOSType = 2;
+        containedFilesCount = 1;
+        "creationTime_nsec" = 0;
+        "creationTime_sec" = 0;
+        dataBlobLocs =         (
+        );
+        deleted = 0;
+        isTree = 1;
+        itemSize = 11288576;
+        "mac_st_dev" = 0;
+        "mac_st_flags" = 0;
+        "mac_st_gid" = 0;
+        "mac_st_ino" = 0;
+        "mac_st_mode" = 0;
+        "mac_st_nlink" = 0;
+        "mac_st_rdev" = 0;
+        "mac_st_uid" = 0;
+        "modificationTime_nsec" = 510552406;
+        "modificationTime_sec" = 1614600354;
+        treeBlobLoc =         { 
+            blobIdentifier = 151ff6a3dd0cd74b5854807598fd7cf6cd360abab8271784da07226a7451fed1;
+            compressionType = 2;
+            isPacked = 1;
+            length = 356;
+            offset = 0;
+            relativePath = "/1795F5BE-09F4-4133-BE83-2F4E7F7C3B75/treepacks/49/24E24F-3E37-4B97-9218-BBFC3952CE26.pack";
+            stretchEncryptionKey = 1;
+        };
+        winAttrs = 0;
+        xattrsBlobLocs =         (
+        );
+    };
+    relativePath = "/1795F5BE-09F4-4133-BE83-2F4E7F7C3B75/backupfolders/4297DBE8-DA5E-48EC-A1DB-0CDB47D7EE55/backuprecords/00161/6936407.backuprecord";
+    storageClass = STANDARD;
+    version = 100;
+    volumeName = "C:";
+}
+</code></pre></div></div>
+
+<p>Each backup record is a Tree of Trees and Nodes mirroring the file structure that was backed up.</p>
+
+<h3 id="backup-records-pointing-to-arq-5-data">Backup Records Pointing to Arq 5 Data</h3>
+
+<p>If you’ve reused a backup set created by Arq 5 or older, Arq 7 created a backup record for each Arq 5 “commit”.
+It contains a “BlobKey” that refers to the root of the directory structure stored in the Arq 5 “commit”.
+See <a href="https://www.arqbackup.com/arq_data_format.txt">https://www.arqbackup.com/arq_data_format.txt</a> for more information about Arq 5 data.</p>
+
+<p>Here’s an example:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>{
+    archived = 0;
+    arq5BucketXML = "&lt;?xml version=\"1.0\"?&gt;\n&lt;plist version=\"1.0\"&gt;\n    &lt;dict&gt;\n        &lt;key&gt;Endpoint&lt;/key&gt;\n        &lt;string&gt;https://AKIAIYUK3N3TME6L4HFA@s3.amazonaws.com/akiaiyuk3n3tme6l4hfa-arq-1&lt;/string&gt;\n        &lt;key&gt;BucketUUID&lt;/key&gt;\n        &lt;string&gt;A39F38F8-6205-4F79-BD1D-8C2DC5CAFB25&lt;/string&gt;\n        &lt;key&gt;BucketName&lt;/key&gt;\n        &lt;string&gt;1 2 files&lt;/string&gt;\n        &lt;key&gt;ComputerUUID&lt;/key&gt;\n        &lt;string&gt;26CB6780-1E01-4B3E-BF22-983BC834D93D&lt;/string&gt;\n        &lt;key&gt;LocalPath&lt;/key&gt;\n        &lt;string&gt;/Users/stefan/backups/1 2 files&lt;/string&gt;\n        &lt;key&gt;LocalMountPoint&lt;/key&gt;\n        &lt;string&gt;/&lt;/string&gt;\n        &lt;key&gt;StorageType&lt;/key&gt;\n        &lt;integer&gt;1&lt;/integer&gt;\n        &lt;key&gt;SkipDuringBackup&lt;/key&gt;\n        &lt;false&gt;&lt;/false&gt;\n        &lt;key&gt;ExcludeItemsWithTimeMachineExcludeMetadataFlag&lt;/key&gt;\n        &lt;false&gt;&lt;/false&gt;\n        &lt;key&gt;IgnoredRelativePaths&lt;/key&gt;\n        &lt;array&gt;&lt;/array&gt;\n        &lt;key&gt;Excludes&lt;/key&gt;\n        &lt;dict&gt;\n            &lt;key&gt;excludes&lt;/key&gt;\n            &lt;array&gt;&lt;/array&gt;\n        &lt;/dict&gt;\n        &lt;key&gt;SkipIfNotMounted&lt;/key&gt;\n        &lt;false&gt;&lt;/false&gt;\n    &lt;/dict&gt;\n&lt;/plist&gt;";
+    arq5TreeBlobKey =     {
+        archiveSize = 0;
+        compressionType = 2;
+        sha1 = bf1a54fd9872cd8b45a8368ad4c5525180b43eee;
+        storageType = 1;
+        stretchEncryptionKey = 1;
+    };
+    arqVersion = "5.20.0.1";
+    backupFolderUUID = "A39F38F8-6205-4F79-BD1D-8C2DC5CAFB25";
+    backupPlanUUID = "26CB6780-1E01-4B3E-BF22-983BC834D93D";
+    computerOSType = 1;
+    copiedFromCommit = 1;
+    copiedFromSnapshot = 0;
+    creationDate = 1608889887;
+    errorCount = 0;
+    isComplete = 1;
+    localPath = "/Users/stefan/backups/1 2 files";
+    relativePath = "/26CB6780-1E01-4B3E-BF22-983BC834D93D/backupfolders/A39F38F8-6205-4F79-BD1D-8C2DC5CAFB25/backuprecords/00160/8889887.backuprecord";
+    storageClass = STANDARD;
+    version = 12;
+}
+</code></pre></div></div>
+
+<h2 id="note-on-lz4-compression">Note on LZ4 Compression</h2>
+
+<p>Data described in this document as “LZ4-compressed” is stored as a 4-byte big-endian length followed by the compressed data in LZ4 block format.</p>
+
+<h2 id="node">Node</h2>
+
+<p>A Node describes either a file or a directory.
+It’s stored as LZ4-compressed and (optionally) encrypted binary data in a “pack” file within the “treepacks” subdirectory of the backup set.</p>
+
+<h3 id="directory-node">Directory Node</h3>
+
+<p>A Node describing a directory will contain a “treeBlobLoc” value that describes where to find the Tree data.</p>
+
+<h3 id="file-node">File Node</h3>
+
+<p>A Node describing a file will contain “dataBlobLocs” describe where to find the ordered list of “chunks” to needed to assemble the file.</p>
+
+<h3 id="node-binary-format">Node Binary Format</h3>
+
+<p>This is Node’s data format:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    [Bool:isTree]
+    [BlobLoc:treeBlobLoc] /* present if isTree is true */
+    [UInt32:computerOSType]
+    [UInt64:dataBlobLocsCount]
+    (
+        [BlobLoc:dataBlobLoc]
+    ) /* repeat dataBlobLocsCount times */
+    [Bool:aclBlobLocIsNotNil]
+    [BlobLoc:aclBlobLoc] /* present if aclBlobLocIsNotNil is true */
+    [UInt64:xattrsBlobLocCount]
+    (
+        [BlobLoc:xattrsBlobLoc]
+    ) /* repeat xattrsBlobLocsCount times */
+    [UInt64:itemSize]
+    [UInt64:containedFilesCount]
+    [Int64:mtime_sec]
+    [Int64:mtime_nsec]
+    [Int64:ctime_sec]
+    [Int64:ctime_nsec]
+    [Int64:create_time_sec]
+    [Int64:create_time_nsec]
+    [String:username]
+    [String:groupName]
+    [Bool:deleted]
+    [Int32:mac_st_dev]
+    [UInt64:mac_st_ino]
+    [UInt32:mac_st_mode]
+    [UInt32:mac_st_nlink]
+    [UInt32:mac_st_uid]
+    [UInt32:mac_st_gid]
+    [Int32:mac_st_rdev]
+    [Int32:mac_st_flags]
+    [UInt32:win_attrs]
+    [UInt32:win_reparse_tag] /* if Tree version &gt;= 2 */
+    [Bool:win_reparse_point_is_directory] /* if Tree version &gt;= 2 */
+</code></pre></div></div>
+
+<h2 id="tree">Tree</h2>
+
+<p>A Tree contains the metadata for a directory plus a set of child Nodes by name.</p>
+
+<p>It’s stored as LZ4-compressed and (optionally) encrypted binary data in a “pack” file within the “treepacks” subdirectory of the backup set, just like a Node.</p>
+
+<p>This is Tree’s data format:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    [UInt32:version]
+    [UInt64:childNodesByNameCount]
+    (
+        [String:childName]
+        [Node:childNode]
+    ) /* repeat childNodesByNameCount times: */
+</code></pre></div></div>
+
+<h2 id="blob">Blob</h2>
+
+<p>A “blob” is just a chunk of data stored either in a pack file (in the blobpacks
+ or largeblobpacks subdirectory) or as a standalone file in the “standardobjects” (or
+“standardiaobjects” etc depending on the storage location type and storage
+class chosen).</p>
+
+<p>A “blob” is LZ4-compressed, and optionally encrypted.</p>
+
+<h2 id="blobloc">BlobLoc</h2>
+
+<p>A “BlobLoc” is a simple structure that specifies the location and length of a Blob.</p>
+
+<p>The “compressionType” value is always 2 (LZ4) for new data.
+For data reused from Arq 5, the value could be 0 (none) or 1 (Gzip).</p>
+
+<p>The “stretchEncryptionKey” value is always 1 for new data.
+For very old data reused from previous versions of Arq, this value could be 0.</p>
+
+<h2 id="encrypted-object">Encrypted Object</h2>
+
+<p>Any Backup Record, Tree, Node or Blob that’s encrypted has the following format:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>header                              41 52 51 4f  ARQO
+HMACSHA256                          xx xx xx xx
+                                    xx xx xx xx
+                                    xx xx xx xx
+                                    xx xx xx xx
+                                    xx xx xx xx
+                                    xx xx xx xx
+                                    xx xx xx xx
+                                    xx xx xx xx
+master IV                           xx xx xx xx
+                                    xx xx xx xx
+                                    xx xx xx xx
+                                    xx xx xx xx
+encrypted data IV + session key     xx xx xx xx (64 bytes)
+                                    ...
+ciphertext                          xx xx xx xx
+                                    ...
+</code></pre></div></div>
+
+<p>To create an EncryptedObject:</p>
+<ol>
+  <li>Generate a random 256-bit session key (Arq reuses it for up to 256 objects before replacing it).</li>
+  <li>Generate a random “data IV”.</li>
+  <li>Encrypt plaintext with AES/CBC and PKCS7 padding using session key and data IV.</li>
+  <li>Generate a random “master IV”.</li>
+  <li>Encrypt (data IV + session key) with AES/CBC using the first “master key” from the encryptedkeyset.dat file (see below)and the “master IV”.</li>
+  <li>Calculate HMAC-SHA256 of (master IV + “encrypted data IV + session key” + ciphertext) using the second 256-bit “master key”.</li>
+  <li>Assemble the data in the format shown above.</li>
+</ol>
+
+<p>To get the plaintext:</p>
+<ol>
+  <li>Calculate HMAC-SHA256 of (master IV + “encrypted data IV + session key” + ciphertext) and verify against HMAC-SHA256 in the file using the second “master key” from the encryptedkeyset.dat file.</li>
+  <li>Ensure the calculated HMAC-SHA256 matches the value in the object header.</li>
+  <li>Decrypt “encrypted data IV + session key” using the first “master key” from the encryptedkeyset.dat file and the “master IV”.</li>
+  <li>Decrypt the ciphertext using the session key and data IV.</li>
+</ol>
+
+<h2 id="encryptedkeysetdat-file">encryptedkeyset.dat file</h2>
+
+<p>This file contains keys for encrypting/decrypting and for creating object identifiers.
+It is encrypted with the encryption password you chose when you created the backup plan.
+If you later modified the encryption password for the backup plan, Arq rewrote encryptedkeyset.dat encrypted with that new password.</p>
+
+<p>The plaintext format (not stored anywhere) is:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>encryption version                  00 00 00 03
+encryption key length               00 00 00 00
+                                    00 00 00 40
+encryption key                      xx xx xx xx 64 bytes
+                                    ...
+HMAC key length                     00 00 00 00
+                                    00 00 00 40
+HMAC key                            xx xx xx xx 64 bytes
+                                    ...
+blob identifier salt length         00 00 00 00
+                                    00 00 00 40
+blob identifier salt                xx xx xx xx 64 bytes
+                                    ...
+
+</code></pre></div></div>
+
+<p>The encrypted format is:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>header                              41 52 51 5f 45 4e 43 52   ARQ_ENCR 
+                                    59 50 54 45 44 5f 4d 41   YPTED_MA
+                                    53 54 45 52 5f 4b 45 59   STER_KEY
+                                    53                        S
+salt                                   xx xx xx xx xx xx xx
+                                    xx
+HMACSHA256                             xx xx xx xx xx xx xx
+                                    xx xx xx xx xx xx xx xx
+                                    xx xx xx xx xx xx xx xx
+                                    xx xx xx xx xx xx xx xx
+                                    xx 
+IV                                     xx xx xx xx xx xx xx
+                                    xx xx xx xx xx xx xx xx
+                                    xx 
+ciphertext                             xx xx xx xx xx xx xx
+                                    ...
+</code></pre></div></div>
+
+<p>To decrypt encryptedkeyset.dat:</p>
+<ol>
+  <li>Derive a 64-byte key from the encryption password using PBKDF2-SHA256, the salt, and 200,000 rounds.</li>
+  <li>Calculate the HMACSHA256 of IV + ciphertext and verify it matches the value in the file.</li>
+  <li>Decrypt the ciphertext using the derived key and the IV from the file.</li>
+</ol>
+
+<h2 id="data-format-documentation-conventions">Data Format Documentation Conventions</h2>
+
+<p>We used a few shortcuts in some of the data format explanations above:</p>
+
+<p>[BlobLoc:value]</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>A [BlobLoc] is stored as:
+
+    [String:blobIdentifier] /* can't be null */
+    [Bool:isPacked]
+    [String:relativePath]
+    [UInt64:offset]
+    [UInt64:length
+    [Bool:stretchEncryptionKey]
+    [UInt32:compressionType]
+</code></pre></div></div>
+
+<p>[Bool:value]</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>A [Bool] is stored as 1 byte, either 00 or 01.
+</code></pre></div></div>
+
+<p>[String:”<string>"]</string></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>A [String] is stored as:
+
+    00 or 01    isNotNull flag
+
+    if not null:
+
+        00 00 00 00    8-byte network-byte-order length
+        00 00 00 0c
+        xx xx xx xx    UTF-8 string data
+        xx xx xx xx
+        xx xx xx xx
+</code></pre></div></div>
+
+<p>[UInt32:<the_number>]</the_number></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>A [UInt32] is stored as:
+
+        00 00 00 00     network-byte-order uint32_t
+</code></pre></div></div>
+
+<p>[Int32:<the_number>]</the_number></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>An [Int32] is stored as:
+
+        00 00 00 00     network-byte-order int32_t
+</code></pre></div></div>
+
+<p>[UInt64:<the_number>]</the_number></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>A [UInt64] is stored as:
+
+        00 00 00 00     network-byte-order uint64_t
+        00 00 00 00
+</code></pre></div></div>
+
+<p>[Int64:<the_number>]</the_number></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>An [Int64] is stored as:
+
+        00 00 00 00     network-byte-order int64_t
+        00 00 00 00
+</code></pre></div></div>
+
+
+
+		</main>
+		
+<footer style="position: absolute; left: 210px; right: 0; bottom: 0; height: 2.5rem; background-color: white">
+    <table style="border-top: none; padding: 0; margin: 0">
+        <tbody style="border-top: none">
+        <tr style="border-bottom: none">
+            <td style="padding-left: 10px">
+                Arq&reg; is a registered trademark of Haystack Software LLC
+            </td>
+            <td style="padding-right: 10px; text-align: right">
+                Copyright &copy; 2009-2026 Haystack Software LLC
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</footer>
+
+	</body>
+	
+</html>

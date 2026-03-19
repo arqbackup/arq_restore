@@ -73,6 +73,12 @@ arq_restore -l debug listcomputers mynas
 ```
 
 
+## Data formats
+
+- [arq5_data_format.txt](arq5_data_format.txt) — Arq 5 backup data format
+- [arq7_data_format.html](arq7_data_format.html) — Arq 7 backup data format
+
+
 ## Compiling from source
 
 Open `arq_restore.xcodeproj` in Xcode and choose **Product > Build**, or from the command line:
