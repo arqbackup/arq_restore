@@ -313,20 +313,18 @@
     }
 
     if ([isArq7 boolValue]) {
-        NSString *theEncryptionPassword = [self readPasswordWithPrompt:@"enter encryption password (or press Enter if none):" error:error];
-        if (theEncryptionPassword == nil) {
-            return NO;
-        }
-
-        printf("\n");
-
         Arq7BackupSet *bs = [Arq7BackupSet backupSetWithPlanUUID:theUUID targetConnection:conn delegate:nil error:error];
         if (bs == nil) {
             return NO;
         }
 
         Arq7KeySet *keySet = nil;
-        if ([bs isEncrypted] && [theEncryptionPassword length] > 0) {
+        if ([bs isEncrypted]) {
+            NSString *theEncryptionPassword = [self readPasswordWithPrompt:@"enter encryption password:" error:error];
+            if (theEncryptionPassword == nil) {
+                return NO;
+            }
+            printf("\n");
             NSString *keysetPath = [NSString stringWithFormat:@"%@/%@/encryptedkeyset.dat", [conn pathPrefix], theUUID];
             NSData *keysetData = [conn contentsOfFileAtPath:keysetPath delegate:nil error:error];
             if (keysetData == nil) {
@@ -480,18 +478,18 @@
     }
 
     if ([isArq7 boolValue]) {
-        NSString *theEncryptionPassword = [self readPasswordWithPrompt:@"enter encryption password (or press Enter if none):" error:error];
-        if (theEncryptionPassword == nil) {
-            return NO;
-        }
-
         Arq7BackupSet *bs = [Arq7BackupSet backupSetWithPlanUUID:theUUID targetConnection:conn delegate:nil error:error];
         if (bs == nil) {
             return NO;
         }
 
         Arq7KeySet *keySet = nil;
-        if ([bs isEncrypted] && [theEncryptionPassword length] > 0) {
+        if ([bs isEncrypted]) {
+            NSString *theEncryptionPassword = [self readPasswordWithPrompt:@"enter encryption password:" error:error];
+            if (theEncryptionPassword == nil) {
+                return NO;
+            }
+            printf("\n");
             NSString *keysetPath = [NSString stringWithFormat:@"%@/%@/encryptedkeyset.dat", [conn pathPrefix], theUUID];
             NSData *keysetData = [conn contentsOfFileAtPath:keysetPath delegate:nil error:error];
             if (keysetData == nil) {
@@ -686,18 +684,18 @@
     }
 
     if ([isArq7 boolValue]) {
-        NSString *theEncryptionPassword = [self readPasswordWithPrompt:@"enter encryption password (or press Enter if none):" error:error];
-        if (theEncryptionPassword == nil) {
-            return NO;
-        }
-
         Arq7BackupSet *bs = [Arq7BackupSet backupSetWithPlanUUID:theUUID targetConnection:conn delegate:nil error:error];
         if (bs == nil) {
             return NO;
         }
 
         Arq7KeySet *keySet = nil;
-        if ([bs isEncrypted] && [theEncryptionPassword length] > 0) {
+        if ([bs isEncrypted]) {
+            NSString *theEncryptionPassword = [self readPasswordWithPrompt:@"enter encryption password:" error:error];
+            if (theEncryptionPassword == nil) {
+                return NO;
+            }
+            printf("\n");
             NSString *keysetPath = [NSString stringWithFormat:@"%@/%@/encryptedkeyset.dat", [conn pathPrefix], theUUID];
             NSData *keysetData = [conn contentsOfFileAtPath:keysetPath delegate:nil error:error];
             if (keysetData == nil) {
