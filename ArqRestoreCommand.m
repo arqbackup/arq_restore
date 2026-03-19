@@ -57,6 +57,7 @@
 #import "ExePath.h"
 #import "AWSRegion.h"
 #import "Arq7BackupSet.h"
+#import "Arq7EncryptedObjectDecryptor.h"
 #import "Arq7BackupFolder.h"
 #import "Arq7KeySet.h"
 #import "Arq7BackupRecord.h"
@@ -410,43 +411,110 @@
         SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"target not found");
         return NO;
     }
-    
-    NSString *theComputerUUID = [args objectAtIndex:3];
-    NSString *theBucketUUID = [args objectAtIndex:4];
-    
+
+    NSString *theUUID = [args objectAtIndex:3];
+    NSString *theFolderUUID = [args objectAtIndex:4];
+
+    TargetConnection *conn = [target newConnection:error];
+    if (conn == nil) {
+        return NO;
+    }
+    NSString *configPath = [NSString stringWithFormat:@"%@/%@/backupconfig.json", [conn pathPrefix], theUUID];
+    NSNumber *isArq7 = [conn fileExistsAtPath:configPath dataSize:NULL delegate:nil error:error];
+    if (isArq7 == nil) {
+        return NO;
+    }
+
+    if ([isArq7 boolValue]) {
+        Arq7BackupSet *bs = [Arq7BackupSet backupSetWithPlanUUID:theUUID targetConnection:conn delegate:nil error:error];
+        if (bs == nil) {
+            return NO;
+        }
+
+        Arq7KeySet *keySet = nil;
+        if ([bs isEncrypted]) {
+            NSString *theEncryptionPassword = [self readPasswordWithPrompt:@"enter encryption password:" error:error];
+            if (theEncryptionPassword == nil) {
+                return NO;
+            }
+            printf("\n");
+            NSString *keysetPath = [NSString stringWithFormat:@"%@/%@/encryptedkeyset.dat", [conn pathPrefix], theUUID];
+            NSData *keysetData = [conn contentsOfFileAtPath:keysetPath delegate:nil error:error];
+            if (keysetData == nil) {
+                return NO;
+            }
+            keySet = [[Arq7KeySet alloc] initWithEncryptedData:keysetData encryptionPassword:theEncryptionPassword error:error];
+            if (keySet == nil) {
+                return NO;
+            }
+        }
+
+        NSString *jsonPath = [NSString stringWithFormat:@"%@/%@/backupfolders/%@/backupfolder.json", [conn pathPrefix], theUUID, theFolderUUID];
+        NSData *data = [conn contentsOfFileAtPath:jsonPath delegate:nil error:error];
+        if (data == nil) {
+            return NO;
+        }
+        if ([Arq7EncryptedObjectDecryptor isEncryptedData:data]) {
+            if (keySet == nil) {
+                SETNSERROR([self errorDomain], ERROR_INVALID_PASSWORD, @"backupfolder.json is encrypted but no key set provided");
+                return NO;
+            }
+            Arq7EncryptedObjectDecryptor *dec = [[Arq7EncryptedObjectDecryptor alloc] initWithKeySet:keySet];
+            data = [dec decryptData:data error:error];
+            if (data == nil) {
+                return NO;
+            }
+        }
+        NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data options:0 error:error];
+        if (json == nil) {
+            return NO;
+        }
+        NSData *prettyData = [NSJSONSerialization dataWithJSONObject:json options:NSJSONWritingPrettyPrinted error:error];
+        if (prettyData == nil) {
+            return NO;
+        }
+        printf("target   %s\n", [[target endpointDisplayName] UTF8String]);
+        printf("plan     %s\n", [theUUID UTF8String]);
+        printf("folder   %s\n", [theFolderUUID UTF8String]);
+        printf("%s\n", [[NSString alloc] initWithData:prettyData encoding:NSUTF8StringEncoding].UTF8String);
+        return YES;
+    }
+
+    // Arq5 path.
     NSString *theEncryptionPassword = [self readPasswordWithPrompt:@"enter encryption password:" error:error];
     if (theEncryptionPassword == nil) {
         return NO;
     }
-    
-    BackupSet *backupSet = [self backupSetForTarget:target computerUUID:theComputerUUID error:error];
+    printf("\n");
+
+    BackupSet *backupSet = [self backupSetForTarget:target computerUUID:theUUID error:error];
     if (backupSet == nil) {
         return NO;
     }
-    
+
     // Reset Target:
     target = [backupSet target];
-    
-    NSArray *buckets = [Bucket bucketsWithTarget:target computerUUID:theComputerUUID encryptionPassword:theEncryptionPassword targetConnectionDelegate:nil error:error];
+
+    NSArray *buckets = [Bucket bucketsWithTarget:target computerUUID:theUUID encryptionPassword:theEncryptionPassword targetConnectionDelegate:nil error:error];
     if (buckets == nil) {
-        return NO;
+        return nil;
     }
     Bucket *matchingBucket = nil;
     for (Bucket *bucket in buckets) {
-        if ([[bucket bucketUUID] isEqualToString:theBucketUUID]) {
+        if ([[bucket bucketUUID] isEqualToString:theFolderUUID]) {
             matchingBucket = bucket;
             break;
         }
     }
     if (matchingBucket == nil) {
-        SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"folder %@ not found", theBucketUUID);
+        SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"folder %@ not found", theFolderUUID);
         return NO;
     }
-    
+
     printf("target   %s\n", [[target endpointDisplayName] UTF8String]);
-    printf("computer %s\n", [theComputerUUID UTF8String]);
-    printf("folder   %s\n", [theBucketUUID UTF8String]);
-    
+    printf("computer %s\n", [theUUID UTF8String]);
+    printf("folder   %s\n", [theFolderUUID UTF8String]);
+
     NSData *xmlData = [matchingBucket toXMLData];
     NSString *xmlString = [[NSString alloc] initWithData:xmlData encoding:NSUTF8StringEncoding];
     printf("%s\n", [xmlString UTF8String]);
