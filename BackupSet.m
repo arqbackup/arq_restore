@@ -37,7 +37,6 @@
 #import "GlacierService.h"
 #import "UserAndComputer.h"
 #import "CryptoKey.h"
-#import "RegexKitLite.h"
 #import "BlobKey.h"
 #import "Commit.h"
 #import "S3ObjectMetadata.h"

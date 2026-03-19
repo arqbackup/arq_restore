@@ -31,8 +31,6 @@
  */
 
 #import "ISO8601Date.h"
-#import "RegexKitLite.h"
-
 #define FMT822 (@"^(\\d{4})-(\\d{2})-(\\d{2})T(\\d{2}):(\\d{2}):(\\d{2})\\.(\\d+)Z$")
 
 @implementation ISO8601Date
@@ -56,19 +54,19 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(ISO8601Date)
     return ret;
 }
 - (NSDate *)lockedDateFromString:(NSString *)str error:(NSError **)error {
-    if ([str rangeOfRegex:FMT822].location == NSNotFound) {
+    NSRegularExpression *re = [NSRegularExpression regularExpressionWithPattern:FMT822 options:0 error:nil];
+    NSTextCheckingResult *match = [re firstMatchInString:str options:0 range:NSMakeRange(0, str.length)];
+    if (match == nil) {
         SETNSERROR([self errorDomain], -1, @"invalid ISO8601 date '%@'", str);
         return nil;
     }
-    return [NSCalendarDate dateWithYear:[[str stringByMatching:FMT822 capture:1] intValue]
-                                  month:[[str stringByMatching:FMT822 capture:2] intValue]
-                                    day:[[str stringByMatching:FMT822 capture:3] intValue]
-                                   hour:[[str stringByMatching:FMT822 capture:4] intValue]
-                                 minute:[[str stringByMatching:FMT822 capture:5] intValue]
-                                 second:[[str stringByMatching:FMT822 capture:6] intValue]
+    return [NSCalendarDate dateWithYear:[[str substringWithRange:[match rangeAtIndex:1]] intValue]
+                                  month:[[str substringWithRange:[match rangeAtIndex:2]] intValue]
+                                    day:[[str substringWithRange:[match rangeAtIndex:3]] intValue]
+                                   hour:[[str substringWithRange:[match rangeAtIndex:4]] intValue]
+                                 minute:[[str substringWithRange:[match rangeAtIndex:5]] intValue]
+                                 second:[[str substringWithRange:[match rangeAtIndex:6]] intValue]
                                timeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
-    
-    
 }
 - (NSString *)basicDateTimeStringFromDate:(NSDate *)theDate {
     [lock lock];

@@ -40,7 +40,6 @@
 		F82951F119868D90001DC91B /* NSDictionary_HTTP.m in Sources */ = {isa = PBXBuildFile; fileRef = F82951AC19868D90001DC91B /* NSDictionary_HTTP.m */; };
 		F82951F219868D90001DC91B /* RFC2616DateFormatter.m in Sources */ = {isa = PBXBuildFile; fileRef = F82951AE19868D90001DC91B /* RFC2616DateFormatter.m */; };
 		F82951F519868D90001DC91B /* URLConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = F82951B419868D90001DC91B /* URLConnection.m */; };
-		F829521319868DE6001DC91B /* RegexKitLite.m in Sources */ = {isa = PBXBuildFile; fileRef = F829521219868DE6001DC91B /* RegexKitLite.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		F829523019868E59001DC91B /* NSObject+SBJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = F829522719868E59001DC91B /* NSObject+SBJSON.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		F829523119868E59001DC91B /* NSString+SBJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = F829522919868E59001DC91B /* NSString+SBJSON.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		F829523219868E59001DC91B /* SBJsonBase.m in Sources */ = {isa = PBXBuildFile; fileRef = F829522B19868E59001DC91B /* SBJsonBase.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
@@ -324,8 +323,6 @@
 		F82951B319868D90001DC91B /* URLConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = URLConnection.h; sourceTree = "<group>"; };
 		F82951B419868D90001DC91B /* URLConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = URLConnection.m; sourceTree = "<group>"; };
 		F829521119868DD0001DC91B /* InputStream.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = InputStream.h; sourceTree = "<group>"; };
-		F829521219868DE6001DC91B /* RegexKitLite.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RegexKitLite.m; sourceTree = "<group>"; };
-		F829521419868DEA001DC91B /* RegexKitLite.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RegexKitLite.h; sourceTree = "<group>"; };
 		F829522619868E59001DC91B /* NSObject+SBJSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSObject+SBJSON.h"; sourceTree = "<group>"; };
 		F829522719868E59001DC91B /* NSObject+SBJSON.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSObject+SBJSON.m"; sourceTree = "<group>"; };
 		F829522819868E59001DC91B /* NSString+SBJSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+SBJSON.h"; sourceTree = "<group>"; };
@@ -1098,8 +1095,6 @@
 				F8F2D97B1986D38900997A15 /* OSStatusDescription.m */,
 				F829DBFA19868FCA00D637E0 /* RFC822.h */,
 				F829DBFB19868FCA00D637E0 /* RFC822.m */,
-				F829521419868DEA001DC91B /* RegexKitLite.h */,
-				F829521219868DE6001DC91B /* RegexKitLite.m */,
 				F829512619868379001DC91B /* SetNSError.h */,
 				F829DC1D1986923100D637E0 /* Sysctl.h */,
 				F829DC1E1986923100D637E0 /* Sysctl.m */,
@@ -1952,7 +1947,6 @@
 				F8F2D9031986B78600997A15 /* RealNode.m in Sources */,
 				F8F2D9A71986DE3B00997A15 /* GlacierPackIndex.m in Sources */,
 				F8F2D9981986DCCC00997A15 /* S3GlacierRestorerParamSet.m in Sources */,
-				F829521319868DE6001DC91B /* RegexKitLite.m in Sources */,
 				F8F2D8FD1986B78600997A15 /* ArrayNode.m in Sources */,
 				F874D8E71DF7618500B7EC02 /* DDAbstractDatabaseLogger.m in Sources */,
 				F82951ED19868D90001DC91B /* HTTPConnectionFactory.m in Sources */,
@@ -2120,13 +2114,13 @@
 					"$(PROJECT_DIR)",
 				);
 				INSTALL_PATH = /usr/local/bin;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				OTHER_LDFLAGS = (
 					"$(PROJECT_DIR)/3rdparty/openssl-1.1.1h/lib/libcrypto.a",
 					"$(PROJECT_DIR)/3rdparty/openssl-1.1.1h/lib/libssl.a",
 				);
 				PRODUCT_NAME = arq_restore;
 				SDKROOT = macosx;
-				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				WARNING_CFLAGS = "-Wno-objc-designated-initializers";
 			};
 			name = Debug;
@@ -2150,13 +2144,13 @@
 					"$(PROJECT_DIR)",
 				);
 				INSTALL_PATH = /usr/local/bin;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				OTHER_LDFLAGS = (
 					"$(PROJECT_DIR)/3rdparty/openssl-1.1.1h/lib/libcrypto.a",
 					"$(PROJECT_DIR)/3rdparty/openssl-1.1.1h/lib/libssl.a",
 				);
 				PRODUCT_NAME = arq_restore;
 				SDKROOT = macosx;
-				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				WARNING_CFLAGS = "-Wno-objc-designated-initializers";
 			};
 			name = Release;
@@ -2192,9 +2186,9 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)";
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
-				MACOSX_DEPLOYMENT_TARGET = 13.0;
 			};
 			name = Debug;
 		};
@@ -2227,8 +2221,8 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)";
-				SDKROOT = macosx;
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				SDKROOT = macosx;
 			};
 			name = Release;
 		};

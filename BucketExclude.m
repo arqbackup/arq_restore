@@ -34,7 +34,6 @@
 #import "DictNode.h"
 #import "IntegerNode.h"
 #import "StringNode.h"
-#import "RegexKitLite.h"
 
 @implementation BucketExclude
 @synthesize type, text;
@@ -70,8 +69,10 @@
             return [[theFilename lowercaseString] hasPrefix:[text lowercaseString]];
         case kBucketExcludeTypeFileNameEndsWith:
             return [[theFilename lowercaseString] hasSuffix:[text lowercaseString]];
-        case kBucketExcludeTypePathMatchesRegex:
-            return [thePath isMatchedByRegex:text options:RKLCaseless inRange:NSMakeRange(0, [thePath length]) error:NULL];
+        case kBucketExcludeTypePathMatchesRegex: {
+            NSRegularExpression *re = [NSRegularExpression regularExpressionWithPattern:text options:NSRegularExpressionCaseInsensitive error:NULL];
+            return re != nil && [re firstMatchInString:thePath options:0 range:NSMakeRange(0, thePath.length)] != nil;
+        }
     }
     return NO;
 }

@@ -32,7 +32,6 @@
 
 #import "TargetConnection.h"
 #import "Target.h"
-#import "RegexKitLite.h"
 #import "S3ObjectMetadata.h"
 #import "Item.h"
 #import "RemoteFS.h"
@@ -98,7 +97,8 @@
     
     NSMutableArray *ret = [NSMutableArray array];
     for (Item *item in [itemsByName allValues]) {
-        if ([item.name rangeOfRegex:@"^(\\S{8}-\\S{4}-\\S{4}-\\S{4}-\\S{12})$"].location != NSNotFound) {
+        NSRegularExpression *uuidRe = [NSRegularExpression regularExpressionWithPattern:@"^(\\S{8}-\\S{4}-\\S{4}-\\S{4}-\\S{12})$" options:0 error:nil];
+        if ([uuidRe firstMatchInString:item.name options:0 range:NSMakeRange(0, item.name.length)] != nil) {
             [ret addObject:item.name];
         } else {
             HSLogDebug(@"%@ is not a UUID; skipping", item.name);
@@ -122,7 +122,8 @@
     
     NSMutableArray *ret = [NSMutableArray array];
     for (Item *item in [itemsByName allValues]) {
-        if ([item.name rangeOfRegex:@"^(\\S{8}-\\S{4}-\\S{4}-\\S{4}-\\S{12})$"].location != NSNotFound) {
+        NSRegularExpression *uuidRe = [NSRegularExpression regularExpressionWithPattern:@"^(\\S{8}-\\S{4}-\\S{4}-\\S{4}-\\S{12})$" options:0 error:nil];
+        if ([uuidRe firstMatchInString:item.name options:0 range:NSMakeRange(0, item.name.length)] != nil) {
             [ret addObject:item.name];
         }
     }

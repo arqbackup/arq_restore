@@ -35,7 +35,6 @@
 #import "StringIO.h"
 #import "Commit.h"
 #import "DataInputStream.h"
-#import "RegexKitLite.h"
 #import "CommitFailedFile.h"
 #import "BufferedInputStream.h"
 #import "BooleanIO.h"
@@ -103,9 +102,10 @@ arqVersion = _arqVersion;
         _parentCommitBlobKey = theParentCommitBlobKey;
         _treeBlobKey = theTreeBlobKey;
         _location = [theLocation copy];
-        NSRange computerRange = [_location rangeOfRegex:@"^file://([^/]+)/" capture:1];
-        if (computerRange.location != NSNotFound) {
-            _computer = [[_location substringWithRange:computerRange] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+        NSRegularExpression *computerRe = [NSRegularExpression regularExpressionWithPattern:@"^file://([^/]+)/" options:0 error:nil];
+        NSTextCheckingResult *computerMatch = [computerRe firstMatchInString:_location options:0 range:NSMakeRange(0, _location.length)];
+        if (computerMatch != nil) {
+            _computer = [[_location substringWithRange:[computerMatch rangeAtIndex:1]] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
         } else {
             _computer = @"";
         }
@@ -197,9 +197,10 @@ arqVersion = _arqVersion;
             goto init_error;
         }
         _location = theLocation;
-        NSRange computerRange = [_location rangeOfRegex:@"^file://([^/]+)/" capture:1];
-        if (computerRange.location != NSNotFound) {
-            _computer = [[_location substringWithRange:computerRange] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+        NSRegularExpression *computerRe = [NSRegularExpression regularExpressionWithPattern:@"^file://([^/]+)/" options:0 error:nil];
+        NSTextCheckingResult *computerMatch = [computerRe firstMatchInString:_location options:0 range:NSMakeRange(0, _location.length)];
+        if (computerMatch != nil) {
+            _computer = [[_location substringWithRange:[computerMatch rangeAtIndex:1]] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
         } else {
             _computer = @"";
         }
@@ -286,9 +287,10 @@ init_done:
     NSMutableString *ret = [[NSMutableString alloc] initWithString:[dateFormatter stringFromDate:[self creationDate]]];
     
     NSString *commitLocation = [self location];
-    NSRange range = [commitLocation rangeOfRegex:@"^([^/]+)://([^/]+)(.+)$" capture:3];
-    if (range.location != NSNotFound) {
-        commitLocation = [commitLocation substringWithRange:range];
+    NSRegularExpression *locationRe = [NSRegularExpression regularExpressionWithPattern:@"^([^/]+)://([^/]+)(.+)$" options:0 error:nil];
+    NSTextCheckingResult *locationMatch = [locationRe firstMatchInString:commitLocation options:0 range:NSMakeRange(0, commitLocation.length)];
+    if (locationMatch != nil) {
+        commitLocation = [commitLocation substringWithRange:[locationMatch rangeAtIndex:3]];
     }
     //FIXME: We should show the old path here, like this:
 //    if (![commitLocation isEqualToString:[bucket localPath]]) {

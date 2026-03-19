@@ -31,7 +31,6 @@
  */
 
 #import "AWSRegion.h"
-#import "RegexKitLite.h"
 
 @implementation AWSRegion
 + (NSArray *)allRegions {

@@ -48,7 +48,6 @@
 #import "StorageType.h"
 #import "GlacierService.h"
 #import "AWSRegion.h"
-#import "RegexKitLite.h"
 #import "AWSRegion.h"
 #import "ObjectEncryptor.h"
 #import "Target.h"

@@ -34,7 +34,6 @@
 #import "Target.h"
 #import "S3Service.h"
 #import "PackIndexEntry.h"
-#import "RegexKitLite.h"
 #import "PackBuilder.h"
 #import "Fark.h"
 #import "PackIndex.h"

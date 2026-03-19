@@ -32,24 +32,24 @@
 
 #import "RFC822.h"
 
-#import "RegexKitLite.h"
 #import "S3Service.h"
 
 #define FMT822 (@"^(\\d{4})-(\\d{2})-(\\d{2})T(\\d{2}):(\\d{2}):(\\d{2})\\.(\\d+)Z$")
 
 @implementation RFC822
 + (NSDate *)dateFromString:(NSString *)dateString error:(NSError **)error {
-    if ([dateString rangeOfRegex:FMT822].location == NSNotFound) {
+    NSRegularExpression *re = [NSRegularExpression regularExpressionWithPattern:FMT822 options:0 error:nil];
+    NSTextCheckingResult *match = [re firstMatchInString:dateString options:0 range:NSMakeRange(0, dateString.length)];
+    if (match == nil) {
         SETNSERROR([S3Service errorDomain], S3SERVICE_INVALID_PARAMETERS, @"invalid RFC822 date '%@'", dateString);
         return nil;
     }
-    return [NSCalendarDate dateWithYear:[[dateString stringByMatching:FMT822 capture:1] intValue] 
-                                  month:[[dateString stringByMatching:FMT822 capture:2] intValue] 
-                                    day:[[dateString stringByMatching:FMT822 capture:3] intValue]  
-                                   hour:[[dateString stringByMatching:FMT822 capture:4] intValue] 
-                                 minute:[[dateString stringByMatching:FMT822 capture:5] intValue]  
-                                 second:[[dateString stringByMatching:FMT822 capture:6] intValue] 
+    return [NSCalendarDate dateWithYear:[[dateString substringWithRange:[match rangeAtIndex:1]] intValue]
+                                  month:[[dateString substringWithRange:[match rangeAtIndex:2]] intValue]
+                                    day:[[dateString substringWithRange:[match rangeAtIndex:3]] intValue]
+                                   hour:[[dateString substringWithRange:[match rangeAtIndex:4]] intValue]
+                                 minute:[[dateString substringWithRange:[match rangeAtIndex:5]] intValue]
+                                 second:[[dateString substringWithRange:[match rangeAtIndex:6]] intValue]
                                timeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
-
 }
 @end

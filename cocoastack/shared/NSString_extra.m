@@ -31,7 +31,6 @@
  */
 
 #import "NSString_extra.h"
-#import "RegexKitLite.h"
 #include <openssl/bio.h>
 #include <openssl/evp.h>
 
@@ -151,9 +150,11 @@ static char hexCharToInt(char c1) {
 - (NSString *)stringWithUniquePath {
     NSString *left = self;
     NSString *right = @"";
-    if ([self rangeOfRegex:PATH_PATTERN].location != NSNotFound) {
-        left = [self substringWithRange:[self rangeOfRegex:PATH_PATTERN capture:1]];
-        right = [self substringWithRange:[self rangeOfRegex:PATH_PATTERN capture:2]];
+    NSRegularExpression *pathRe = [NSRegularExpression regularExpressionWithPattern:PATH_PATTERN options:0 error:nil];
+    NSTextCheckingResult *pathMatch = [pathRe firstMatchInString:self options:0 range:NSMakeRange(0, self.length)];
+    if (pathMatch != nil) {
+        left = [self substringWithRange:[pathMatch rangeAtIndex:1]];
+        right = [self substringWithRange:[pathMatch rangeAtIndex:2]];
     }
     NSFileManager *fm = [NSFileManager defaultManager];
     NSUInteger index = 2;

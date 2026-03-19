@@ -35,7 +35,6 @@
 #import "S3Service.h"
 #import "Target.h"
 #import "BlobKey.h"
-#import "RegexKitLite.h"
 #import "PackId.h"
 #import "NSFileManager_extra.h"
 #import "PackIndexEntry.h"
@@ -315,14 +314,14 @@ targetConnectionDelegate:(id <TargetConnectionDelegate>)theTargetConnectionDeleg
         return nil;
     }
     
-    NSString *regex = @"^([^/]+).pack$";
+    NSRegularExpression *packRe = [NSRegularExpression regularExpressionWithPattern:@"^([^/]+)\\.pack$" options:0 error:nil];
     NSMutableSet *ret = [NSMutableSet set];
     for (Item *item in [itemsByName allValues]) {
-        if ([item.name isMatchedByRegex:regex]) {
-            NSString *packSHA1 = [item.name substringWithRange:[item.name rangeOfRegex:regex capture:1]];
+        NSTextCheckingResult *match = [packRe firstMatchInString:item.name options:0 range:NSMakeRange(0, item.name.length)];
+        if (match != nil) {
+            NSString *packSHA1 = [item.name substringWithRange:[match rangeAtIndex:1]];
             PackId *packId = [[PackId alloc] initWithPackSetName:packSetName packSHA1:packSHA1];
             [ret addObject:packId];
-            
         }
     }
     return ret;

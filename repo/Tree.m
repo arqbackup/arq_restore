@@ -37,7 +37,6 @@
 #import "Node.h"
 #import "Tree.h"
 #import "DataInputStream.h"
-#import "RegexKitLite.h"
 #import "BufferedInputStream.h"
 #import "NSData-Compress.h"
 #import "GunzipInputStream.h"

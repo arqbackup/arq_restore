@@ -31,7 +31,6 @@
  */
 
 #import "System.h"
-#import "RegexKitLite.h"
 
 #define SYSTEM_VERSION_PLIST @"/System/Library/CoreServices/SystemVersion.plist"
 
@@ -53,11 +52,12 @@
     if (productVersion == nil) {
         return -1;
     }
-    NSRange range = [productVersion rangeOfRegex:@"^(\\d+)\\.\\d+" capture:1];
-    if (range.location == NSNotFound) {
+    NSRegularExpression *majorRe = [NSRegularExpression regularExpressionWithPattern:@"^(\\d+)\\.\\d+" options:0 error:nil];
+    NSTextCheckingResult *majorMatch = [majorRe firstMatchInString:productVersion options:0 range:NSMakeRange(0, productVersion.length)];
+    if (majorMatch == nil) {
         return -1;
     }
-    NSString *majorVersion = [productVersion substringWithRange:range];
+    NSString *majorVersion = [productVersion substringWithRange:[majorMatch rangeAtIndex:1]];
     return [majorVersion integerValue];
 }
 + (NSInteger)productMinorVersion:(NSError **)error {
@@ -65,11 +65,12 @@
     if (productVersion == nil) {
         return -1;
     }
-    NSRange range = [productVersion rangeOfRegex:@"^\\d+\\.(\\d+)" capture:1];
-    if (range.location == NSNotFound) {
+    NSRegularExpression *minorRe = [NSRegularExpression regularExpressionWithPattern:@"^\\d+\\.(\\d+)" options:0 error:nil];
+    NSTextCheckingResult *minorMatch = [minorRe firstMatchInString:productVersion options:0 range:NSMakeRange(0, productVersion.length)];
+    if (minorMatch == nil) {
         return -1;
     }
-    NSString *minorVersion = [productVersion substringWithRange:range];
+    NSString *minorVersion = [productVersion substringWithRange:[minorMatch rangeAtIndex:1]];
     return [minorVersion integerValue];
 }
 @end

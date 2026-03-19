@@ -39,7 +39,6 @@
 #import "IntegerIO.h"
 #import "AWSRegion.h"
 #import "RemoteFS.h"
-#import "RegexKitLite.h"
 #import "S3AuthorizationProviderFactory.h"
 #import "S3Service.h"
 #import "AWSRegion.h"

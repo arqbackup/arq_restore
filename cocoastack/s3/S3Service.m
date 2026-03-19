@@ -31,7 +31,6 @@
  */
 
 #import "InputStream.h"
-#import "RegexKitLite.h"
 #import "S3Owner.h"
 #import "S3Lister.h"
 #import "S3AuthorizationProvider.h"
@@ -229,7 +228,8 @@ NSString *kS3StorageClassReducedRedundancy = @"REDUCED_REDUNDANCY";
     }
     
     NSDictionary *ret = nil;
-    if ([theDirectoryPath isMatchedByRegex:@"^/([^/]+)/(\\S{8}-\\S{4}-\\S{4}-\\S{4}-\\S{12})/objects/$"]) {
+    NSRegularExpression *uuidPathRe = [NSRegularExpression regularExpressionWithPattern:@"^/([^/]+)/(\\S{8}-\\S{4}-\\S{4}-\\S{4}-\\S{12})/objects/$" options:0 error:nil];
+    if ([uuidPathRe firstMatchInString:theDirectoryPath options:0 range:NSMakeRange(0, theDirectoryPath.length)] != nil) {
         S3ObjectsLister *lister = [[S3ObjectsLister alloc] initWithS3AuthorizationProvider:sap
                                                                            endpoint:endpoint
                                                                                path:theDirectoryPath

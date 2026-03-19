@@ -34,7 +34,6 @@
 #import "HTTP.h"
 #import "URLConnection.h"
 #import "S3Service.h"
-#import "RegexKitLite.h"
 #import "NSError_extra.h"
 #import "S3AuthorizationProvider.h"
 #import "S3ErrorResult.h"

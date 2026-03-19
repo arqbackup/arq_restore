@@ -43,7 +43,6 @@
 #import "NSError_extra.h"
 #import "Streams.h"
 #import "DataTransferDelegate.h"
-#import "RegexKitLite.h"
 #import "System.h"
 #import "HTTPInputStream.h"
 
@@ -122,8 +121,9 @@ static NSString *RUN_LOOP_MODE = @"HTTPConnectionRunLoopMode";
 }
 - (NSString *)requestPathInfo {
     NSString *urlDescription = [[mutableURLRequest URL] description];
-    NSRange rangeBeforeQueryString = [urlDescription rangeOfRegex:@"^([^?]+)"];
-    NSString *stringBeforeQueryString = [urlDescription substringWithRange:rangeBeforeQueryString];
+    NSRegularExpression *preQueryRe = [NSRegularExpression regularExpressionWithPattern:@"^([^?]+)" options:0 error:nil];
+    NSTextCheckingResult *preQueryMatch = [preQueryRe firstMatchInString:urlDescription options:0 range:NSMakeRange(0, urlDescription.length)];
+    NSString *stringBeforeQueryString = preQueryMatch ? [urlDescription substringWithRange:preQueryMatch.range] : urlDescription;
     NSString *path = [[mutableURLRequest URL] path];
     if ([stringBeforeQueryString hasSuffix:@"/"] && ![path hasSuffix:@"/"]) {
         // NSURL's path method strips trailing slashes. Add it back in.
@@ -262,9 +262,10 @@ static NSString *RUN_LOOP_MODE = @"HTTPConnectionRunLoopMode";
     NSString *downloadName = nil;
     NSString *contentDisposition = [self responseHeaderForKey:@"Content-Disposition"];
     if (contentDisposition != nil) {
-        NSRange filenameRange = [contentDisposition rangeOfRegex:@"attachment;filename=(.+)" capture:1];
-        if (filenameRange.location != NSNotFound) {
-            downloadName = [contentDisposition substringWithRange:filenameRange];
+        NSRegularExpression *filenameRe = [NSRegularExpression regularExpressionWithPattern:@"attachment;filename=(.+)" options:0 error:nil];
+        NSTextCheckingResult *filenameMatch = [filenameRe firstMatchInString:contentDisposition options:0 range:NSMakeRange(0, contentDisposition.length)];
+        if (filenameMatch != nil) {
+            downloadName = [contentDisposition substringWithRange:[filenameMatch rangeAtIndex:1]];
         }
     }
     return downloadName;

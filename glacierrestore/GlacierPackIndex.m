@@ -35,7 +35,6 @@
 #include <libkern/OSByteOrder.h>
 #import "GlacierPackIndex.h"
 #import "S3Service.h"
-#import "RegexKitLite.h"
 #import "NSString_extra.h"
 #import "BinarySHA1.h"
 #import "PackIndexEntry.h"
@@ -90,9 +89,10 @@ typedef struct pack_index {
         return nil;
     }
     for (Item *item in [itemsByName allValues]) {
-        NSRange sha1Range = [item.name rangeOfRegex:@"^(\\w+)\\.index$" capture:1];
-        if (sha1Range.location != NSNotFound) {
-            NSString *thePackSHA1 = [item.name substringWithRange:sha1Range];
+        NSRegularExpression *indexRe = [NSRegularExpression regularExpressionWithPattern:@"^(\\w+)\\.index$" options:0 error:nil];
+        NSTextCheckingResult *indexMatch = [indexRe firstMatchInString:item.name options:0 range:NSMakeRange(0, item.name.length)];
+        if (indexMatch != nil) {
+            NSString *thePackSHA1 = [item.name substringWithRange:[indexMatch rangeAtIndex:1]];
             PackId *packId = [[PackId alloc] initWithPackSetName:thePackSetName packSHA1:thePackSHA1];
             GlacierPackIndex *index = [[GlacierPackIndex alloc] initWithTarget:theTarget
                                                                      s3Service:theS3
