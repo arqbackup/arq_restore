@@ -48,6 +48,8 @@
 }
 - (id)initWithTarget:(Target *)theTarget;
 
+- (NSString *)pathPrefix;
+
 - (BOOL)updateFingerprintWithTargetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;
 
 - (Item *)itemAtPath:(NSString *)thePath targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error;

@@ -49,7 +49,7 @@
                         targetConnection:(TargetConnection *)theConn
                                 delegate:(id <TargetConnectionDelegate>)theDelegate
                                    error:(NSError **)error {
-    NSString *configPath = [NSString stringWithFormat:@"/%@/backupconfig.json", thePlanUUID];
+    NSString *configPath = [NSString stringWithFormat:@"%@/%@/backupconfig.json", [theConn pathPrefix], thePlanUUID];
     NSError *myError = nil;
     NSNumber *exists = [theConn fileExistsAtPath:configPath dataSize:NULL delegate:theDelegate error:&myError];
     if (exists == nil || ![exists boolValue]) {

@@ -62,6 +62,10 @@
     return self;
 }
 
+- (NSString *)pathPrefix {
+    return pathPrefix;
+}
+
 - (BOOL)updateFingerprintWithTargetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error {
     RemoteFS *remoteFS = [self remoteFS:error];
     if (remoteFS == nil) {

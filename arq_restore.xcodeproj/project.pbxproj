@@ -9,6 +9,9 @@
 /* Begin PBXBuildFile section */
 		00C03BEC6D117B44D5C2204F /* Arq7BackupRecord.m in Sources */ = {isa = PBXBuildFile; fileRef = EA24D0F8711EF622B44A16C6 /* Arq7BackupRecord.m */; };
 		0C85E9AF23756CB1B4BEC45A /* Arq7Tree.m in Sources */ = {isa = PBXBuildFile; fileRef = FB8A6D73F1EB11427F4C73B6 /* Arq7Tree.m */; };
+		2850D51BA71D3FF1C8F65B2C /* Arq6SnapshotVolume.m in Sources */ = {isa = PBXBuildFile; fileRef = B978E1F96D09898405336355 /* Arq6SnapshotVolume.m */; };
+		2F133D876AC9590189EC2069 /* Arq6Restorer.m in Sources */ = {isa = PBXBuildFile; fileRef = B871374D12E58B41F3F7D374 /* Arq6Restorer.m */; };
+		5BA9F739812FA22673A8EE3D /* Arq6Snapshot.m in Sources */ = {isa = PBXBuildFile; fileRef = FA27B2EB3BBF168CFDBA5633 /* Arq6Snapshot.m */; };
 		6A19A925594271207012F510 /* Arq7BlobReader.m in Sources */ = {isa = PBXBuildFile; fileRef = 435ED03C340F178688C0650E /* Arq7BlobReader.m */; };
 		71BC62DEA2C4306E49938ACD /* Arq7BlobLoc.m in Sources */ = {isa = PBXBuildFile; fileRef = FA6177396C759724290F24EA /* Arq7BlobLoc.m */; };
 		7ADABF11062D0757B0CE4910 /* Arq7EncryptedObjectDecryptor.m in Sources */ = {isa = PBXBuildFile; fileRef = F9B6F9615DCF01EEF33E09B1 /* Arq7EncryptedObjectDecryptor.m */; };
@@ -247,6 +250,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		02AE861E26CF0610EA7699FF /* Arq6Snapshot.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = Arq6Snapshot.h; sourceTree = "<group>"; };
 		08FB7796FE84155DC02AAC07 /* arq_restore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = arq_restore.m; sourceTree = "<group>"; };
 		08FB779EFE84155DC02AAC07 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		328508496E540BAB8E0E7C70 /* Arq7BackupFolder.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = Arq7BackupFolder.m; sourceTree = "<group>"; };
@@ -255,13 +259,17 @@
 		3F1D87E0C7A4CA012379EACA /* Arq7KeySet.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = Arq7KeySet.h; sourceTree = "<group>"; };
 		435ED03C340F178688C0650E /* Arq7BlobReader.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = Arq7BlobReader.m; sourceTree = "<group>"; };
 		4942EC7DAEA686C0D7D32170 /* Arq7BlobReader.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = Arq7BlobReader.h; sourceTree = "<group>"; };
+		760E10F40A56FAC6D2D12FEE /* Arq6SnapshotVolume.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = Arq6SnapshotVolume.h; sourceTree = "<group>"; };
 		771B2A2744BB30FC6213588E /* Arq7BlobLoc.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = Arq7BlobLoc.h; sourceTree = "<group>"; };
 		777E920E386C0804695EC106 /* Arq7Restorer.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = Arq7Restorer.h; sourceTree = "<group>"; };
+		7BA613DBB03C9212092CA8CE /* Arq6Restorer.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = Arq6Restorer.h; sourceTree = "<group>"; };
 		8DD76FA10486AA7600D96B5E /* arq_restore */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = arq_restore; sourceTree = BUILT_PRODUCTS_DIR; };
 		8F3E5557B82BA77CB30B8163 /* Arq7BackupSet.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = Arq7BackupSet.m; sourceTree = "<group>"; };
 		97FC4AFFE5E0B8383D729ECE /* Arq7Node.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = Arq7Node.h; sourceTree = "<group>"; };
 		B2DF607C84B053727A20717B /* Arq7Tree.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = Arq7Tree.h; sourceTree = "<group>"; };
 		B37E1DDBD43DE537F097E683 /* Arq7EncryptedObjectDecryptor.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = Arq7EncryptedObjectDecryptor.h; sourceTree = "<group>"; };
+		B871374D12E58B41F3F7D374 /* Arq6Restorer.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = Arq6Restorer.m; sourceTree = "<group>"; };
+		B978E1F96D09898405336355 /* Arq6SnapshotVolume.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = Arq6SnapshotVolume.m; sourceTree = "<group>"; };
 		C33427E593619F254EE645F5 /* Arq7Node.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = Arq7Node.m; sourceTree = "<group>"; };
 		CAF1E1931F447CE03587FD1B /* Arq7BackupRecord.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = Arq7BackupRecord.h; sourceTree = "<group>"; };
 		D6C2D011310A82BCDB057B30 /* Arq7BackupSet.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = Arq7BackupSet.h; sourceTree = "<group>"; };
@@ -882,6 +890,7 @@
 		F8F2D9B01986DF6B00997A15 /* GlacierRestorerParamSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GlacierRestorerParamSet.m; sourceTree = "<group>"; };
 		F8F2D9B21986DFF700997A15 /* GlacierRestorerDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GlacierRestorerDelegate.h; sourceTree = "<group>"; };
 		F9B6F9615DCF01EEF33E09B1 /* Arq7EncryptedObjectDecryptor.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = Arq7EncryptedObjectDecryptor.m; sourceTree = "<group>"; };
+		FA27B2EB3BBF168CFDBA5633 /* Arq6Snapshot.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = Arq6Snapshot.m; sourceTree = "<group>"; };
 		FA6177396C759724290F24EA /* Arq7BlobLoc.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = Arq7BlobLoc.m; sourceTree = "<group>"; };
 		FB8A6D73F1EB11427F4C73B6 /* Arq7Tree.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = Arq7Tree.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -924,6 +933,7 @@
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 				F8A18C9F1E3E16C300AF9F97 /* Frameworks */,
 				1EE93DF757788A3434A5CE8F /* arq7restore */,
+				BDEC592FAFC5F6FCA423D965 /* arq6restore */,
 			);
 			name = arq_restore;
 			sourceTree = "<group>";
@@ -1023,6 +1033,20 @@
 			);
 			name = arq7restore;
 			path = arq7restore;
+			sourceTree = "<group>";
+		};
+		BDEC592FAFC5F6FCA423D965 /* arq6restore */ = {
+			isa = PBXGroup;
+			children = (
+				760E10F40A56FAC6D2D12FEE /* Arq6SnapshotVolume.h */,
+				B978E1F96D09898405336355 /* Arq6SnapshotVolume.m */,
+				02AE861E26CF0610EA7699FF /* Arq6Snapshot.h */,
+				FA27B2EB3BBF168CFDBA5633 /* Arq6Snapshot.m */,
+				7BA613DBB03C9212092CA8CE /* Arq6Restorer.h */,
+				B871374D12E58B41F3F7D374 /* Arq6Restorer.m */,
+			);
+			name = arq6restore;
+			path = arq6restore;
 			sourceTree = "<group>";
 		};
 		F829512019868345001DC91B /* cocoastack */ = {
@@ -2087,6 +2111,9 @@
 				00C03BEC6D117B44D5C2204F /* Arq7BackupRecord.m in Sources */,
 				6A19A925594271207012F510 /* Arq7BlobReader.m in Sources */,
 				AF33F3B4CCAA9608AA354136 /* Arq7Restorer.m in Sources */,
+				2850D51BA71D3FF1C8F65B2C /* Arq6SnapshotVolume.m in Sources */,
+				5BA9F739812FA22673A8EE3D /* Arq6Snapshot.m in Sources */,
+				2F133D876AC9590189EC2069 /* Arq6Restorer.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

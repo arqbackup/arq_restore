@@ -22,7 +22,7 @@
                      targetConnection:(TargetConnection *)theConn
                              delegate:(id <TargetConnectionDelegate>)theDelegate
                                 error:(NSError **)error {
-    NSString *foldersPath = [NSString stringWithFormat:@"/%@/backupfolders", thePlanUUID];
+    NSString *foldersPath = [NSString stringWithFormat:@"%@/%@/backupfolders", [theConn pathPrefix], thePlanUUID];
     NSDictionary *itemsByName = [theConn itemsByNameAtPath:foldersPath targetConnectionDelegate:theDelegate error:error];
     if (itemsByName == nil) {
         return nil;
@@ -38,7 +38,7 @@
             continue;
         }
 
-        NSString *jsonPath = [NSString stringWithFormat:@"/%@/backupfolders/%@/backupfolder.json", thePlanUUID, folderUUID];
+        NSString *jsonPath = [NSString stringWithFormat:@"%@/%@/backupfolders/%@/backupfolder.json", [theConn pathPrefix], thePlanUUID, folderUUID];
         NSError *myError = nil;
         NSData *jsonData = [theConn contentsOfFileAtPath:jsonPath delegate:theDelegate error:&myError];
         if (jsonData == nil) {

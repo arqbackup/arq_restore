@@ -32,8 +32,8 @@
                                                  keySet:(Arq7KeySet *)theKeySet
                                                delegate:(id <TargetConnectionDelegate>)theDelegate
                                                   error:(NSError **)error {
-    NSString *backupRecordsPath = [NSString stringWithFormat:@"/%@/backupfolders/%@/backuprecords",
-                                   thePlanUUID, theFolderUUID];
+    NSString *backupRecordsPath = [NSString stringWithFormat:@"%@/%@/backupfolders/%@/backuprecords",
+                                   [theConn pathPrefix], thePlanUUID, theFolderUUID];
 
     // List 5-digit subdirectories.
     NSDictionary *dirsByName = [theConn itemsByNameAtPath:backupRecordsPath
