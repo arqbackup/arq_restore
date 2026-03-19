@@ -20,6 +20,7 @@
     NSString *_diskIdentifier;
     TargetConnection *_conn;
     Arq7KeySet *_keySet;
+    NSString *_relativePath;
     NSString *_destinationPath;
     id <TargetConnectionDelegate> _delegate;
     Arq7BlobReader *_blobReader;
@@ -33,6 +34,7 @@
                   diskIdentifier:(NSString *)theDiskIdentifier
                 targetConnection:(TargetConnection *)theConn
                           keySet:(Arq7KeySet *)theKeySet
+                    relativePath:(NSString *)theRelativePath
                  destinationPath:(NSString *)theDestinationPath
                         delegate:(id <TargetConnectionDelegate>)theDelegate {
     if (self = [super init]) {
@@ -40,6 +42,7 @@
         _diskIdentifier = theDiskIdentifier;
         _conn = theConn;
         _keySet = theKeySet;
+        _relativePath = theRelativePath;
         _destinationPath = theDestinationPath;
         _delegate = theDelegate;
     }
@@ -87,6 +90,39 @@
     Arq7Tree *rootTree = [_blobReader treeForBlobLoc:volume.node.treeBlobLoc error:error];
     if (rootTree == nil) {
         return NO;
+    }
+
+    // Walk to relative path if specified.
+    if (_relativePath != nil) {
+        NSString *path = _relativePath;
+        if ([path hasPrefix:@"/"]) {
+            path = [path substringFromIndex:1];
+        }
+        NSArray *components = [path pathComponents];
+        Arq7Tree *currentTree = rootTree;
+        for (NSUInteger i = 0; i < [components count]; i++) {
+            NSString *component = [components objectAtIndex:i];
+            Arq7Node *childNode = [currentTree childNodeWithName:component];
+            if (childNode == nil) {
+                SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"path component '%@' not found", component);
+                return NO;
+            }
+            if ([childNode isTree]) {
+                currentTree = [_blobReader treeForBlobLoc:childNode.treeBlobLoc error:error];
+                if (currentTree == nil) {
+                    return NO;
+                }
+                if (i == [components count] - 1) {
+                    return [self restoreTree:currentTree toPath:_destinationPath error:error];
+                }
+            } else {
+                if (i < [components count] - 1) {
+                    SETNSERROR([self errorDomain], -1, @"'%@' is not a directory", component);
+                    return NO;
+                }
+                return [self restoreFile:childNode toPath:_destinationPath error:error];
+            }
+        }
     }
 
     return [self restoreTree:rootTree toPath:_destinationPath error:error];

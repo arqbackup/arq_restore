@@ -42,7 +42,7 @@
     NSData *rawData = nil;
 
     // Build the full relative path (relative to target root).
-    NSString *relativePath = [NSString stringWithFormat:@"%@/%@/%@", [_conn pathPrefix], _planUUID, theBlobLoc.relativePath];
+    NSString *relativePath = [NSString stringWithFormat:@"%@%@", [_conn pathPrefix], theBlobLoc.relativePath];
 
     if (theBlobLoc.isPacked) {
         // Read a slice from a pack file.

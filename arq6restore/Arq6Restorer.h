@@ -13,6 +13,7 @@
                   diskIdentifier:(NSString *)theDiskIdentifier
                 targetConnection:(TargetConnection *)theConn
                           keySet:(Arq7KeySet *)theKeySet
+                    relativePath:(NSString *)theRelativePath
                  destinationPath:(NSString *)theDestinationPath
                         delegate:(id <TargetConnectionDelegate>)theDelegate;
 

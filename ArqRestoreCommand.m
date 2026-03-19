@@ -337,38 +337,34 @@
             }
         }
 
-        // Arq6 path: list volumes from most recent snapshot.
-        if ([Arq6Snapshot isArq6PlanUUID:theUUID targetConnection:conn delegate:nil]) {
-            Arq6Snapshot *snapshot = [Arq6Snapshot mostRecentSnapshotForPlanUUID:theUUID
-                                                                 targetConnection:conn
-                                                                           keySet:keySet
-                                                                         delegate:nil
-                                                                            error:error];
-            if (snapshot == nil) {
-                return NO;
-            }
+        // Arq7 path: try backupfolders first.
+        NSArray *folders = [Arq7BackupFolder backupFoldersForPlanUUID:theUUID targetConnection:conn keySet:keySet delegate:nil error:error];
+        if (folders != nil && [folders count] > 0) {
             printf("target   %s\n", [[target endpointDisplayName] UTF8String]);
             printf("plan     %s\n", [theUUID UTF8String]);
-            for (NSString *diskIdentifier in [[snapshot.volumesByDiskIdentifier allKeys] sortedArrayUsingSelector:@selector(compare:)]) {
-                Arq6SnapshotVolume *vol = [snapshot.volumesByDiskIdentifier objectForKey:diskIdentifier];
-                printf("\tvolume %s\n", [[vol name] UTF8String]);
-                printf("\t\tmountpoint %s\n", [[vol mountPoint] UTF8String]);
-                printf("\t\tuuid %s\n", [diskIdentifier UTF8String]);
+            for (Arq7BackupFolder *folder in folders) {
+                printf("\tfolder %s\n", [[folder localPath] UTF8String]);
+                printf("\t\tuuid %s\n", [[folder folderUUID] UTF8String]);
             }
             return YES;
         }
 
-        // Arq7 path.
-        NSArray *folders = [Arq7BackupFolder backupFoldersForPlanUUID:theUUID targetConnection:conn keySet:keySet delegate:nil error:error];
-        if (folders == nil) {
+        // Arq6 path: list volumes from most recent snapshot.
+        Arq6Snapshot *snapshot = [Arq6Snapshot mostRecentSnapshotForPlanUUID:theUUID
+                                                             targetConnection:conn
+                                                                       keySet:keySet
+                                                                     delegate:nil
+                                                                        error:error];
+        if (snapshot == nil) {
             return NO;
         }
-
         printf("target   %s\n", [[target endpointDisplayName] UTF8String]);
         printf("plan     %s\n", [theUUID UTF8String]);
-        for (Arq7BackupFolder *folder in folders) {
-            printf("\tfolder %s\n", [[folder localPath] UTF8String]);
-            printf("\t\tuuid %s\n", [[folder folderUUID] UTF8String]);
+        for (NSString *diskIdentifier in [[snapshot.volumesByDiskIdentifier allKeys] sortedArrayUsingSelector:@selector(compare:)]) {
+            Arq6SnapshotVolume *vol = [snapshot.volumesByDiskIdentifier objectForKey:diskIdentifier];
+            printf("\tvolume %s\n", [[vol name] UTF8String]);
+            printf("\t\tmountpoint %s\n", [[vol mountPoint] UTF8String]);
+            printf("\t\tuuid %s\n", [diskIdentifier UTF8String]);
         }
         return YES;
     }
@@ -449,33 +445,67 @@
             }
         }
 
-        NSString *jsonPath = [NSString stringWithFormat:@"%@/%@/backupfolders/%@/backupfolder.json", [conn pathPrefix], theUUID, theFolderUUID];
-        NSData *data = [conn contentsOfFileAtPath:jsonPath delegate:nil error:error];
-        if (data == nil) {
-            return NO;
-        }
-        if ([Arq7EncryptedObjectDecryptor isEncryptedData:data]) {
-            if (keySet == nil) {
-                SETNSERROR([self errorDomain], ERROR_INVALID_PASSWORD, @"backupfolder.json is encrypted but no key set provided");
+        // Arq7 path: try backupfolders first.
+        NSArray *folders = [Arq7BackupFolder backupFoldersForPlanUUID:theUUID targetConnection:conn keySet:keySet delegate:nil error:error];
+        if (folders != nil && [folders count] > 0) {
+            Arq7BackupFolder *matchingFolder = nil;
+            for (Arq7BackupFolder *folder in folders) {
+                if ([[folder folderUUID] isEqualToString:theFolderUUID]) {
+                    matchingFolder = folder;
+                    break;
+                }
+            }
+            if (matchingFolder == nil) {
+                SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"folder %@ not found", theFolderUUID);
                 return NO;
             }
-            Arq7EncryptedObjectDecryptor *dec = [[Arq7EncryptedObjectDecryptor alloc] initWithKeySet:keySet];
-            data = [dec decryptData:data error:error];
-            if (data == nil) {
+            NSDictionary *json = @{
+                @"uuid": matchingFolder.folderUUID ?: @"",
+                @"localPath": matchingFolder.localPath ?: @"",
+                @"name": matchingFolder.name ?: @"",
+                @"storageClass": matchingFolder.storageClass ?: @"",
+            };
+            NSData *prettyData = [NSJSONSerialization dataWithJSONObject:json options:NSJSONWritingPrettyPrinted error:error];
+            if (prettyData == nil) {
                 return NO;
             }
+            printf("target   %s\n", [[target endpointDisplayName] UTF8String]);
+            printf("plan     %s\n", [theUUID UTF8String]);
+            printf("folder   %s\n", [theFolderUUID UTF8String]);
+            printf("%s\n", [[NSString alloc] initWithData:prettyData encoding:NSUTF8StringEncoding].UTF8String);
+            return YES;
         }
-        NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data options:0 error:error];
-        if (json == nil) {
+
+        // Arq6 path: print volume info from most recent snapshot.
+        Arq6Snapshot *snapshot = [Arq6Snapshot mostRecentSnapshotForPlanUUID:theUUID
+                                                             targetConnection:conn
+                                                                       keySet:keySet
+                                                                     delegate:nil
+                                                                        error:error];
+        if (snapshot == nil) {
             return NO;
         }
-        NSData *prettyData = [NSJSONSerialization dataWithJSONObject:json options:NSJSONWritingPrettyPrinted error:error];
+        Arq6SnapshotVolume *volume = [snapshot.volumesByDiskIdentifier objectForKey:theFolderUUID];
+        if (volume == nil) {
+            SETNSERROR([self errorDomain], ERROR_NOT_FOUND,
+                       @"disk identifier %@ not found in snapshot; available: %@",
+                       theFolderUUID, [[snapshot.volumesByDiskIdentifier allKeys] componentsJoinedByString:@", "]);
+            return NO;
+        }
+        NSDictionary *info = @{
+            @"diskIdentifier": volume.diskIdentifier,
+            @"name": volume.name ?: @"",
+            @"mountPoint": volume.mountPoint ?: @"",
+            @"snapshotCreationDate": @([snapshot.creationDate timeIntervalSince1970]),
+            @"planUUID": snapshot.planUUID ?: @"",
+        };
+        NSData *prettyData = [NSJSONSerialization dataWithJSONObject:info options:NSJSONWritingPrettyPrinted error:error];
         if (prettyData == nil) {
             return NO;
         }
         printf("target   %s\n", [[target endpointDisplayName] UTF8String]);
         printf("plan     %s\n", [theUUID UTF8String]);
-        printf("folder   %s\n", [theFolderUUID UTF8String]);
+        printf("volume   %s\n", [theFolderUUID UTF8String]);
         printf("%s\n", [[NSString alloc] initWithData:prettyData encoding:NSUTF8StringEncoding].UTF8String);
         return YES;
     }
@@ -569,62 +599,59 @@
             }
         }
 
-        // Arq6 path: theFolderUUID is the diskIdentifier.
-        if ([Arq6Snapshot isArq6PlanUUID:theUUID targetConnection:conn delegate:nil]) {
-            Arq6Snapshot *snapshot = [Arq6Snapshot mostRecentSnapshotForPlanUUID:theUUID
-                                                                 targetConnection:conn
-                                                                           keySet:keySet
-                                                                         delegate:nil
-                                                                            error:error];
-            if (snapshot == nil) {
+        // Arq7 path: try backup record first.
+        NSError *myError = nil;
+        Arq7BackupRecord *record = [Arq7BackupRecord mostRecentBackupRecordForPlanUUID:theUUID
+                                                                            folderUUID:theFolderUUID
+                                                                      targetConnection:conn
+                                                                                keySet:keySet
+                                                                              delegate:nil
+                                                                                 error:&myError];
+        if (record != nil) {
+            if (record.node == nil) {
+                SETNSERROR([self errorDomain], -1, @"backup record has no node (version %d)", record.version);
                 return NO;
             }
-            Arq6SnapshotVolume *volume = [snapshot.volumesByDiskIdentifier objectForKey:theFolderUUID];
-            if (volume == nil) {
-                SETNSERROR([self errorDomain], ERROR_NOT_FOUND,
-                           @"disk identifier %@ not found in snapshot", theFolderUUID);
-                return NO;
-            }
+
             printf("target   %s\n", [[target endpointDisplayName] UTF8String]);
             printf("plan     %s\n", [theUUID UTF8String]);
-            printf("volume   %s\n", [theFolderUUID UTF8String]);
+            printf("folder   %s\n", [theFolderUUID UTF8String]);
 
             Arq7BlobReader *blobReader = [[Arq7BlobReader alloc] initWithPlanUUID:theUUID
                                                                  targetConnection:conn
                                                                            keySet:keySet
                                                                          delegate:nil];
-            Arq7Tree *rootTree = [blobReader treeForBlobLoc:volume.node.treeBlobLoc error:error];
+            Arq7Tree *rootTree = [blobReader treeForBlobLoc:record.node.treeBlobLoc error:error];
             if (rootTree == nil) {
                 return NO;
             }
             return [self printArq7Tree:rootTree blobReader:blobReader relativePath:@"" error:error];
         }
 
-        // Arq7 path.
-        Arq7BackupRecord *record = [Arq7BackupRecord mostRecentBackupRecordForPlanUUID:theUUID
-                                                                            folderUUID:theFolderUUID
-                                                                      targetConnection:conn
-                                                                                keySet:keySet
-                                                                              delegate:nil
-                                                                                 error:error];
-        if (record == nil) {
+        // Arq6 path: theFolderUUID is the diskIdentifier.
+        Arq6Snapshot *snapshot = [Arq6Snapshot mostRecentSnapshotForPlanUUID:theUUID
+                                                             targetConnection:conn
+                                                                       keySet:keySet
+                                                                     delegate:nil
+                                                                        error:error];
+        if (snapshot == nil) {
             return NO;
         }
-
-        if (record.node == nil) {
-            SETNSERROR([self errorDomain], -1, @"backup record has no node (version %d)", record.version);
+        Arq6SnapshotVolume *volume = [snapshot.volumesByDiskIdentifier objectForKey:theFolderUUID];
+        if (volume == nil) {
+            SETNSERROR([self errorDomain], ERROR_NOT_FOUND,
+                       @"disk identifier %@ not found in snapshot", theFolderUUID);
             return NO;
         }
-
         printf("target   %s\n", [[target endpointDisplayName] UTF8String]);
         printf("plan     %s\n", [theUUID UTF8String]);
-        printf("folder   %s\n", [theFolderUUID UTF8String]);
+        printf("volume   %s\n", [theFolderUUID UTF8String]);
 
         Arq7BlobReader *blobReader = [[Arq7BlobReader alloc] initWithPlanUUID:theUUID
                                                              targetConnection:conn
                                                                        keySet:keySet
                                                                      delegate:nil];
-        Arq7Tree *rootTree = [blobReader treeForBlobLoc:record.node.treeBlobLoc error:error];
+        Arq7Tree *rootTree = [blobReader treeForBlobLoc:volume.node.treeBlobLoc error:error];
         if (rootTree == nil) {
             return NO;
         }
@@ -739,6 +766,7 @@
 
     NSString *theUUID = [args objectAtIndex:3];
     NSString *theFolderUUID = [args objectAtIndex:4];
+    NSString *theRelativePath = ([args count] == 6) ? [args objectAtIndex:5] : nil;
 
     // Detect Arq7.
     TargetConnection *conn = [target newConnection:error];
@@ -775,44 +803,50 @@
             }
         }
 
-        // Arq6 restore path: theFolderUUID is the diskIdentifier.
-        if ([Arq6Snapshot isArq6PlanUUID:theUUID targetConnection:conn delegate:nil]) {
-            NSString *safeName = [theFolderUUID stringByReplacingOccurrencesOfString:@"/" withString:@"_"];
-            NSString *destinationPath = [[[NSFileManager defaultManager] currentDirectoryPath] stringByAppendingPathComponent:safeName];
+        // Arq7 restore path: try backupfolders first.
+        NSString *folderPath = [NSString stringWithFormat:@"%@/%@/backupfolders/%@", [conn pathPrefix], theUUID, theFolderUUID];
+        NSNumber *hasFolderDir = [conn fileExistsAtPath:folderPath dataSize:NULL delegate:nil error:error];
+        if (hasFolderDir != nil && [hasFolderDir boolValue]) {
+            NSString *restoreName = theRelativePath ? [theRelativePath lastPathComponent] : theFolderUUID;
+            NSString *destinationPath = [[[NSFileManager defaultManager] currentDirectoryPath] stringByAppendingPathComponent:restoreName];
             if ([[NSFileManager defaultManager] fileExistsAtPath:destinationPath]) {
                 SETNSERROR([self errorDomain], -1, @"%@ already exists", destinationPath);
                 return NO;
             }
+
             printf("target   %s\n", [[target endpointDisplayName] UTF8String]);
             printf("plan     %s\n", [theUUID UTF8String]);
-            printf("volume   %s\n", [theFolderUUID UTF8String]);
+            printf("folder   %s\n", [theFolderUUID UTF8String]);
             printf("\nrestoring to %s\n\n", [destinationPath UTF8String]);
 
-            Arq6Restorer *restorer = [[Arq6Restorer alloc] initWithPlanUUID:theUUID
-                                                             diskIdentifier:theFolderUUID
+            Arq7Restorer *restorer = [[Arq7Restorer alloc] initWithPlanUUID:theUUID
+                                                                 folderUUID:theFolderUUID
                                                            targetConnection:conn
                                                                      keySet:keySet
+                                                               relativePath:theRelativePath
                                                             destinationPath:destinationPath
                                                                    delegate:nil];
             return [restorer restore:error];
         }
 
-        // Arq7 restore path.
-        NSString *destinationPath = [[[NSFileManager defaultManager] currentDirectoryPath] stringByAppendingPathComponent:theFolderUUID];
+        // Arq6 restore path: theFolderUUID is the diskIdentifier.
+        NSString *restoreName = theRelativePath ? [theRelativePath lastPathComponent]
+                                                : [theFolderUUID stringByReplacingOccurrencesOfString:@"/" withString:@"_"];
+        NSString *destinationPath = [[[NSFileManager defaultManager] currentDirectoryPath] stringByAppendingPathComponent:restoreName];
         if ([[NSFileManager defaultManager] fileExistsAtPath:destinationPath]) {
             SETNSERROR([self errorDomain], -1, @"%@ already exists", destinationPath);
             return NO;
         }
-
         printf("target   %s\n", [[target endpointDisplayName] UTF8String]);
         printf("plan     %s\n", [theUUID UTF8String]);
-        printf("folder   %s\n", [theFolderUUID UTF8String]);
+        printf("volume   %s\n", [theFolderUUID UTF8String]);
         printf("\nrestoring to %s\n\n", [destinationPath UTF8String]);
 
-        Arq7Restorer *restorer = [[Arq7Restorer alloc] initWithPlanUUID:theUUID
-                                                             folderUUID:theFolderUUID
+        Arq6Restorer *restorer = [[Arq6Restorer alloc] initWithPlanUUID:theUUID
+                                                         diskIdentifier:theFolderUUID
                                                        targetConnection:conn
                                                                  keySet:keySet
+                                                           relativePath:theRelativePath
                                                         destinationPath:destinationPath
                                                                delegate:nil];
         return [restorer restore:error];
@@ -1214,13 +1248,14 @@
     size_t bufsize = BUFSIZE;
     char *buf = malloc(bufsize);
     ssize_t len = getline(&buf, &bufsize, stdin);
-    free(buf);
     tcsetattr(STDIN_FILENO, TCSANOW, &oldTermios);
-    
+
     if (len > 0 && buf[len - 1] == '\n') {
         --len;
     }
-    
-    return [[NSString alloc] initWithBytes:buf length:len encoding:NSUTF8StringEncoding];
+
+    NSString *ret = [[NSString alloc] initWithBytes:buf length:len encoding:NSUTF8StringEncoding];
+    free(buf);
+    return ret;
 }
 @end

@@ -19,6 +19,7 @@
     NSString *_folderUUID;
     TargetConnection *_conn;
     Arq7KeySet *_keySet;
+    NSString *_relativePath;
     NSString *_destinationPath;
     id <TargetConnectionDelegate> _delegate;
     Arq7BlobReader *_blobReader;
@@ -32,6 +33,7 @@
                       folderUUID:(NSString *)theFolderUUID
                 targetConnection:(TargetConnection *)theConn
                           keySet:(Arq7KeySet *)theKeySet
+                    relativePath:(NSString *)theRelativePath
                  destinationPath:(NSString *)theDestinationPath
                         delegate:(id <TargetConnectionDelegate>)theDelegate {
     if (self = [super init]) {
@@ -39,6 +41,7 @@
         _folderUUID = theFolderUUID;
         _conn = theConn;
         _keySet = theKeySet;
+        _relativePath = theRelativePath;
         _destinationPath = theDestinationPath;
         _delegate = theDelegate;
     }
@@ -73,12 +76,6 @@
         return NO;
     }
 
-    // Create destination directory.
-    NSFileManager *fm = [NSFileManager defaultManager];
-    if (![fm createDirectoryAtPath:_destinationPath withIntermediateDirectories:YES attributes:nil error:error]) {
-        return NO;
-    }
-
     // The root node should be a tree node.
     if (![record.node isTree]) {
         SETNSERROR([self errorDomain], -1, @"root node is not a directory");
@@ -89,6 +86,47 @@
     Arq7Tree *rootTree = [_blobReader treeForBlobLoc:record.node.treeBlobLoc error:error];
     if (rootTree == nil) {
         return NO;
+    }
+
+    // Walk to relative path if specified.
+    if (_relativePath != nil) {
+        NSString *path = _relativePath;
+        if ([path hasPrefix:@"/"]) {
+            path = [path substringFromIndex:1];
+        }
+        NSArray *components = [path pathComponents];
+        Arq7Tree *currentTree = rootTree;
+        for (NSUInteger i = 0; i < [components count]; i++) {
+            NSString *component = [components objectAtIndex:i];
+            Arq7Node *childNode = [currentTree childNodeWithName:component];
+            if (childNode == nil) {
+                SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"path component '%@' not found", component);
+                return NO;
+            }
+            if ([childNode isTree]) {
+                currentTree = [_blobReader treeForBlobLoc:childNode.treeBlobLoc error:error];
+                if (currentTree == nil) {
+                    return NO;
+                }
+                if (i == [components count] - 1) {
+                    // Last component is a directory — restore this subtree.
+                    return [self restoreTree:currentTree toPath:_destinationPath error:error];
+                }
+            } else {
+                if (i < [components count] - 1) {
+                    SETNSERROR([self errorDomain], -1, @"'%@' is not a directory", component);
+                    return NO;
+                }
+                // Last component is a file — restore just this file.
+                return [self restoreFile:childNode toPath:_destinationPath error:error];
+            }
+        }
+    } else {
+        // Create destination directory.
+        NSFileManager *fm = [NSFileManager defaultManager];
+        if (![fm createDirectoryAtPath:_destinationPath withIntermediateDirectories:YES attributes:nil error:error]) {
+            return NO;
+        }
     }
 
     return [self restoreTree:rootTree toPath:_destinationPath error:error];
