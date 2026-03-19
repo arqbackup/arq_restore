@@ -4,6 +4,7 @@
 */
 
 @class TargetConnection;
+@class Arq7KeySet;
 @protocol TargetConnectionDelegate;
 
 @interface Arq7BackupFolder : NSObject
@@ -16,6 +17,7 @@
 // Lists all backup folders for the given plan UUID.
 + (NSArray *)backupFoldersForPlanUUID:(NSString *)thePlanUUID
                      targetConnection:(TargetConnection *)theConn
+                               keySet:(Arq7KeySet *)theKeySet
                              delegate:(id <TargetConnectionDelegate>)theDelegate
                                 error:(NSError **)error;
 @end

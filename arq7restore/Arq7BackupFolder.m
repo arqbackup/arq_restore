@@ -1,4 +1,6 @@
 #import "Arq7BackupFolder.h"
+#import "Arq7KeySet.h"
+#import "Arq7EncryptedObjectDecryptor.h"
 #import "TargetConnection.h"
 #import "Item.h"
 
@@ -20,6 +22,7 @@
 
 + (NSArray *)backupFoldersForPlanUUID:(NSString *)thePlanUUID
                      targetConnection:(TargetConnection *)theConn
+                               keySet:(Arq7KeySet *)theKeySet
                              delegate:(id <TargetConnectionDelegate>)theDelegate
                                 error:(NSError **)error {
     NSString *foldersPath = [NSString stringWithFormat:@"%@/%@/backupfolders", [theConn pathPrefix], thePlanUUID];
@@ -40,13 +43,26 @@
 
         NSString *jsonPath = [NSString stringWithFormat:@"%@/%@/backupfolders/%@/backupfolder.json", [theConn pathPrefix], thePlanUUID, folderUUID];
         NSError *myError = nil;
-        NSData *jsonData = [theConn contentsOfFileAtPath:jsonPath delegate:theDelegate error:&myError];
-        if (jsonData == nil) {
+        NSData *data = [theConn contentsOfFileAtPath:jsonPath delegate:theDelegate error:&myError];
+        if (data == nil) {
             HSLogError(@"failed to read %@: %@", jsonPath, myError);
             continue;
         }
 
-        NSDictionary *json = [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:error];
+        // Decrypt if ARQO-prefixed.
+        if ([Arq7EncryptedObjectDecryptor isEncryptedData:data]) {
+            if (theKeySet == nil) {
+                SETNSERROR(@"Arq7BackupFolderErrorDomain", ERROR_INVALID_PASSWORD, @"backupfolder.json is encrypted but no key set provided");
+                return nil;
+            }
+            Arq7EncryptedObjectDecryptor *dec = [[Arq7EncryptedObjectDecryptor alloc] initWithKeySet:theKeySet];
+            data = [dec decryptData:data error:error];
+            if (data == nil) {
+                return nil;
+            }
+        }
+
+        NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data options:0 error:error];
         if (json == nil) {
             return nil;
         }

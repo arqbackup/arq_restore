@@ -360,7 +360,7 @@
         }
 
         // Arq7 path.
-        NSArray *folders = [Arq7BackupFolder backupFoldersForPlanUUID:theUUID targetConnection:conn delegate:nil error:error];
+        NSArray *folders = [Arq7BackupFolder backupFoldersForPlanUUID:theUUID targetConnection:conn keySet:keySet delegate:nil error:error];
         if (folders == nil) {
             return NO;
         }
