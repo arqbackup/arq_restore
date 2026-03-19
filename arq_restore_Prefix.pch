@@ -37,4 +37,5 @@
 #import "HSLog.h"
 #import "SetNSError.h"
 #import "NSErrorCodes.h"
-#endif
+#endif // __OBJC__
+

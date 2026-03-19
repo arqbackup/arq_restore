@@ -1,6 +1,6 @@
 # arq_restore
 
-An open-source command-line macOS utility for restoring from backups created by [Arq](http://www.arqbackup.com/).
+An open-source command-line macOS utility for restoring from backups created by any version of [Arq](http://www.arqbackup.com/).
 
 Download arq_restore in binary form [here](http://arqbackup.github.io/arq_restore/).
 
@@ -18,7 +18,6 @@ arq_restore works with Arq backups on AWS or a local filesystem. If you need to 
 
 To compile, open the Xcode project and pick "Build" from the "Product" menu.
 
-arq_restore expects OpenSSL 1.0.2 installed in the default location.
 
 
 ## License
