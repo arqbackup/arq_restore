@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2009-2017, Haystack Software LLC https://www.arqbackup.com
+ Copyright (c) 2009-2026, Haystack Software LLC https://www.arqbackup.com
 
  All rights reserved.
 
