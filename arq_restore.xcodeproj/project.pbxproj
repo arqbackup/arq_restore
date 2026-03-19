@@ -1848,10 +1848,10 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0910;
+				LastUpgradeCheck = 1600;
 			};
 			buildConfigurationList = 1DEB927808733DD40010E9CD /* Build configuration list for PBXProject "arq_restore" */;
-			compatibilityVersion = "Xcode 3.2";
+			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = English;
 			hasScannedForEncodings = 1;
 			knownRegions = (
@@ -2126,6 +2126,7 @@
 				);
 				PRODUCT_NAME = arq_restore;
 				SDKROOT = macosx;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				WARNING_CFLAGS = "-Wno-objc-designated-initializers";
 			};
 			name = Debug;
@@ -2155,6 +2156,7 @@
 				);
 				PRODUCT_NAME = arq_restore;
 				SDKROOT = macosx;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				WARNING_CFLAGS = "-Wno-objc-designated-initializers";
 			};
 			name = Release;
@@ -2192,6 +2194,7 @@
 				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)";
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 			};
 			name = Debug;
 		};
@@ -2225,6 +2228,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)";
 				SDKROOT = macosx;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 			};
 			name = Release;
 		};
