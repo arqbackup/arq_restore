@@ -38,7 +38,8 @@
     uint32_t exePathSize = 0;
     _NSGetExecutablePath(NULL, &exePathSize);
     char *exePath = (char *)malloc(exePathSize);
-    NSAssert(_NSGetExecutablePath(exePath, &exePathSize) == 0, @"must be zero");
+    int result = _NSGetExecutablePath(exePath, &exePathSize);
+    NSAssert(result == 0, @"must be zero");
     NSString *ret = [[NSString alloc] initWithBytes:exePath length:exePathSize encoding:NSUTF8StringEncoding];
     free(exePath);
     return ret;
