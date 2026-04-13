@@ -669,23 +669,23 @@ static NSUInteger _numProcessors;
         for (DDLoggerNode *loggerNode in _loggers) {
             // skip the loggers that shouldn't write this message based on the log level
 
-            if (!(logMessage->_flag & loggerNode->_level)) {
+            if (!((NSUInteger)(logMessage->_flag) & (NSUInteger)(loggerNode->_level))) {
                 continue;
             }
-            
+
             dispatch_group_async(_loggingGroup, loggerNode->_loggerQueue, ^{ @autoreleasepool {
                 [loggerNode->_logger logMessage:logMessage];
             } });
         }
-        
+
         dispatch_group_wait(_loggingGroup, DISPATCH_TIME_FOREVER);
     } else {
         // Execute each logger serialy, each within its own queue.
-        
+
         for (DDLoggerNode *loggerNode in _loggers) {
             // skip the loggers that shouldn't write this message based on the log level
 
-            if (!(logMessage->_flag & loggerNode->_level)) {
+            if (!((NSUInteger)(logMessage->_flag) & (NSUInteger)(loggerNode->_level))) {
                 continue;
             }
             

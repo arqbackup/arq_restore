@@ -69,7 +69,7 @@
  * We also define shorthand versions for asynchronous and synchronous logging.
  **/
 #define LOG_MAYBE(async, lvl, flg, ctx, tag, fnct, frmt, ...) \
-        do { if(lvl & flg) LOG_MACRO(async, lvl, flg, ctx, tag, fnct, frmt, ##__VA_ARGS__); } while(0)
+        do { if((NSUInteger)(lvl) & (NSUInteger)(flg)) LOG_MACRO(async, lvl, flg, ctx, tag, fnct, frmt, ##__VA_ARGS__); } while(0)
 
 /**
  * Ready to use log macros with no context or tag.
