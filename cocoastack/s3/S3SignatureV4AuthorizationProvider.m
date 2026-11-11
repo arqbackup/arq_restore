@@ -50,6 +50,8 @@ static NSDateFormatter *g_dateFormatter = nil;
         if (g_dateFormatter == nil) {
             g_dateFormatter = [[NSDateFormatter alloc] init];
             [g_dateFormatter setDateFormat:@"yyyyMMdd"];
+            [g_dateFormatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
+            [g_dateFormatter setLocale:[[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"]];
         }
         signingKeysLock = [[NSLock alloc] init];
     }
