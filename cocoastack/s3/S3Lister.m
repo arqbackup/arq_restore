@@ -206,7 +206,7 @@
 
 - (NSArray *)parseXMLResponse:(NSData *)response foundPrefixes:(NSArray **)foundPrefixes error:(NSError **)error {
     NSError *myError = nil;
-    NSXMLDocument *xmlDoc = [[NSXMLDocument alloc] initWithData:response options:0 error:&myError];
+    xmlDoc = [[NSXMLDocument alloc] initWithData:response options:0 error:&myError];
     if (!xmlDoc) {
         HSLogDebug(@"list Objects XML data: %@", [[NSString alloc] initWithData:response encoding:NSUTF8StringEncoding]);
         SETNSERROR([S3Service errorDomain], [myError code], @"error parsing List Objects XML response: %@", myError);
