@@ -301,6 +301,10 @@
     }
 
     NSString *theUUID = [args objectAtIndex:3];
+    target = [self targetForTarget:target containingUUID:theUUID error:error];
+    if (target == nil) {
+        return NO;
+    }
 
     // Detect Arq7 by checking for backupconfig.json.
     TargetConnection *conn = [target newConnection:error];
@@ -409,6 +413,10 @@
     }
 
     NSString *theUUID = [args objectAtIndex:3];
+    target = [self targetForTarget:target containingUUID:theUUID error:error];
+    if (target == nil) {
+        return NO;
+    }
     NSString *theFolderUUID = [args objectAtIndex:4];
 
     TargetConnection *conn = [target newConnection:error];
@@ -562,6 +570,10 @@
     }
 
     NSString *theUUID = [args objectAtIndex:3];
+    target = [self targetForTarget:target containingUUID:theUUID error:error];
+    if (target == nil) {
+        return NO;
+    }
     NSString *theFolderUUID = [args objectAtIndex:4];
 
     // Detect Arq7.
@@ -765,6 +777,10 @@
     }
 
     NSString *theUUID = [args objectAtIndex:3];
+    target = [self targetForTarget:target containingUUID:theUUID error:error];
+    if (target == nil) {
+        return NO;
+    }
     NSString *theFolderUUID = [args objectAtIndex:4];
     NSString *theRelativePath = ([args count] == 6) ? [args objectAtIndex:5] : nil;
 
@@ -1052,6 +1068,30 @@
         }
     }
     SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"backup set %@ not found at target\n", theComputerUUID);
+    return nil;
+}
+
+- (Target *)targetForTarget:(Target *)theTarget containingUUID:(NSString *)theUUID error:(NSError **)error {
+    if ([theTarget targetType] != kTargetAWS) {
+        return theTarget;
+    }
+    // An aws target's own endpoint names a placeholder bucket, so find the real bucket holding theUUID.
+    NSArray *expandedTargetList = [self expandedTargetListForTarget:theTarget error:error];
+    if (expandedTargetList == nil) {
+        return nil;
+    }
+    for (Target *candidate in expandedTargetList) {
+        NSError *myError = nil;
+        TargetConnection *conn = [candidate newConnection:&myError];
+        if (conn == nil) {
+            continue;
+        }
+        NSArray *theComputerUUIDs = [conn computerUUIDsWithDelegate:nil error:&myError];
+        if ([theComputerUUIDs containsObject:theUUID]) {
+            return candidate;
+        }
+    }
+    SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"no S3 bucket at target contains %@", theUUID);
     return nil;
 }
 
