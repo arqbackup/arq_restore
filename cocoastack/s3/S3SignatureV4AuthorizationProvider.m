@@ -38,8 +38,6 @@
 #import "NSString_extra.h"
 #import "HTTPConnection.h"
 
-static NSDateFormatter *g_dateFormatter = nil;
-
 @implementation S3SignatureV4AuthorizationProvider
 - (id)initWithAccessKey:(NSString *)access secretKey:(NSString *)secret awsRegion:(AWSRegion *)theAWSRegion {
     if (self = [super init]) {
@@ -47,10 +45,6 @@ static NSDateFormatter *g_dateFormatter = nil;
         secretKey = secret;
         awsRegion = theAWSRegion;
         signingKeysByDateString = [[NSMutableDictionary alloc] init];
-        if (g_dateFormatter == nil) {
-            g_dateFormatter = [[NSDateFormatter alloc] init];
-            [g_dateFormatter setDateFormat:@"yyyyMMdd"];
-        }
         signingKeysLock = [[NSLock alloc] init];
     }
     return self;
@@ -70,10 +64,10 @@ static NSDateFormatter *g_dateFormatter = nil;
         *outStringToSign = theString;
     }
     
+    // The credential scope date must be the UTC date, matching X-Amz-Date.
+    NSString *dateString = [[ISO8601Date sharedISO8601Date] basicDateStringFromDate:now];
+
     [signingKeysLock lock];
-    // Lock before using g_dateFormatter because it's not thread-safe!
-    NSString *dateString = [g_dateFormatter stringFromDate:now];
-    
     NSData *signingKey = [signingKeysByDateString objectForKey:dateString];
     if (signingKey == nil) {
         signingKey = [self makeSigningKeyForDateString:dateString];
@@ -109,10 +103,7 @@ static NSDateFormatter *g_dateFormatter = nil;
     
     // Scope
     NSMutableString *scope = [[NSMutableString alloc] init];
-    [signingKeysLock lock];
-    // Lock before using g_dateFormatter because it's not thread-safe!
-    [scope appendString:[g_dateFormatter stringFromDate:now]];
-    [signingKeysLock unlock];
+    [scope appendString:[[ISO8601Date sharedISO8601Date] basicDateStringFromDate:now]];
 
     [scope appendString:@"/"];
     [scope appendString:[awsRegion regionName]];

@@ -93,11 +93,11 @@ CWL_SYNTHESIZE_SINGLETON_FOR_CLASS(ISO8601Date)
     NSDateFormatter *ret = [[NSDateFormatter alloc] init];
     [ret setDateFormat:theFormat];
     
-    NSLocale *usLocale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US"];
+    NSLocale *usLocale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"];
     if (usLocale != nil) {
         [ret setLocale:usLocale];
     } else {
-        HSLogWarn(@"no en_US locale installed");
+        HSLogWarn(@"no en_US_POSIX locale installed");
     }
     [ret setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
     NSCalendar *gregorianCalendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSGregorianCalendar];
