@@ -47,6 +47,8 @@
     NSString *escapedS3ObjectPathPrefix;
 	BOOL isTruncated;
 	NSString *marker;
+    // Retained so XPath queries on the returned Contents nodes still work.
+    NSXMLDocument *xmlDoc;
 }
 - (id)initWithS3AuthorizationProvider:(id <S3AuthorizationProvider>)theSAP
                              endpoint:(NSURL *)theEndpoint
