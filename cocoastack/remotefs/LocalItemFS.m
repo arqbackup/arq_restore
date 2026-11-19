@@ -33,6 +33,8 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #import "LocalItemFS.h"
+#include <fcntl.h>
+#include <errno.h>
 #import "Item.h"
 #import "CacheOwnership.h"
 #import "Streams.h"
@@ -166,6 +168,47 @@
 }
 - (NSData *)contentsOfRange:(NSRange)theRange ofFileItem:(Item *)theItem itemPath:(NSString *)theFullPath dataTransferDelegate:(id <DataTransferDelegate>)theDTD targetConnectionDelegate:(id <TargetConnectionDelegate>)theTCD error:(NSError **)error {
     NSString *localPath = theFullPath; //[path stringByAppendingString:theDirectoryPath];
+    if (theRange.location != NSNotFound) {
+        // Read only the requested bytes. Packs are tens of MB and a blob is
+        // often a few KB, so reading the whole file for every blob is very
+        // wasteful (and keeps the whole pack in memory until it is released).
+        int fd = open([localPath fileSystemRepresentation], O_RDONLY);
+        if (fd < 0) {
+            int errnum = errno;
+            if (errnum == ENOENT) {
+                SETNSERROR([self errorDomain], ERROR_NOT_FOUND, @"%@ not found", theFullPath);
+            } else {
+                SETNSERROR(@"UnixErrorDomain", errnum, @"open %@: %s", theFullPath, strerror(errnum));
+            }
+            return nil;
+        }
+        NSMutableData *buf = [NSMutableData dataWithLength:theRange.length];
+        char *bytes = (char *)[buf mutableBytes];
+        size_t total = 0;
+        while (total < theRange.length) {
+            ssize_t n = pread(fd, bytes + total, theRange.length - total, (off_t)(theRange.location + total));
+            if (n < 0 && errno == EINTR) {
+                continue;
+            }
+            if (n < 0) {
+                int errnum = errno;
+                close(fd);
+                SETNSERROR(@"UnixErrorDomain", errnum, @"read %@: %s", theFullPath, strerror(errnum));
+                return nil;
+            }
+            if (n == 0) {
+                break;
+            }
+            total += (size_t)n;
+        }
+        close(fd);
+        if (total < theRange.length) {
+            SETNSERROR([self errorDomain], -1, @"requested bytes at %ld length %ld but file only has %ld bytes", theRange.location, theRange.length, (long)(theRange.location + total));
+            return nil;
+        }
+        return buf;
+    }
+
     NSError *myError = nil;
     NSData *ret = [NSData dataWithContentsOfFile:localPath options:NSUncachedRead error:&myError];
     if (ret == nil) {
@@ -173,13 +216,6 @@
             myError = [[NSError alloc] initWithDomain:[self errorDomain] code:ERROR_NOT_FOUND description:[NSString stringWithFormat:@"%@ not found", theFullPath]];
         }
         SETERRORFROMMYERROR;
-    }
-    if (theRange.location != NSNotFound) {
-        if ([ret length] < (theRange.location + theRange.length)) {
-            SETNSERROR([self errorDomain], -1, @"requested bytes at %ld length %ld but got %ld bytes", theRange.location, theRange.length, [ret length]);
-            return nil;
-        }
-        ret = [ret subdataWithRange:theRange];
     }
     return ret;
 }
