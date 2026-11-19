@@ -321,6 +321,35 @@
                 return nil;
             }
         }
+        if (theTreeVersion >= 4) {
+            // Tree version 4 appends added-time, document-id and sparse-file
+            // fields to every node. They are read only to stay in step with
+            // the byte stream; sparse-file holes are not reconstructed.
+            int64_t addedTime_sec = 0;
+            int64_t addedTime_nsec = 0;
+            uint32_t documentID = 0;
+            BOOL hasDocumentID = NO;
+            BOOL isSparse = NO;
+            uint64_t sparseLogicalSize = 0;
+            uint64_t holeCount = 0;
+            if (![IntegerIO readInt64:&addedTime_sec from:bis error:error]
+                || ![IntegerIO readInt64:&addedTime_nsec from:bis error:error]
+                || ![IntegerIO readUInt32:&documentID from:bis error:error]
+                || ![BooleanIO read:&hasDocumentID from:bis error:error]
+                || ![BooleanIO read:&isSparse from:bis error:error]
+                || ![IntegerIO readUInt64:&sparseLogicalSize from:bis error:error]
+                || ![IntegerIO readUInt64:&holeCount from:bis error:error]) {
+                return nil;
+            }
+            for (uint64_t i = 0; i < holeCount; i++) {
+                uint64_t holeOffset = 0;
+                uint64_t holeLength = 0;
+                if (![IntegerIO readUInt64:&holeOffset from:bis error:error]
+                    || ![IntegerIO readUInt64:&holeLength from:bis error:error]) {
+                    return nil;
+                }
+            }
+        }
         _userName = userName;
         _groupName = groupName;
         _deleted = deleted;
